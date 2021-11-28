@@ -1,4 +1,5 @@
 from SolidElement import HexaElement1
+from FemDataModel import addMatrix
 #--------------------------------------------------------------------#
 
 class HexaElement1WT(HexaElement1):
