@@ -1,0 +1,302 @@
+<!DOCTYPE html> 
+<html>
+  <head>
+    <title>FEM 3D (HTML5) ver 1.10</title>
+    <meta http-equiv="Content-Language" content="ja" />
+    <meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS" />
+    <script src="../three.min.js"></script>
+    <script src="../OrthographicTrackballControls.js"></script>
+    <script src="../numeric-1.2.6.min.js"></script>
+    <script src="Fem.js"></script>
+    <script>
+    <!--
+      window.addEventListener('load',function(){
+      	initModel();
+      });
+    -->
+    </script>
+    <link rel="stylesheet" type="text/css" href="fem.css" />
+  </head>
+  <body>
+    <h1>3次元有限要素法 (静的線形構造解析・熱解析・固有値解析) ver 1.10</h1>
+    <p class="notice">※このページではHTML5及びthree.js、数値計算ライブラリ (Numeric.js) を使用しています</p>
+
+    <div class="parent">
+      <div id="info-canvas"></div>
+      <canvas id="colorbar"></canvas>
+      <div id="fem-canvas"></div>
+      <div id="file">
+      	<p>ローカルファイル<br />
+      	読込ファイル：<input type="file" id="localreadfile" tabindex="0" />
+      	<input type="button" value="読込" onclick="readLocalFile();" tabindex="1" /><br />
+      	書込ファイル名：<input type="text" id="localwritefile" value="" tabindex="2" />
+      	<input type="button" value="書込" onclick="writeLocalFile();" tabindex="3" /><br />
+      	<input type="button" value="取消" onclick="cancelFile();" tabindex="4" /></p>
+      </div>
+      <div id="calc">
+      	<p>方程式解法：<br />
+      	<input type="radio" name="method" value="lup"
+      	 tabindex="0" checked />LUP分解法（直接解法）<br />
+      	<input type="radio" name="method" value="ilucg"
+      	 tabindex="1" />不完全LU分解共役勾配法（ILUCG法，反復解法）<br />
+      	歪・応力・歪エネルギー密度のデータ<br />
+      	<input type="radio" name="restype" value="nodes"
+      	 tabindex="2" checked />節点
+      	<input type="radio" name="restype" value="elements"
+      	 tabindex="3" />要素<br />
+      	解析種類<br />
+      	<input type="radio" name="calctype" value="static"
+      	 tabindex="4" checked />静解析
+      	<input type="radio" name="calctype" value="vibration"
+      	 tabindex="5" />固有振動
+      	<input type="radio" name="calctype" value="buckling"
+      	 tabindex="6" />線形座屈解析<br />
+      	求める固有値の数
+      	<input type="number" id="eigennumber" value="10" min="1" tabindex="7" /></p>
+      	<input type="button" value="計算開始" onclick="calcStart();" tabindex="8" />
+      	<input type="button" value="取消" onclick="calcCancel();" tabindex="9" />
+      </div>
+      <div id="result">
+      	<p>変形表示倍率：
+      	<input type="number" id="dispcoef" value="0.1" min="0" step="0.1" tabindex="0" /><br />
+      	固有値データ：
+      	<select id="eigenvalue" size="1" tabindex="1">
+      	</select><br />
+      	コンター図表示データ：
+      	<select id="contour" size="1" onchange="resultView.setResComp();" tabindex="2">
+      	</select><br />
+      	コンター図表示成分：
+      	<select id="component" size="1" tabindex="3">
+      	</select><br />
+      	<input type="button" value="計算結果消去" onclick="removeRes();" tabindex="4" /></p>
+      	<input type="button" value="表示設定" onclick="setResultConfig();" tabindex="5" />
+      	<input type="button" value="取消" onclick="cancelResultConfig();" tabindex="6" />
+      </div>
+      <div id="config">
+      	<div style="margin-top:1em;text-align:left;margin-left:100px">要素表示色</div>
+      	<canvas id="el-color"></canvas>
+      	<input type="checkbox" id="showedge" value="elemedge" checked/>要素辺を表示する
+      	<div style="margin:1em 0 1em 0;">
+      	  光源位置
+      	  x:<input type="number" id="lightx" value="" tabindex="0" />
+      	  y:<input type="number" id="lighty" value="" tabindex="1" />
+      	  z:<input type="number" id="lightz" value="" tabindex="2" />
+      	</div>
+      	<input type="button" value="設定" onclick="setConfig();" tabindex="3" />
+      	<input type="button" value="取消" onclick="cancelConfig();" tabindex="4" />
+      </div>
+      <div class="control">
+      	<input type="button" value="ファイル" onclick="showFileWindow();" tabindex="0" />
+      	<input type="button" value="計算" onclick="showCalc();" tabindex="1" />
+      	<input type="button" value="結果表示設定" onclick="showResultWindow();" tabindex="2" />
+      	<input type="button" value="コンフィグ" onclick="showConfig();" tabindex="3" />
+      </div>
+    </div>
+
+    <p style="margin-top:440px;"><strong>操作方法</strong></p>
+    マウス操作
+    <table>
+      <tr>
+      	<td><strong>マウスドラッグ</strong></td>
+      	<td>
+      	  対象物を回転させます。
+      	</td>
+      </tr>
+      <tr>
+      	<td><strong>マウスドラッグ + Shift</strong></td>
+      	<td>
+      	  対象物を平行移動させます。
+      	</td>
+      </tr>
+      <tr>
+      	<td><strong>マウスドラッグ + Ctrl</strong></td>
+      	<td>
+      	  対象物を拡大・縮小させます。
+      	</td>
+      </tr>
+    </table>
+
+    キー操作
+    <table>
+      <tr>
+      	<td style="color:#ff0000;"><strong>X</strong></td>
+      	<td>
+      	  視点を<span style="color:#ff0000;">x</span>軸方向にしてy-z面を表示します。
+      	</td>
+      </tr>
+      <tr>
+      	<td style="color:#00cc00;"><strong>Y</strong></td>
+      	<td>
+      	  視点を<span style="color:#00cc00;">y</span>軸方向にしてx-z面を表示します。
+      	</td>
+      </tr>
+      <tr>
+      	<td style="color:#0000ff;"><strong>Z</strong></td>
+      	<td>
+      	  視点を<span style="color:#0000ff;">z</span>軸方向にしてx-y面を表示します。
+      	</td>
+      </tr>
+    </table>
+
+    パネル操作
+    <table>
+      <tr>
+      	<td><strong>ファイル</strong></td>
+      	<td>
+      	  ローカルファイルの読み込み・書き込みをします。
+      	  読み込みは対象ファイルを選択し、「読込」ボタンを押してください。
+      	  書き込みはファイル名を入力後、
+      	  「書込」ボタンを押すとブラウザによってダウンロードされます。
+      	  （Javascriptの仕様で読み込みとは異なる操作になります。）
+      	</td>
+      </tr>
+      <tr>
+      	<td><strong>計算</strong></td>
+      	<td>
+      	  計算を実行します。<br />
+      	  <ul>
+      	  <li>方程式解法<br />
+      	  LU分解法（直接解法）、不完全LU分解共役勾配法（反復解法）
+      	  から選択します。
+      	  反復解法は計算は速いのですが、歪んだ要素やシェル要素では性能が低下します。
+      	  また拘束が無い状態で固有値解析を行う場合は直接解法でないと
+      	  正しい解が求まらないことがあります
+      	  （固有値解析でも計算過程で上記手法を使用します）。
+      	  デフォルトはシェル要素を含む場合は直接解法、含まない場合は反復解法です。</li>
+      	  <li>歪・応力・歪エネルギー密度のデータ<br />
+      	  これらのデータを節点・要素のいずれで保持するか選択します。
+      	  本来これらの値は各要素の節点毎に計算されます
+      	  （正確には積分点で計算された値を基に節点の値を計算します）が、
+      	  そのままではデータが膨大になるため節点または要素何れかで平均値を保持します。
+      	  デフォルトは節点データですが、
+      	  別材料の界面など不連続点がある場合は要素データの方が適切でしょう。</li>
+      	  <li>解析種類<br />
+      	  静解析・固有振動解析・線形座屈解析の何れかを選択します。
+      	  静解析は拘束または熱解析条件（温度境界・熱伝達境界）
+      	  の何れかが無いと計算できません。
+      	  また固有振動解析では強制変位は変位０の拘束となり、荷重は無視されます。
+      	  なお座屈解析は現バージョンでは極めて限定された条件
+      	  （均等圧縮など）しか正しく計算できません（※）。</li>
+      	  <li>求める固有値の数<br />
+      	  固有値計算で求める固有値の数です。
+      	  計算で使用するランチョス法のマトリックスサイズは固有値数の３倍です。
+      	  そのため拘束が無いなど固有値が被る場合は
+      	  わざと数を多めに設定しないと解が求まらないことがあります。</li>
+      	  </ul>
+      	</td>
+      </tr>
+      <tr>
+      	<td><strong>結果表示設定</strong></td>
+      	<td>
+      	  計算結果の変形表示、コンター図の設定及び計算結果の消去をします。
+      	</td>
+      </tr>
+      <tr>
+      	<td><strong>変形表示倍率</strong></td>
+      	<td>
+      	  変形の表示倍率を入力します。数値はモデルサイズに対する割合です。
+      	  変更するには数値を入力後リターンを押してください。
+      	</td>
+      </tr>
+      <tr>
+      	<td><strong>コンター図表示データ</strong></td>
+      	<td>
+      	  コンター図の表示データを非表示、変位、歪、応力、歪エネルギー密度（構造解析）、
+      	  温度（熱解析）から選択します。<br />
+      	  固有振動解析の場合は誤解を避けるため歪、応力は表示しません。<br />
+      	  ※固有振動解析において固有値以外の変位などの結果は相対値を見るためのものであり、
+      	  絶対値の大きさ＝固有ベクトルの大きさには何の意味もありません。
+      	</td>
+      </tr>
+      <tr>
+      	<td><strong>コンター図表示成分</strong></td>
+      	<td>
+      	  変位（ベクトル）、歪、応力（テンソル）、
+      	  歪エネルギー密度、温度（スカラー）
+      	  のデータ種類および成分を選択します。
+      	  主応力やミーゼス応力も選択できます。
+      	  またシェル要素は表(1)裏(2)の結果を表示できます。
+      	  （ソリッド要素は1,2どちらも同じ値です。）
+      	  梁要素の1,2の意味はダウンロードファイルの資料を参照してください。
+      	</td>
+      </tr>
+      <tr>
+      	<td><strong>結果消去</strong></td>
+      	<td>
+      	  計算結果を消去します。
+      	</td>
+      </tr>
+      <tr>
+      	<td><strong>コンフィグ</strong></td>
+      	<td>
+      	  モデルの表示設定をします。
+      	  コンター非表示での要素表示色、要素辺表示の有無、光源位置を設定できます。
+      	</td>
+      </tr>
+    </table>
+
+    境界条件表示　（）はWeb上のサンプルに無し　ダウンロードファイルのサンプルのみ
+    <table>
+      <tr>
+      	<td style="color:#0000ff;"><strong>青矢印</strong></td>
+      	<td>
+      	  拘束条件－矢印方向を拘束（細長い矢印は回転拘束）
+      	</td>
+      </tr>
+      <tr>
+      	<td style="color:#00cc00;"><strong>緑矢印</strong></td>
+      	<td>
+      	  荷重条件－矢印方向の荷重
+      	</td>
+      </tr>
+      <tr>
+      	<td style="color:#ff6600;"><strong>橙矢印</strong></td>
+      	<td>
+      	  熱伝達条件－矢印が向いた面に熱伝達率＋雰囲気温度を付加
+      	</td>
+      </tr>
+      <tr>
+      	<td style="color:#ff00ff;">（<strong>紫矢印</strong>）</td>
+      	<td>
+      	  圧力条件－矢印が向いた面に圧力付加
+      	</td>
+      </tr>
+      <tr>
+      	<td style="color:#ff0000;">（<strong>赤丸</strong>）</td>
+      	<td>
+      	  温度拘束条件－節点温度を固定
+      	</td>
+      </tr>
+    </table>
+
+    <p><strong>プログラム概要</strong><br />
+    有限要素法 (FEM) で静的線形構造解析問題・伝熱問題・固有振動問題・線形座屈を解くプログラムです。</p>
+
+    <p><cite>
+      参考文献<br />
+      有限要素法 構造力学の変形・破壊挙動の解析 三好俊郎・白鳥正樹・座古勝・坂田信二共著
+      実教出版<br />
+      弾性力学と有限要素法 田中喜久昭・長岐滋・井上達雄共著 大河出版<br />
+      よくわかる連続体力学ノート 非線形CAE協会編／京谷孝史著 森北出版<br />
+      計算力学レクチャーシリーズ⑨ 高性能有限要素法 日本計算工学会編／山田貴博著 丸善<br />
+      有限要素法ハンドブック Ⅰ基礎編 鷲津久一郎・宮本博・山田嘉昭・山本善之・川井忠彦共著
+      培風館<br />
+      有限要素法による流れのシミュレーション 日本数値流体力学会有限要素法研究委員会編
+      シュプリンガー=フェアラーク東京<br />
+      いまさら聞けない計算力学の常識 社団法人土木学会応用力学委員会計算力学小委員会編
+      丸善出版<br />
+      Fortran95，C &amp; Javaによる新数値計算法－数値計算とデータ分析－ 小国力著
+      サイエンス社<br />
+      計算力学技術者認定事業標準問題集２
+      計算力学技術者１級（固体力学分野の有限要素法解析技術者）
+      第９版２刷（２０１５年版） 日本機械学会<br />
+      <a href="http://www.fem.gr.jp/">Internet-College of FEM</a><br />
+      <a href="http://ums.futene.net/">有限要素法(FEM)のページ</a><br />
+      three.js による HTML5 3D グラフィックス[改訂版]上・下 遠藤理平著 カットシステム<br />
+      <a href="https://threejs.org/">three.js</a><br />
+      <a href="https://www.cdnpkg.com/numeric">Numeric Javascript</a>
+    </cite></p>
+
+    <a href="../engineer.html#fem">技術屋の魂(?)に戻る</a>
+  </body>
+</html>
