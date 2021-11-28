@@ -1,305 +1,300 @@
-//--------------------------------------------------------------------//
-// 境界条件
-var BoundaryCondition=function(){
-  this.restraints=[];		// 拘束条件
-  this.loads=[];		// 荷重条件
-  this.pressures=[];		// 面圧条件
-  this.temperature=[];		// 節点温度条件
-  this.htcs=[];			// 熱伝達境界条件
-  this.loadMax=0;		// 最大荷重
-  this.pressMax=0;		// 最大面圧
-  this.dof=[];			// 節点の自由度
-  this.nodeIndex=[];		// 荷重ベクトルの節点ポインタ
-  this.bcList=[];		// 境界条件を設定した節点のリスト
-};
+from BoundaryCondition import compareNodeLabel, compareElementLabel
+import math
+#--------------------------------------------------------------------#
 
-// データを消去する
-BoundaryCondition.prototype.clear=function(){
-  this.restraints.length=0;
-  this.loads.length=0;
-  this.pressures.length=0;
-  this.temperature.length=0;
-  this.htcs.length=0;
-  this.loadMax=0;
-  this.pressMax=0;
-};
+# 節点ラベルを比較する
+# bc1,bc2 - 比較する境界条件
+def compareNodeLabel(bc1,bc2):
+  if(bc1.node<bc2.node):
+    return -1
+  elif(bc1.node>bc2.node):
+    return 1
+  return 0
 
-// 境界条件を初期化する
-BoundaryCondition.prototype.init=function(){
-  this.restraints.sort(compareNodeLabel);
-  this.loads.sort(compareNodeLabel);
-  this.pressures.sort(compareElementLabel);
-  this.temperature.sort(compareNodeLabel);
-  this.htcs.sort(compareElementLabel);
-  this.loadMax=0;
-  this.pressMax=0;
-  var i;
-  for(i=0;i<this.loads.length;i++){
-    this.loadMax=Math.max(this.loadMax,this.loads[i].magnitude());
-  }
-  for(i=0;i<this.pressures.length;i++){
-    this.pressMax=Math.max(this.pressMax,this.pressures[i].press);
-  }
-};
 
-// 構造解析の節点ポインタを設定する
-// count - 節点数
-BoundaryCondition.prototype.setPointerStructure=function(count){
-  this.nodeIndex.length=0;
-  this.bcList.length=0;
-  var i,dofAll=0;
-  for(i=0;i<count;i++){
-    this.nodeIndex[i]=dofAll;
-    dofAll+=this.dof[i];
-  }
-  for(i=0;i<dofAll;i++){
-    this.bcList[i]=-1;
-  }
-  for(i=0;i<this.restraints.length;i++){
-    var r=this.restraints[i];
-    var index0=this.nodeIndex[r.node];
-    var rdof=this.dof[r.node];
-    for(var j=0;j<rdof;j++){
-      if(r.rest[j]) this.bcList[index0+j]=6*i+j;
-    }
-  }
-  return dofAll;
-};
+# 要素ラベルを比較する
+# bc1,bc2 - 比較する境界条件
+def compareElementLabel(bc1,bc2):
+  if(bc1.element<bc2.element):
+    return -1
+  elif(bc1.element>bc2.element):
+    return 1
+  return 0
 
-// 熱解析の節点ポインタを設定する
-// count - 節点数
-BoundaryCondition.prototype.setPointerHeat=function(count){
-  this.dof.length=0;
-  this.nodeIndex.length=0;
-  this.bcList.length=0;
-  var i,temps=this.temperature.length;
-  for(i=0;i<count;i++){
-    this.bcList[i]=-1;
-  }
-  for(i=0;i<temps;i++){
-    var t=this.temperature[i];
-    this.bcList[t.node]=i;
-  }
-  return temps;
-};
 
-// 強制変位を返す
-// bc - 変位自由度ポインタ
-BoundaryCondition.prototype.getRestDisp=function(bc){
-  return this.restraints[parseInt(bc/6)].x[bc%6];
-};
+#--------------------------------------------------------------------#
+# 境界条件
+class BoundaryCondition():
+  def __init__(self):
+    self.clear()    
+    self.dof=[]			# 節点の自由度
+    self.nodeIndex=[]		# 荷重ベクトルの節点ポインタ
+    self.bcList=[]		# 境界条件を設定した節点のリスト
 
-// データ文字列を返す
-// nodes - 節点
-// elems - 要素
-BoundaryCondition.prototype.toStrings=function(nodes,elems){
-  var s=[],i;
-  for(i=0;i<this.restraints.length;i++){
-    s.push(this.restraints[i].toString(nodes));
-  }
-  for(i=0;i<this.loads.length;i++){
-    s.push(this.loads[i].toString(nodes));
-  }
-  for(i=0;i<this.pressures.length;i++){
-    s.push(this.pressures[i].toString(elems));
-  }
-  for(i=0;i<this.temperature.length;i++){
-    s.push(this.temperature[i].toString(nodes));
-  }
-  for(i=0;i<this.htcs.length;i++){
-    s.push(this.htcs[i].toString(elems));
-  }
-  return s;
-};
+  # データを消去する
+  def clear(self):
+    self.restraints=[]		# 拘束条件
+    self.loads=[]		# 荷重条件
+    self.pressures=[]		# 面圧条件
+    self.temperature=[]		# 節点温度条件
+    self.htcs=[]			# 熱伝達境界条件
+    self.loadMax=0		# 最大荷重
+    self.pressMax=0		# 最大面圧
 
-// 節点ラベルを比較する
-// bc1,bc2 - 比較する境界条件
-function compareNodeLabel(bc1,bc2){
-  if(bc1.node<bc2.node)      return -1;
-  else if(bc1.node>bc2.node) return 1;
-  else                       return 0;
-}
 
-// 要素ラベルを比較する
-// bc1,bc2 - 比較する境界条件
-function compareElementLabel(bc1,bc2){
-  if(bc1.element<bc2.element)      return -1;
-  else if(bc1.element>bc2.element) return 1;
-  else                             return 0;
-}
+  # 境界条件を初期化する
+  def init(self):
+    self.restraints.sort(compareNodeLabel)
+    self.loads.sort(compareNodeLabel)
+    self.pressures.sort(compareElementLabel)
+    self.temperature.sort(compareNodeLabel)
+    self.htcs.sort(compareElementLabel)
+    self.loadMax=0
+    self.pressMax=0
 
-//--------------------------------------------------------------------//
-// ３次元ベクトル（並進＋回転）
-// x,y,z - x,y,z成分
-// rx,ry,rz - x,y,z軸周り回転角
-var Vector3R=function(x,y,z,rx,ry,rz){
-  this.x=[x||0,y||0,z||0,rx||0,ry||0,rz||0];
-};
+    for i in range(len(self.loads)):
+      self.loadMax=max(self.loadMax,self.loads[i].magnitude())
 
-// 並進成分の大きさを返す
-Vector3R.prototype.magnitude=function(){
-  return Math.sqrt(this.magnitudeSq());
-};
+    for i in range(len(self.pressures)):
+      self.pressMax=max(self.pressMax,self.pressures[i].press)
 
-// 並進成分の大きさの2乗を返す
-Vector3R.prototype.magnitudeSq=function(){
-  return this.x[0]*this.x[0]+this.x[1]*this.x[1]+this.x[2]*this.x[2];
-};
 
-// 回転成分の大きさを返す
-Vector3R.prototype.magnitudeR=function(){
-  return Math.sqrt(this.magnitudeSqR());
-};
+  # 構造解析の節点ポインタを設定する
+  # count - 節点数
+  def setPointerStructure(self, count):
+    self.nodeIndex=[]		# 荷重ベクトルの節点ポインタ
+    self.bcList=[]		# 境界条件を設定した節点のリスト
+    dofAll=0
+    for i in range(count):
+      self.nodeIndex[i]=dofAll
+      dofAll+=self.dof[i]
 
-// 回転成分の大きさの2乗を返す
-Vector3R.prototype.magnitudeSqR=function(){
-  return this.x[3]*this.x[3]+this.x[4]*this.x[4]+this.x[5]*this.x[5];
-};
+    for i in range(dofAll):
+      self.bcList[i]=-1
 
-// ベクトルのコピーを返す
-Vector3R.prototype.clone=function(){
-  return new this.constructor(this.x[0],this.x[1],this.x[2],
-      	      	      	      this.x[3],this.x[4],this.x[5]);
-};
+    for i in range(len(self.restraints)):
+      r=self.restraints[i]
+      index0=self.nodeIndex[r.node]
+      rdof=self.dof[r.node]
+      for j in range(rdof):
+        if(r.rest[j]):
+          self.bcList[index0+j]=6*i+j
 
-//--------------------------------------------------------------------//
-// 要素境界条件
-// element - 要素ラベル
-// face - 要素境界面
-var ElementBorderBound=function(element,face){
-  this.element=element;
-  this.face=face;
-};
+    return dofAll
 
-// 要素境界を返す
-// elem - 要素
-ElementBorderBound.prototype.getBorder=function(elem){
-  if(this.face.length===2){
-    var j;
-    if(this.face.charAt(0)==='F'){
-      j=parseInt(this.face.charAt(1))-1;
-      return elem.border(this.element,j);
-    }
-    else if(this.face.charAt(0)==='E'){
-      j=parseInt(this.face.charAt(1))-1;
-      return elem.borderEdge(this.element,j);
-    }
-  }
-  return null;
-};
 
-//--------------------------------------------------------------------//
-// 拘束条件
-// node - 節点ラベル
-// coords - 局所座標系
-// restx,resty,restz - x,y,z方向の拘束の有無
-// x,y,z - 強制変位のx,y,z成分
-// restrx,restry,restrz - x,y,z方向の回転拘束の有無
-// rx,ry,rz - 強制変位のx,y,z軸周り回転角
-var Restraint=function(node,coords,restx,resty,restz,x,y,z,
-      	      	       restrx,restry,restrz,rx,ry,rz){
-  Vector3R.call(this,x,y,z,rx,ry,rz);
-  this.node=node;
-  this.coords=coords;
-  this.rest=[restx,resty,restz,restrx,restry,restrz];
-  this.globalX=this.x;
-};
+  # 熱解析の節点ポインタを設定する
+  # count - 節点数
+  def setPointerHeat(self, count):
+    self.dof=[]			# 節点の自由度
+    self.nodeIndex=[]		# 荷重ベクトルの節点ポインタ
+    self.bcList=[]		# 境界条件を設定した節点のリスト
+    temps=len(self.temperature)
+    for i in range(count):
+      self.bcList[i]=-1
 
-// 拘束条件を表す文字列を返す
-// nodes - 節点
-Restraint.prototype.toString=function(nodes){
-  var s='Restraint\t'+nodes[this.node].label.toString(10);
-  for(var i=0;i<6;i++){
-    if(this.rest[i]){
-      s+='\t1\t'+this.x[i];
-    }
-    else{
-      s+='\t0\t'+this.x[i];
-    }
-  }
-  if(this.coords){
-    s+='\t'+this.coords.label.toString(10);
-  }
-  return s;
-};
+    for i in range(temps):
+      t=self.temperature[i]
+      self.bcList[t.node]=i
 
-//--------------------------------------------------------------------//
-// 荷重条件
-// node - 節点ラベル
-// coords - 局所座標系
-// x,y,z - x,y,z成分
-// rx,ry,rz - x,y,z軸周り回転成分
-var Load=function(node,coords,x,y,z,rx,ry,rz){
-  Vector3R.call(this,x,y,z,rx,ry,rz);
-  this.node=node;
-  this.coords=coords;
-  this.globalX=this.x;
-};
+    return temps
 
-// 荷重条件を表す文字列を返す
-// nodes - 節点
-Load.prototype.toString=function(nodes){
-  var s='Load\t'+nodes[this.node].label.toString(10)+'\t'+
-      	this.x.join('\t');
-  if(this.coords){
-    s+='\t'+this.coords.label.toString(10);
-  }
-  return s;
-};
 
-//--------------------------------------------------------------------//
-// 面圧条件
-// element - 要素ラベル
-// face - 要素境界面
-// press - 面圧
-var Pressure=function(element,face,press){
-  ElementBorderBound.call(this,element,face);
-  this.press=press;
-};
+  # 強制変位を返す
+  # bc - 変位自由度ポインタ
+  def getRestDisp(self, bc):
+    return self.restraints[int(bc/6)].x[bc%6]
 
-// 面圧条件を表す文字列を返す
-// elems - 要素
-Pressure.prototype.toString=function(elems){
-  return 'Pressure\t'+elems[this.element].label.toString(10)+'\t'+
-      	  this.face+'\t'+this.press;
-};
 
-//--------------------------------------------------------------------//
-// 温度固定条件
-// node - 節点ラベル
-// t - 温度
-var Temperature=function(node,t){
-  this.node=node;
-  this.t=t;
-};
+  # データ文字列を返す
+  # nodes - 節点
+  # elems - 要素
+  def toStrings(self, nodes, elems):
+    s=[]
+    for i in range(len(self.restraints)):
+      s.append(self.restraints[i].toString(nodes))
 
-// 温度固定条件を表す文字列を返す
-// nodes - 節点
-Temperature.prototype.toString=function(nodes){
-  return 'Temperature\t'+nodes[this.node].label.toString(10)+'\t'+
-      	 this.t;
-};
+    for i in range(len(self.loads)):
+      s.append(self.loads[i].toString(nodes))
 
-//--------------------------------------------------------------------//
-// 熱伝達境界条件
-// element - 要素ラベル
-// face - 要素境界面
-// htc - 熱伝達率
-// outTemp - 外部温度
-var HeatTransferBound=function(element,face,htc,outTemp){
-  ElementBorderBound.call(this,element,face);
-  this.htc=htc;
-  this.outTemp=outTemp;
-};
+    for i in range(len(self.pressures)):
+      s.append(self.pressures[i].toString(elems))
 
-// 熱伝達境界条件を表す文字列を返す
-// elems - 要素
-HeatTransferBound.prototype.toString=function(elems){
-  return 'HTC\t'+elems[this.element].label.toString(10)+'\t'+
-      	  this.face+'\t'+this.htc+'\t'+this.outTemp;
-};
+    for i in range(len(self.temperature)):
+      s.append(self.temperature[i].toString(nodes))
 
-inherits(Restraint,Vector3R);
-inherits(Load,Vector3R);
-inherits(Pressure,ElementBorderBound);
-inherits(HeatTransferBound,ElementBorderBound);
+    for i in range(len(self.htcs)):
+      s.append(self.htcs[i].toString(elems))
+
+    return s
+
+
+#--------------------------------------------------------------------#
+# ３次元ベクトル（並進＋回転）
+# x,y,z - x,y,z成分
+# rx,ry,rz - x,y,z軸周り回転角
+class Vector3R:
+  def __init__(self, x=0, y=0, z=0, rx=0, ry=0, rz=0):
+    self.x=[x,y,z,rx,ry,rz]
+
+
+  # 並進成分の大きさを返す
+  def magnitude(self):
+    return math.sqrt(self.magnitudeSq())
+
+
+  # 並進成分の大きさの2乗を返す
+  def magnitudeSq(self):
+    return self.x[0]*self.x[0]+self.x[1]*self.x[1]+self.x[2]*self.x[2]
+
+
+  # 回転成分の大きさを返す
+  def magnitudeR(self):
+    return math.sqrt(self.magnitudeSqR())
+
+
+  # 回転成分の大きさの2乗を返す
+  def magnitudeSqR(self):
+    return self.x[3]*self.x[3]+self.x[4]*self.x[4]+self.x[5]*self.x[5]
+
+  # ベクトルのコピーを返す
+  def clone(self):
+    return Vector3R(self.x[0],self.x[1],self.x[2],
+                    self.x[3],self.x[4],self.x[5])
+
+
+#--------------------------------------------------------------------#
+# 要素境界条件
+# element - 要素ラベル
+# face - 要素境界面
+class ElementBorderBound:
+  def __init__(self, element, face):
+    self.element=element
+    self.face=face
+
+
+  # 要素境界を返す
+  # elem - 要素
+  def getBorder(self, elem):
+    if len(self.face.length)==2:
+
+      if self.face.charAt(0)=='F':
+        j=int(self.face.charAt(1))-1
+        return elem.border(self.element,j)
+
+      elif self.face.charAt(0)=='E':
+        j=int(self.face.charAt(1))-1
+        return elem.borderEdge(self.element,j)
+
+    return None
+
+
+#--------------------------------------------------------------------#
+# 拘束条件
+# node - 節点ラベル
+# coords - 局所座標系
+# restx,resty,restz - x,y,z方向の拘束の有無
+# x,y,z - 強制変位のx,y,z成分
+# restrx,restry,restrz - x,y,z方向の回転拘束の有無
+# rx,ry,rz - 強制変位のx,y,z軸周り回転角
+class Restraint(Vector3R):
+  def __init__(self, node,coords, restx, resty, restz, x, y, z,
+                                  restrx,restry,restrz,rx,ry,rz):
+    super().__init__(x,y,z,rx,ry,rz)
+    self.node=node
+    self.coords=coords
+    self.rest=[restx,resty,restz,restrx,restry,restrz]
+    self.globalX=self.x
+
+
+  # 拘束条件を表す文字列を返す
+  # nodes - 節点
+  def toString(self, nodes):
+    s='Restraint\t'+nodes[self.node].label.toString(10)
+    for i in range(6):
+      if(self.rest[i]):
+        s+='\t1\t'+self.x[i]
+
+      else:
+        s+='\t0\t'+self.x[i]
+
+    if(self.coords):
+      s+='\t'+self.coords.label.toString(10)
+
+    return s
+
+
+#--------------------------------------------------------------------#
+# 荷重条件
+# node - 節点ラベル
+# coords - 局所座標系
+# x,y,z - x,y,z成分
+# rx,ry,rz - x,y,z軸周り回転成分
+class Load(Vector3R):
+  def __init__(self, node,coords,x,y,z,rx,ry,rz):
+    super().__init__(x,y,z,rx,ry,rz)
+    self.node=node
+    self.coords=coords
+    self.globalX=self.x
+
+  # 荷重条件を表す文字列を返す
+  # nodes - 節点
+  def toString(self, nodes):
+    s='Load\t'+nodes[self.node].label.toString(10)+'\t'+ \
+          self.x.join('\t')
+    if self.coords:
+      s+='\t'+self.coords.label.toString(10)
+
+    return s
+
+
+#--------------------------------------------------------------------#
+# 面圧条件
+# element - 要素ラベル
+# face - 要素境界面
+# press - 面圧
+class Pressure(ElementBorderBound):
+  def __init__(self, element,face,press):
+    super().__init__(element,face)
+    self.press=press
+
+  # 面圧条件を表す文字列を返す
+  # elems - 要素
+  def toString(self, elems):
+    return 'Pressure\t'+elems[self.element].label.toString(10)+'\t'+ \
+            self.face+'\t'+self.press
+
+
+#--------------------------------------------------------------------#
+# 温度固定条件
+# node - 節点ラベル
+# t - 温度
+class Temperature:
+  def __init__(self, node, t):
+    self.node=node
+    self.t=t
+
+  # 温度固定条件を表す文字列を返す
+  # nodes - 節点
+  def toString(self, nodes):
+    return 'Temperature\t'+nodes[self.node].label.toString(10)+'\t'+ \
+          self.t
+
+
+#--------------------------------------------------------------------#
+# 熱伝達境界条件
+# element - 要素ラベル
+# face - 要素境界面
+# htc - 熱伝達率
+# outTemp - 外部温度
+class HeatTransferBound(ElementBorderBound):
+  def __init__(self, element,face,htc,outTemp):
+    super().__init__(element,face)
+    self.htc=htc
+    self.outTemp=outTemp
+
+  # 熱伝達境界条件を表す文字列を返す
+  # elems - 要素
+  def toString(self, elems):
+    return 'HTC\t'+elems[self.element].label.toString(10)+'\t'+ \
+            self.face+'\t'+self.htc+'\t'+self.outTemp
