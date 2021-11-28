@@ -81,7 +81,7 @@ class BarElement(FElement):
       for j in range(4):
         kk1[I_YMZ[j]]=kmi1[j]
         kk2[I_ZMY[j]]=kmi2[j]
- 
+
     toDir3(d,kk)
     return kk
 

@@ -15,7 +15,7 @@ class HexaElement1WT(HexaElement1):
     # 要素境界名称を返す
     def getName(self):
         return 'HexaElement1WT'
-    
+
 
     # 剛性マトリックスを返す
     # p - 要素節点

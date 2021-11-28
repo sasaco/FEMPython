@@ -1,7 +1,8 @@
 import math
 from Result import Strain, Stress
 from ElementBorder import TriangleBorder1, TriangleBorder2, QuadangleBorder1, QuadangleBorder2
-from Element import * # swap関数, solidAngle関数, planeAngle関数
+from Element import FElement, swap, solidAngle, planeAngle, GTETRA2, C1_3, GX2, GTRI2, GX3, C1_6, GW3
+from FemDataModel import addMatrix
 #--------------------------------------------------------------------#
 
 # 四面体2次要素の節点のξ,η,ζ座標
@@ -115,7 +116,7 @@ class SolidElement(FElement):
     count = self.nodeCount()
     gr = []
     ji = THREE.Matrix3().getInverse(ja,True).elements
-    for i in range(counti):
+    for i in range(count):
       gr[i]=[
         ji[0] * sf[i][1] + ji[3] * sf[i][2] + ji[6] * sf[i][3],
         ji[1] * sf[i][1] + ji[4] * sf[i][2] + ji[7] * sf[i][3],
