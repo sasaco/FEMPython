@@ -77,8 +77,8 @@ def showInfo():
         else:
             info.textContent='変位 Max.:'+numString(model.result.dispMax)
     else:
-        info.innerHTML='節点:'+model.mesh.nodes.length+
-                                     '<br />要素:'+model.mesh.elements.length
+        info.innerHTML='節点:'+model.mesh.nodes.length + \
+                        '<br />要素:'+model.mesh.elements.length
 
 # 固有値を表示する
 # index - 固有値のインデックス

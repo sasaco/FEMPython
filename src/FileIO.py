@@ -241,7 +241,7 @@ function readFemResult(s):
   }
   for(i=0i<s.lengthi++):
     keyWord=s[i][0].toLowerCase()
-    ss.length=0
+    ss.clear()
     for(j=2j<s[i].lengthj++):
       ss[j-2]=float(s[i][j])
     }

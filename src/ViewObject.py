@@ -356,25 +356,25 @@ RestraintHelper(rest,size):
   if(rest.rest[0]):
     geom=THREE.CylinderBufferGeometry(0,0.5*size,size,5,1)
     geom.translate(0,-0.5*size,0)
-    geom.rotateZ(0.5*math.PI)
+    geom.rotateZ(0.5*math.pi)
     self.add(THREE.Mesh(geom,REST_MAT))
   }
   if(rest.rest[1]):
     geom=THREE.CylinderBufferGeometry(0,0.5*size,size,5,1)
     geom.translate(0,-0.5*size,0)
-    geom.rotateX(math.PI)
+    geom.rotateX(math.pi)
     self.add(THREE.Mesh(geom,REST_MAT))
   }
   if(rest.rest[2]):
     geom=THREE.CylinderBufferGeometry(0,0.5*size,size,5,1)
     geom.translate(0,-0.5*size,0)
-    geom.rotateX(-0.5*math.PI)
+    geom.rotateX(-0.5*math.pi)
     self.add(THREE.Mesh(geom,REST_MAT))
   }
   if(rest.rest[3]):
     geom=THREE.CylinderBufferGeometry(0,0.3*size,2*size,5,1)
     geom.translate(0,size,0)
-    geom.rotateZ(-0.5*math.PI)
+    geom.rotateZ(-0.5*math.pi)
     self.add(THREE.Mesh(geom,REST_MAT))
   }
   if(rest.rest[4]):
@@ -385,7 +385,7 @@ RestraintHelper(rest,size):
   if(rest.rest[5]):
     geom=THREE.CylinderBufferGeometry(0,0.3*size,2*size,5,1)
     geom.translate(0,size,0)
-    geom.rotateX(0.5*math.PI)
+    geom.rotateX(0.5*math.pi)
     self.add(THREE.Mesh(geom,REST_MAT))
   }
   if(rest.coords):

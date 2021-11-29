@@ -1,5 +1,8 @@
-from FemDataModel import Nodes
+from FemDataModel import Nodes, normalVector
+from Vector3 import Vector3
 import math
+import numpy as np
+from typing import List 
 #--------------------------------------------------------------------#
 
 # 三角形2次要素のガウス積分の積分点座標
@@ -26,7 +29,7 @@ def swap(nodes,i1,i2):
 # 平面上の角度を求める
 # p0 - 基点
 # p1,p2 - 頂点
-def planeAngle(p0,p1,p2):
+def planeAngle(p0: Vector3, p1: Vector3, p2: Vector3):
     v1=p1.clone().sub(p0).normalize()
     v2=p2.clone().sub(p0).normalize()
     return math.acos(min(max(v1.dot(v2),0),1))
@@ -35,7 +38,7 @@ def planeAngle(p0,p1,p2):
 # 三角形の立体角を球面過剰から求める
 # p0 - 基点
 # p1,p2,p3 - 頂点
-def solidAngle(p0,p1,p2,p3):
+def solidAngle(p0: Vector3, p1:Vector3, p2:Vector3, p3:Vector3):
     v1=p1.clone().sub(p0)
     v2=p2.clone().sub(p0)
     v3=p3.clone().sub(p0)
@@ -46,7 +49,7 @@ def solidAngle(p0,p1,p2,p3):
     a1=max(min(-v12.dot(v31),1),-1)
     a2=max(min(-v23.dot(v12),1),-1)
     a3=max(min(-v31.dot(v23),1),-1)
-    return acos(a1)+acos(a2)+acos(a3)-math.PI
+    return acos(a1)+acos(a2)+acos(a3)-math.pi
 
 
 # 方向余弦マトリックスを返す
@@ -61,11 +64,11 @@ def dirMatrix(p,axis):
 # 方向余弦マトリックスを返す
 # p - 頂点座標
 # axis - 断面基準方向ベクトル
-def dirVectors(p,axis):
+def dirVectors(p: List[Vector3],axis: Vector3):
     if(len(p)==2):		# 梁要素
         v1=p[1].clone().sub(p[0]).normalize()
-        v2=THREE.Vector3()
-        v3=THREE.Vector3()
+        v2=Vector3()
+        v3=Vector3()
         if(axis!=None):
             dt=v1.dot(axis)
             v2.set(axis.x-dt*v1.x,axis.y-dt*v1.y,axis.z-dt*v1.z)
@@ -96,7 +99,7 @@ def dirVectors(p,axis):
 # d - 方向余弦マトリックス
 # k - 剛性マトリックス
 def toDir(d,k):
-    a = numeric.dot(d,k)
+    a = np.dot(d,k)
     for i in range(len(k)):
         ki=k[i]
         ai=a[i]

@@ -1,11 +1,13 @@
 from Material import KS_CIRCLE, KS_RECT
 import math
+
+from Vector3 import Vector3
 #--------------------------------------------------------------------#
 
 CIRCLE_DIV=16			# 円形断面表示オブジェクトの分割数
-CIRCLE_DTH=2*math.PI/CIRCLE_DIV	# 円形断面の１分割の角度
-COEF_K1=64/math.pow(math.PI,5)	# 矩形断面の捩り係数
-COEF_K=8/(math.PI*math.PI)
+CIRCLE_DTH=2*math.pi/CIRCLE_DIV	# 円形断面の１分割の角度
+COEF_K1=64/math.pow(math.pi,5)	# 矩形断面の捩り係数
+COEF_K=8/(math.pi*math.pi)
 
 
 # 矩形断面の捩り係数を求める
@@ -14,7 +16,7 @@ def rectCoef(ba):
     dk1s=0
     dks=0
     dbs=0
-    pba=0.5*math.PI*ba
+    pba=0.5*math.pi*ba
     i=1
     sg=1
     while(dk1/dk1s>1e-10):
@@ -51,7 +53,7 @@ class CircleSection:
         self.d1=float(ss[0])	# 外径
         self.d2=float(ss[1])	# 内径
         # 断面積
-        self.area=0.25*math.PI*(self.d1*self.d1-self.d2*self.d2)
+        self.area=0.25*math.pi*(self.d1*self.d1-self.d2*self.d2)
         # 断面２次モーメント
         self.iy=0.0625*self.area*(self.d1*self.d1+self.d2*self.d2)
         self.iz=self.iy
@@ -212,8 +214,8 @@ class RectSection:
     # pos1,pos2 - 外径，内径の座標
     # cx,cy,cz - 中心点座標
     # v1,v2 - 軸方向，断面基準方向ベクトル
-    def setCoords(self,pos1,pos2,cx,cy,cz,v1,v2):
-        v3=THREE.Vector3().crossVectors(v1,v2)
+    def setCoords(self,pos1,pos2,cx,cy,cz,v1: Vector3, v2:Vector3):
+        v3=v1.cross(v2)
         c1=[0.5,-0.5,-0.5,0.5,0.5]
         c2=[0.5,0.5,-0.5,-0.5,0.5]
         for j in range(len(c1)):

@@ -76,7 +76,7 @@ ColorPicker.prototype.getColor():
 ColorPicker.prototype.draw():
   self.context.clearRect(0,0,self.canvas.width,self.canvas.height)
 # 色相スライダー
-  dth=2*math.PI/self.div,dh=360/self.div
+  dth=2*math.pi/self.div,dh=360/self.div
   cc0=1,ss0=0,th,h,s,l,i
   for(i=0i<self.divi++):
     th=dth*(i+1)
@@ -95,7 +95,7 @@ ColorPicker.prototype.draw():
     cc0=cc1
     ss0=ss1
   }
-  th=2*math.PI*self.hsl[0]
+  th=2*math.pi*self.hsl[0]
   cc0=math.cos(th)
   ss0=math.sin(th)
   self.drawPointer(self.cx+self.rc*cc0,self.cy-self.rc*ss0)
@@ -138,17 +138,17 @@ ColorPicker.prototype.drawPointer(x,y):
   h=360*self.hsl[0],s=100*self.hsl[1],l=100*self.hsl[2]
   self.context.fillStyle='hsl('+h+','+s+'%,'+l+'%)'
   self.context.beginPath()
-  self.context.arc(x,y,self.pt,0,2*math.PI,False)
+  self.context.arc(x,y,self.pt,0,2*math.pi,False)
   self.context.closePath()
   self.context.fill()
   self.context.strokeStyle='#ffffff'
   self.context.beginPath()
-  self.context.arc(x,y,self.pt,0,2*math.PI,False)
+  self.context.arc(x,y,self.pt,0,2*math.pi,False)
   self.context.closePath()
   self.context.stroke()
   self.context.strokeStyle='#000000'
   self.context.beginPath()
-  self.context.arc(x,y,self.pt+1,0,2*math.PI,False)
+  self.context.arc(x,y,self.pt+1,0,2*math.pi,False)
   self.context.closePath()
   self.context.stroke()
 }
@@ -213,7 +213,7 @@ ColorPicker.prototype.initMouseEvent():
 
 # 色相を返す
   function hue():
-    h=math.atan2(cp.cy-my,mx-cp.cx)/(2*math.PI)
+    h=math.atan2(cp.cy-my,mx-cp.cx)/(2*math.pi)
     if(h<0) h+=1
     return h
   }

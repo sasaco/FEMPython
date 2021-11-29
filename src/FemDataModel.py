@@ -1,12 +1,15 @@
-from Solver import Solver
-from Result import Result, EigenValue
+from Solver import Solver, LU_METHOD, ILUCG_METHOD
+from Result import Result, EigenValue, NODE_DATA, ELEMENT_DATA, VIBRATION, BUCKLING
 from Material import Material
+from BoundaryCondition import BoundaryCondition
+from Vector3 import Vector3
 from FemMain import *
 import math
 import time
+from typing import List, Union
 #--------------------------------------------------------------------#
 
-COEF_F_W=0.5/math.PI	# f/ω比 1/2π
+COEF_F_W=0.5/math.pi	# f/ω比 1/2π
 
 # 節点集合の節点ラベルを再設定する
 # map - ラベルマップ
@@ -65,34 +68,37 @@ def center(p):
         x+=p[i].x
         y+=p[i].y
         z+=p[i].z
-    return THREE.Vector3(cc*x,cc*y,cc*z)
+    return Vector3(cc*x,cc*y,cc*z)
 
 
 # 法線ベクトルを返す
 # p - 頂点座標
-def normalVector(p):
+def normalVector(p: List[Vector3]) -> Vector3:
     if len(p)<3:
         return None
 
     elif len(p)==3 or len(p)==6:
-        return THREE.Vector3().subVectors(p[1],p[0]).cross(THREE.Vector3().subVectors(p[2],p[0])).normalize()
+        # return Vector3().subVectors(p[1],p[0]).cross(THREE.Vector3().subVectors(p[2],p[0])).normalize()
+        return (p[1] - p[0]).cross(p[2] - p[0]).normalize()
 
     elif len(p)==4 or len(p)==8:
-        return THREE.Vector3().subVectors(p[2],p[0]).cross(THREE.Vector3().subVectors(p[3],p[1])).normalize()
+        # return Vector3().subVectors(p[2],p[0]).cross(THREE.Vector3().subVectors(p[3],p[1])).normalize()
+        return (p[2] - p[0]).cross(p[3] - p[1]).normalize()
 
     else:
         vx=0
         vy=0
         vz=0
         for i in range(len(p)):
-            p1 = p[(i+1)%len(p)]
-            p2 = p[(i+2)%len(p)]
-            norm=THREE.Vector3().subVectors(p1,p[i]).cross(THREE.Vector3().subVectors(p2,p[i]))
+            p1:Vector3 = p[(i+1)%len(p)]
+            p2:Vector3 = p[(i+2)%len(p)]
+            #norm=THREE.Vector3().subVectors(p1,p[i]).cross(THREE.Vector3().subVectors(p2,p[i]))
+            norm=(p1 - p[i]).cross(p2 - p[i])
             vx+=norm.x
             vy+=norm.y
             vz+=norm.z
 
-        return THREE.Vector3(vx,vy,vz).normalize()
+        return Vector3(vx,vy,vz).normalize()
 
 
 # ラベルを比較する
@@ -139,11 +145,11 @@ class FemDataModel:
         self.hasShellBar=False		# シェル要素または梁要素を含まない
 
     # データを消去する
-    def clear():
-        self.materials.length=0
-        self.shellParams.length=0
-        self.barParams.length=0
-        self.coordinates.length=0
+    def clear(self):
+        self.materials.clear()
+        self.shellParams.clear()
+        self.barParams.clear()
+        self.coordinates.clear()
         self.mesh.clear()
         self.bc.clear()
         self.result.clear()
@@ -151,7 +157,7 @@ class FemDataModel:
 
 
     # モデルを初期化する
-    def init():
+    def init(self):
         self.solver.method=ILUCG_METHOD	# デフォルトは反復解法
         mats=self.materials
         mats.sort(compareLabel)
@@ -346,7 +352,7 @@ class FemDataModel:
             del eig.ut[i]
 
         for i in range(count):
-            f = COEF_F_W * math.sqrt(max(eig.lambda[i], 0))
+            f = COEF_F_W * math.sqrt(max(eig['lambda'][i], 0))
             uti = eig.ut[i]
             s=0
             for j in range(len(uti)):
@@ -369,7 +375,7 @@ class FemDataModel:
     # count - 求める固有値の数
     def calcBuckling(self, count):
         t0 = time.time()
-        if(self.bc.restraints.length==0):
+        if(len(self.bc.restraints)==0):
             raise Exception('拘束条件がありません')
 
         self.setNodeDoF()
@@ -380,7 +386,7 @@ class FemDataModel:
         self.solver.createGeomStiffMatrix()
         self.result.clear()
         eig=self.solver.eigenByArnoldi(n,0)
-        nodeCount=self.mesh.nodes.length
+        nodeCount=len(self.mesh.nodes)
         for i in range(count, n):
             del eig.ut[i]
         for i in range(count):
@@ -389,7 +395,7 @@ class FemDataModel:
             for j in range(len(uti)):
                 s += uti[j]*uti[j]
             u=numeric.mul(1/math.sqrt(s),uti)
-            ev=EigenValue(eig.lambda[i],BUCKLING)
+            ev=EigenValue(eig['lambda'][i],BUCKLING)
             ev.setDisplacement(self.bc,u,nodeCount)
             self.result.addEigenValue(ev)
             if(self.result.type==ELEMENT_DATA):
@@ -411,7 +417,8 @@ class FemDataModel:
 
         self.result.initStrainAndStress(nodeCount)
         for i in range(elemCount):
-            elem=elems[i],en=elem.nodes
+            elem=elems[i]
+            en=elem.nodes
             p=[]
             v=[]
             for j in range(len(en)):
@@ -421,7 +428,7 @@ class FemDataModel:
             material=self.materials[elem.material]
             mat=material.matrix
             ea=elem.angle(p)
-            if(elem.isShell):
+            if elem.isShell:
                 sp=model.shellParams[elem.param]
                 if(elem.getName()=='TriElement1'):
                     mmat=mat.m2d
@@ -446,7 +453,7 @@ class FemDataModel:
                                                                             eps2[j],str2[j],se2[j])
                     angle[en[j]]+=eaj
 
-            elif(elem.isBar):
+            elif elem.isBar:
                 sect=model.barParams[elem.param].section
                 s=elem.strainStress(p,v,material,sect)
                 eps1=s[0]
@@ -473,7 +480,7 @@ class FemDataModel:
                     self.result.addStructureData(en[j],eps1[j],str1[j],se1[j],
                                                                             eps1[j],str1[j],se1[j])
                     angle[en[j]]+=eaj
- 
+
         for i in range(nodeCount):
             if(angle[i]!=0):
                 self.result.mulStructureData(i,1/angle[i])
@@ -483,7 +490,7 @@ class FemDataModel:
     def calculateElementStress(self):
         nodes=self.mesh.nodes
         elems=self.mesh.elements
-        elemCount=elems.length
+        elemCount=len(elems)
         self.result.initStrainAndStress(elemCount)
         for i in range(elemCount):
             elem=elems[i]
@@ -496,9 +503,9 @@ class FemDataModel:
 
             material=self.materials[elem.material]
             mat=material.matrix
-            if(elem.isShell):
+            if elem.isShell:
                 sp=model.shellParams[elem.param]
-                if(elem.getName()=='TriElement1'):
+                if elem.getName()=='TriElement1':
                     mmat=mat.m2d
                 else:
                     mmat=mat.msh
@@ -536,9 +543,9 @@ class FemDataModel:
             material=self.materials[elem.material]
             mat=material.matrix
             ea=elem.angle(p)
-            if(elem.isShell):
+            if elem.isShell:
                 sp=model.shellParams[elem.param]
-                if(elem.getName()=='TriElement1'):
+                if elem.getName()=='TriElement1':
                     mmat=mat.m2d
                 else:
                     mmat=mat.msh
@@ -555,7 +562,7 @@ class FemDataModel:
                     ev.sEnergy2[enj]+=se2[j]
                     angle[enj]+=eaj
 
-            elif(elem.isBar):
+            elif elem.isBar:
                 sect=model.barParams[elem.param].section
                 s=elem.strainStress(p,v,material,sect)
                 se1=s[2]
@@ -602,7 +609,7 @@ class FemDataModel:
 
             material=self.materials[elem.material]
             mat=material.matrix
-            if(elem.isShell):
+            if elem.isShell:
                 sp=model.shellParams[elem.param]
                 if(elem.getName()=='TriElement1'):
                     mmat=mat.m2d
@@ -613,7 +620,7 @@ class FemDataModel:
                 ev.sEnergy1[i]=s[2]
                 ev.sEnergy2[i]=s[5]
 
-            elif(elem.isBar):
+            elif elem.isBar:
                 sect=model.barParams[elem.param].section
                 s=elem.elementStrainStress(p,v,material,sect)
                 ev.sEnergy1[i]=s[2]
@@ -639,17 +646,17 @@ class FemDataModel:
         for i in range(len(self.barParams)):
             s.append(self.barParams[i].toString())
 
-        for i in range(len(coordinates)):
+        for i in range(len(self.coordinates)):
             s.append(self.coordinates[i].toString())
 
         for i in range(len(nodes)):
             s.append(nodes[i].toString())
 
         for i in range(len(elems)):
-            if(elems[i].isShell):
+            if elems[i].isShell:
                 s.append(elems[i].toString(self.materials,self.shellParams,nodes))
 
-            elif(elems[i].isBar):
+            elif elems[i].isBar:
                 s.append(elems[i].toString(self.materials,self.barParams,nodes))
 
             else:
@@ -684,7 +691,7 @@ class MeshModel():
     def getNodes(self, s):
         p=[]
         for i in range(len(s.nodes)):
-            p[i]=self.nodes[s.nodes[i]]
+            p.append(self.nodes[s.nodes[i]])
         return p
 
     # モデルを初期化する
@@ -762,124 +769,124 @@ class MeshModel():
                     beforeEdge=edge
 
 
-    # 形状データを取り出す
-    def getGeometry(self):
-        sb=[]
-        for i in range(len(self.freeFaces)):
-            # Array.prototype.push.apply(sb,self.freeFaces[i].splitBorder())
-            for e in self.freeFaces[i].splitBorder():
-                sb.append(e)
+    # # 形状データを取り出す
+    # def getGeometry(self):
+    #     sb=[]
+    #     for i in range(len(self.freeFaces)):
+    #         # Array.prototype.push.apply(sb,self.freeFaces[i].splitBorder())
+    #         for e in self.freeFaces[i].splitBorder():
+    #             sb.append(e)
 
-        pos=new Float32Array(9*sb.length)
-        norm=new Float32Array(9*sb.length)
-        colors=new Float32Array(9*sb.length)
-        geometry=THREE.BufferGeometry()
-        geometry.elements=new Int32Array(3*sb.length)
-        geometry.nodes=new Int32Array(3*sb.length)
-        geometry.angle=new Float32Array(9*sb.length)
-        for i in range(len(sb)):
-            i9 = 9*i
-            v=sb[i].nodes
-            elem=sb[i].element
-            p=[self.nodes[v[0]],self.nodes[v[1]],self.nodes[v[2]]]
-            n=normalVector(p)
-            for j in range(3):
-                j3=i9+3*j
-                geometry.elements[3*i+j]=elem
-                geometry.nodes[3*i+j]=v[j]
-                pos[j3]=p[j].x
-                pos[j3+1]=p[j].y
-                pos[j3+2]=p[j].z
-                norm[j3]=n.x
-                norm[j3+1]=n.y
-                norm[j3+2]=n.z
-                colors[j3]=meshColors[0]
-                colors[j3+1]=meshColors[1]
-                colors[j3+2]=meshColors[2]
-                geometry.angle[j3]=0
-                geometry.angle[j3+1]=0
-                geometry.angle[j3+2]=0
+    #     pos=new Float32Array(9*sb.length)
+    #     norm=new Float32Array(9*sb.length)
+    #     colors=new Float32Array(9*sb.length)
+    #     geometry=THREE.BufferGeometry()
+    #     geometry.elements=new Int32Array(3*sb.length)
+    #     geometry.nodes=new Int32Array(3*sb.length)
+    #     geometry.angle=new Float32Array(9*sb.length)
+    #     for i in range(len(sb)):
+    #         i9 = 9*i
+    #         v=sb[i].nodes
+    #         elem=sb[i].element
+    #         p=[self.nodes[v[0]],self.nodes[v[1]],self.nodes[v[2]]]
+    #         n=normalVector(p)
+    #         for j in range(3):
+    #             j3=i9+3*j
+    #             geometry.elements[3*i+j]=elem
+    #             geometry.nodes[3*i+j]=v[j]
+    #             pos[j3]=p[j].x
+    #             pos[j3+1]=p[j].y
+    #             pos[j3+2]=p[j].z
+    #             norm[j3]=n.x
+    #             norm[j3+1]=n.y
+    #             norm[j3+2]=n.z
+    #             colors[j3]=meshColors[0]
+    #             colors[j3+1]=meshColors[1]
+    #             colors[j3+2]=meshColors[2]
+    #             geometry.angle[j3]=0
+    #             geometry.angle[j3+1]=0
+    #             geometry.angle[j3+2]=0
 
-        geometry.addAttribute('position',THREE.BufferAttribute(pos,3))
-        geometry.addAttribute('normal',THREE.BufferAttribute(norm,3))
-        geometry.addAttribute('color',THREE.BufferAttribute(colors,3))
-        return geometry
-
-
-    # 要素辺の形状データを取り出す
-    def getEdgeGeometry(self):
-        edges=self.faceEdges
-        pos=new Float32Array(6*edges.length)
-        geometry=THREE.BufferGeometry()
-        geometry.nodes=new Int32Array(2*edges.length)
-        geometry.angle=new Float32Array(6*edges.length)
-        for i in range(len(edges)):
-            i2=2*i
-            i6=6*i
-            v=edges[i].nodes
-            p1=self.nodes[v[0]]
-            p2=self.nodes[v[1]]
-            geometry.nodes[i2]=v[0]
-            geometry.nodes[i2+1]=v[1]
-            pos[i6]=p1.x
-            pos[i6+1]=p1.y
-            pos[i6+2]=p1.z
-            pos[i6+3]=p2.x
-            pos[i6+4]=p2.y
-            pos[i6+5]=p2.z
-            for j in range(6):
-                geometry.angle[i6+j]=0
-
-        geometry.addAttribute('position',THREE.BufferAttribute(pos,3))
-        return geometry
+    #     geometry.addAttribute('position',THREE.BufferAttribute(pos,3))
+    #     geometry.addAttribute('normal',THREE.BufferAttribute(norm,3))
+    #     geometry.addAttribute('color',THREE.BufferAttribute(colors,3))
+    #     return geometry
 
 
-    # 梁要素の形状データを取り出す
-    def getBarGeometry(self):
-        geometry=THREE.BufferGeometry()
-        geometry.param=[]
-        geometry.dir=[]
-        elems=self.elements
-        bars=[]
-        axis=[]
-        for i in range(len(elems)):
-            if(elems[i].isBar):
-                bars.append(elems[i].border(i,0))
-                geometry.param.append(model.barParams[elems[i].param].section)
-                axis.append(elems[i].axis)
+    # # 要素辺の形状データを取り出す
+    # def getEdgeGeometry(self):
+    #     edges=self.faceEdges
+    #     pos=new Float32Array(6*edges.length)
+    #     geometry=THREE.BufferGeometry()
+    #     geometry.nodes=new Int32Array(2*edges.length)
+    #     geometry.angle=new Float32Array(6*edges.length)
+    #     for i in range(len(edges)):
+    #         i2=2*i
+    #         i6=6*i
+    #         v=edges[i].nodes
+    #         p1=self.nodes[v[0]]
+    #         p2=self.nodes[v[1]]
+    #         geometry.nodes[i2]=v[0]
+    #         geometry.nodes[i2+1]=v[1]
+    #         pos[i6]=p1.x
+    #         pos[i6+1]=p1.y
+    #         pos[i6+2]=p1.z
+    #         pos[i6+3]=p2.x
+    #         pos[i6+4]=p2.y
+    #         pos[i6+5]=p2.z
+    #         for j in range(6):
+    #             geometry.angle[i6+j]=0
 
-        pos=new Float32Array(6*bars.length)
-        colors=new Float32Array(6*bars.length)
-        geometry.elements=new Int32Array(2*bars.length)
-        geometry.nodes=new Int32Array(2*bars.length)
-        geometry.angle=new Float32Array(6*bars.length)
-        for i in range(len(bars)):
-            i2=2*i
-            i6=6*i
-            v=bars[i].nodes
-            elem=bars[i].element
-            p1=self.nodes[v[0]]
-            p2=self.nodes[v[1]]
-            geometry.dir.append(dirVectors([p1,p2],axis[i]))
-            geometry.elements[i2]=elem
-            geometry.elements[i2+1]=elem
-            geometry.nodes[i2]=v[0]
-            geometry.nodes[i2+1]=v[1]
-            pos[i6]=p1.x
-            pos[i6+1]=p1.y
-            pos[i6+2]=p1.z
-            pos[i6+3]=p2.x
-            pos[i6+4]=p2.y
-            pos[i6+5]=p2.z
-            for j in range(3):
-                colors[i6+j]=meshColors[j]
-                colors[i6+j+3]=meshColors[j]
-                geometry.angle[i6+j]=0
-                geometry.angle[i6+j+3]=0
+    #     geometry.addAttribute('position',THREE.BufferAttribute(pos,3))
+    #     return geometry
 
-        geometry.addAttribute('position',THREE.BufferAttribute(pos,3))
-        geometry.addAttribute('color',THREE.BufferAttribute(colors,3))
-        return geometry
+
+    # # 梁要素の形状データを取り出す
+    # def getBarGeometry(self):
+    #     geometry=THREE.BufferGeometry()
+    #     geometry.param=[]
+    #     geometry.dir=[]
+    #     elems=self.elements
+    #     bars=[]
+    #     axis=[]
+    #     for i in range(len(elems)):
+    #         if(elems[i].isBar):
+    #             bars.append(elems[i].border(i,0))
+    #             geometry.param.append(model.barParams[elems[i].param].section)
+    #             axis.append(elems[i].axis)
+
+    #     pos=new Float32Array(6*bars.length)
+    #     colors=new Float32Array(6*bars.length)
+    #     geometry.elements=new Int32Array(2*bars.length)
+    #     geometry.nodes=new Int32Array(2*bars.length)
+    #     geometry.angle=new Float32Array(6*bars.length)
+    #     for i in range(len(bars)):
+    #         i2=2*i
+    #         i6=6*i
+    #         v=bars[i].nodes
+    #         elem=bars[i].element
+    #         p1=self.nodes[v[0]]
+    #         p2=self.nodes[v[1]]
+    #         geometry.dir.append(dirVectors([p1,p2],axis[i]))
+    #         geometry.elements[i2]=elem
+    #         geometry.elements[i2+1]=elem
+    #         geometry.nodes[i2]=v[0]
+    #         geometry.nodes[i2+1]=v[1]
+    #         pos[i6]=p1.x
+    #         pos[i6+1]=p1.y
+    #         pos[i6+2]=p1.z
+    #         pos[i6+3]=p2.x
+    #         pos[i6+4]=p2.y
+    #         pos[i6+5]=p2.z
+    #         for j in range(3):
+    #             colors[i6+j]=meshColors[j]
+    #             colors[i6+j+3]=meshColors[j]
+    #             geometry.angle[i6+j]=0
+    #             geometry.angle[i6+j+3]=0
+
+    #     geometry.addAttribute('position',THREE.BufferAttribute(pos,3))
+    #     geometry.addAttribute('color',THREE.BufferAttribute(colors,3))
+    #     return geometry
 
 
 #--------------------------------------------------------------------#
@@ -894,7 +901,7 @@ class FENode(Vector3):
 
     # 節点のコピーを返す
     def clone(self):
-        return self.constructor(self.label,self.x,self.y,self.z)
+        return FENode(self.label,self.x,self.y,self.z)
 
     # 節点を表す文字列を返す
     def toString(self):
