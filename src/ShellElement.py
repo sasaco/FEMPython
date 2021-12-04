@@ -2,7 +2,9 @@ from Element import FElement, toDir, toDir3, swap, dirMatrix, planeAngle, GTRI2,
 from FemDataModel import normalVector, addMatrix
 from Result import Strain, Stress
 from ElementBorder import TriangleBorder1, EdgeBorder1, QuadangleBorder1
+from Vector3 import Vector3
 import math
+from typing import List
 #--------------------------------------------------------------------#
 
 # 三角形1次要素の節点のξ,η座標
@@ -21,10 +23,10 @@ TRI1_MASS1=[[1,0.5,0.5],[0.5,1,0.5],[0.5,0.5,1]]
 # 節点座標を局所座標系に変換する
 # d - 方向余弦マトリックス
 # p - 要素節点
-def toLocal(d,p):
+def toLocal(d,p: List[Vector3]) -> List[Vector3]:
     x=[]
     for i in range(len(p)):
-        x[i]=THREE.Vector3().set(
+        x[i]=Vector3(
             d[0][0]*p[i].x+d[1][0]*p[i].y+d[2][0]*p[i].z,
             d[0][1]*p[i].x+d[1][1]*p[i].y+d[2][1]*p[i].z,
             d[0][2]*p[i].x+d[1][2]*p[i].y+d[2][2]*p[i].z)
@@ -57,11 +59,11 @@ class ShellElement(FElement):
 
     # 要素節点の角度を返す
     # p - 要素節点
-    def angle(self, p):
+    def angle(self, p: List[Vector3]) -> List[float]:
         th=[]
         count=self.nodeCount()
         for i in range(count):
-            th[i] = planeAngle(p[i], p[(i+1)%count], p[(i+count-1)%count])
+            th.append(planeAngle(p[i], p[(i+1)%count], p[(i+count-1)%count]))
 
         return th
 
@@ -71,7 +73,7 @@ class ShellElement(FElement):
     # sf - 形状関数行列
     # n - 法線ベクトル
     # t - 要素厚さ
-    def jacobianMatrix(self, p, sf, n, t):
+    def jacobianMatrix(self, p: List[Vector3], sf, n, t):
         count=self.nodeCount()
         jac=[0,0,0,0,0,0,0,0,0]
         for i in range(count):

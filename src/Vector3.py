@@ -2,14 +2,17 @@ import numpy as np
 
 #--------------------------------------------------------------------#
 class Vector3:
-    def __init__(self,x,y,z):
+    def __init__(self,x=0,y=0,z=0):
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
         self.vec = np.array([self.x, self.y, self.z])
 
-    def set(self, x, y, z) -> None:
+    def set(self, x, y, z):
         self.__init__(x,y,z)
+
+    def fromArray(self):
+        pass
 
     def __add__(self,other):
         # 足し算
