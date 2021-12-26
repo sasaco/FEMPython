@@ -4,22 +4,14 @@ from typing import List
 
 # 節点ラベルを比較する
 # bc1,bc2 - 比較する境界条件
-def compareNodeLabel(bc1, bc2):
-    if(bc1.node<bc2.node):
-        return -1
-    elif(bc1.node>bc2.node):
-        return 1
-    return 0
+def compareNodeLabel(bc1):
+    return bc1.node
 
 
 # 要素ラベルを比較する
 # bc1,bc2 - 比較する境界条件
-def compareElementLabel(bc1,bc2):
-    if(bc1.element<bc2.element):
-        return -1
-    elif(bc1.element>bc2.element):
-        return 1
-    return 0
+def compareElementLabel(bc1):
+    return bc1.element
 
 
 #--------------------------------------------------------------------#
@@ -33,8 +25,8 @@ class BoundaryCondition():
 
     # データを消去する
     def clear(self):
-        self.restraints = []	# 拘束条件
-        self.loads = []		    # 荷重条件
+        self.restraints: list[Restraint] = []   # 拘束条件
+        self.loads: List[Load] = []		        # 荷重条件
         self.pressures = []		# 面圧条件
         self.temperature = []	# 節点温度条件
         self.htcs = []			# 熱伝達境界条件
@@ -198,13 +190,16 @@ class ElementBorderBound:
 # restrx,restry,restrz - x,y,z方向の回転拘束の有無
 # rx,ry,rz - 強制変位のx,y,z軸周り回転角
 class Restraint(Vector3R):
-    def __init__(self, node,coords, restx, resty, restz, x, y, z,
-                                                                    restrx,restry,restrz,rx,ry,rz):
-        super().__init__(x,y,z,rx,ry,rz)
-        self.node=node
-        self.coords=coords
-        self.rest=[restx,resty,restz,restrx,restry,restrz]
-        self.globalX=self.x
+    def __init__(self, node: int, coords: int,
+                restx: bool, resty: bool, restz: bool,
+                x: float, y: float, z: float,
+                restrx: bool = False, restry: bool = False, restrz: bool = False,
+                rx: float = 0, ry: float = 0, rz: float = 0):
+        super().__init__(x, y, z, rx, ry, rz)
+        self.node = node
+        self.coords = coords
+        self.rest: List[bool] = [restx, resty, restz, restrx, restry, restrz]
+        self.globalX = self.x
 
 
     # 拘束条件を表す文字列を返す
@@ -231,11 +226,13 @@ class Restraint(Vector3R):
 # x,y,z - x,y,z成分
 # rx,ry,rz - x,y,z軸周り回転成分
 class Load(Vector3R):
-    def __init__(self, node,coords,x,y,z,rx,ry,rz):
+    def __init__(self, node: int, coords: int,
+                x: float, y: float, z: float,
+                rx: float=0, ry: float=0, rz: float=0):
         super().__init__(x,y,z,rx,ry,rz)
-        self.node=node
-        self.coords=coords
-        self.globalX=self.x
+        self.node = node
+        self.coords = coords
+        self.globalX = self.x
 
     # 荷重条件を表す文字列を返す
     # nodes - 節点

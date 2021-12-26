@@ -2,7 +2,7 @@ from Solver import Solver, LU_METHOD, ILUCG_METHOD
 from Result import Result, EigenValue, NODE_DATA, ELEMENT_DATA, VIBRATION, BUCKLING
 from Material import Material
 from BoundaryCondition import BoundaryCondition
-from FemMain import *
+from Element import normalVector
 import math
 import numpy as np
 import time
@@ -16,8 +16,8 @@ COEF_F_W = 0.5 / math.pi	# f/ω比 1/2π
 # s - 節点集合
 def resetNodes(map,s):
     for i in range(len(s.nodes)):
-        if(s.nodes[i] in map):
-            s.nodes[i]=map[s.nodes[i]]
+        if s.nodes[i] in map:
+            s.nodes[i] = map[s.nodes[i]]
         else:
             raise Exception('節点番号'+s.nodes[i]+'は存在しません')
 
@@ -73,21 +73,21 @@ def center(p) -> np.ndarray:
 
 # ラベルを比較する
 # o1,o2 - 比較する対象
-def compareLabel(o1, o2):
-    return o1.label < o2.label
+def compareLabel(o1):
+    return o1.label
 
 
 #--------------------------------------------------------------------#
 # FEM データモデル
 class FemDataModel:
     def __init__(self):
-        self.materials = []			# 材料
+        self.materials: List[Material] = []			# 材料
         self.shellParams = []			# シェルパラメータ
         self.barParams = []			# 梁パラメータ
         self.coordinates = []			# 局所座標系
         self.mesh = MeshModel()		# メッシュモデル
         self.bc = BoundaryCondition()	# 境界条件
-        self.solver = Solver()		# 連立方程式求解オブジェクト
+        self.solver = Solver(self.bc)		# 連立方程式求解オブジェクト
         self.result = Result()		# 計算結果
         self.hasShellBar = False		# シェル要素または梁要素を含まない
 
@@ -130,12 +130,12 @@ class FemDataModel:
 
     # 節点・要素ポインタを設定する
     def reNumbering(self):
-        nodes=self.mesh.nodes
-        elements=self.mesh.elements
+        nodes = self.mesh.nodes
+        elements = self.mesh.elements
 
-        map=[]
+        map = dict()
         for i in range(len(nodes)):
-            map[nodes[i].label]=i
+            map[nodes[i].label] = i
 
         for i in range(len(elements)):
             resetNodes(map,elements[i])
@@ -149,7 +149,7 @@ class FemDataModel:
         for i in range(len(self.bc.temperature)):
             resetNodePointer(map,self.bc.temperature[i])
 
-        map=[]
+        map = dict()
         for i in range(len(elements)):
             map[elements[i].label]=i
 
@@ -165,15 +165,15 @@ class FemDataModel:
         if(len(self.materials)==0):
             self.materials.append(Material(1,1,0.3,1,1,1,1))
 
-        map=[]
-        elements=self.mesh.elements
+        map = dict()
+        elements = self.mesh.elements
 
         for i in range(len(self.materials)):
-            map[self.materials[i].label]=i
+            map[self.materials[i].label] = i
 
         for i in range(len(elements)):
             if(elements[i].material in map):
-                elements[i].material=map[elements[i].material]
+                elements[i].material = map[elements[i].material]
 
             else:
                 raise Exception('材料番号'+elements[i].material+
@@ -186,8 +186,8 @@ class FemDataModel:
             self.hasShellBar=False
             return
 
-        map1=[]
-        map2=[]
+        map1 = dict()
+        map2 = dict()
         elements=self.mesh.elements
         shellbars=0
         for i in range(len(self.shellParams)):
@@ -223,7 +223,7 @@ class FemDataModel:
         if(len(self.coordinates)==0):
             return
 
-        map=[]
+        map = dict()
         for i in range(len(self.coordinates)):
             map[self.coordinates[i].label]=self.coordinates[i]
 
@@ -242,16 +242,16 @@ class FemDataModel:
 
         dof = []
         for i in range(nodeCount):
-            dof[i]=3
+            dof.append(3)
 
         for i in range(elemCount):
-            elem=self.mesh.elements[i]
+            elem = self.mesh.elements[i]
             if(elem.isShell or elem.isBar):	# シェル要素・梁要素
-                count=elem.nodeCount()
+                count = elem.nodeCount()
                 for j in range(count):
                     dof[elem.nodes[j]]=6
 
-        self.solver.dof=self.bc.setPointerStructure(nodeCount)
+        self.solver.dof = self.bc.setPointerStructure(nodeCount)
 
 
     # 静解析をする
@@ -651,11 +651,11 @@ class MeshModel():
     def checkChirality(self):
         for i in range(len(self.elements)):
             elem = self.elements[i]
-            if elem.isShell==False and elem.isBar==False:
-                pe=self.getNodes(elem)
-                pf=self.getNodes(elem.border(i,0))
-                n1=normalVector(pf)
-                n2=center(pe).sub(center(pf))
+            if elem.isShell == False and elem.isBar == False:
+                pe = self.getNodes(elem)
+                pf = self.getNodes(elem.border(i, 0))
+                n1 = normalVector(pf)
+                n2 = center(pe) - center(pf)
                 if n1.dot(n2) > 0:
                     elem.mirror()
 
@@ -841,11 +841,11 @@ class MeshModel():
 # label - 節点ラベル
 # x,y,z - x,y,z座標
 class FENode():
-    def __init__(self,label, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.label=label
+    def __init__(self, label: int, x: float, y: float, z: float):
+        self.x: float = x
+        self.y: float = y
+        self.z: float = z
+        self.label: int = label
 
 
     # 節点のコピーを返す

@@ -418,10 +418,10 @@ def buckCalcStart(model):
 #--------------------------------------------------------------------#
 # 連立方程式求解オブジェクト
 class Solver():
-    def __init__(self, model):
+    def __init__(self, bc: BoundaryCondition):
         self.clear()
         self.method = LU_METHOD	# 方程式解法
-        self.model = model
+        self.bc: BoundaryCondition = bc
 
     # データを消去する
     def clear(self):
@@ -432,7 +432,7 @@ class Solver():
 
     # 剛性マトリックス・荷重ベクトルを作成する
     def createStiffnessMatrix(self):
-        bc: BoundaryCondition = self.model.bc
+        bc = self.bc
         bcList: List[int] = bc.bcList
         reducedList = []
         for i in range(len(bcList)):
@@ -456,7 +456,7 @@ class Solver():
 
     # 剛性マトリックス・質量マトリックスを作成する
     def createStiffMassMatrix(self):
-        bc: BoundaryCondition = self.model.bc
+        bc = self.bc
         bcList = bc.bcList
         reducedList = []
         for i in range(len(bcList)):
@@ -476,7 +476,7 @@ class Solver():
 
     # 幾何剛性マトリックスを作成する
     def createGeomStiffMatrix(self):
-        bc: BoundaryCondition = self.model.bc
+        bc = self.bc
         bcList: List[int] = bc.bcList
         reducedList = []
         for i in range(len(bcList)):
@@ -492,7 +492,7 @@ class Solver():
 
     # 熱計算のマトリックス・ベクトルを計算する
     def createHeatMatrix(self):
-        bcList: List[int] = self.model.bc.bcList
+        bcList: List[int] = self.bc.bcList
         reducedList = []
         for i in range(len(bcList)):
             if bcList[i] < 0:
@@ -505,7 +505,7 @@ class Solver():
         # 拘束自由度を除去する
         for i in range(len(bcList)):
             if bcList[i] >= 0:
-                t = self.model.bc.temperature[bcList[i]]
+                t = self.bc.temperature[bcList[i]]
                 for j in range(len(vector1)):
                     if i in matrix1[j]:
                         vector1[j] -= t.t * matrix1[j][i]

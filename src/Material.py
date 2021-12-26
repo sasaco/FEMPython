@@ -9,15 +9,15 @@ from Section import CircleSection, RectSection, KS_RECT
 # hCon - 熱伝導率
 # sHeat - 比熱
 class Material:
-    def __init__(self, label, ee, nu, dens, hCon, sHeat):
-        self.label = label
-        self.ee = ee
-        self.nu = nu
-        self.dens = dens
-        self.hCon = hCon
-        self.sHeat = sHeat
-        self.gg = 0.5 * ee / (1+nu)	# 横弾性係数
-        self.cv = dens * sHeat		# 体積比熱
+    def __init__(self, label: int, ee: float, nu: float, dens: float, hCon: float, sHeat: float):
+        self.label: int = label
+        self.ee: float = ee
+        self.nu: float = nu
+        self.dens: float = dens
+        self.hCon: float = hCon
+        self.sHeat: float = sHeat
+        self.gg: float = 0.5 * ee / (1+nu)	# 横弾性係数
+        self.cv: float = dens * sHeat		# 体積比熱
         self.matrix = None		# 応力 - 歪マトリックス
 
 

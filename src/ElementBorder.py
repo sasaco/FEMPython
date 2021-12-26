@@ -202,13 +202,13 @@ class EdgeBorder1(ElementBorder):
         return [value,value]
 
 
-    # 辺の法線ベクトルを返す
-    # p - 節点
-    # ep - 要素の節点
-    def normalVector(self, p, ep):
-        ne = normalVector(ep)
-        dir = p[1].clone().sub(p[0])
-        return normalize(dir.cross(ne))
+    # # 辺の法線ベクトルを返す
+    # # p - 節点
+    # # ep - 要素の節点
+    # def normalVector(self, p, ep):
+    #     ne = normalVector(ep)
+    #     dir = p[1] - p[0]
+    #     return normalize(dir.cross(ne))
 
 
 #--------------------------------------------------------------------#

@@ -31,12 +31,13 @@ class FemMain:
         if fileName!=None:
             readServerFemFile(fileName, self.model)
 
-        self.model.calculate()
         # modalWindow=[document.getElementById('file'),
         #             document.getElementById('calc'),
         #             document.getElementById('result'),
         #             document.getElementById('config')]
         # loop()
+    def calculate(self):
+        self.model.calculate()
 
     # three.js の初期化をする
     # def initThree():

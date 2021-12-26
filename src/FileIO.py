@@ -22,7 +22,7 @@ def readServerFemFile(fileName, model):
 	f = open(fileName, encoding="utf-8")
 	fstr = f.read()  # ファイル終端まで全て読んだデータを返す
 	f.close()
-	readFemModel(fstr, model)
+	readFemModel(fstr.strip().split('\n'), model)
 
 
 # FEMデータを読み込む
@@ -33,7 +33,7 @@ def readFemModel(s: List[str], model: FemDataModel):
 	bc=model.bc
 	# res=[]
 	for i in range(len(s)):
-		ss: List[str] = s[i].strip().split(' ')
+		ss: List[str] = s[i].strip().split()
 		if len(ss)>0:
 			keyWord = ss[0].lower()
 		# 材料データ
@@ -186,16 +186,16 @@ def readRestraint(ss: List[str]) -> Restraint:
 
 	else:
 		if len(ss)>14:
-			coords=int(ss[14])
-		rrx= int(ss[8]) != 0
-		rry= int(ss[10]) != 0
-		rrz= int(ss[12]) != 0
-		if rx==False and ry==False and rz==False and \
-			rrx==False and rry==False and rrz==False:
+			coords = int(ss[14])
+		rrx = int(ss[8]) != 0
+		rry = int(ss[10]) != 0
+		rrz = int(ss[12]) != 0
+		if rx == False and ry == False and rz == False and \
+			rrx == False and rry == False and rrz == False:
 			return None
-		return Restraint(int(ss[1]),coords,rx,ry,rz,x,y,z,
-							rrx,rry,rrz,float(ss[9]),
-							float(ss[11]),float(ss[13]))
+		return Restraint(int(ss[1]), coords, rx, ry, rz, x, y, z,
+							rrx, rry, rrz, float(ss[9]),
+							float(ss[11]), float(ss[13]))
 
 # 荷重条件を読み込む
 # ss - データ文字列配列
@@ -221,7 +221,7 @@ def readLoad(ss) -> Load:
 def readVertex(ss: List[str], i: int, count: int) -> List[int]:
 	vertex=[]
 	for j in range(count):
-		vertex[j]=int(ss[i+j])
+		vertex.append(int(ss[i+j]))
 	return vertex
 
 # 局所座標系を読み込む
