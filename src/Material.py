@@ -1,27 +1,24 @@
-from Section import CircleSection, RectSection
-#--------------------------------------------------------------------#
-KS_RECT=5/6			# 矩形断面のせん断補正係数
-KS_CIRCLE=6/7			# 円形断面のせん断補正係数
+from Section import CircleSection, RectSection, KS_RECT
 
 #--------------------------------------------------------------------#
 # 材料
 # label - 材料番号
-# ee - ヤング率 (縦弾性係数) 
+# ee - ヤング率 (縦弾性係数)
 # nu - ポアソン比
 # dens - 密度
 # hCon - 熱伝導率
 # sHeat - 比熱
 class Material:
-    def __init__(self,label,ee,nu,dens,hCon,sHeat):
-        self.label=label
-        self.ee=ee
-        self.nu=nu
-        self.dens=dens
-        self.hCon=hCon
-        self.sHeat=sHeat
-        self.gg=0.5*ee/(1+nu)	# 横弾性係数
-        self.cv=dens*sHeat		# 体積比熱
-        self.matrix=None		# 応力 - 歪マトリックス
+    def __init__(self, label, ee, nu, dens, hCon, sHeat):
+        self.label = label
+        self.ee = ee
+        self.nu = nu
+        self.dens = dens
+        self.hCon = hCon
+        self.sHeat = sHeat
+        self.gg = 0.5 * ee / (1+nu)	# 横弾性係数
+        self.cv = dens * sHeat		# 体積比熱
+        self.matrix = None		# 応力 - 歪マトリックス
 
 
     # 平面応力問題の応力 - 歪マトリックスを作成する
@@ -40,7 +37,8 @@ class Material:
     # 軸対称問題の応力 - 歪マトリックスを作成する
     def matrixAxiSymetric(self):
         coef=self.ee/((1+self.nu)*(1-2*self.nu))
-        s1=coef*(1-self.nu),s2=coef*self.nu
+        s1 = coef * (1 - self.nu)
+        s2 = coef * self.nu
         return [[s1,s2,s2,0],[s2,s1,s2,0],[s2,s2,s1,0],[0,0,0,self.gg]]
 
 
@@ -52,7 +50,8 @@ class Material:
     # 3次元問題の応力 - 歪マトリックスを作成する
     def matrix3D(self):
         coef=self.ee/((1+self.nu)*(1-2*self.nu))
-        s1=coef*(1-self.nu),s2=coef*self.nu
+        s1 = coef * (1-self.nu)
+        s2 = coef * self.nu
         return [[s1,s2,s2,0,0,0],[s2,s1,s2,0,0,0],[s2,s2,s1,0,0,0],
                         [0,0,0,self.gg,0,0],[0,0,0,0,self.gg,0],[0,0,0,0,0,self.gg]]
 

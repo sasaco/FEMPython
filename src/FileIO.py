@@ -1,6 +1,7 @@
 from typing import List, Tuple, Dict, Set
 
-from numpy.lib.function_base import select
+import numpy as np
+import math
 
 from FemDataModel import FemDataModel, FENode
 from Material import Material, ShellParameter, BarParameter
@@ -10,8 +11,8 @@ from SolidElement import TetraElement1, WedgeElement1, HexaElement1, TetraElemen
 from AdvancedElement import HexaElement1WT
 from BoundaryCondition import Pressure, Temperature, HeatTransferBound, Restraint, Load
 from Coordinates import Coordinates
-from Result import *
-from Vector3 import Vector3
+from Result import ELEMENT_DATA, NODE_DATA
+# from Vector3 import Vector3
 #--------------------------------------------------------------------#
 # ファイル読み込み・書き込み
 
@@ -68,7 +69,7 @@ def readFemModel(s: List[str], model: FemDataModel):
 				mesh.elements.append(BEBarElement
 					(int(ss[1]),int(ss[2]),int(ss[3]),
 					readVertex(ss,4,2),
-					Vector3(float(ss[6]),float(ss[7]),float(ss[8]))))
+					np.array([float(ss[6]),float(ss[7]),float(ss[8])])))
 
 		elif keyWord=='tbarelement' and len(ss)>5:
 			if(len(ss)<8):
@@ -76,10 +77,11 @@ def readFemModel(s: List[str], model: FemDataModel):
 					(int(ss[1]),int(ss[2]),int(ss[3]),
 					readVertex(ss,4,2)))
 			else:
-				mesh.elements.append(TBarElement
-					(int(ss[1]),int(ss[2]),int(ss[3]),
-					readVertex(ss,4,2),
-					Vector3(float(ss[6]),float(ss[7]),float(ss[8]))))
+				mesh.elements.append(TBarElement(
+					int(ss[1]), int(ss[2]), int(ss[3]),
+					readVertex(ss, 4, 2),
+					np.array([float(ss[6]),float(ss[7]),float(ss[8])])
+					))
 
 		elif keyWord=='trielement1' and len(ss)>6:
 			mesh.elements.append(TriElement1

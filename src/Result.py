@@ -5,63 +5,63 @@ import numpy as np
 #--------------------------------------------------------------------#
 
 # データ型
-NONE   =-1		# 空データ
-DISPLACEMENT=0	# 変位
-STRAIN=1		# 歪
-STRESS=2		# 応力
-S_ENERGY=3		# 歪エネルギー密度
-TEMPERATURE=4	# 温度
+NONE = -1		    # 空データ
+DISPLACEMENT = 0    # 変位
+STRAIN = 1		    # 歪
+STRESS = 2		    # 応力
+S_ENERGY = 3		# 歪エネルギー密度
+TEMPERATURE = 4	    # 温度
 # 成分
-X=0		# x成分
-Y=1		# y成分
-Z=2		# z成分
-RX=3		# x軸回転成分
-RY=4		# y軸回転成分
-RZ=5		# z軸回転成分
-XY=3		# xyせん断成分
-YZ=4		# yzせん断成分
-ZX=5		# zxせん断成分
-MAGNITUDE=6	# 大きさ
-MAX_PRINCIPAL=7	# 最大主成分
-MIN_PRINCIPAL=8	# 最小主成分
-MID_PRINCIPAL=9	# 中間主成分
-MAX_SHARE=10	# 最大せん断成分
-VON_MISES=11	# ミーゼス応力
-SHIFT=12		# 成分シフト量
+X = 0		        # x成分
+Y = 1		        # y成分
+Z = 2		        # z成分
+RX = 3		        # x軸回転成分
+RY = 4		        # y軸回転成分
+RZ = 5		        # z軸回転成分
+XY = 3		        # xyせん断成分
+YZ = 4		        # yzせん断成分
+ZX = 5		        # zxせん断成分
+MAGNITUDE = 6	    # 大きさ
+MAX_PRINCIPAL = 7	# 最大主成分
+MIN_PRINCIPAL = 8	# 最小主成分
+MID_PRINCIPAL = 9	# 中間主成分
+MAX_SHARE = 10	    # 最大せん断成分
+VON_MISES = 11	    # ミーゼス応力
+SHIFT = 12		    # 成分シフト量
 # 変位の成分
-DISP_COMPONENT=['Mag.','x','y','z']
-DISP2_COMPONENT=['Mag.','x','y','z','rotx','roty','rotz']
+DISP_COMPONENT = ['Mag.','x','y','z']
+DISP2_COMPONENT = ['Mag.','x','y','z','rotx','roty','rotz']
 # 歪の成分
-STRAIN_COMPONENT=['Max.prin.','Min.prin.','Mid.prin.',
-                                    'Max.share',
-                                    'x','y','z','xy','yz','zx']
+STRAIN_COMPONENT = ['Max.prin.','Min.prin.','Mid.prin.',
+                    'Max.share',
+                    'x','y','z','xy','yz','zx']
 # 応力の成分
-STRESS_COMPONENT=['Max.prin.','Min.prin.','Mid.prin.',
-                                    'Max.share','Von mises',
-                                    'x','y','z','xy','yz','zx']
+STRESS_COMPONENT = ['Max.prin.','Min.prin.','Mid.prin.',
+                    'Max.share','Von mises',
+                    'x','y','z','xy','yz','zx']
 # 歪エネルギー密度の成分
-ENERGY_COMPONENT=['Energy']
-COMP_MAP={'Mag.':MAGNITUDE,'x':X,'y':Y,'z':Z,
-                        'rotx':RX,'roty':RY,'rotz':RZ,'xy':XY,'yz':YZ,'zx':ZX,
-                        'Max.prin.':MAX_PRINCIPAL,'Min.prin.':MIN_PRINCIPAL,
-                        'Mid.prin.':MID_PRINCIPAL,'Max.share':MAX_SHARE,
-                        'Von mises':VON_MISES,'Energy':0,
-                        'x 1':X,'y 1':Y,'z 1':Z,'xy 1':XY,'yz 1':YZ,'zx 1':ZX,
-                        'Max.prin. 1':MAX_PRINCIPAL,'Min.prin. 1':MIN_PRINCIPAL,
-                        'Mid.prin. 1':MID_PRINCIPAL,'Max.share 1':MAX_SHARE,
-                        'Von mises 1':VON_MISES,'Energy 1':0,
-                        'x 2':X+SHIFT,'y 2':Y+SHIFT,'z 2':Z+SHIFT,
-                        'xy 2':XY+SHIFT,'yz 2':YZ+SHIFT,'zx 2':ZX+SHIFT,
-                        'Max.prin. 2':MAX_PRINCIPAL+SHIFT,
-                        'Min.prin. 2':MIN_PRINCIPAL+SHIFT,
-                        'Mid.prin. 2':MID_PRINCIPAL+SHIFT,
-                        'Max.share 2':MAX_SHARE+SHIFT,
-                        'Von mises 2':VON_MISES+SHIFT,'Energy 2':1}
-EIG_EPS=1e-10		# 固有値計算の収束閾値
-NODE_DATA=0		# 節点データ
-ELEMENT_DATA=1		# 要素データ
-VIBRATION='Vibration'	# 振動解析
-BUCKLING='Buckling'	# 座屈解析
+ENERGY_COMPONENT = ['Energy']
+COMP_MAP = {'Mag.':MAGNITUDE,'x':X,'y':Y,'z':Z,
+            'rotx':RX,'roty':RY,'rotz':RZ,'xy':XY,'yz':YZ,'zx':ZX,
+            'Max.prin.':MAX_PRINCIPAL,'Min.prin.':MIN_PRINCIPAL,
+            'Mid.prin.':MID_PRINCIPAL,'Max.share':MAX_SHARE,
+            'Von mises':VON_MISES,'Energy':0,
+            'x 1':X,'y 1':Y,'z 1':Z,'xy 1':XY,'yz 1':YZ,'zx 1':ZX,
+            'Max.prin. 1':MAX_PRINCIPAL,'Min.prin. 1':MIN_PRINCIPAL,
+            'Mid.prin. 1':MID_PRINCIPAL,'Max.share 1':MAX_SHARE,
+            'Von mises 1':VON_MISES,'Energy 1':0,
+            'x 2':X+SHIFT,'y 2':Y+SHIFT,'z 2':Z+SHIFT,
+            'xy 2':XY+SHIFT,'yz 2':YZ+SHIFT,'zx 2':ZX+SHIFT,
+            'Max.prin. 2':MAX_PRINCIPAL+SHIFT,
+            'Min.prin. 2':MIN_PRINCIPAL+SHIFT,
+            'Mid.prin. 2':MID_PRINCIPAL+SHIFT,
+            'Max.share 2':MAX_SHARE+SHIFT,
+            'Von mises 2':VON_MISES+SHIFT,'Energy 2':1}
+EIG_EPS = 1e-10		    # 固有値計算の収束閾値
+NODE_DATA = 0		    # 節点データ
+ELEMENT_DATA = 1		# 要素データ
+VIBRATION = 'Vibration'	# 振動解析
+BUCKLING = 'Buckling'	# 座屈解析
 
 
 # Jacobie法で対称テンソルの固有値を求める
@@ -192,32 +192,32 @@ def removeOptions(sel):
             sel.removeChild(sel.firstChild)
 
 
-# 結果表示設定ウィンドウを表示する
-def showResultWindow():
-    showModalWindow(RESULT_WINDOW)
-    resultView.stock()
+# # 結果表示設定ウィンドウを表示する
+# def showResultWindow():
+#     showModalWindow(RESULT_WINDOW)
+#     resultView.stock()
 
 
-# 計算結果を消去する
-def removeRes():
-    model.result.clear()
-    viewObj.removeResult()
-    # colorBar.clear()
-    showInfo()
-    resultView.setContourSelect()
-    hideModalWindow(RESULT_WINDOW)
+# # 計算結果を消去する
+# def removeRes():
+#     model.result.clear()
+#     viewObj.removeResult()
+#     # colorBar.clear()
+#     showInfo()
+#     resultView.setContourSelect()
+#     hideModalWindow(RESULT_WINDOW)
 
 
-# 結果表示設定を更新する
-def setResultConfig():
-    hideModalWindow(RESULT_WINDOW)
-    resultView.setConfig()
+# # 結果表示設定を更新する
+# def setResultConfig():
+#     hideModalWindow(RESULT_WINDOW)
+#     resultView.setConfig()
 
 
-# 結果表示設定を取り消す
-def cancelResultConfig():
-    hideModalWindow(RESULT_WINDOW)
-    resultView.reset()
+# # 結果表示設定を取り消す
+# def cancelResultConfig():
+#     hideModalWindow(RESULT_WINDOW)
+#     resultView.reset()
 
 
 #--------------------------------------------------------------------#

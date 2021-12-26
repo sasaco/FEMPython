@@ -1,14 +1,15 @@
-from Material import KS_CIRCLE, KS_RECT
 import math
-
-from Vector3 import Vector3
+import numpy as np
+# from Vector3 import Vector3
 #--------------------------------------------------------------------#
 
 CIRCLE_DIV = 16			                # 円形断面表示オブジェクトの分割数
 CIRCLE_DTH = 2 * math.pi / CIRCLE_DIV	# 円形断面の１分割の角度
 COEF_K1 = 64 / math.pow(math.pi, 5)	    # 矩形断面の捩り係数
 COEF_K = 8 / (math.pi * math.pi)
-
+#--------------------------------------------------------------------#
+KS_RECT = 5/6			# 矩形断面のせん断補正係数
+KS_CIRCLE = 6/7			# 円形断面のせん断補正係数
 
 # 矩形断面の捩り係数を求める
 # ba - 辺の長さ比b/a
@@ -214,31 +215,31 @@ class RectSection:
     # pos1,pos2 - 外径，内径の座標
     # cx,cy,cz - 中心点座標
     # v1,v2 - 軸方向，断面基準方向ベクトル
-    def setCoords(self,pos1,pos2,cx,cy,cz,v1: Vector3, v2:Vector3):
-        v3=v1.cross(v2)
-        c1=[0.5,-0.5,-0.5,0.5,0.5]
-        c2=[0.5,0.5,-0.5,-0.5,0.5]
+    def setCoords(self, pos1, pos2, cx, cy, cz, v1: np.ndarray, v2: np.ndarray):
+        v3 = np.cross(v1, v2)
+        c1 = [0.5, -0.5, -0.5, 0.5, 0.5]
+        c2 = [0.5, 0.5, -0.5, -0.5, 0.5]
         for j in range(len(c1)):
-            j3=3*j
-            pos1[j3]=cx+c1[j]*self.b1*v2.x+c2[j]*self.h1*v3.x
-            pos1[j3+1]=cy+c1[j]*self.b1*v2.y+c2[j]*self.h1*v3.y
-            pos1[j3+2]=cz+c1[j]*self.b1*v2.z+c2[j]*self.h1*v3.z
-            pos2[j3]=cx+c1[j]*self.b2*v2.x+c2[j]*self.h2*v3.x
-            pos2[j3+1]=cy+c1[j]*self.b2*v2.y+c2[j]*self.h2*v3.y
-            pos2[j3+2]=cz+c1[j]*self.b2*v2.z+c2[j]*self.h2*v3.z
+            j3 = 3*j
+            pos1[j3] = cx + c1[j] * self.b1 * v2[0] + c2[j] * self.h1 * v3[0]
+            pos1[j3+1] = cy + c1[j] * self.b1 * v2[1] + c2[j] * self.h1 * v3[1]
+            pos1[j3+2] = cz + c1[j] * self.b1 * v2[2] + c2[j] * self.h1 * v3[2]
+            pos2[j3] = cx + c1[j] * self.b2 * v2[0] + c2[j] * self.h2 * v3[0]
+            pos2[j3+1] = cy + c1[j] * self.b2 * v2[1] + c2[j] * self.h2 * v3[1]
+            pos2[j3+2] = cz + c1[j] * self.b2 * v2[2] + c2[j] * self.h2 * v3[2]
 
 
     # 質量・重心周りの慣性モーメントを返す
     # dens - 密度
     # l - 要素長さ
-    def massInertia(self,dens,l):
-        dl=dens*l
-        dly=dl*self.iz
-        dlz=dl*self.iy
-        return [dl*self.area,dly+dlz,dly,dlz]
+    def massInertia(self, dens, l):
+        dl = dens * l
+        dly = dl * self.iz
+        dlz = dl * self.iy
+        return [dl * self.area, dly + dlz, dly, dlz]
 
 
     # 断面を表す文字列を返す
     def toString(self):
-        return self.b1+'\t'+self.h1+'\t'+self.b2+'\t'+self.h2
+        return self.b1 + '\t' + self.h1 + '\t' + self.b2 + '\t' + self.h2
 

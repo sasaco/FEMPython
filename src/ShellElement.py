@@ -1,6 +1,6 @@
-from Element import FElement, toDir, toDir3, swap, dirMatrix, planeAngle, GTRI2, GX2, C1_3, C1_6, C1_12, normalVector
+from Element import FElement, toDir, toDir3, swap, dirMatrix, planeAngle, C1_3, C1_12, normalVector
 from Result import Strain, Stress
-from ElementBorder import TriangleBorder1, EdgeBorder1, QuadangleBorder1, addMatrix
+from ElementBorder import TriangleBorder1, EdgeBorder1, QuadangleBorder1, TRI2_INT, QUAD1_INT, addMatrix
 import math
 import numpy as np
 from typing import List
@@ -10,12 +10,8 @@ from typing import List
 TRI1_NODE=[[0,0],[1,0],[0,1]]
 # 三角形1次要素の積分点のξ,η座標,重み係数
 TRI1_INT=[[C1_3,C1_3,0.5]]
-# 三角形2次要素の積分点のξ,η座標,重み係数
-TRI2_INT=[[GTRI2[0],GTRI2[0],C1_6],[GTRI2[1],GTRI2[0],C1_6],[GTRI2[0],GTRI2[1],C1_6]]
 # 四角形1次要素の節点のξ,η座標
 QUAD1_NODE=[[-1,-1],[1,-1],[1,1],[-1,1]]
-# 四角形1次要素の積分点のξ,η座標,重み係数
-QUAD1_INT=[[GX2[0],GX2[0],1],[GX2[1],GX2[0],1],[GX2[0],GX2[1],1],[GX2[1],GX2[1],1]]
 # 三角形1次要素の質量マトリックス係数
 TRI1_MASS1=[[1,0.5,0.5],[0.5,1,0.5],[0.5,0.5,1]]
 

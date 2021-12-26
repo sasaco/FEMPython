@@ -2,7 +2,7 @@ import math
 import numpy as np
 from Result import Strain, Stress
 from ElementBorder import TriangleBorder1, TriangleBorder2, QuadangleBorder1, QuadangleBorder2, addMatrix
-from Element import FElement, swap, solidAngle, planeAngle, GTETRA2, C1_3, GX2, GTRI2, GX3, C1_6, GW3
+from Element import FElement, swap, solidAngle, planeAngle, GTETRA2, C1_3, GX2, GTRI2, GX3, C1_6, GW3, C1_24
 #--------------------------------------------------------------------#
 
 # 四面体2次要素の節点のξ,η,ζ座標
@@ -634,7 +634,7 @@ class TetraElement2(SolidElement):
                         planeAngle(p[4],p[2],p[3]),planeAngle(p[5],p[0],p[3]),
                         planeAngle(p[6],p[1],p[3]),planeAngle(p[7],p[1],p[2]),
                         planeAngle(p[8],p[2],p[0]),planeAngle(p[9],p[0],p[1])]
-    }
+
 
     # 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
     # xsi,eta,zeta - 要素内部ξ,η,ζ座標

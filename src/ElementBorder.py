@@ -1,10 +1,14 @@
 import math
 import numpy as np
 
-from Element import GX3, GW3, C1_6, C1_3, normalize, normalVector
+from Element import GTRI2, GX2, C1_6, GX3, GW3, C1_6, C1_3, normalize, normalVector
 from Nodes import Nodes
-from ShellElement import TRI2_INT, QUAD1_INT
 #--------------------------------------------------------------------#
+# 三角形2次要素の積分点のξ,η座標,重み係数
+TRI2_INT=[[GTRI2[0],GTRI2[0],C1_6],[GTRI2[1],GTRI2[0],C1_6],[GTRI2[0],GTRI2[1],C1_6]]
+
+# 四角形1次要素の積分点のξ,η座標,重み係数
+QUAD1_INT=[[GX2[0],GX2[0],1],[GX2[1],GX2[0],1],[GX2[0],GX2[1],1],[GX2[1],GX2[1],1]]
 
 # 四角形2次要素の積分点のξ,η座標,重み係数
 QUAD2_INT=[
