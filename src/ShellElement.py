@@ -40,7 +40,7 @@ def toLocal(d,p: List[np.ndarray]) -> List[np.ndarray]:
 # nodeP - 節点のξ,η座標
 # intP - 積分点のξ,η座標,重み係数
 class ShellElement(FElement):
-    def __init__(self, label, material, param, nodes, nodeP, intP, shapeFunction: function):
+    def __init__(self, label, material, param, nodes, nodeP, intP, shapeFunction):
         super().__init__(label,material,nodes)
         self.param = param
         self.isShell = True
@@ -440,7 +440,7 @@ class ShellElement(FElement):
 # nodes - 節点番号
 class TriElement1(ShellElement):
     def __init__(self,label,material,param,nodes):
-        super().__init__(label,material,param,nodes, TRI1_NODE, TRI1_INT)
+        super().__init__(label,material,param,nodes, TRI1_NODE, TRI1_INT, self.shapeFunction)
 
 
     # 要素名称を返す
@@ -848,7 +848,7 @@ class TriElement1(ShellElement):
 # nodes - 節点番号
 class QuadElement1(ShellElement):
     def __init__(self,label,material,param,nodes):
-        super().__init__(label,material,param,nodes, QUAD1_NODE, QUAD1_INT)
+        super().__init__(label,material,param,nodes, QUAD1_NODE, QUAD1_INT, self.shapeFunction)
 
     # 要素名称を返す
     def getName(self):

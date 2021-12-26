@@ -46,7 +46,7 @@ def addVector(v,dv):
 # nodes - 節点番号
 # intP - 積分点のξ,η座標,重み係数
 class ElementBorder(Nodes):
-    def __init__(self, element, nodes, intP, shapeFunction: function):
+    def __init__(self, element, nodes, intP, shapeFunction):
         super().__init__(nodes)
         self.element = element
         self.intP = intP
@@ -160,7 +160,7 @@ class ElementBorder(Nodes):
 # nodes - 節点番号
 class EdgeBorder1(ElementBorder):
     def __init__(self, element, nodes):
-        super().__init__(element, nodes, None)
+        super().__init__(element, nodes, None, self.shapeFunction)
         self.isEdge = True
 
     # 要素境界名称を返す
@@ -217,7 +217,7 @@ class EdgeBorder1(ElementBorder):
 # nodes - 節点番号
 class TriangleBorder1(ElementBorder):
     def __init__(self, element, nodes):
-        super().__init__(element, nodes, None)
+        super().__init__(element, nodes, None, self.shapeFunction)
 
     # 要素境界名称を返す
     def getName(self):
@@ -272,7 +272,7 @@ class TriangleBorder1(ElementBorder):
 # nodes - 節点番号
 class TriangleBorder2(ElementBorder):
     def __init__(self, element, nodes):
-        super().__init__(element, nodes, TRI2_INT)
+        super().__init__(element, nodes, TRI2_INT, self.shapeFunction)
 
     # 要素境界名称を返す
     def getName(self):
@@ -310,7 +310,7 @@ class TriangleBorder2(ElementBorder):
 # nodes - 節点番号
 class QuadangleBorder1(ElementBorder):
     def __init__(self, element, nodes):
-        super().__init__(element,nodes, QUAD1_INT)
+        super().__init__(element,nodes, QUAD1_INT, self.shapeFunction)
 
     # 要素境界名称を返す
     def getName(self):
@@ -341,7 +341,7 @@ class QuadangleBorder1(ElementBorder):
 # nodes - 節点番号
 class QuadangleBorder2(ElementBorder):
     def __init__(self, element, nodes):
-        super().__init__(element, nodes, QUAD2_INT)
+        super().__init__(element, nodes, QUAD2_INT, self.shapeFunction)
 
     # 要素境界名称を返す
     def getName(self):

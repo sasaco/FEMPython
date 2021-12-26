@@ -211,7 +211,7 @@ def loadVector(dof, model):
     loads = model.bc.loads
     press = model.bc.pressures
     vector = np.zeros(dof)
-    index = model.bc.nodeIndex
+    index: List[int] = model.bc.nodeIndex
     bcdof = model.bc.dof
     for i in range(len(loads)):
         ld = loads[i]
