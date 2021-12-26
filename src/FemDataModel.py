@@ -2,7 +2,6 @@ from Solver import Solver, LU_METHOD, ILUCG_METHOD
 from Result import Result, EigenValue, NODE_DATA, ELEMENT_DATA, VIBRATION, BUCKLING
 from Material import Material
 from BoundaryCondition import BoundaryCondition
-from Vector3 import Vector3
 from FemMain import *
 import math
 import numpy as np
@@ -841,15 +840,17 @@ class MeshModel():
 # 節点
 # label - 節点ラベル
 # x,y,z - x,y,z座標
-class FENode(Vector3):
-    def __init__(self,label,x,y,z):
-        super().__init__(x,y,z)
+class FENode():
+    def __init__(self,label, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
         self.label=label
 
 
     # 節点のコピーを返す
     def clone(self):
-        return FENode(self.label,self.x,self.y,self.z)
+        return FENode(self.label, self.x, self.y, self.z)
 
     # 節点を表す文字列を返す
     def toString(self):
