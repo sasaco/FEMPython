@@ -40,12 +40,13 @@ def toLocal(d,p: List[np.ndarray]) -> List[np.ndarray]:
 # nodeP - 節点のξ,η座標
 # intP - 積分点のξ,η座標,重み係数
 class ShellElement(FElement):
-    def __init__(self, label, material, param, nodes, nodeP, intP):
+    def __init__(self, label, material, param, nodes, nodeP, intP, shapeFunction: function):
         super().__init__(label,material,nodes)
         self.param = param
         self.isShell = True
         self.nodeP = nodeP
         self.intP = intP
+        self.shapeFunction = shapeFunction
 
 
     # 要素境界数を返す
@@ -116,9 +117,9 @@ class ShellElement(FElement):
     # d - 方向余弦マトリックス
     # t - 要素厚さ
     def grad(self, p, ja, sf, d, t):
-        count=self.nodeCount()
+        count = self.nodeCount()
         gr=[]
-        ji=self.jacobInv(ja,d).elements
+        ji = self.jacobInv(ja, d)
         for i in range(count):
             sfi=sf[i]
             dndxsi=sfi[1]
@@ -139,7 +140,7 @@ class ShellElement(FElement):
     def strainMatrix1(self, ja, sf, d) -> np.ndarray:
         count = self.nodeCount()
         m = np.zeros((count,4))
-        ji = self.jacobInv(ja,d).elements
+        ji = self.jacobInv(ja,d)
         for i in range(count):
             mi = m[i]
             sfi = sf[i]
@@ -207,7 +208,7 @@ class ShellElement(FElement):
         ja = self.jacobianMatrix(p, sf, normalVector(p), t)
         count=self.nodeCount()
         matrix=[]
-        coef = 2 * w * abs(ja.determinant())
+        coef = 2 * w * abs(np.linalg.det(ja))
         for i in range(count):
             matr=[]
             cf2 = coef * sf[i][0]
@@ -230,7 +231,7 @@ class ShellElement(FElement):
         gr = self.grad(p, ja, sf, dirMatrix(p), t)
         count = self.nodeCount()
         matrix = []
-        coef = 2 * w * abs(ja.determinant())
+        coef = 2 * w * abs(np.linalg.det(ja))
         for i in range(count):
             matr = []
             gri = gr[i]
@@ -297,7 +298,7 @@ class ShellElement(FElement):
             gr = self.grad(p, ja, sf, d, t)
             sm = self.strainMatrix(ja, sf, d, 0, t)
             str = self.toStress(np.dot(d1, np.dot(v, sm)))
-            w = 2 * ip[2] * abs(ja.determinant())
+            w = 2 * ip[2] * abs(np.linalg.det(ja))
             for i1 in range(count):
                 i6 = 6 * i1
                 gri = gr[i1]
@@ -358,11 +359,11 @@ class ShellElement(FElement):
     # d - 方向余弦マトリックス
     # xsi,eta,zeta - ξ,η,ζ座標
     # t - 要素厚さ
-    def strainPart(self, p,v,n,d,xsi,eta,zeta,t):
+    def strainPart(self, p,v,n,d,xsi,eta,zeta,t) -> np.ndarray:
         sf=self.shapeFunction(xsi,eta)
         ja=self.jacobianMatrix(p,sf,n,t)
         sm=self.strainMatrix(ja,sf,d,zeta,t)
-        return numeric.dotVM(v,sm)
+        return np.dot(v,sm)
 
 
     # 要素歪・応力を返す
@@ -624,7 +625,7 @@ class TriElement1(ShellElement):
 
         sf1 = self.shapeFunction(C1_3, C1_3)
         ja1 = self.jacobianMatrix(p, sf1, n, t)
-        jac1 = ja1.determinant()
+        jac1 = np.linalg.det(ja1)
         jinv = self.jacobInv(ja1, d)
         b1 = self.strainMatrix1(sf1, jinv)
         k1 = self.stiffPart(d1, b1, abs(jac1))
@@ -751,7 +752,7 @@ class TriElement1(ShellElement):
         sf3 = self.shapeFunction3(p, d, ip[0], ip[1])
         sm = self.strainMatrix(sf1, sf3, jinv, d, 0, t)
         str = self.toStress(np.dot(d1, np.dot(v, sm)))
-        w = abs(ja.determinant())
+        w = abs(np.linalg.det(ja))
         for i1 in range(count):
             i6 = 6 * i1
             gri = gr[i1]

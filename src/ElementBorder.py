@@ -46,11 +46,12 @@ def addVector(v,dv):
 # nodes - 節点番号
 # intP - 積分点のξ,η座標,重み係数
 class ElementBorder(Nodes):
-    def __init__(self, element, nodes, intP):
+    def __init__(self, element, nodes, intP, shapeFunction: function):
         super().__init__(nodes)
         self.element = element
         self.intP = intP
         self.isEdge = False		# 辺ではない
+        self.shapeFunction = shapeFunction
 
 
     # 周回順に並んだ節点ラベルを返す

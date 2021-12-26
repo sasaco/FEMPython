@@ -179,6 +179,7 @@ class FElement(Nodes):
         self.isShell = False		# シェル要素ではない
         self.isBar = False		# 梁要素ではない
 
+
     # 要素境界を返す
     # element - 要素ラベル
     def borders(self, element):

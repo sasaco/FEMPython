@@ -1,4 +1,5 @@
 import math
+from typing import List
 import numpy as np
 from Result import Strain, Stress
 from ElementBorder import TriangleBorder1, TriangleBorder2, QuadangleBorder1, QuadangleBorder2, addMatrix
@@ -6,14 +7,14 @@ from Element import FElement, swap, solidAngle, planeAngle, GTETRA2, C1_3, GX2, 
 #--------------------------------------------------------------------#
 
 # 四面体2次要素の節点のξ,η,ζ座標
-TETRA2_NODE=[[0,0,0],[1,0,0],[0,1,0],[0,0,1],[0.5,0,0],[0.5,0.5,0],
-                            [0,0.5,0],[0,0,0.5],[0.5,0,0.5],[0,0.5,0.5]]
+TETRA2_NODE = [ [0,0,0],[1,0,0],[0,1,0],[0,0,1],[0.5,0,0],[0.5,0.5,0],
+                [0,0.5,0],[0,0,0.5],[0.5,0,0.5],[0,0.5,0.5]]
 
 # 四面体2次要素の積分点のξ,η,ζ座標,重み係数
 TETRA2_INT=[[GTETRA2[0],GTETRA2[0],GTETRA2[0],C1_24],
-                        [GTETRA2[1],GTETRA2[0],GTETRA2[0],C1_24],
-                        [GTETRA2[0],GTETRA2[1],GTETRA2[0],C1_24],
-                        [GTETRA2[0],GTETRA2[0],GTETRA2[1],C1_24]]
+            [GTETRA2[1],GTETRA2[0],GTETRA2[0],C1_24],
+            [GTETRA2[0],GTETRA2[1],GTETRA2[0],C1_24],
+            [GTETRA2[0],GTETRA2[0],GTETRA2[1],C1_24]]
 
 # 楔形1次要素の節点のξ,η,ζ座標
 WEDGE1_NODE=[[0,0,-1],[1,0,-1],[0,1,-1],[0,0,1],[1,0,1],[0,1,1]]
@@ -23,37 +24,37 @@ WEDGE1_INT=[[C1_3,C1_3,GX2[0],0.5],[C1_3,C1_3,GX2[1],0.5]]
 
 # 楔形2次要素の節点のξ,η,ζ座標
 WEDGE2_NODE=[[0,0,-1],[1,0,-1],[0,1,-1],[0,0,1],[1,0,1],[0,1,1],
-                            [0.5,0,-1],[0.5,0.5,-1],[0,0.5,-1],
-                            [0.5,0,1],[0.5,0.5,1],[0,0.5,1],
-                            [0,0,0],[1,0,0],[0,1,0]]
+            [0.5,0,-1],[0.5,0.5,-1],[0,0.5,-1],
+            [0.5,0,1],[0.5,0.5,1],[0,0.5,1],
+            [0,0,0],[1,0,0],[0,1,0]]
 
 # 楔形2次要素の積分点のξ,η,ζ座標,重み係数
 WEDGE2_INT=[[GTRI2[0],GTRI2[0],GX3[0],C1_6*GW3[0]],
-                        [GTRI2[1],GTRI2[0],GX3[0],C1_6*GW3[0]],
-                        [GTRI2[0],GTRI2[1],GX3[0],C1_6*GW3[0]],
-                        [GTRI2[0],GTRI2[0],GX3[1],C1_6*GW3[1]],
-                        [GTRI2[1],GTRI2[0],GX3[1],C1_6*GW3[1]],
-                        [GTRI2[0],GTRI2[1],GX3[1],C1_6*GW3[1]],
-                        [GTRI2[0],GTRI2[0],GX3[2],C1_6*GW3[2]],
-                        [GTRI2[1],GTRI2[0],GX3[2],C1_6*GW3[2]],
-                        [GTRI2[0],GTRI2[1],GX3[2],C1_6*GW3[2]]]
+            [GTRI2[1],GTRI2[0],GX3[0],C1_6*GW3[0]],
+            [GTRI2[0],GTRI2[1],GX3[0],C1_6*GW3[0]],
+            [GTRI2[0],GTRI2[0],GX3[1],C1_6*GW3[1]],
+            [GTRI2[1],GTRI2[0],GX3[1],C1_6*GW3[1]],
+            [GTRI2[0],GTRI2[1],GX3[1],C1_6*GW3[1]],
+            [GTRI2[0],GTRI2[0],GX3[2],C1_6*GW3[2]],
+            [GTRI2[1],GTRI2[0],GX3[2],C1_6*GW3[2]],
+            [GTRI2[0],GTRI2[1],GX3[2],C1_6*GW3[2]]]
 
 # 六面体1次要素の節点のξ,η,ζ座標
 HEXA1_NODE=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
-                        [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]]
+            [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]]
 
 # 六面体1次要素の積分点のξ,η,ζ座標,重み係数
 HEXA1_INT=[[GX2[0],GX2[0],GX2[0],1],[GX2[1],GX2[0],GX2[0],1],
-                    [GX2[0],GX2[1],GX2[0],1],[GX2[1],GX2[1],GX2[0],1],
-                    [GX2[0],GX2[0],GX2[1],1],[GX2[1],GX2[0],GX2[1],1],
-                    [GX2[0],GX2[1],GX2[1],1],[GX2[1],GX2[1],GX2[1],1]]
+            [GX2[0],GX2[1],GX2[0],1],[GX2[1],GX2[1],GX2[0],1],
+            [GX2[0],GX2[0],GX2[1],1],[GX2[1],GX2[0],GX2[1],1],
+            [GX2[0],GX2[1],GX2[1],1],[GX2[1],GX2[1],GX2[1],1]]
 
 # 六面体2次要素の節点のξ,η,ζ座標
 HEXA2_NODE=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
-                    [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1],
-                    [0,-1,-1],[1,0,-1],[0,1,-1],[-1,0,-1],
-                    [0,-1,1],[1,0,1],[0,1,1],[-1,0,1],
-                    [-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0]]
+            [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1],
+            [0,-1,-1],[1,0,-1],[0,1,-1],[-1,0,-1],
+            [0,-1,1],[1,0,1],[0,1,1],[-1,0,1],
+            [-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0]]
 
 # 六面体2次要素の積分点のξ,η,ζ座標,重み係数
 def HEXA2_INT():
@@ -61,19 +62,20 @@ def HEXA2_INT():
     for k in range(3):
         for j in range(3):
             for i in range(3):
-                a.append([GX3[i],GX3[j],GX3[k],GW3[i]*GW3[j]*GW3[k]])
+                a.append([GX3[i], GX3[j], GX3[k], GW3[i] * GW3[j] * GW3[k]] )
     return a
 
 # 六面体1次要素の質量マトリックス係数
 def HEXA1_MASS_BASE():
-    v=[]
+    v = []
     for i in range(8):
-        v[i] = []
+        v2 = []
         for j in range(8):
             s = abs( HEXA1_NODE[i][0] - HEXA1_NODE[j][0] ) + \
-                    abs( HEXA1_NODE[i][1] - HEXA1_NODE[j][1] ) + \
-                    abs( HEXA1_NODE[i][2] - HEXA1_NODE[j][2] )
-            v[i][j] = math.pow(0.5, 0.5*s) / 27
+                abs( HEXA1_NODE[i][1] - HEXA1_NODE[j][1] ) + \
+                abs( HEXA1_NODE[i][2] - HEXA1_NODE[j][2] )
+            v2.append(math.pow(0.5, 0.5 * s) / 27)
+        v.append(v2)
     return v
 
 
@@ -85,50 +87,51 @@ def HEXA1_MASS_BASE():
 # nodeP - 節点のξ,η,ζ座標
 # intP - 積分点のξ,η,ζ座標,重み係数
 class SolidElement(FElement):
-    def __init__(self, label, material, nodes, nodeP, intP):
+    def __init__(self, label, material, nodes, nodeP, intP, shapeFunction):
         super().__init__(label, material, nodes)
         self.nodeP = nodeP
         self.intP = intP
+        self.shapeFunction = shapeFunction
 
     # ヤコビ行列を返す
     # p - 要素節点
     # sf - 形状関数行列
-    def jacobianMatrix(self, p, sf):
+    def jacobianMatrix(self, p: np.ndarray, sf) -> np.ndarray:
         count = self.nodeCount()
-        jac = [0,0,0,0,0,0,0,0,0]
+        jac = np.zeros(9)
         for i in range(count):
             sfi = sf[i]
-            pix = p[i].x
-            piy = p[i].y
-            piz = p[i].z
+            pix = p[i][0]
+            piy = p[i][1]
+            piz = p[i][2]
             for j in range(3):
                 sfij = sfi[j+1]
                 jac[j] += sfij * pix
                 jac[j + 3] += sfij * piy
                 jac[j + 6] += sfij * piz
-        return THREE.Matrix3().fromArray(jac)
+        return jac
 
     # 形状関数の勾配 [ dNi/dx dNi/dy dNi/dz ] を返す
     # p - 要素節点
     # ja - ヤコビ行列
     # sf - 形状関数行列
-    def grad(self, p, ja, sf):
+    def grad(self, p, ja, sf) -> List[np.ndarray]:
         count = self.nodeCount()
         gr = []
-        ji = THREE.Matrix3().getInverse(ja,True).elements
+        ji = np.linalg.inv(ja)
         for i in range(count):
-            gr[i]=[
+            gr.append(np.array([
                 ji[0] * sf[i][1] + ji[3] * sf[i][2] + ji[6] * sf[i][3],
                 ji[1] * sf[i][1] + ji[4] * sf[i][2] + ji[7] * sf[i][3],
                 ji[2] * sf[i][1] + ji[5] * sf[i][2] + ji[8] * sf[i][3]
-                ]
+                ]))
         return gr
 
     # 歪 - 変位マトリックスの転置行列を返す
     # grad - 形状関数の勾配
-    def strainMatrix(self, grad):
+    def strainMatrix(self, grad) -> np.ndarray:
         count = self.nodeCount()
-        m = np.zeros((3*count,6))
+        m = np.zeros((3*count, 6))
         for i in range(count):
             i3 = 3 * i
             gr = grad[i]
@@ -153,7 +156,7 @@ class SolidElement(FElement):
         ja = self.jacobianMatrix(p,sf)
         count = self.nodeCount()
         matrix = []
-        coef = w * abs(ja.determinant())
+        coef = w * abs(np.linalg.det(ja))
         for i in range(count):
             matr = []
             cf2 = coef * sf[i][0]
@@ -174,7 +177,7 @@ class SolidElement(FElement):
         gr = self.grad(p,ja,sf)
         count = self.nodeCount()
         matrix = []
-        coef = w * abs(ja.determinant())
+        coef = w * abs(np.linalg.det(ja))
         for i in range(count):
             matr = []
             gri = gr[i]
@@ -199,7 +202,7 @@ class SolidElement(FElement):
         for i in range(len(self.intP)):
             sf = self.shapeFunction( self.intP[i][0], self.intP[i][1], self.intP[i][2] )
             ja = self.jacobianMatrix(p,sf)
-            coef = self.intP[i][3] * dens*abs(ja.determinant())
+            coef = self.intP[i][3] * dens*abs(np.linalg.det(ja))
             for i1 in range(count):
                 for j1 in range(count):
                     value = coef * sf[i1][0] * sf[j1][0]
@@ -222,7 +225,7 @@ class SolidElement(FElement):
             ip = self.intP[i]
             sf = self.shapeFunction(ip[0], ip[1], ip[2])
             ja = self.jacobianMatrix(p, sf)
-            ks = self.stiffPart(d1, self.strainMatrix(self.grad(p, ja, sf)), ip[3] * abs(ja.determinant()))
+            ks = self.stiffPart(d1, self.strainMatrix(self.grad(p, ja, sf)), ip[3] * abs(np.linalg.det(ja)))
             addMatrix(kk, ks)
 
         return kk
@@ -266,17 +269,17 @@ class SolidElement(FElement):
             ja = self.jacobianMatrix(p, sf)
             gr = self.grad(p, ja, sf)
             sm = self.strainMatrix(gr)
-            str = numeric.dotMV(d1, numeric.dotVM(v,sm))
-            w = ip[3] * abs(ja.determinant())
+            str = np.dot(d1, np.dot(v, sm))
+            w = ip[3] * abs(np.linalg.det(ja))
             for i1 in range(count):
                 i3 = 3 * i1
                 gri = gr[i1]
                 for j1 in range(count):
                     j3 = 3 * j1
                     grj = gr[j1]
-                    s = w * ( gri[0] * ( str[0] * grj[0] + str[3] * grj[1] + str[5] * grj[2] ) +
-                                        gri[1] * ( str[3] * grj[0] + str[1] * grj[1] + str[4] * grj[2] ) +
-                                        gri[2] * ( str[5] * grj[0] + str[4] * grj[1] + str[2] * grj[2] ))
+                    s = w ( gri[0] * ( str[0] * grj[0] + str[3] * grj[1] + str[5] * grj[2] ) +
+                            gri[1] * ( str[3] * grj[0] + str[1] * grj[1] + str[4] * grj[2] ) +
+                            gri[2] * ( str[5] * grj[0] + str[4] * grj[1] + str[2] * grj[2] ))
                     kk[i3][j3] += s
                     kk[i3+1][j3+1] += s
                     kk[i3+2][j3+2] += s
@@ -297,11 +300,11 @@ class SolidElement(FElement):
         for i in range(count):
             eps = self.strainPart(p, v, self.nodeP[i])
             strain[i] = Strain(eps)
-            str = numeric.dotMV(d1,eps)
+            str = np.dot(d1, eps)
             stress[i] = Stress(str)
-            energy[i] = 0.5 * strain[i].innerProduct(stress[i])
+            energy[i] = 0.5 * np.inner(strain[i], stress[i])
 
-        return [strain,stress,energy]
+        return [strain, stress, energy]
 
 
     # 要素内の歪ベクトルを返す
@@ -312,7 +315,7 @@ class SolidElement(FElement):
         sf = self.shapeFunction(x[0], x[1], x[2])
         ja = self.jacobianMatrix(p, sf)
         sm = self.strainMatrix(self.grad(p, ja, sf))
-        return numeric.dotVM(v,sm)
+        return np.dot(v, sm)
 
 
     # 要素歪・応力を返す
@@ -327,10 +330,10 @@ class SolidElement(FElement):
         energy = 0
         for i in range(len(self.intP)):
             eps = self.strainPart(p, v, self.intP[i])
-            strain = numeric.add(strain, eps)
-            str = numeric.dotMV(d1, eps)
-            stress = numeric.add(stress, str)
-            energy += np.dot(eps, str)
+            strain = strain + eps
+            str1 = np.dot(d1, eps)
+            stress = stress + str1
+            energy += np.dot(eps, str1)
 
         strain = np.multiply(strain, cf)
         stress = np.multiply(stress, cf)
@@ -357,7 +360,7 @@ class SolidElement(FElement):
 # nodes - 節点番号
 class TetraElement1(SolidElement):
     def __init__(self, label, material, nodes):
-        super().__init__(label, material, nodes, None, None)
+        super().__init__(label, material, nodes, None, None, self.shapeFunction)
 
 
     # 要素名称を返す
@@ -411,8 +414,7 @@ class TetraElement1(SolidElement):
             [ 1 - xsi - eta - zeta, -1, -1, -1 ],
             [ xsi, 1, 0, 0 ],
             [ eta, 0, 1, 0 ],
-            [ zeta, 0, 0, 1 ]
-        ]
+            [ zeta, 0, 0, 1 ]]
 
     # ヤコビアンを返す
     # p - 要素節点
@@ -526,7 +528,7 @@ class TetraElement1(SolidElement):
         ja = self.jacobianMatrix(p)
         gr = self.grad(p, ja)
         sm = self.strainMatrix(gr)
-        str = numeric.dotMV(d1, numeric.dotVM( self.toArray(u,3), sm ))
+        str = np.dot(d1, np.dot( self.toArray(u,3), sm ))
         w = C1_6 * abs(ja)
         for i1 in range(count):
             i3 = 3 * i1
@@ -552,16 +554,15 @@ class TetraElement1(SolidElement):
     # d1 - 応力 - 歪マトリックス
     def strainStress(self, p, u, d1):
         sm = self.strainMatrix( self.grad( p, self.jacobian(p)))
-        eps = numeric.dotVM(self.toArray(u,3), sm)
+        eps = np.dot(self.toArray(u,3), sm)
         strain = Strain(eps)
-        str = numeric.dotMV(d1,eps)
+        str = np.dot(d1, eps)
         stress = Stress(str)
         energy = 0.5 * strain.innerProduct(stress)
         return [
             [ strain, strain, strain, strain ],
             [ stress, stress, stress, stress ],
-            [ energy, energy, energy, energy ]
-        ]
+            [ energy, energy, energy, energy ]]
 
 
     # 要素歪・応力を返す
@@ -570,12 +571,10 @@ class TetraElement1(SolidElement):
     # d1 - 応力 - 歪マトリックス
     def elementStrainStress(self, p, u, d1):
         sm = self.strainMatrix(self.grad(p,self.jacobian(p)))
-        eps = numeric.dotVM(self.toArray(u,3),sm)
-        str = numeric.dotMV(d1,eps)
+        eps = np.dot(self.toArray(u,3),sm)
+        str = np.dot(d1,eps)
         energy = 0.5 * np.dot(eps,str)
-        return [
-            Strain(eps), Stress(str), energy
-        ]
+        return [ Strain(eps), Stress(str), energy ]
 
 
 #--------------------------------------------------------------------#
@@ -585,7 +584,7 @@ class TetraElement1(SolidElement):
 # nodes - 節点番号
 class TetraElement2(SolidElement):
     def __init__(self, label, material, nodes):
-        super().__init__(label, material, nodes, TETRA2_NODE, TETRA2_INT)
+        super().__init__(label, material, nodes, TETRA2_NODE, TETRA2_INT, self.shapeFunction)
 
 
     # 要素名称を返す
@@ -619,37 +618,37 @@ class TetraElement2(SolidElement):
 
     # 要素を鏡像反転する
     def mirror(self):
-        swap(self.nodes,1,2)
-        swap(self.nodes,4,6)
-        swap(self.nodes,8,9)
+        swap(self.nodes, 1, 2)
+        swap(self.nodes, 4, 6)
+        swap(self.nodes, 8, 9)
 
 
     # 要素節点の角度を返す
     # p - 要素節点
     def angle(self, p):
-        return [solidAngle(p[0],p[4],p[6],p[7]),
-                        solidAngle(p[1],p[5],p[4],p[8]),
-                        solidAngle(p[2],p[6],p[5],p[9]),
-                        solidAngle(p[3],p[7],p[8],p[9]),
-                        planeAngle(p[4],p[2],p[3]),planeAngle(p[5],p[0],p[3]),
-                        planeAngle(p[6],p[1],p[3]),planeAngle(p[7],p[1],p[2]),
-                        planeAngle(p[8],p[2],p[0]),planeAngle(p[9],p[0],p[1])]
+        return [solidAngle(p[0], p[4], p[6], p[7]),
+                solidAngle(p[1], p[5], p[4], p[8]),
+                solidAngle(p[2], p[6], p[5], p[9]),
+                solidAngle(p[3], p[7], p[8], p[9]),
+                planeAngle(p[4], p[2], p[3]),planeAngle(p[5],p[0],p[3]),
+                planeAngle(p[6], p[1], p[3]),planeAngle(p[7],p[1],p[2]),
+                planeAngle(p[8], p[2], p[0]),planeAngle(p[9],p[0],p[1])]
 
 
     # 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
     # xsi,eta,zeta - 要素内部ξ,η,ζ座標
     def shapeFunction(self, xsi, eta, zeta):
-        xez=1-xsi-eta-zeta
-        return [[xez*(2*xez-1),1-4*xez,1-4*xez,1-4*xez],
-                        [xsi*(2*xsi-1),4*xsi-1,0,0],
-                        [eta*(2*eta-1),0,4*eta-1,0],
-                        [zeta*(2*zeta-1),0,0,4*zeta-1],
-                        [4*xez*xsi,4*(xez-xsi),-4*xsi,-4*xsi],
-                        [4*xsi*eta,4*eta,4*xsi,0],
-                        [4*xez*eta,-4*eta,4*(xez-eta),-4*eta],
-                        [4*xez*zeta,-4*zeta,-4*zeta,4*(xez-zeta)],
-                        [4*xsi*zeta,4*zeta,0,4*xsi],
-                        [4*eta*zeta,0,4*zeta,4*eta]]
+        xez = 1 - xsi - eta - zeta
+        return [[xez * (2 * xez - 1), 1 - 4 * xez, 1 - 4 * xez, 1 - 4 * xez],
+                [xsi * (2 * xsi - 1), 4 * xsi - 1, 0, 0],
+                [eta * (2 * eta - 1), 0, 4 * eta - 1, 0],
+                [zeta * (2 * zeta - 1), 0, 0, 4 * zeta - 1],
+                [4 * xez * xsi, 4 * (xez - xsi), -4 * xsi, -4 * xsi],
+                [4 * xsi * eta, 4 * eta, 4 * xsi, 0],
+                [4 * xez * eta, -4 * eta, 4 * (xez - eta), -4 * eta],
+                [4 * xez * zeta, -4 * zeta, -4 * zeta, 4 * (xez - zeta)],
+                [4 * xsi * zeta, 4 * zeta, 0, 4 * xsi],
+                [4 * eta * zeta, 0, 4 * zeta, 4 * eta]]
 
 
 #--------------------------------------------------------------------#
@@ -659,7 +658,7 @@ class TetraElement2(SolidElement):
 # nodes - 節点番号
 class WedgeElement1(SolidElement):
     def __init__(self, label, material, nodes):
-        super().__init__(label, material, nodes, WEDGE1_NODE, WEDGE1_INT)
+        super().__init__(label, material, nodes, WEDGE1_NODE, WEDGE1_INT, self.shapeFunction)
 
     # 要素名称を返す
     def getName(self):
@@ -729,7 +728,7 @@ class WedgeElement1(SolidElement):
         for i in range(2):
             sf=self.shapeFunction(
                 WEDGE1_INT[i][0], WEDGE1_INT[i][1], WEDGE1_INT[i][2])
-            ja += self.jacobianMatrix(p, sf).determinant()
+            ja += np.linalg.det(self.jacobianMatrix(p, sf))
 
         v0 = dens * ja / 36
         m = np.zeros((18,18))
@@ -756,7 +755,7 @@ class WedgeElement1(SolidElement):
 # nodes - 節点番号
 class WedgeElement2(SolidElement):
     def __init__(self, label, material, nodes):
-        super().__init__(label, material, nodes, WEDGE2_NODE, WEDGE2_INT)
+        super().__init__(label, material, nodes, WEDGE2_NODE, WEDGE2_INT, self.shapeFunction)
 
     # 要素名称を返す
     def getName(swlf):
@@ -855,7 +854,7 @@ class WedgeElement2(SolidElement):
 # nodes - 節点番号
 class HexaElement1(SolidElement):
     def __init__(self, label, material, nodes):
-        super().__init__(label, material, nodes, HEXA1_NODE, HEXA1_INT)
+        super().__init__(label, material, nodes, HEXA1_NODE, HEXA1_INT, self.shapeFunction)
 
     # 要素名称を返す
     def getName(self):
@@ -909,7 +908,7 @@ class HexaElement1(SolidElement):
 
     # 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
     # xsi,eta,zeta - 要素内部ξ,η,ζ座標
-    def shapeFunction(self, xsi,eta,zeta):
+    def shapeFunction(self, xsi, eta, zeta):
         return [[0.125*(1-xsi)*(1-eta)*(1-zeta),-0.125*(1-eta)*(1-zeta),
                             -0.125*(1-xsi)*(1-zeta),-0.125*(1-xsi)*(1-eta)],
                         [0.125*(1+xsi)*(1-eta)*(1-zeta),0.125*(1-eta)*(1-zeta),
@@ -935,7 +934,7 @@ class HexaElement1(SolidElement):
         for i in range(8):
             sf = self.shapeFunction(HEXA1_INT[i][0],HEXA1_INT[i][1],
                                                                 HEXA1_INT[i][2])
-            ja += abs(self.jacobianMatrix(p,sf).determinant())
+            ja += abs(np.linalg.det(self.jacobianMatrix(p,sf)))
 
         coef = dens * ja
         m = np.zeros((24,24))
@@ -958,7 +957,7 @@ class HexaElement1(SolidElement):
 # nodes - 節点番号
 class HexaElement2(SolidElement):
     def __init__(self, label, material, nodes):
-        super().__init__(label, material, nodes, HEXA2_NODE, HEXA2_INT)
+        super().__init__(label, material, nodes, HEXA2_NODE, HEXA2_INT, self.shapeFunction)
 
     # 要素名称を返す
     def getName(self):
