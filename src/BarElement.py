@@ -1,4 +1,5 @@
-from Element import FElement, dirMatrix, toDir3, C1_3
+import numpy as np
+from Element import FElement, dirMatrix, toDir3, C1_3, normalize
 from ElementBorder import EdgeBorder1
 from Result import Strain, Stress
 #--------------------------------------------------------------------#
@@ -19,7 +20,7 @@ class BarElement(FElement):
 		self.param=param
 		self.isBar=True
 		if axis!=None:
-			axis.normalize()
+			normalize(axis)
 		self.axis=axis
 
 
@@ -59,7 +60,7 @@ class BarElement(FElement):
 	# material - 材料
 	# sect - 梁断面パラメータ
 	def stiffnessMatrix(self, p, material, sect):
-		kk=numeric.rep([12,12],0)
+		kk=np.zeros((12,12))
 		l=p[0].distanceTo(p[1])
 		d=dirMatrix(p,self.axis)
 		kx=material.ee*sect.area/l
@@ -104,7 +105,7 @@ class BarElement(FElement):
 		l2=p[0].distanceToSquared(p[1])
 		d=dirMatrix(p,self.axis)
 		v=self.toLocalArray(u,d)
-		kk=numeric.rep([12,12],0)
+		kk=np.zeros((12,12))
 		sx=material.ee*sect.area*(v[6]-v[0])/l2
 		for i in range(3):
 			kk[i][i]=sx
@@ -174,10 +175,10 @@ class BarElement(FElement):
 		for i in range(2):
 			str[i]=sect.strainStress(material,ex,thd,kpy[i],kpz[i],sy,sz)
 
-		strain1=Strain(numeric.mul(0.5,numeric.add(str[0][0],str[1][0])))
-		stress1=Stress(numeric.mul(0.5,numeric.add(str[0][1],str[1][1])))
-		strain2=Strain(numeric.mul(0.5,numeric.add(str[0][2],str[1][2])))
-		stress2=Stress(numeric.mul(0.5,numeric.add(str[0][3],str[1][3])))
+		strain1=Strain(np.multiply(0.5,numeric.add(str[0][0],str[1][0])))
+		stress1=Stress(np.multiply(0.5,numeric.add(str[0][1],str[1][1])))
+		strain2=Strain(np.multiply(0.5,numeric.add(str[0][2],str[1][2])))
+		stress2=Stress(np.multiply(0.5,numeric.add(str[0][3],str[1][3])))
 		strain1.rotate(d)
 		stress1.rotate(d)
 		strain2.rotate(d)
@@ -264,7 +265,7 @@ class BEBarElement(BarElement):
 		m0=mi[0]
 		dm=C1_3*m0
 		dix=C1_3*mi[1]
-		m=numeric.rep([12,12],0)
+		m=np.zeros((12,12))
 		m[0][0]=dm
 		m[0][6]=0.5*dm
 		m[6][0]=0.5*dm

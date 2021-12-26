@@ -1,4 +1,5 @@
 import math
+import numpy as np
 #--------------------------------------------------------------------#
 # 反復解法（不完全LU分解共役勾配法）
 
@@ -27,7 +28,7 @@ def getILU(a):
             if arow.hasOwnProperty(j):
                 cols.append(int(j))
 
-        cols.sort(function(c1,c2):return c1-c2})
+        sorted(cols, key=lambda c1,c2: c1-c2)
 
         for j in range(len(cols)):
             cj=cols[j]
@@ -72,14 +73,14 @@ def getILU(a):
     rowData.append(count)
     for i in range(m):
         diag[i]+=count
-        count+=col[i].length
+        count+= len(col[i])
         rowData.append(count)
         #Array.prototype.push.apply(colData,col[i])
         for e in col[i]:
-            colData.push(e)
+            colData.append(e)
         #Array.prototype.push.apply(valData,val[i])
         for e in val[i]:
-            valData.push(e)
+            valData.append(e)
 
         valData[diag[i]]=1/valData[diag[i]]
 
@@ -127,13 +128,14 @@ def solveLU(lu,p):
 def solveILU(matrix,ilu,p,iterMax,thres):
     iterMax=len(iterMaxorp)
     thres=thresorILUCG_THRES
-    x=numeric.rep([p.length],0),xg=p.concat()
+    x=np.zeros(len(p))
+    xg=p.concat()
     xq=solveLU(ilu,xg)
     xd=xq.concat(),j
     for iter in range(iterMax):
-        z1=numeric.dotVV(xd,xg)
+        z1=np.dot(xd,xg)
         xq=sparseDotMV(matrix,xd)
-        r=numeric.dotVV(xd,xq)
+        r=np.dot(xd,xq)
         if abs(r)==0:
             raise Exception('方程式求解エラー at iter='+iter)
 
@@ -142,10 +144,10 @@ def solveILU(matrix,ilu,p,iterMax,thres):
             x[j]+=alpha*xd[j]
             xg[j]-=alpha*xq[j]
 
-        if(numeric.dotVV(xg,xg)<thres):
+        if(np.dot(xg,xg)<thres):
             return x
         xq2=solveLU(ilu,xg)
-        z2=numeric.dotVV(xq,xq2)
+        z2=np.dot(xq,xq2)
         beta=-z2/r
         for j in range(len(xg)):
             xd[j]=beta*xd[j]+xq2[j]
@@ -190,13 +192,13 @@ def  toSparse(a):
             if arow.hasOwnProperty(j):
                 cols.append(int(j))
 
-        cols.sort(function(c1,c2):return c1-c2})
+        sorted(cols, key=lambda c1,c2: c1-c2)
 
         count += len(cols)
         row.append(count)
         #Array.prototype.push.apply(col,cols)
         for e in cols:
-            col.push(e)
+            col.append(e)
 
         for j in range(len(cols)):
             val.append(arow[cols[j]])

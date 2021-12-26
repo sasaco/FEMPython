@@ -4,40 +4,40 @@ import math
 from Vector3 import Vector3
 #--------------------------------------------------------------------#
 
-CIRCLE_DIV=16			# 円形断面表示オブジェクトの分割数
-CIRCLE_DTH=2*math.pi/CIRCLE_DIV	# 円形断面の１分割の角度
-COEF_K1=64/math.pow(math.pi,5)	# 矩形断面の捩り係数
-COEF_K=8/(math.pi*math.pi)
+CIRCLE_DIV = 16			                # 円形断面表示オブジェクトの分割数
+CIRCLE_DTH = 2 * math.pi / CIRCLE_DIV	# 円形断面の１分割の角度
+COEF_K1 = 64 / math.pow(math.pi, 5)	    # 矩形断面の捩り係数
+COEF_K = 8 / (math.pi * math.pi)
 
 
 # 矩形断面の捩り係数を求める
 # ba - 辺の長さ比b/a
 def rectCoef(ba):
-    dk1s=0
-    dks=0
-    dbs=0
-    pba=0.5*math.pi*ba
-    i=1
-    sg=1
-    while(dk1/dk1s>1e-10):
-        ex=math.exp(-2*pba*i)
-        dk1=(1-ex)/((i+ex)*math.pow(i,5))	# IEは双曲線関数未実装
-        dk1s+=dk1
-        i+=2
+    dk1s = 0
+    dks = 0
+    dbs = 0
+    pba = 0.5 * math.pi * ba
+    i = 1
+    sg = 1
+    while dk1 / dk1s > 1e-10:
+        ex = math.exp(-2 * pba * i)
+        dk1 = (1 - ex) / ((i+ex)*math.pow(i, 5))	# IEは双曲線関数未実装
+        dk1s += dk1
+        i += 2
 
-    i=1
-    while(dk/dks>1e-10):
-        dk=2/((math.exp(pba*i)+math.exp(-pba*i))*i*i)
-        dks+=dk
-        i+=2
+    i = 1
+    while dk / dks > 1e-10:
+        dk = 2 / ((math.exp(pba*i) + math.exp(-pba*i)) * i * i)
+        dks += dk
+        i += 2
 
-    i=1
-    while(abs(db/dbs)>1e-12):
-        ex=math.exp(-2*pba*i)
-        db=sg*(1-ex)/((i+ex)*i*i)
-        dbs+=db
-        i+=2
-        sg=-sg
+    i = 1
+    while abs(db/dbs) > 1e-12:
+        ex = math.exp(-2 * pba * i)
+        db = sg * (1-ex) / ((i+ex) * i * i)
+        dbs += db
+        i += 2
+        sg =- sg
 
     k1=1/3-COEF_K1*dk1s/ba
     k=1-COEF_K*dks

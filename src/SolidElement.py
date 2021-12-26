@@ -1,8 +1,8 @@
 import math
+import numpy as np
 from Result import Strain, Stress
-from ElementBorder import TriangleBorder1, TriangleBorder2, QuadangleBorder1, QuadangleBorder2
+from ElementBorder import TriangleBorder1, TriangleBorder2, QuadangleBorder1, QuadangleBorder2, addMatrix
 from Element import FElement, swap, solidAngle, planeAngle, GTETRA2, C1_3, GX2, GTRI2, GX3, C1_6, GW3
-from FemDataModel import addMatrix
 #--------------------------------------------------------------------#
 
 # 四面体2次要素の節点のξ,η,ζ座標
@@ -128,7 +128,7 @@ class SolidElement(FElement):
     # grad - 形状関数の勾配
     def strainMatrix(self, grad):
         count = self.nodeCount()
-        m = numeric.rep([3*count,6],0)
+        m = np.zeros((3*count,6))
         for i in range(count):
             i3 = 3 * i
             gr = grad[i]
@@ -195,7 +195,7 @@ class SolidElement(FElement):
     # dens - 材料の密度
     def massMatrix(self, p, dens):
         count = self.nodeCount()
-        m = numeric.rep([3*count,3*count],0)
+        m = np.zeros((3*count,3*count))
         for i in range(len(self.intP)):
             sf = self.shapeFunction( self.intP[i][0], self.intP[i][1], self.intP[i][2] )
             ja = self.jacobianMatrix(p,sf)
@@ -217,7 +217,7 @@ class SolidElement(FElement):
     # d1 - 応力 - 歪マトリックス
     def stiffnessMatrix(self, p, d1):
         count = 3 * self.nodeCount()
-        kk = numeric.rep([count,count], 0)
+        kk = np.zeros((count,count))
         for i in range(len(self.intP)):
             ip = self.intP[i]
             sf = self.shapeFunction(ip[0], ip[1], ip[2])
@@ -233,7 +233,7 @@ class SolidElement(FElement):
     # coef - 係数
     def shapeFunctionMatrix(self, p, coef):
         count = self.nodeCount()
-        s = numeric.rep([count,count], 0)
+        s = np.zeros((count,count))
         for i in range(len(self.intP)):
             addMatrix(s, self.shapePart(p, self.intP[i], coef * self.intP[i][3]))
 
@@ -245,7 +245,7 @@ class SolidElement(FElement):
     # coef - 係数
     def gradMatrix(self, p, coef):
         count = self.nodeCount()
-        g = numeric.rep([count,count], 0)
+        g = np.zeros((count,count))
         for i in range(len(self.intP)):
             addMatrix(g, self.gradPart(p, self.intP[i], coef * self.intP[i][3]))
 
@@ -258,7 +258,7 @@ class SolidElement(FElement):
     # d1 - 応力 - 歪マトリックス
     def geomStiffnessMatrix(self, p, u, d1):
         count = self.nodeCount()
-        kk = numeric.rep([3*count,3*count], 0)
+        kk = np.zeros((3*count,3*count))
         v = self.toArray(u, 3)
         for i in range(len(self.intP)):
             ip = self.intP[i]
@@ -330,10 +330,10 @@ class SolidElement(FElement):
             strain = numeric.add(strain, eps)
             str = numeric.dotMV(d1, eps)
             stress = numeric.add(stress, str)
-            energy += numeric.dotVV(eps, str)
+            energy += np.dot(eps, str)
 
-        strain = numeric.mul(strain, cf)
-        stress = numeric.mul(stress, cf)
+        strain = np.multiply(strain, cf)
+        stress = np.multiply(stress, cf)
         energy *= 0.5 * cf
         return [Strain(strain), Stress(stress), energy]
 
@@ -457,7 +457,7 @@ class TetraElement1(SolidElement):
     # p - 要素節点
     # dens - 材料の密度
     def massMatrix(self, p, dens):
-        m = numeric.rep([12,12], 0)
+        m = np.zeros((12,12))
         value = dens * self.jacobian(p)/60
         vh = 0.5 * value
         for i in range(12, 3):
@@ -522,7 +522,7 @@ class TetraElement1(SolidElement):
     # d1 - 応力 - 歪マトリックス
     def geomStiffnessMatrix(self, p, u, d1):
         count = self.nodeCount()
-        kk = numeric.rep([3*count,3*count], 0)
+        kk = np.zeros((3*count,3*count))
         ja = self.jacobianMatrix(p)
         gr = self.grad(p, ja)
         sm = self.strainMatrix(gr)
@@ -572,7 +572,7 @@ class TetraElement1(SolidElement):
         sm = self.strainMatrix(self.grad(p,self.jacobian(p)))
         eps = numeric.dotVM(self.toArray(u,3),sm)
         str = numeric.dotMV(d1,eps)
-        energy = 0.5 * numeric.dotVV(eps,str)
+        energy = 0.5 * np.dot(eps,str)
         return [
             Strain(eps), Stress(str), energy
         ]
@@ -732,7 +732,7 @@ class WedgeElement1(SolidElement):
             ja += self.jacobianMatrix(p, sf).determinant()
 
         v0 = dens * ja / 36
-        m = numeric.rep([18,18],0)
+        m = np.zeros((18,18))
         for i in range(6):
             for j in range(6):
                 value = v0
@@ -938,7 +938,7 @@ class HexaElement1(SolidElement):
             ja += abs(self.jacobianMatrix(p,sf).determinant())
 
         coef = dens * ja
-        m = numeric.rep([24,24], 0)
+        m = np.zeros((24,24))
         for i in range(8):
             i3 = 3 * i
             for j in range(8):

@@ -1,96 +1,132 @@
-from FemDataModel import Nodes, normalVector
-from Vector3 import Vector3
+from Nodes import Nodes
 import math
 import numpy as np
-from typing import List 
+from typing import List
 #--------------------------------------------------------------------#
 
 # 三角形2次要素のガウス積分の積分点座標
-GTRI2=[1/6,2/3]
+GTRI2 = [1/6, 2/3]
 # 四面体2次要素のガウス積分の積分点座標
-GTETRA2=[0.25-0.05*math.sqrt(5),0.25+0.15*math.sqrt(5)]
+GTETRA2 = [0.25 - 0.05 * math.sqrt(5), 0.25 + 0.15 * math.sqrt(5)]
 # 四角形1次要素のガウス積分の積分点座標
-GX2=[-1/math.sqrt(3),1/math.sqrt(3)]
+GX2 = [ -1 / math.sqrt(3), 1 / math.sqrt(3)]
 # 四角形2次要素のガウス積分の積分点座標
-GX3=[-math.sqrt(0.6),0,math.sqrt(0.6)]
+GX3 = [ -math.sqrt(0.6), 0, math.sqrt(0.6)]
 # ガウス積分の重み係数
-GW3=[5/9,8/9,5/9]
-C1_3=1/3,C1_6=1/6,C1_12=1/12,C1_24=1/24	# 1/3,1/6,1/12,1/24
+GW3 = [ 5/9, 8/9, 5/9 ]
+C1_3 = 1/3
+C1_6 = 1/6
+C1_12 = 1/12
+C1_24 = 1/24	# 1/3,1/6,1/12,1/24
 
 
 # 節点を入れ替える
 # i1,i2 - 節点インデックス
 def swap(nodes,i1,i2):
-    t=nodes[i1]
-    nodes[i1]=nodes[i2]
-    nodes[i2]=t
+    t = nodes[i1]
+    nodes[i1] = nodes[i2]
+    nodes[i2] = t
 
+
+def normalize(vector: np.ndarray) -> np.ndarray:
+    return vector / np.linalg.norm(vector)
+
+# 法線ベクトルを返す
+# p - 頂点座標
+def normalVector(p: List[np.ndarray]) -> np.ndarray:
+    if len(p) < 3:
+        return None
+
+    elif len(p) == 3 or len(p) == 6:
+        return normalize(np.cross(p[1] - p[0], p[2] - p[0]))
+
+    elif len(p)==4 or len(p)==8:
+        return normalize(np.cross(p[2] - p[0], p[3] - p[1]))
+
+    else:
+        vx = 0
+        vy = 0
+        vz = 0
+        for i in range(len(p)):
+            p1 = p[(i+1)%len(p)]
+            p2 = p[(i+2)%len(p)]
+            norm=(p1 - p[i]).cross(p2 - p[i])
+            vx+=norm.x
+            vy+=norm.y
+            vz+=norm.z
+
+        return normalize(np.array([vx,vy,vz]))
 
 # 平面上の角度を求める
 # p0 - 基点
 # p1,p2 - 頂点
-def planeAngle(p0: Vector3, p1: Vector3, p2: Vector3):
-    v1=p1.clone().sub(p0).normalize()
-    v2=p2.clone().sub(p0).normalize()
-    return math.acos(min(max(v1.dot(v2),0),1))
-
+def planeAngle(p0: np.ndarray, p1: np.ndarray, p2: np.ndarray):
+    v1 = normalize(p1 - p0)
+    v2 = normalize(p2 - p0)
+    return math.acos(min(max(np.dot(v1, v2),0),1))
 
 # 三角形の立体角を球面過剰から求める
 # p0 - 基点
 # p1,p2,p3 - 頂点
-def solidAngle(p0: Vector3, p1:Vector3, p2:Vector3, p3:Vector3):
-    v1=p1.clone().sub(p0)
-    v2=p2.clone().sub(p0)
-    v3=p3.clone().sub(p0)
-    v12=v1.clone().cross(v2).normalize()
-    v23=v2.clone().cross(v3).normalize()
-    v31=v3.clone().cross(v1).normalize()
-    max=max,min=min,acos=math.acos
-    a1=max(min(-v12.dot(v31),1),-1)
-    a2=max(min(-v23.dot(v12),1),-1)
-    a3=max(min(-v31.dot(v23),1),-1)
-    return acos(a1)+acos(a2)+acos(a3)-math.pi
+def solidAngle(p0: np.ndarray, p1:np.ndarray, p2:np.ndarray, p3:np.ndarray):
+    v1 = p1 - p0
+    v2 = p2 - p0
+    v3 = p3 - p0
+    v12 = normalize(np.cross(v1, v2))
+    v23 = normalize(np.cross(v2, v3))
+    v31 = normalize(np.cross(v3, v1))
+    a1 = max(min(np.dot(-v12, v31),1),-1)
+    a2 = max(min(np.dot(-v23, v12),1),-1)
+    a3 = max(min(np.dot(-v31, v23),1),-1)
+    return math.acos(a1) + math.acos(a2) + math.acos(a3) - math.pi
 
 
 # 方向余弦マトリックスを返す
 # p - 頂点座標
 # axis - 断面基準方向ベクトル
-def dirMatrix(p,axis):
-    v=dirVectors(p,axis)
-    return [[v[0].x,v[1].x,v[2].x],[v[0].y,v[1].y,v[2].y],
-                [v[0].z,v[1].z,v[2].z]]
+def dirMatrix(p: np.ndarray,axis: np.ndarray):
+    v = dirVectors(p, axis)
+    return v
+    # [
+    #     [v[0].x, v[1].x, v[2].x],
+    #     [v[0].y, v[1].y, v[2].y],
+    #     [v[0].z, v[1].z, v[2].z]
+    # ]
 
 
 # 方向余弦マトリックスを返す
 # p - 頂点座標
 # axis - 断面基準方向ベクトル
-def dirVectors(p: List[Vector3],axis: Vector3):
-    if(len(p)==2):		# 梁要素
-        v1=p[1].clone().sub(p[0]).normalize()
-        v2=Vector3()
-        v3=Vector3()
-        if(axis!=None):
-            dt=v1.dot(axis)
-            v2.set(axis.x-dt*v1.x,axis.y-dt*v1.y,axis.z-dt*v1.z)
-            if(v2.lengthSq()>0):
-                v2.normalize()
+def dirVectors(p: np.ndarray, axis: np.ndarray):
+    if len(p)==2:		# 梁要素
+        v1 = normalize(p[1] - p[0])
+        if axis!=None:
+            dt = np.dot(v1, axis)
+            v2 = np.array( (axis[0] - dt * v1[0],
+                            axis[1] - dt * v1[1],
+                            axis[2] - dt * v1[2]))
+            if np.sqrt(np.sum(np.square(v2))) > 0:
+                v2 = normalize(v2)
 
-        if(v2.lengthSq()==0):
-            if(abs(v1.x)<abs(v1.y)):
-                v2.set(1-v1.x*v1.x,-v1.x*v1.y,-v1.x*v1.z).normalize()
-
+        if np.sqrt(np.sum(np.square(v2)))==0:
+            if(abs(v1.x) < abs(v1.y)):
+                v2 = normalize(np.array([
+                    1 - v1[0] * v1[0], -v1[0] * v1[1], -v1[0] * v1[2]
+                ]))
             else:
-                v2.set(-v1.y*v1.x,1-v1.y*v1.y,-v1.y*v1.z).normalize()
+                v2 = normalize(np.array([
+                    -v1[1] * v1[0], 1 - v1[1] * v1[1], -v1[1] * v1[2]
+                ]))
 
-        v3.crossVectors(v1,v2)
-        return [v1,v2,v3]
+        v3 = np.cross(v1, v2)
+        return [v1, v2, v3]
 
-    elif(len(p)>2):		# シェル要素
-        v3=normalVector(p)
-        v2=p[1].clone().sub(p[0])
-        v2=v3.clone().cross(v2).normalize()
-        v1=v2.clone().cross(v3)
-        return [v1,v2,v3]
+    elif len(p)>2:		# シェル要素
+        v3 = normalVector(p)
+        v2 = p[1] - p[0]
+        v2 = normalize(np.cross(v3, v2))
+        v1 = np.cross(v2, v3)
+        return [v1, v2, v3]
 
     return None
 
@@ -104,14 +140,14 @@ def toDir(d,k):
         ki=k[i]
         ai=a[i]
         for j in range(len(ki)):
-            ki[j] = numeric.dotVV(ai,d[j])
+            ki[j] = np.dot(ai, d[j])
 
 
 # 剛性マトリックスの方向を修正する
 # d - 方向余弦マトリックス
 # k - 剛性マトリックス
-def toDir3(d,k):
-    a=[[0,0,0],[0,0,0],[0,0,0]]
+def toDir3(d, k):
+    a = np.zeros((3,3))
     for i in range(0, len(k), 3):
         for j in range(0, len(k[i]), 3):
             for i1 in range(3):
@@ -120,14 +156,14 @@ def toDir3(d,k):
                 for j1 in range(3):
                     s=0
                     for ii in range(3):
-                        s+=di[ii]*k[i+ii][j+j1]
-                    ai[j1]=s
+                        s += di[ii] * k[i+ii][j+j1]
+                    ai[j1] = s
 
             for i1 in range(3):
-                ai=a[i1]
-                ki=k[i+i1]
+                ai = a[i1]
+                ki = k[i+i1]
                 for j1 in range(3):
-                    ki[j+j1]=numeric.dotVV(ai,d[j1])
+                    ki[j+j1] = np.dot(ai, d[j1])
 
 
 #--------------------------------------------------------------------#
@@ -157,7 +193,7 @@ class FElement(Nodes):
     # d - 応力-歪マトリックス
     # b - 歪-変位マトリックスの転置行列
     # coef - 係数
-    def stiffPart(self, d, b, coef):
+    def stiffPart(self, d, b, coef) -> List[np.ndarray]:
         size1 = len(b)
         size2 = len(d)
         k=[]
@@ -165,11 +201,11 @@ class FElement(Nodes):
             a=[]
             bi=b[i]
             for j in range(size2):
-                a[j] = coef * numeric.dotVV(bi,d[j])
+                a.append(coef * np.dot(bi,d[j]))
 
             ki=[]
             for j in range(size1):
-                ki[j]=numeric.dotVV(a,b[j])
+                ki.append(np.dot(a,b[j]))
 
             k[i]=ki
 
@@ -196,12 +232,13 @@ class FElement(Nodes):
     def toLocalArray(self, u,d):
         v = []
         for i in range(2):
-            ux=u[i].x
+            # ux=u[i].x
+            ux = u[i][0]
             for j in range(3):
-                v.append(d[0][j]*ux[0]+d[1][j]*ux[1]+d[2][j]*ux[2])
+                v.append(d[0][j] * ux[0] + d[1][j] * ux[1] + d[2][j] * ux[2])
 
             for j in range(3):
-                v.append(d[0][j]*ux[3]+d[1][j]*ux[4]+d[2][j]*ux[5])
+                v.append(d[0][j] * ux[3] + d[1][j] * ux[4] + d[2][j] * ux[5])
 
         return v
 

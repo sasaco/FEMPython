@@ -8,31 +8,8 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "test/test_json.py",
+            "program": "test.py",
             "console": "integratedTerminal"
-        },
-        {
-          "name": "Flask",
-          "type": "python",
-          "request": "launch",
-          "stopOnEntry": false,
-          "python": "${command:python.interpreterPath}",
-          "program": "${workspaceRoot}/test/test_server.py",
-          "cwd": "${workspaceRoot}",
-          "env": {
-            "FLASK_APP": "${workspaceRoot}/test/test_server.py"
-          },
-          "args": [
-            "run",
-            "--no-debugger",
-            "--no-reload"
-          ],
-          "envFile": "${workspaceRoot}/.env",
-          "debugOptions": [
-            "WaitOnAbnormalExit",
-            "WaitOnNormalExit",
-            "RedirectOutput"
-          ]
         }
     ]
 }

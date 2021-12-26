@@ -1,11 +1,11 @@
-from FemDataModel import Nodes
+from Nodes import Nodes
 from BoundaryCondition import Vector3R
 import math
 import numpy as np
 #--------------------------------------------------------------------#
 
 # データ型
-NONE=-1		# 空データ
+NONE   =-1		# 空データ
 DISPLACEMENT=0	# 変位
 STRAIN=1		# 歪
 STRESS=2		# 応力
@@ -149,8 +149,8 @@ def eigenByJacob(m,iterMax):
 
     for i in range(size):
         eig.append([m[i],ev[i]])
-    
-    eig.sort(function(v1,v2):return v2[0]-v1[0]})
+
+    sorted(eig, key=lambda v1, v2: v2[0]-v1[0])
 
     for i in range(size):
         m[i]=eig[i][0]
@@ -202,7 +202,7 @@ def showResultWindow():
 def removeRes():
     model.result.clear()
     viewObj.removeResult()
-    colorBar.clear()
+    # colorBar.clear()
     showInfo()
     resultView.setContourSelect()
     hideModalWindow(RESULT_WINDOW)
@@ -708,183 +708,183 @@ class Stress(SymmetricTensor3):
 
     # ミーゼス応力を返す
     def mises(self):
-        dxy=self.xx-self.yy
-        dyz=self.yy-self.zz
-        dzx=self.zz-self.xx
-        ss=dxy*dxy+dyz*dyz+dzx*dzx
-        tt=self.xy*self.xy+self.yz*self.yz+self.zx*self.zx
-        return math.sqrt(0.5*ss+3*tt)
+        dxy = self.xx - self.yy
+        dyz = self.yy - self.zz
+        dzx = self.zz - self.xx
+        ss = dxy * dxy + dyz * dyz + dzx * dzx
+        tt = self.xy * self.xy + self.yz * self.yz + self.zx * self.zx
+        return math.sqrt(0.5 * ss + 3 * tt)
 
 
 #--------------------------------------------------------------------#
 # 結果表示設定
-class ResultView:
-    def __init__(self):
-        self.dispCoef=document.getElementById('dispcoef')	# 変形表示倍率
-        self.eigen=document.getElementById('eigenvalue')	# 固有値データ
-        self.contour=document.getElementById('contour')	# コンター図表示データ
-        self.component=document.getElementById('component')	# コンター図表示成分
+# class ResultView:
+#     def __init__(self):
+#         self.dispCoef=document.getElementById('dispcoef')	# 変形表示倍率
+#         self.eigen=document.getElementById('eigenvalue')	# 固有値データ
+#         self.contour=document.getElementById('contour')	# コンター図表示データ
+#         self.component=document.getElementById('component')	# コンター図表示成分
 
 
-    # 静解析の設定を初期化する
-    def setInitStatic(self):
-        removeOptions(self.eigen)
-        self.setContourSelect()
-        self.setConfig()
+#     # 静解析の設定を初期化する
+#     def setInitStatic(self):
+#         removeOptions(self.eigen)
+#         self.setContourSelect()
+#         self.setConfig()
 
-    # 固有値解析の設定を初期化する
-    def setInitEigen(self):
-        removeOptions(self.eigen)
-        eigenValue=model.result.eigenValue
-        for i in range(len(eigenValue)):
-            self.eigen.appendChild(createOption('固有値'+(i+1),i))
+#     # 固有値解析の設定を初期化する
+#     def setInitEigen(self):
+#         removeOptions(self.eigen)
+#         eigenValue=model.result.eigenValue
+#         for i in range(len(eigenValue)):
+#             self.eigen.appendChild(createOption('固有値'+(i+1),i))
 
-        removeOptions(self.contour)
-        self.contour.appendChild(createOption('コンター無し',NONE))
-        self.contour.appendChild(createOption('変位',DISPLACEMENT))
-        self.contour.appendChild(createOption('歪エネルギー密度',S_ENERGY))
-        self.setResComp()
-        self.setConfig()
-
-
-    # 表示するコンター図データを設定する
-    def setContourSelect(self):
-        removeOptions(self.eigen)
-        removeOptions(self.contour)
-        self.contour.appendChild(createOption('コンター無し',NONE))
-
-        if len(model.result.displacement)>0:
-            self.contour.appendChild(createOption('変位',DISPLACEMENT))
-
-        if len(model.result.strain1)>0:
-            self.contour.appendChild(createOption('歪',STRAIN))
-
-        if len(model.result.stress1)>0:
-            self.contour.appendChild(createOption('応力',STRESS))
-
-        if len(model.result.sEnergy1)>0:
-            self.contour.appendChild(createOption('歪エネルギー密度',S_ENERGY))
-
-        if len(model.result.temperature)>0:
-            self.contour.appendChild(createOption('温度',TEMPERATURE))
-
-        removeOptions(self.component)
+#         removeOptions(self.contour)
+#         self.contour.appendChild(createOption('コンター無し',NONE))
+#         self.contour.appendChild(createOption('変位',DISPLACEMENT))
+#         self.contour.appendChild(createOption('歪エネルギー密度',S_ENERGY))
+#         self.setResComp()
+#         self.setConfig()
 
 
-    # 表示成分を設定する
-    def setResComp(self):
-        if model.result.calculated == False:
-            return
-        removeOptions(self.component)
+#     # 表示するコンター図データを設定する
+#     def setContourSelect(self):
+#         removeOptions(self.eigen)
+#         removeOptions(self.contour)
+#         self.contour.appendChild(createOption('コンター無し',NONE))
 
-        index = int(self.contour.value)
-        if index == DISPLACEMENT:
-            if model.hasShellBar:
-                setOptions(self.component,DISP2_COMPONENT,-1)
-            else:
-                setOptions(self.component,DISP_COMPONENT,-1)
-        elif index == STRAIN:
-            if model.hasShellBar:
-                setOptions(self.component,STRAIN_COMPONENT,1)
-                setOptions(self.component,STRAIN_COMPONENT,2)
-            else:
-                setOptions(self.component,STRAIN_COMPONENT,-1)
-        elif index == STRESS:
-            if model.hasShellBar:
-                setOptions(self.component,STRESS_COMPONENT,1)
-                setOptions(self.component,STRESS_COMPONENT,2)
-            else:
-                setOptions(self.component,STRESS_COMPONENT,-1)
-        elif index == S_ENERGY:
-            if model.hasShellBar:
-                setOptions(self.component,ENERGY_COMPONENT,1)
-                setOptions(self.component,ENERGY_COMPONENT,2)
-            else:
-                setOptions(self.component,ENERGY_COMPONENT,-1)
+#         if len(model.result.displacement)>0:
+#             self.contour.appendChild(createOption('変位',DISPLACEMENT))
+
+#         if len(model.result.strain1)>0:
+#             self.contour.appendChild(createOption('歪',STRAIN))
+
+#         if len(model.result.stress1)>0:
+#             self.contour.appendChild(createOption('応力',STRESS))
+
+#         if len(model.result.sEnergy1)>0:
+#             self.contour.appendChild(createOption('歪エネルギー密度',S_ENERGY))
+
+#         if len(model.result.temperature)>0:
+#             self.contour.appendChild(createOption('温度',TEMPERATURE))
+
+#         removeOptions(self.component)
 
 
-    # 設定を表示に反映させる
-    def setConfig(self):
-        eigen=int(self.eigen.value)
-        dcoef=float(self.dispCoef.value)
-        param=int(self.contour.value)
-        coef,comp,minValue,maxValue
-        if isFinite(eigen):
-            eigenValue=model.result.eigenValue[eigen]
-            coef=dcoef*min(bounds.size/eigenValue.dispMax,
-                                                    1/eigenValue.angleMax)
-            viewObj.setDisplacement(eigenValue.displacement,coef)
-            showEigenValue(eigen,eigenValue.type,eigenValue.value)
-            if param<0:
-                viewObj.clearContour()
-                colorBar.clear()
-            else:
-                comp=int(self.component.value)
-                model.result.setContour(param,comp,eigenValue)
-                minValue=model.result.minValue
-                maxValue=model.result.maxValue
-                if param==DISPLACEMENT:
-                    pass
-                elif param==TEMPERATURE:
-                        viewObj.setContour(model.result.value,minValue,maxValue)
-                else:
-                        viewObj.setContour(model.result.value,minValue,maxValue,
-                                                            model.result.type)
-                colorBar.draw(minValue,maxValue)
-        else:
-            coef=dcoef*min(bounds.size/model.result.dispMax,
-                                                    1/model.result.angleMax)
-            viewObj.setDisplacement(model.result.displacement,coef)
-            if param<0:
-                viewObj.clearContour()
-                colorBar.clear()
-            else:
-                comp=int(self.component.value)
-                model.result.setContour(param,comp)
-                minValue=model.result.minValue
-                maxValue=model.result.maxValue
-                if param==DISPLACEMENT:
-                    pass
-                elif param==TEMPERATURE:
-                    viewObj.setContour(model.result.value,minValue,maxValue)
-                else:
-                    viewObj.setContour(model.result.value,minValue,maxValue,
-                                                        model.result.type)
+#     # 表示成分を設定する
+#     def setResComp(self):
+#         if model.result.calculated == False:
+#             return
+#         removeOptions(self.component)
 
-                colorBar.draw(minValue,maxValue)
+#         index = int(self.contour.value)
+#         if index == DISPLACEMENT:
+#             if model.hasShellBar:
+#                 setOptions(self.component,DISP2_COMPONENT,-1)
+#             else:
+#                 setOptions(self.component,DISP_COMPONENT,-1)
+#         elif index == STRAIN:
+#             if model.hasShellBar:
+#                 setOptions(self.component,STRAIN_COMPONENT,1)
+#                 setOptions(self.component,STRAIN_COMPONENT,2)
+#             else:
+#                 setOptions(self.component,STRAIN_COMPONENT,-1)
+#         elif index == STRESS:
+#             if model.hasShellBar:
+#                 setOptions(self.component,STRESS_COMPONENT,1)
+#                 setOptions(self.component,STRESS_COMPONENT,2)
+#             else:
+#                 setOptions(self.component,STRESS_COMPONENT,-1)
+#         elif index == S_ENERGY:
+#             if model.hasShellBar:
+#                 setOptions(self.component,ENERGY_COMPONENT,1)
+#                 setOptions(self.component,ENERGY_COMPONENT,2)
+#             else:
+#                 setOptions(self.component,ENERGY_COMPONENT,-1)
 
 
-    # 設定をバックアップする
-    def stock(self):
-        self.coef0=self.dispCoef.value
-        self.contour0=[]
-        self.comp0=[]
+#     # 設定を表示に反映させる
+#     def setConfig(self):
+#         eigen=int(self.eigen.value)
+#         dcoef=float(self.dispCoef.value)
+#         param=int(self.contour.value)
+#         coef,comp,minValue,maxValue
+#         if isFinite(eigen):
+#             eigenValue=model.result.eigenValue[eigen]
+#             coef=dcoef*min(bounds.size/eigenValue.dispMax,
+#                                                     1/eigenValue.angleMax)
+#             viewObj.setDisplacement(eigenValue.displacement,coef)
+#             showEigenValue(eigen,eigenValue.type,eigenValue.value)
+#             if param<0:
+#                 viewObj.clearContour()
+#                 colorBar.clear()
+#             else:
+#                 comp=int(self.component.value)
+#                 model.result.setContour(param,comp,eigenValue)
+#                 minValue=model.result.minValue
+#                 maxValue=model.result.maxValue
+#                 if param==DISPLACEMENT:
+#                     pass
+#                 elif param==TEMPERATURE:
+#                         viewObj.setContour(model.result.value,minValue,maxValue)
+#                 else:
+#                         viewObj.setContour(model.result.value,minValue,maxValue,
+#                                                             model.result.type)
+#                 colorBar.draw(minValue,maxValue)
+#         else:
+#             coef=dcoef*min(bounds.size/model.result.dispMax,
+#                                                     1/model.result.angleMax)
+#             viewObj.setDisplacement(model.result.displacement,coef)
+#             if param<0:
+#                 viewObj.clearContour()
+#                 colorBar.clear()
+#             else:
+#                 comp=int(self.component.value)
+#                 model.result.setContour(param,comp)
+#                 minValue=model.result.minValue
+#                 maxValue=model.result.maxValue
+#                 if param==DISPLACEMENT:
+#                     pass
+#                 elif param==TEMPERATURE:
+#                     viewObj.setContour(model.result.value,minValue,maxValue)
+#                 else:
+#                     viewObj.setContour(model.result.value,minValue,maxValue,
+#                                                         model.result.type)
 
-        for i in range(len(self.contour.childNodes)):
-            self.contour0[i]=self.contour.childNodes[i]
-
-        self.contIndex=self.contour.selectedIndex
-
-        for i in range(len(self.component.childNodes)):
-            self.comp0[i]=self.component.childNodes[i]
-
-        self.compIndex=self.component.selectedIndex
+#                 colorBar.draw(minValue,maxValue)
 
 
-    # 設定を元に戻す
-    def reset(self):
-        self.dispCoef.value=self.coef0
-        removeOptions(self.contour)
-        removeOptions(self.component)
+#     # 設定をバックアップする
+#     def stock(self):
+#         self.coef0=self.dispCoef.value
+#         self.contour0=[]
+#         self.comp0=[]
 
-        for i in range(len(self.contour0)):
-            self.contour.appendChild(self.contour0[i])
+#         for i in range(len(self.contour.childNodes)):
+#             self.contour0[i]=self.contour.childNodes[i]
 
-        self.contour.selectedIndex=self.contIndex
+#         self.contIndex=self.contour.selectedIndex
 
-        for i in range(len(self.comp0)):
-            self.component.appendChild(self.comp0[i])
+#         for i in range(len(self.component.childNodes)):
+#             self.comp0[i]=self.component.childNodes[i]
 
-        self.component.selectedIndex=self.compIndex
+#         self.compIndex=self.component.selectedIndex
+
+
+#     # 設定を元に戻す
+#     def reset(self):
+#         self.dispCoef.value=self.coef0
+#         removeOptions(self.contour)
+#         removeOptions(self.component)
+
+#         for i in range(len(self.contour0)):
+#             self.contour.appendChild(self.contour0[i])
+
+#         self.contour.selectedIndex=self.contIndex
+
+#         for i in range(len(self.comp0)):
+#             self.component.appendChild(self.comp0[i])
+
+#         self.component.selectedIndex=self.compIndex
 
 

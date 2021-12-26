@@ -5,11 +5,12 @@ from BoundaryCondition import BoundaryCondition
 from Vector3 import Vector3
 from FemMain import *
 import math
+import numpy as np
 import time
 from typing import List, Union
 #--------------------------------------------------------------------#
 
-COEF_F_W=0.5/math.pi	# f/ω比 1/2π
+COEF_F_W = 0.5 / math.pi	# f/ω比 1/2π
 
 # 節点集合の節点ラベルを再設定する
 # map - ラベルマップ
@@ -59,7 +60,7 @@ def resetCoordinatesPointer(map,bc):
 
 # 重心位置を返す
 # p - 頂点座標
-def center(p):
+def center(p) -> np.ndarray:
     x=0
     y=0
     z=0
@@ -68,81 +69,28 @@ def center(p):
         x+=p[i].x
         y+=p[i].y
         z+=p[i].z
-    return Vector3(cc*x,cc*y,cc*z)
-
-
-# 法線ベクトルを返す
-# p - 頂点座標
-def normalVector(p: List[Vector3]) -> Vector3:
-    if len(p)<3:
-        return None
-
-    elif len(p)==3 or len(p)==6:
-        # return Vector3().subVectors(p[1],p[0]).cross(THREE.Vector3().subVectors(p[2],p[0])).normalize()
-        return (p[1] - p[0]).cross(p[2] - p[0]).normalize()
-
-    elif len(p)==4 or len(p)==8:
-        # return Vector3().subVectors(p[2],p[0]).cross(THREE.Vector3().subVectors(p[3],p[1])).normalize()
-        return (p[2] - p[0]).cross(p[3] - p[1]).normalize()
-
-    else:
-        vx=0
-        vy=0
-        vz=0
-        for i in range(len(p)):
-            p1:Vector3 = p[(i+1)%len(p)]
-            p2:Vector3 = p[(i+2)%len(p)]
-            #norm=THREE.Vector3().subVectors(p1,p[i]).cross(THREE.Vector3().subVectors(p2,p[i]))
-            norm=(p1 - p[i]).cross(p2 - p[i])
-            vx+=norm.x
-            vy+=norm.y
-            vz+=norm.z
-
-        return Vector3(vx,vy,vz).normalize()
+    return np.array([cc*x,cc*y,cc*z])
 
 
 # ラベルを比較する
 # o1,o2 - 比較する対象
-def compareLabel(o1,o2):
-    if o1.label < o2.label:
-        return -1
-    elif o1.label>o2.label:
-        return 1
-
-    return 0
-
-
-# 行列の和を計算する
-# a - 基準行列
-# da - 加える行列
-def addMatrix(a,da):
-    for i in range(len(a)):
-        for j in range(len(a[i])):
-            a[i][j]+=da[i][j]
-
-
-# ベクトルの和を計算する
-# v - 基準ベクトル
-# dv - 加えるベクトル
-def addVector(v,dv):
-    for i in range(len(v)):
-        v[i]+=dv[i]
-
+def compareLabel(o1, o2):
+    return o1.label < o2.label
 
 
 #--------------------------------------------------------------------#
 # FEM データモデル
 class FemDataModel:
     def __init__(self):
-        self.materials=[]			# 材料
-        self.shellParams=[]			# シェルパラメータ
-        self.barParams=[]			# 梁パラメータ
-        self.coordinates=[]			# 局所座標系
-        self.mesh=MeshModel()		# メッシュモデル
-        self.bc=BoundaryCondition()	# 境界条件
-        self.solver= Solver()		# 連立方程式求解オブジェクト
-        self.result= Result()		# 計算結果
-        self.hasShellBar=False		# シェル要素または梁要素を含まない
+        self.materials = []			# 材料
+        self.shellParams = []			# シェルパラメータ
+        self.barParams = []			# 梁パラメータ
+        self.coordinates = []			# 局所座標系
+        self.mesh = MeshModel()		# メッシュモデル
+        self.bc = BoundaryCondition()	# 境界条件
+        self.solver = Solver()		# 連立方程式求解オブジェクト
+        self.result = Result()		# 計算結果
+        self.hasShellBar = False		# シェル要素または梁要素を含まない
 
     # データを消去する
     def clear(self):
@@ -153,14 +101,14 @@ class FemDataModel:
         self.mesh.clear()
         self.bc.clear()
         self.result.clear()
-        self.result.type=NODE_DATA
+        self.result.type = NODE_DATA
 
 
     # モデルを初期化する
     def init(self):
-        self.solver.method=ILUCG_METHOD	# デフォルトは反復解法
+        self.solver.method = ILUCG_METHOD	# デフォルトは反復解法
         mats=self.materials
-        mats.sort(compareLabel)
+        sorted(mats, key=compareLabel)
         self.mesh.init()
         self.bc.init()
         self.reNumbering()
@@ -195,7 +143,7 @@ class FemDataModel:
 
         for i in range(len(self.bc.restraints)):
             resetNodePointer(map,self.bc.restraints[i])
- 
+
         for i in range(len(self.bc.loads)):
             resetNodePointer(map,self.bc.loads[i])
 
@@ -343,21 +291,21 @@ class FemDataModel:
         t0=time.time()
         self.result.clear()
         self.setNodeDoF()
-        count=min(count,self.solver.dof)
-        n=min(3*count,self.solver.dof),i
+        count = min(count, self.solver.dof)
+        n = min(3*count, self.solver.dof)
         self.solver.createStiffMassMatrix()
         eig=self.solver.eigenByLanczos(n)
-        nodeCount=self.mesh.nodes.length
+        nodeCount= len(self.mesh.nodes)
         for i in range(count, n):
             del eig.ut[i]
 
         for i in range(count):
             f = COEF_F_W * math.sqrt(max(eig['lambda'][i], 0))
             uti = eig.ut[i]
-            s=0
+            s = 0
             for j in range(len(uti)):
                  s += uti[j] * uti[j]
-            u = numeric.mul(1/math.sqrt(s), uti)
+            u = np.multiply(1/math.sqrt(s), uti)
             ev = EigenValue(f,VIBRATION)
             ev.setDisplacement(self.bc,u,nodeCount)
             self.result.addEigenValue(ev)
@@ -382,7 +330,7 @@ class FemDataModel:
         n = min(3*count,self.solver.dof)
         self.solver.createStiffnessMatrix()
         d=self.solver.solve()
-        self.result.setDisplacement(self.bc,d,self.mesh.nodes.length)
+        self.result.setDisplacement(self.bc,d,len(self.mesh.nodes))
         self.solver.createGeomStiffMatrix()
         self.result.clear()
         eig=self.solver.eigenByArnoldi(n,0)
@@ -391,10 +339,10 @@ class FemDataModel:
             del eig.ut[i]
         for i in range(count):
             uti=eig.ut[i]
-            s=0
+            s = 0
             for j in range(len(uti)):
                 s += uti[j]*uti[j]
-            u=numeric.mul(1/math.sqrt(s),uti)
+            u=np.multiply(1/math.sqrt(s),uti)
             ev=EigenValue(eig['lambda'][i],BUCKLING)
             ev.setDisplacement(self.bc,u,nodeCount)
             self.result.addEigenValue(ev)
@@ -413,17 +361,17 @@ class FemDataModel:
         nodeCount=len(nodes)
         elems=self.mesh.elements
         elemCount=len(elems)
-        angle=numeric.rep([nodeCount],0)
+        angle= np.zeros(nodeCount)
 
         self.result.initStrainAndStress(nodeCount)
         for i in range(elemCount):
-            elem=elems[i]
-            en=elem.nodes
+            elem = elems[i]
+            en = elem.nodes
             p=[]
             v=[]
             for j in range(len(en)):
-                p[j]=nodes[en[j]]
-                v[j]=self.result.displacement[en[j]]
+                p.append(nodes[en[j]])
+                v.append(self.result.displacement[en[j]])
 
             material=self.materials[elem.material]
             mat=material.matrix
@@ -529,7 +477,7 @@ class FemDataModel:
         nodeCount=len(nodes)
         elems=self.mesh.elements
         elemCount=len(elems)
-        angle=numeric.rep([nodeCount], 0)
+        angle=np.zeros(nodeCount)
         ev.initStrainEnergy(nodeCount)
         for i in range(elemCount):
             elem=elems[i]
@@ -680,7 +628,7 @@ class MeshModel():
 
     # データを消去する
     def clear(self):
-        self.nodes=[]		# 節点
+        self.nodes=[]		    # 節点
         self.elements=[]		# 要素
         self.freeFaces=[]		# 表面
         self.faceEdges=[]		# 表面の要素辺
@@ -696,10 +644,10 @@ class MeshModel():
 
     # モデルを初期化する
     def init(self):
-        self.nodes.sort(compareLabel)
-        bounds.set()
- 
- 
+        sorted(self.nodes, key=compareLabel)
+        # bounds.set() // THREE.js に関する初期化処理`
+
+
     # 要素の鏡像向きを揃える
     def checkChirality(self):
         for i in range(len(self.elements)):
@@ -730,7 +678,7 @@ class MeshModel():
                     border.append(elems[i].border(i,j))
 
         if len(border)>0:
-            border.sort(function(b1,b2):return b1.compare(b2)})
+            sorted(border, key=lambda b1, b2: b1.compare(b2))
             addsw=True
             beforeEb=border[0]
             for i in range(len(border)):
@@ -759,7 +707,7 @@ class MeshModel():
                 edges.append(EdgeBorder1(i, [nds[j], nds[(j+1)%len(nds)]]))
 
         if len(edges)>0:
-            edges.sort(function(b1,b2):return b1.compare(b2)})
+            sorted(edges, key= lambda b1,b2: b1.compare(b2))
             beforeEdge=edges[0]
             self.faceEdges.append(beforeEdge)
             for i in range(1, len(edges)):
@@ -908,14 +856,3 @@ class FENode(Vector3):
         return 'Node\t'+self.label.toString(10)+'\t'+ \
                     self.x+'\t'+self.y+'\t'+self.z
 
-
-#--------------------------------------------------------------------#
-# 節点集合
-# nodes - 節点番号
-class Nodes:
-    def __init__(self, nodes):
-        self.nodes=nodes
-
-    # 節点数を返す
-    def nodeCount(self):
-        return len(self.nodes)

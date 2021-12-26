@@ -1,10 +1,10 @@
-from BoundaryCondition import compareNodeLabel, compareElementLabel
 import math
+from typing import List
 #--------------------------------------------------------------------#
 
 # 節点ラベルを比較する
 # bc1,bc2 - 比較する境界条件
-def compareNodeLabel(bc1,bc2):
+def compareNodeLabel(bc1, bc2):
     if(bc1.node<bc2.node):
         return -1
     elif(bc1.node>bc2.node):
@@ -26,59 +26,59 @@ def compareElementLabel(bc1,bc2):
 # 境界条件
 class BoundaryCondition():
     def __init__(self):
-        self.clear()    
-        self.dof=[]			# 節点の自由度
-        self.nodeIndex=[]		# 荷重ベクトルの節点ポインタ
-        self.bcList=[]		# 境界条件を設定した節点のリスト
+        self.clear()
+        self.dof = []			# 節点の自由度
+        self.nodeIndex: List[int] = []  # 荷重ベクトルの節点ポインタ
+        self.bcList: List[int] = []		# 境界条件を設定した節点のリスト
 
     # データを消去する
     def clear(self):
-        self.restraints=[]		# 拘束条件
-        self.loads=[]		# 荷重条件
-        self.pressures=[]		# 面圧条件
-        self.temperature=[]		# 節点温度条件
-        self.htcs=[]			# 熱伝達境界条件
-        self.loadMax=0		# 最大荷重
-        self.pressMax=0		# 最大面圧
+        self.restraints = []	# 拘束条件
+        self.loads = []		    # 荷重条件
+        self.pressures = []		# 面圧条件
+        self.temperature = []	# 節点温度条件
+        self.htcs = []			# 熱伝達境界条件
+        self.loadMax = 0		# 最大荷重
+        self.pressMax = 0		# 最大面圧
 
 
     # 境界条件を初期化する
     def init(self):
-        self.restraints.sort(compareNodeLabel)
-        self.loads.sort(compareNodeLabel)
-        self.pressures.sort(compareElementLabel)
-        self.temperature.sort(compareNodeLabel)
-        self.htcs.sort(compareElementLabel)
-        self.loadMax=0
-        self.pressMax=0
+        sorted(self.restraints, key=compareNodeLabel)
+        sorted(self.loads, key=compareNodeLabel)
+        sorted(self.pressures, key=compareElementLabel)
+        sorted(self.temperature, key=compareNodeLabel)
+        sorted(self.htcs, key=compareElementLabel)
+        self.loadMax = 0
+        self.pressMax = 0
 
         for i in range(len(self.loads)):
-            self.loadMax=max(self.loadMax,self.loads[i].magnitude())
+            self.loadMax = max(self.loadMax, self.loads[i].magnitude())
 
         for i in range(len(self.pressures)):
-            self.pressMax=max(self.pressMax,self.pressures[i].press)
+            self.pressMax = max(self.pressMax, self.pressures[i].press)
 
 
     # 構造解析の節点ポインタを設定する
     # count - 節点数
     def setPointerStructure(self, count):
-        self.nodeIndex=[]		# 荷重ベクトルの節点ポインタ
-        self.bcList=[]		# 境界条件を設定した節点のリスト
-        dofAll=0
+        self.nodeIndex = []		# 荷重ベクトルの節点ポインタ
+        self.bcList = []		# 境界条件を設定した節点のリスト
+        dofAll = 0
         for i in range(count):
-            self.nodeIndex[i]=dofAll
-            dofAll+=self.dof[i]
+            self.nodeIndex[i] = dofAll
+            dofAll += self.dof[i]
 
         for i in range(dofAll):
-            self.bcList[i]=-1
+            self.bcList[i] = -1
 
         for i in range(len(self.restraints)):
-            r=self.restraints[i]
-            index0=self.nodeIndex[r.node]
-            rdof=self.dof[r.node]
+            r = self.restraints[i]
+            index0 = self.nodeIndex[r.node]
+            rdof = self.dof[r.node]
             for j in range(rdof):
                 if(r.rest[j]):
-                    self.bcList[index0+j]=6*i+j
+                    self.bcList[index0+j] = 6 * i + j
 
         return dofAll
 
@@ -86,16 +86,16 @@ class BoundaryCondition():
     # 熱解析の節点ポインタを設定する
     # count - 節点数
     def setPointerHeat(self, count):
-        self.dof=[]			# 節点の自由度
-        self.nodeIndex=[]		# 荷重ベクトルの節点ポインタ
-        self.bcList=[]		# 境界条件を設定した節点のリスト
-        temps=len(self.temperature)
+        self.dof = []			# 節点の自由度
+        self.nodeIndex = []		# 荷重ベクトルの節点ポインタ
+        self.bcList = []		# 境界条件を設定した節点のリスト
+        temps = len(self.temperature)
         for i in range(count):
-            self.bcList[i]=-1
+            self.bcList[i] = -1
 
         for i in range(temps):
-            t=self.temperature[i]
-            self.bcList[t.node]=i
+            t = self.temperature[i]
+            self.bcList[t.node] = i
 
         return temps
 
@@ -176,7 +176,7 @@ class ElementBorderBound:
     # 要素境界を返す
     # elem - 要素
     def getBorder(self, elem):
-        if len(self.face.length)==2:
+        if len(self.face)==2:
 
             if self.face.charAt(0)=='F':
                 j=int(self.face.charAt(1))-1

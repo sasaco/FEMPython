@@ -1,7 +1,9 @@
-from Element import GX3, GW3, C1_6
-from FemDataModel import Nodes, normalVector, addVector, addMatrix
-from ShellElement import TRI2_INT, QUAD1_INT
 import math
+import numpy as np
+
+from Element import GX3, GW3, C1_6, C1_3, normalize, normalVector
+from Nodes import Nodes
+from ShellElement import TRI2_INT, QUAD1_INT
 #--------------------------------------------------------------------#
 
 # 四角形2次要素の積分点のξ,η座標,重み係数
@@ -16,6 +18,23 @@ QUAD2_INT=[
     [GX3[1],GX3[2],GW3[1]*GW3[2]],
     [GX3[2],GX3[2],GW3[2]*GW3[2]]
 ]
+
+
+# 行列の和を計算する
+# a - 基準行列
+# da - 加える行列
+def addMatrix(a, da):
+    for i in range(len(a)):
+        for j in range(len(a[i])):
+            a[i][j] += da[i][j]
+
+
+# ベクトルの和を計算する
+# v - 基準ベクトル
+# dv - 加えるベクトル
+def addVector(v,dv):
+    for i in range(len(v)):
+        v[i]+=dv[i]
 
 #--------------------------------------------------------------------#
 # 要素境界
@@ -43,8 +62,8 @@ class ElementBorder(Nodes):
     def compare(self, b):
         p1 = self.nodes.concat()
         p2 = b.nodes.concat()
-        p1.sort(function(a, b):return a-b})
-        p2.sort(function(a, b):return a-b})
+        sorted(p1, key=lambda a, b: a-b)
+        sorted(p2, key=lambda a, b: a-b)
         count = min(len(p1), len(p2))
         for i in range(count):
             d = p1[i] - p2[i]
@@ -111,7 +130,7 @@ class ElementBorder(Nodes):
     # coef - 係数
     def shapeFunctionMatrix(self, p, coef):
         count = self.nodeCount()
-        s = numeric.rep([count,count], 0)
+        s = np.zeros((count,count))
         for i in range(len(self.intP)):
             addMatrix(s, self.shapeMatrixPart(p,self.intP[i], coef*self.intP[i][2]))
 
@@ -123,7 +142,7 @@ class ElementBorder(Nodes):
     # coef - 係数
     def shapeFunctionVector(self, p, coef):
         count = self.nodeCount()
-        s = numeric.rep([count], 0)
+        s = np.zeros((count))
         for i in range(len(self.intP)):
             addVector(s, self.shapeVectorPart(p,self.intP[i], coef*self.intP[i][2]))
 
@@ -184,7 +203,7 @@ class EdgeBorder1(ElementBorder):
     def normalVector(self, p, ep):
         ne = normalVector(ep)
         dir = p[1].clone().sub(p[0])
-        return dir.cross(ne).normalize()
+        return normalize(dir.cross(ne))
 
 
 #--------------------------------------------------------------------#
@@ -228,7 +247,7 @@ class TriangleBorder1(ElementBorder):
         value = coef * self.jacobian(p) / 12
         vh = 0.5 * value
         count = self.nodeCount()
-        s = numeric.rep([count,count], vh)
+        s = np.repeat(vh, count * count).reshape(count, count)
         for i in range(count):
             s[i][i] = value
 
@@ -239,7 +258,7 @@ class TriangleBorder1(ElementBorder):
     # p - 節点
     # coef - 係数
     def shapeFunctionVector(self, p, coef):
-        return numeric.rep([self.nodeCount()], C1_6 * coef * self.jacobian(p))
+        return np.repeat(C1_6 * coef * self.jacobian(p), self.nodeCount())
 
 
 #--------------------------------------------------------------------#
