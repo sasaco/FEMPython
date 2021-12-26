@@ -86,9 +86,9 @@ class ElementBorder(Nodes):
         jac = [0,0,0,0,0,0]
         for i in range(count):
             for j in range(2):
-                jac[j] += sf[i][j+1] * p[i].x
-                jac[j+2] += sf[i][j+1] * p[i].y
-                jac[j+4] += sf[i][j+1] * p[i].z
+                jac[j] += sf[i][j+1] * p[i][0]
+                jac[j+2] += sf[i][j+1] * p[i][1]
+                jac[j+4] += sf[i][j+1] * p[i][2]
 
         j1 = jac[2] * jac[5] - jac[4] * jac[3]
         j2 = jac[4] * jac[1] - jac[0] * jac[5]

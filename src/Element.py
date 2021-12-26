@@ -2,6 +2,8 @@ from Nodes import Nodes
 import math
 import numpy as np
 from typing import List
+
+from FENode import FENode
 #--------------------------------------------------------------------#
 
 # 三角形2次要素のガウス積分の積分点座標
@@ -33,15 +35,15 @@ def normalize(vector: np.ndarray) -> np.ndarray:
 
 # 法線ベクトルを返す
 # p - 頂点座標
-def normalVector(p: List[np.ndarray]) -> np.ndarray:
+def normalVector(p: List[FENode]) -> np.ndarray:
     if len(p) < 3:
         return None
 
     elif len(p) == 3 or len(p) == 6:
-        return normalize(np.cross(p[1] - p[0], p[2] - p[0]))
+        return normalize(np.cross(p[1].sub(p[0]), p[2].sub(p[0])))
 
     elif len(p)==4 or len(p)==8:
-        return normalize(np.cross(p[2] - p[0], p[3] - p[1]))
+        return normalize(np.cross(p[2].sub(p[0]), p[3].sub(p[1])))
 
     else:
         vx = 0
@@ -50,10 +52,10 @@ def normalVector(p: List[np.ndarray]) -> np.ndarray:
         for i in range(len(p)):
             p1 = p[(i+1)%len(p)]
             p2 = p[(i+2)%len(p)]
-            norm=(p1 - p[i]).cross(p2 - p[i])
-            vx+=norm.x
-            vy+=norm.y
-            vz+=norm.z
+            norm = np.cross(p1.sub(p[i]), p2.sub(p[i]))
+            vx += norm[0]
+            vy += norm[1]
+            vz += norm[2]
 
         return normalize(np.array([vx,vy,vz]))
 
@@ -109,7 +111,7 @@ def dirVectors(p: np.ndarray, axis: np.ndarray):
                 v2 = normalize(v2)
 
         if np.sqrt(np.sum(np.square(v2)))==0:
-            if(abs(v1.x) < abs(v1.y)):
+            if(abs(v1[0]) < abs(v1[2])):
                 v2 = normalize(np.array([
                     1 - v1[0] * v1[0], -v1[0] * v1[1], -v1[0] * v1[2]
                 ]))

@@ -7,6 +7,8 @@ import math
 import numpy as np
 import time
 from typing import List, Union
+
+from src.FENode import FENode
 #--------------------------------------------------------------------#
 
 COEF_F_W = 0.5 / math.pi	# f/ω比 1/2π
@@ -59,7 +61,7 @@ def resetCoordinatesPointer(map,bc):
 
 # 重心位置を返す
 # p - 頂点座標
-def center(p) -> np.ndarray:
+def center(p: List[FENode]) -> np.ndarray:
     x=0
     y=0
     z=0
@@ -668,10 +670,10 @@ class MeshModel():
         self.freeFaces=[]
         border=[]
         for i in range(len(elems)):
-            if(elems[i].isShell):
+            if elems[i].isShell:
                 self.freeFaces.append(elems[i].border(i,0))
 
-            elif elems[i].isBar==False:
+            elif elems[i].isBar == False:
                 count = elems[i].borderCount()
                 for j in range(count):
                     border.append(elems[i].border(i,j))
@@ -836,24 +838,4 @@ class MeshModel():
     #     return geometry
 
 
-#--------------------------------------------------------------------#
-# 節点
-# label - 節点ラベル
-# x,y,z - x,y,z座標
-class FENode():
-    def __init__(self, label: int, x: float, y: float, z: float):
-        self.x: float = x
-        self.y: float = y
-        self.z: float = z
-        self.label: int = label
-
-
-    # 節点のコピーを返す
-    def clone(self):
-        return FENode(self.label, self.x, self.y, self.z)
-
-    # 節点を表す文字列を返す
-    def toString(self):
-        return 'Node\t'+self.label.toString(10)+'\t'+ \
-                    self.x+'\t'+self.y+'\t'+self.z
 
