@@ -1,5 +1,7 @@
 import math
 import numpy as np
+import copy
+from typing import List
 
 from Element import GTRI2, GX2, C1_6, GX3, GW3, C1_6, C1_3, normalize, normalVector
 from Nodes import Nodes
@@ -61,22 +63,6 @@ class ElementBorder(Nodes):
     # 要素境界のコピーを返す
     def clone(self):
         return self.constructor(self.element,self.nodes.concat())
-
-    # 要素境界を比較する
-    # b - 比較対象の要素境界
-    def compare(self, b):
-        p1 = self.nodes.concat()
-        p2 = b.nodes.concat()
-        sorted(p1, key=lambda a, b: a-b)
-        sorted(p2, key=lambda a, b: a-b)
-        count = min(len(p1), len(p2))
-        for i in range(count):
-            d = p1[i] - p2[i]
-            if ( d != 0 ):
-                return d
-
-        return len(p1) - len(p2)
-
 
     # 擬似ヤコビアンを返す
     # p - 節点
@@ -153,6 +139,21 @@ class ElementBorder(Nodes):
 
         return s
 
+
+# 要素境界を比較する
+# b - 比較対象の要素境界
+def compare(a: ElementBorder, b: ElementBorder):
+    p1: List[int] = copy.copy(a.nodes)
+    p2: List[int] = copy.copy(b.nodes)
+    p1.sort()
+    p2.sort()
+    count = min(len(p1), len(p2))
+    for i in range(count):
+        d = p1[i] - p2[i]
+        if ( d != 0 ):
+            return d
+
+    return len(p1) - len(p2)
 
 #--------------------------------------------------------------------#
 # 辺1次要素境界

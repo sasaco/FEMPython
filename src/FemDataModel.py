@@ -2,13 +2,15 @@ from Solver import Solver, LU_METHOD, ILUCG_METHOD
 from Result import Result, EigenValue, NODE_DATA, ELEMENT_DATA, VIBRATION, BUCKLING
 from Material import Material
 from BoundaryCondition import BoundaryCondition
+from ElementBorder import EdgeBorder1, compare
 from Element import normalVector
+from FENode import FENode
+
 import math
 import numpy as np
 import time
 from typing import List, Union
-
-from src.FENode import FENode
+from functools import cmp_to_key
 #--------------------------------------------------------------------#
 
 COEF_F_W = 0.5 / math.pi	# f/ω比 1/2π
@@ -120,13 +122,13 @@ class FemDataModel:
         self.mesh.getFreeFaces()
         self.mesh.getFaceEdges()
         for i in range(len(mats)):
-            m2d=mats[i].matrix2Dstress()
-            msh=mats[i].matrixShell()
-            m3d=mats[i].matrix3D()
-            mats[i].matrix={
-                "m2d":m2d,
-                "msh":msh,
-                "m3d":m3d
+            m2d = mats[i].matrix2Dstress()
+            msh = mats[i].matrixShell()
+            m3d = mats[i].matrix3D()
+            mats[i].matrix = {
+                "m2d": m2d,
+                "msh": msh,
+                "m3d": m3d
             }
 
 
@@ -664,11 +666,11 @@ class MeshModel():
 
     # 表面を取り出す
     def getFreeFaces(self):
-        elems=self.elements
-        if len(elems)==0:
+        elems = self.elements
+        if len(elems) == 0:
             return
-        self.freeFaces=[]
-        border=[]
+        self.freeFaces = []
+        border = []
         for i in range(len(elems)):
             if elems[i].isShell:
                 self.freeFaces.append(elems[i].border(i,0))
@@ -679,18 +681,18 @@ class MeshModel():
                     border.append(elems[i].border(i,j))
 
         if len(border)>0:
-            sorted(border, key=lambda b1, b2: b1.compare(b2))
-            addsw=True
-            beforeEb=border[0]
+            border = sorted(border, key=cmp_to_key(compare))
+            addsw = True
+            beforeEb = border[0]
             for i in range(len(border)):
                 eb=border[i]
-                if beforeEb.compare(eb)==0:
-                    addsw=False
+                if compare(beforeEb, eb) == 0:
+                    addsw = False
                 else:
                     if(addsw):
                         self.freeFaces.append(beforeEb)
-                    beforeEb=eb
-                    addsw=True
+                    beforeEb = eb
+                    addsw = True
 
             if(addsw):
                 self.freeFaces.append(beforeEb)
@@ -708,14 +710,14 @@ class MeshModel():
                 edges.append(EdgeBorder1(i, [nds[j], nds[(j+1)%len(nds)]]))
 
         if len(edges)>0:
-            sorted(edges, key= lambda b1,b2: b1.compare(b2))
-            beforeEdge=edges[0]
+            edges = sorted(edges, key=cmp_to_key(compare))
+            beforeEdge = edges[0]
             self.faceEdges.append(beforeEdge)
             for i in range(1, len(edges)):
-                edge=edges[i]
-                if beforeEdge.compare(edge)!=0:
+                edge = edges[i]
+                if compare(beforeEdge, edge) != 0:
                     self.faceEdges.append(edge)
-                    beforeEdge=edge
+                    beforeEdge = edge
 
 
     # # 形状データを取り出す
