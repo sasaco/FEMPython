@@ -54,10 +54,8 @@ def massMatrix(dof, model):
     for i in range(dof):
         mrow=matrix[i]
         for j in mrow:
-            if mrow.hasOwnProperty(j):
-                j=int(j)
-                if abs(mrow[j])<eps:
-                    del mrow[j]
+            if abs(j)<eps:
+                j=0
 
     return matrix
 
@@ -160,17 +158,16 @@ def geomStiffnessMatrix(dof, model):
         ri = rests[i]
         if ri.coords:
             ri.coords.transMatrix(matrix, dof, index[ri.node], bcdof[i])
+
     # 絶対値が小さい成分を除去・符号反転
     eps = PRECISION * kmax
     for i in range(dof):
         mrow = matrix[i]
         for j in mrow:
-            if mrow.hasOwnProperty(j):
-                j = int(j)
-                if abs(mrow[j]) < eps:
-                    del mrow[j]
-                else:
-                    mrow[j] = -mrow[j]
+            if abs(j) < eps:
+                j =0
+            else:
+                j = -j
     return matrix
 
 # 要素のマトリックスを設定する
@@ -315,6 +312,9 @@ def tempVector(matrix, model):
 # mrow - 元のマトリックスの行データ
 # list - 抽出部分のリスト
 def extructRow(mrow, list):
+    for j in list:
+        self.matrix[i].append(matrix1[list[i]][j])
+
     exrow = [0 for i in range(len(mrow))]
     col = [i for i in range(len(mrow))]
     i1 = 0
@@ -514,14 +514,18 @@ class Solver():
     # matrix1,vector1 - 元のマトリックス,ベクトル
     # list - 抽出部分のリスト
     def extruct(self, matrix1: np.ndarray, vector1: np.ndarray, list: List[int]):
-        self.matrix = matrix1    # 行列
-        self.vector = vector1	# ベクトル
-        return
-        # self.matrix = []    # 行列
-        # self.vector = []	# ベクトル
-        # for i in range(len(list)):
-        #     self.vector.append(vector1[list[i]])
-        #     self.matrix.append(extructRow(matrix1[list[i]], list))
+        # self.matrix = matrix1    # 行列
+        # self.vector = vector1	# ベクトル
+        # return
+        self.matrix = []    # 行列
+        self.vector = []	# ベクトル
+        for i in list:
+            self.vector.append(vector1[i])
+            matrix2 = []
+            for j in list:
+                matrix2.append(matrix1[i][j])
+                #self.matrix.append(extructRow(matrix1[list[i]], list))
+            self.matrix.append(matrix2)
 
 
     # 連立方程式を解く
