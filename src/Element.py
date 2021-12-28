@@ -210,7 +210,7 @@ class FElement(Nodes):
             for j in range(size1):
                 ki.append(np.dot(a,b[j]))
 
-            k[i]=ki
+            k.append(ki)
 
         return k
 

@@ -54,15 +54,16 @@ class BoundaryCondition():
     # 構造解析の節点ポインタを設定する
     # count - 節点数
     def setPointerStructure(self, count):
-        self.nodeIndex = []		# 荷重ベクトルの節点ポインタ
-        self.bcList = []		# 境界条件を設定した節点のリスト
+
+        # 荷重ベクトルの節点ポインタ
+        self.nodeIndex = []		
         dofAll = 0
         for i in range(count):
-            self.nodeIndex[i] = dofAll
+            self.nodeIndex.append(dofAll)
             dofAll += self.dof[i]
 
-        for i in range(dofAll):
-            self.bcList[i] = -1
+        # 境界条件を設定した節点のリスト
+        self.bcList = [-1 for i in range(dofAll)]		
 
         for i in range(len(self.restraints)):
             r = self.restraints[i]

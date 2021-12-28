@@ -1,6 +1,7 @@
 import BoundaryCondition
 from Element import normalVector
 from Result import NODE_DATA, ELEMENT_DATA
+from Material import Material
 from Lanczos import eigByLanczosLUP, eigByLanczosILUCG, eigByArnoldiLUP, eigByArnoldiILUCG
 import numpy as np
 from typing import List
@@ -16,10 +17,10 @@ ILUCG_METHOD = 1	# 不完全LU分解共役勾配法
 def massMatrix(dof, model):
     mesh = model.mesh
     elements = mesh.elements
-    matrix = []
+    matrix = np.zeros((dof,dof))
     mm,mmax = 0
-    for i in range(dof):
-        matrix.append([])
+    # for i in range(dof):
+    #     matrix.append([])
 
     for i in range(len(elements)):
         elem=elements[i]
@@ -28,16 +29,16 @@ def massMatrix(dof, model):
         if elem.isShell:
             sp = model.shellParams[elem.param]
             mm = elem.massMatrix(mesh.getNodes(elem),dens,sp.thickness)
-            mmax = setElementMatrix(elem,6,matrix,mm,mmax)
+            mmax = setElementMatrix(elem,6,matrix,mm,mmax,model)
 
         elif elem.isBar:
             sect = model.barParams[elem.param].section
             mm = elem.massMatrix(mesh.getNodes(elem),dens,sect)
-            mmax = setElementMatrix(elem,6,matrix,mm,mmax)
+            mmax = setElementMatrix(elem,6,matrix,mm,mmax,model)
 
         else:
             mm = elem.massMatrix(mesh.getNodes(elem),dens)
-            mmax = setElementMatrix(elem,3,matrix,mm,mmax)
+            mmax = setElementMatrix(elem,3,matrix,mm,mmax,model)
 
     # 座標変換
     rests = model.bc.restraints
@@ -66,31 +67,30 @@ def massMatrix(dof, model):
 def stiffnessMatrix(dof, model):
     mesh = model.mesh
     elements = mesh.elements
-    matrix = []
+    matrix = np.zeros((dof,dof)) #[[] for i in range(dof)]
     kmax = 0
-    for i in range(dof):
-        matrix[i] = []
+
     for i in range(len(elements)):
         elem = elements[i]
-        material = model.materials[elem.material]
+        material: Material = model.materials[elem.material]
         mat = material.matrix
         if elem.isShell:
             sp = model.shellParams[elem.param]
             if elem.getName() == 'TriElement1':
-                km = elem.stiffnessMatrix(mesh.getNodes(elem), mat.m2d, sp)
+                km = elem.stiffnessMatrix(mesh.getNodes(elem), mat['m2d'], sp)
             else:
-                km = elem.stiffnessMatrix(mesh.getNodes(elem), mat.msh, sp)
+                km = elem.stiffnessMatrix(mesh.getNodes(elem), mat['msh'], sp)
 
-            kmax = setElementMatrix(elem, 6, matrix, km, kmax)
+            kmax = setElementMatrix(elem, 6, matrix, km, kmax, model)
 
         elif elem.isBar:
             sect = model.barParams[elem.param].section
             km = elem.stiffnessMatrix(mesh.getNodes(elem), material, sect)
-            kmax = setElementMatrix(elem, 6, matrix, km, kmax)
+            kmax = setElementMatrix(elem, 6, matrix, km, kmax, model)
 
         else:
-            km = elem.stiffnessMatrix(mesh.getNodes(elem), mat.m3d)
-            kmax = setElementMatrix(elem, 3, matrix, km, kmax)
+            km = elem.stiffnessMatrix(mesh.getNodes(elem), mat['m3d'])
+            kmax = setElementMatrix(elem, 3, matrix, km, kmax, model)
 
     # 座標変換
     rests = model.bc.restraints
@@ -106,10 +106,8 @@ def stiffnessMatrix(dof, model):
     for i in range(dof):
         mrow = matrix[i]
         for j in mrow:
-            if mrow.hasOwnProperty(j):
-                j = int(j)
-                if abs(mrow[j]) < eps:
-                    del mrow[j]
+            if abs(j) < eps:
+                j = 0
 
     return matrix
 
@@ -121,10 +119,10 @@ def geomStiffnessMatrix(dof, model):
     elements = mesh.elements
     nodes = mesh.nodes
     disp = model.result.displacement
-    matrix = []
+    matrix = np.zeros((dof, dof))
     kmax = 0
-    for i in range(dof):
-        matrix.append([])
+    # for i in range(dof):
+    #     matrix.append([])
     for i in range(len(elements)):
         elem = elements[i]
         en = elem.nodes
@@ -143,16 +141,16 @@ def geomStiffnessMatrix(dof, model):
                 km = elem.geomStiffnessMatrix(p, v, mat.m2d, sp)
             else:
                 km = elem.geomStiffnessMatrix(p, v, mat.msh, sp)
-            kmax = setElementMatrix(elem, 6, matrix, km, kmax)
+            kmax = setElementMatrix(elem, 6, matrix, km, kmax,model)
 
         elif(elem.isBar):
             sect = model.barParams[elem.param].section
             km = elem.geomStiffnessMatrix(p, v, material, sect)
-            kmax = setElementMatrix(elem, 6, matrix, km, kmax)
+            kmax = setElementMatrix(elem, 6, matrix, km, kmax,model)
 
         else:
             km = elem.geomStiffnessMatrix(p, v, mat.m3d)
-            kmax = setElementMatrix(elem, 3, matrix, km, kmax)
+            kmax = setElementMatrix(elem, 3, matrix, km, kmax,model)
 
     # 座標変換
     rests = model.bc.restraints
@@ -196,12 +194,12 @@ def setElementMatrix(element, dof, matrix, km, kmax, model):
                 krow = km[i0+i1]
                 for j1 in range(dof):
                     cj1 = column0+j1
-                    if cj1 in mrow:
-                        mrow[cj1] += krow[j0+j1]
-                        kmax=max(kmax, abs(mrow[cj1]))
-                    else:
-                        mrow[cj1] = krow[j0+j1]
-                        kmax = max(kmax, abs(mrow[cj1]))
+                    # if cj1 in mrow:
+                    mrow[cj1] += krow[j0+j1]
+                    kmax=max(kmax, abs(mrow[cj1]))
+                    # else:
+                    #     mrow[cj1] = krow[j0+j1]
+                    #     kmax = max(kmax, abs(mrow[cj1]))
 
     return kmax
 
@@ -219,7 +217,7 @@ def loadVector(dof, model):
         ldx = ld.globalX
         ldof = bcdof[nd]
         index0 = index[nd]
-        for j in range(dof):
+        for j in range(ldof):
             vector[index0+j] = ldx[j]
 
     for i in range(len(press)):
@@ -316,16 +314,15 @@ def tempVector(matrix, model):
 # 行列の行から一部を抽出する
 # mrow - 元のマトリックスの行データ
 # list - 抽出部分のリスト
-def extructRow(mrow,list):
-    exrow = []
-    col = []
+def extructRow(mrow, list):
+    exrow = [0 for i in range(len(mrow))]
+    col = [i for i in range(len(mrow))]
     i1 = 0
     j1 = 0
-    for j in mrow:
-        if mrow.hasOwnProperty(j):
-            col.append(int(j))
-
-    sorted(col, key=lambda j1, j2: j1-j2)
+    # for j in mrow:
+    #     if mrow.hasOwnProperty(j):
+    #         col.append(int(j))
+    # col = sorted(col, key=lambda j1, j2: j1-j2)
 
     while i1 < len(col) and j1 < len(list):
         if col[i1] == list[j1]:
@@ -418,10 +415,11 @@ def buckCalcStart(model):
 #--------------------------------------------------------------------#
 # 連立方程式求解オブジェクト
 class Solver():
-    def __init__(self, bc: BoundaryCondition):
+    def __init__(self, model):
         self.clear()
         self.method = LU_METHOD	# 方程式解法
-        self.bc: BoundaryCondition = bc
+        self.model = model
+        self.bc: BoundaryCondition = model.bc
 
     # データを消去する
     def clear(self):
@@ -440,8 +438,8 @@ class Solver():
                 reducedList.append(i)
 
         # 剛性マトリックス・荷重ベクトルの作成
-        matrix1 = stiffnessMatrix(self.dof)
-        vector1 = loadVector(self.dof)
+        matrix1 = stiffnessMatrix(self.dof, self.model)
+        vector1 = loadVector(self.dof, self.model)
 
         # 拘束自由度を除去する
         for i in range(len(bcList)):
@@ -512,16 +510,18 @@ class Solver():
 
         self.extruct(matrix1, vector1, reducedList)
 
-
     # 行列の一部を抽出する
     # matrix1,vector1 - 元のマトリックス,ベクトル
     # list - 抽出部分のリスト
-    def extruct(self, matrix1,vector1,list):
-        self.matrix=[]		# 行列
-        self.vector=[]		# ベクトル
-        for i in range(len(list)):
-            self.vector[i]=vector1[list[i]]
-            self.matrix[i]=extructRow(matrix1[list[i]],list)
+    def extruct(self, matrix1: np.ndarray, vector1: np.ndarray, list: List[int]):
+        self.matrix = matrix1    # 行列
+        self.vector = vector1	# ベクトル
+        return
+        # self.matrix = []    # 行列
+        # self.vector = []	# ベクトル
+        # for i in range(len(list)):
+        #     self.vector.append(vector1[list[i]])
+        #     self.matrix.append(extructRow(matrix1[list[i]], list))
 
 
     # 連立方程式を解く

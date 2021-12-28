@@ -433,20 +433,20 @@ class Result():
     # 節点歪・応力を初期化する
     # count - 節点数
     def initStrainAndStress(self, count):
-        self.strain1=[]		# 節点歪
-        self.strain2=[]
-        self.stress1=[]		# 節点応力
-        self.stress2=[]
-        self.sEnergy1=[]		# 節点歪エネルギー密度
-        self.sEnergy2=[]
-        zeros=[0,0,0,0,0,0]
-        for i in range(count):
-            self.strain1[i]=Strain(zeros)
-            self.strain2[i]=Strain(zeros)
-            self.stress1[i]=Stress(zeros)
-            self.stress2[i]=Stress(zeros)
-            self.sEnergy1[i]=0
-            self.sEnergy2[i]=0
+        zeros = [0,0,0,0,0,0]
+        self.strain1 = [Strain(zeros) for i in range(count)]		# 節点歪
+        self.strain2 = [Strain(zeros) for i in range(count)]
+        self.stress1 = [Stress(zeros) for i in range(count)]		# 節点応力
+        self.stress2 = [Stress(zeros) for i in range(count)]
+        self.sEnergy1 = [0 for i in range(count)]		# 節点歪エネルギー密度
+        self.sEnergy2 = [0 for i in range(count)]
+        # for i in range(count):
+        #     self.strain1.append(Strain(zeros))
+        #     self.strain2.append(Strain(zeros))
+        #     self.stress1.append(Stress(zeros))
+        #     self.stress2.append(Stress(zeros))
+        #     self.sEnergy1.append(0)
+        #     self.sEnergy2.append(0)
 
 
     # データ文字列を返す

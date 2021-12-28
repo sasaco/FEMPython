@@ -36,6 +36,7 @@ class FemMain:
         #             document.getElementById('result'),
         #             document.getElementById('config')]
         # loop()
+        return
     def calculate(self):
         self.model.calculate()
 

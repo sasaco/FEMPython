@@ -91,7 +91,7 @@ class FemDataModel:
         self.coordinates = []			# 局所座標系
         self.mesh = MeshModel()		# メッシュモデル
         self.bc = BoundaryCondition()	# 境界条件
-        self.solver = Solver(self.bc)		# 連立方程式求解オブジェクト
+        self.solver = Solver(self)		# 連立方程式求解オブジェクト
         self.result = Result()		# 計算結果
         self.hasShellBar = False		# シェル要素または梁要素を含まない
 
@@ -240,14 +240,11 @@ class FemDataModel:
 
     # 節点の自由度を設定する
     def setNodeDoF(self):
-        dof=self.bc.dof
-        nodeCount=len(self.mesh.nodes)
-        elemCount=len(self.mesh.elements)
+        nodeCount = len(self.mesh.nodes)
+        elemCount = len(self.mesh.elements)
 
-        dof = []
-        for i in range(nodeCount):
-            dof.append(3)
-
+        self.bc.dof = [3 for i in range(nodeCount)]
+        dof = self.bc.dof
         for i in range(elemCount):
             elem = self.mesh.elements[i]
             if(elem.isShell or elem.isBar):	# シェル要素・梁要素

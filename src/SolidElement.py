@@ -101,9 +101,9 @@ class SolidElement(FElement):
         jac = np.zeros(9)
         for i in range(count):
             sfi = sf[i]
-            pix = p[i][0]
-            piy = p[i][1]
-            piz = p[i][2]
+            pix = p[i].x
+            piy = p[i].y
+            piz = p[i].z
             for j in range(3):
                 sfij = sfi[j+1]
                 jac[j] += sfij * pix
@@ -115,10 +115,10 @@ class SolidElement(FElement):
     # p - 要素節点
     # ja - ヤコビ行列
     # sf - 形状関数行列
-    def grad(self, p, ja, sf) -> List[np.ndarray]:
+    def grad(self, p, ja: np.ndarray, sf) -> List[np.ndarray]:
         count = self.nodeCount()
         gr = []
-        ji = np.linalg.inv(ja)
+        ji = np.linalg.inv(ja.reshape(3,3)).reshape(9)
         for i in range(count):
             gr.append(np.array([
                 ji[0] * sf[i][1] + ji[3] * sf[i][2] + ji[6] * sf[i][3],
@@ -225,7 +225,9 @@ class SolidElement(FElement):
             ip = self.intP[i]
             sf = self.shapeFunction(ip[0], ip[1], ip[2])
             ja = self.jacobianMatrix(p, sf)
-            ks = self.stiffPart(d1, self.strainMatrix(self.grad(p, ja, sf)), ip[3] * abs(np.linalg.det(ja)))
+            jd = np.linalg.det(ja.reshape(3,3))
+            jp = ip[3] * abs(jd)
+            ks = self.stiffPart(d1, self.strainMatrix(self.grad(p, ja, sf)), jp)
             addMatrix(kk, ks)
 
         return kk
