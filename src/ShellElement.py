@@ -56,11 +56,11 @@ class ShellElement(FElement):
 
     # 要素節点の角度を返す
     # p - 要素節点
-    def angle(self, p: List[np.ndarray]) -> List[float]:
-        th=[]
+    def angle(self, p: List[np.ndarray]) -> np.ndarray:
         count = self.nodeCount()
+        th=np.zeros(count)
         for i in range(count):
-            th.append(planeAngle(p[i], p[(i+1)%count], p[(i+count-1)%count]))
+            th[i] = planeAngle(p[i], p[(i+1)%count], p[(i+count-1)%count])
 
         return th
 
@@ -335,19 +335,26 @@ class ShellElement(FElement):
         stress2=[]
         energy2=[]
         for i in range(count):
-            np=self.nodeP[i]
-            eps1=self.strainPart(p,v,n,d,np[0],np[1],1,t)
-            eps2=self.strainPart(p,v,n,d,np[0],np[1],-1,t)
-            strain1[i]=self.toStrain(eps1)
-            stress1[i]=self.toStress(numeric.dotMV(d1,eps1))
-            strain2[i]=self.toStrain(eps2)
-            stress2[i]=self.toStress(numeric.dotMV(d1,eps2))
-            strain1[i].rotate(d)
-            stress1[i].rotate(d)
-            strain2[i].rotate(d)
-            stress2[i].rotate(d)
-            energy1[i]=0.5*strain1[i].innerProduct(stress1[i])
-            energy2[i]=0.5*strain2[i].innerProduct(stress2[i])
+            nd = self.nodeP[i]
+            eps1=self.strainPart(p, v, n, d, nd[0], nd[1], 1, t)
+            eps2=self.strainPart(p, v, n, d, nd[0], nd[1], -1, t)
+            sin1: Strain = self.toStrain(eps1)
+            str1: Stress = self.toStress(np.dot(d1,eps1))
+            sin2: Strain = self.toStrain(eps2)
+            str2: Stress = self.toStress(np.dot(d1,eps2))
+            sin1.rotate(d)
+            str1.rotate(d)
+            sin2.rotate(d)
+            str2.rotate(d)
+            egy1 = 0.5 * sin1.innerProduct(str1)
+            egy2 = 0.5 * sin2.innerProduct(str2)
+
+            strain1.append(sin1)
+            stress1.append(str1)
+            strain2.append(sin2)
+            stress2.append(str2)
+            energy1.append(egy1)
+            energy2.append(egy2)
 
         return [strain1,stress1,energy1,strain2,stress2,energy2]
 
@@ -408,13 +415,13 @@ class ShellElement(FElement):
 
     # ベクトルを歪に変換する
     # s - 歪ベクトル
-    def toStrain(self, s):
+    def toStrain(self, s) -> Strain:
         return Strain([s[0],s[1],0,s[2],s[3],s[4]])
 
 
     # ベクトルを歪に変換する
     # s - 歪ベクトル
-    def toStress(s):
+    def toStress(s) -> Stress:
         return Stress([s[0],s[1],0,s[2],s[3],s[4]])
 
 

@@ -281,8 +281,8 @@ class FemDataModel:
         if calc == False:
             raise Exception('拘束条件不足のため計算できません')
 
-        t1=time.time()
-        print('Calculation time:'+(t1-t0)+'ms')
+        t1 = time.time()
+        print('Calculation time: {0}ms'.format(t1-t0))
 
 
     # 固有振動数・固有ベクトルを求める
@@ -367,8 +367,8 @@ class FemDataModel:
         for i in range(elemCount):
             elem = elems[i]
             en = elem.nodes
-            p=[]
-            v=[]
+            p = []
+            v = []
             for j in range(len(en)):
                 p.append(nodes[en[j]])
                 v.append(self.result.displacement[en[j]])
@@ -377,7 +377,7 @@ class FemDataModel:
             mat=material.matrix
             ea=elem.angle(p)
             if elem.isShell:
-                sp=model.shellParams[elem.param]
+                sp=self.shellParams[elem.param]
                 if(elem.getName()=='TriElement1'):
                     mmat=mat.m2d
                 else:
@@ -402,32 +402,32 @@ class FemDataModel:
                     angle[en[j]]+=eaj
 
             elif elem.isBar:
-                sect=model.barParams[elem.param].section
-                s=elem.strainStress(p,v,material,sect)
-                eps1=s[0]
-                str1=s[1]
-                se1=s[2]
-                eps2=s[3]
-                str2=s[4]
-                se2=s[5]
+                sect = self.barParams[elem.param].section
+                s = elem.strainStress(p,v,material,sect)
+                eps1 = s[0]
+                str1 = s[1]
+                se1 = s[2]
+                eps2 = s[3]
+                str2 = s[4]
+                se2 = s[5]
                 for j in range(len(en)):
                     self.result.addStructureData(en[j],eps1[j],str1[j],se1[j],
                                                                             eps2[j],str2[j],se2[j])
                     angle[en[j]] += 1
 
             else:
-                s=elem.strainStress(p,v,mat.m3d)
-                eps1=s[0]
-                str1=s[1]
-                se1=s[2]
+                s = elem.strainStress(p, v, mat['m3d'])
+                eps1 = s[0]
+                str1 = s[1]
+                se1 = s[2]
                 for j in range(len(en)):
-                    eaj=ea[j]
+                    eaj = ea[j]
                     eps1[j].mul(eaj)
                     str1[j].mul(eaj)
-                    se1[j]*=eaj
-                    self.result.addStructureData(en[j],eps1[j],str1[j],se1[j],
-                                                                            eps1[j],str1[j],se1[j])
-                    angle[en[j]]+=eaj
+                    se1[j] *= eaj
+                    self.result.addStructureData(
+                        en[j], eps1[j], str1[j], se1[j], eps1[j], str1[j], se1[j])
+                    angle[en[j]] += eaj
 
         for i in range(nodeCount):
             if(angle[i]!=0):
@@ -452,7 +452,7 @@ class FemDataModel:
             material=self.materials[elem.material]
             mat=material.matrix
             if elem.isShell:
-                sp=model.shellParams[elem.param]
+                sp=self.shellParamss[elem.param]
                 if elem.getName()=='TriElement1':
                     mmat=mat.m2d
                 else:
@@ -461,7 +461,7 @@ class FemDataModel:
                 self.result.addStructureData(i,s[0],s[1],s[2],s[3],s[4],s[5])
 
             elif(elem.isBar):
-                sect=model.barParams[elem.param].section
+                sect=self.barParams[elem.param].section
                 s=elem.elementStrainStress(p,v,material,sect)
                 self.result.addStructureData(i,s[0],s[1],s[2],s[3],s[4],s[5])
 
@@ -492,7 +492,7 @@ class FemDataModel:
             mat=material.matrix
             ea=elem.angle(p)
             if elem.isShell:
-                sp=model.shellParams[elem.param]
+                sp=self.shellParamss[elem.param]
                 if elem.getName()=='TriElement1':
                     mmat=mat.m2d
                 else:
@@ -511,7 +511,7 @@ class FemDataModel:
                     angle[enj]+=eaj
 
             elif elem.isBar:
-                sect=model.barParams[elem.param].section
+                sect=self.barParams[elem.param].section
                 s=elem.strainStress(p,v,material,sect)
                 se1=s[2]
                 se2=s[5]
@@ -558,7 +558,7 @@ class FemDataModel:
             material=self.materials[elem.material]
             mat=material.matrix
             if elem.isShell:
-                sp=model.shellParams[elem.param]
+                sp=self.shellParamss[elem.param]
                 if(elem.getName()=='TriElement1'):
                     mmat=mat.m2d
                 else:
@@ -569,7 +569,7 @@ class FemDataModel:
                 ev.sEnergy2[i]=s[5]
 
             elif elem.isBar:
-                sect=model.barParams[elem.param].section
+                sect=self.barParams[elem.param].section
                 s=elem.elementStrainStress(p,v,material,sect)
                 ev.sEnergy1[i]=s[2]
                 ev.sEnergy2[i]=s[5]
@@ -800,7 +800,7 @@ class MeshModel():
     #     for i in range(len(elems)):
     #         if(elems[i].isBar):
     #             bars.append(elems[i].border(i,0))
-    #             geometry.param.append(model.barParams[elems[i].param].section)
+    #             geometry.param.append(self.barParams[elems[i].param].section)
     #             axis.append(elems[i].axis)
 
     #     pos=new Float32Array(6*bars.length)

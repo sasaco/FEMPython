@@ -1,3 +1,5 @@
+import numpy as np
+
 #--------------------------------------------------------------------#
 # 局所座標系
 # label - 座標系ラベル
@@ -5,13 +7,13 @@
 class Coordinates:
     def __init__(self,label,n11,n12,n13,n21,n22,n23,n31,n32,n33):
         self.label=label
-        self.c=THREE.Matrix3().set(n11,n12,n13,n21,n22,n23,n31,n32,n33)
+        self.c=np.array([n11,n12,n13,n21,n22,n23,n31,n32,n33])
 
     # グローバル座標系に変換する
     # x - ベクトル成分
     def toGlobal(self, x):
         y=[]
-        e=self.c.elements
+        e=self.c
         for i in range(3):
             y[i] = e[i] * x[0] + e[i+3] * x[1] + e[i+6] * x[2]
             y[i+3] = e[i] * x[3] + e[i+3] * x[4] + e[i+6] * x[5]
@@ -25,7 +27,7 @@ class Coordinates:
     # idx0 - 節点ポインタ
     # ndof - 節点自由度
     def transMatrix(self,matrix,dof,idx0,ndof):
-        e=self.c.elements
+        e=self.c
         for i in range(0, dof, 3):
             mi1=matrix[i]
             mi2=matrix[i+1]
@@ -67,7 +69,7 @@ class Coordinates:
     # idx0 - 節点ポインタ
     # ndof - 節点自由度
     def transVector(self,vector,dof,idx0,ndof):
-        e=self.c.elements
+        e=self.c
         for j in range(idx0, idx0+ndof, 3):
             x1=vector[j]
             x2=vector[j+1]
@@ -80,5 +82,5 @@ class Coordinates:
     # 局所座標系を表す文字列を返す
     def toString(self):
         return 'Coordinates\t'+self.label.toString(10)+'\t'+ \
-                        self.c.elements.join('\t')
+                        self.c.join('\t')
 

@@ -62,18 +62,18 @@ def normalVector(p: List[FENode]) -> np.ndarray:
 # 平面上の角度を求める
 # p0 - 基点
 # p1,p2 - 頂点
-def planeAngle(p0: np.ndarray, p1: np.ndarray, p2: np.ndarray):
-    v1 = normalize(p1 - p0)
-    v2 = normalize(p2 - p0)
+def planeAngle(p0: FENode, p1: FENode, p2: FENode):
+    v1 = normalize(p1.sub(p0))
+    v2 = normalize(p2.sub(p0))
     return math.acos(min(max(np.dot(v1, v2),0),1))
 
 # 三角形の立体角を球面過剰から求める
 # p0 - 基点
 # p1,p2,p3 - 頂点
-def solidAngle(p0: np.ndarray, p1:np.ndarray, p2:np.ndarray, p3:np.ndarray):
-    v1 = p1 - p0
-    v2 = p2 - p0
-    v3 = p3 - p0
+def solidAngle(p0: FENode, p1:FENode, p2:FENode, p3:FENode):
+    v1 = p1.sub(p0)
+    v2 = p2.sub(p0)
+    v3 = p3.sub(p0)
     v12 = normalize(np.cross(v1, v2))
     v23 = normalize(np.cross(v2, v3))
     v31 = normalize(np.cross(v3, v1))

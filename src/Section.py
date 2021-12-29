@@ -50,7 +50,7 @@ def rectCoef(ba):
 # 円形断面
 # ss - データ文字列
 class CircleSection:
-    def __init__(self,ss):
+    def __init__(self, ss):
         self.d1=float(ss[0])	# 外径
         self.d2=float(ss[1])	# 内径
         # 断面積
@@ -127,7 +127,7 @@ class CircleSection:
 # 矩形断面
 # ss - データ文字列
 class RectSection:
-    def __init__(self,ss):
+    def __init__(self, ss):
         b1=float(ss[0])
         h1=float(ss[1])
         b2=float(ss[2])

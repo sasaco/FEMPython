@@ -51,8 +51,8 @@ class BarElement(FElement):
 
 	# 要素節点の角度を返す 梁要素では１
 	# p - 要素節点
-	def angle(self, p):
-		return [1,1]
+	def angle(self, p) -> np.ndarray:
+		return np.array([1,1])
 
 
 	# 剛性マトリックスを返す
@@ -123,36 +123,42 @@ class BarElement(FElement):
 	# material - 材料
 	# sect - 梁断面パラメータ
 	def strainStress(self, p, u, material, sect):
-		l=p[0].distanceTo(p[1])
-		d=dirMatrix(p,self.axis)
-		v=self.toLocalArray(u,d)
-		strain1=[]
-		stress1=[]
-		energy1=[]
-		strain2=[]
-		stress2=[]
-		energy2=[]
-		ex=(v[6]-v[0])/l
-		thd=(v[9]-v[3])/l
-		ks=self.bendCurveShare(v,l,material,sect)
-		kpy=ks[0]
-		kpz=ks[1]
-		sy=ks[2]
-		sz=ks[3]
+		l = p[0].distanceTo(p[1])
+		d = dirMatrix(p,self.axis)
+		v = self.toLocalArray(u,d)
+		strain1 = []
+		stress1 = []
+		energy1 = []
+		strain2 = []
+		stress2 = []
+		energy2 = []
+		ex = (v[6] - v[0]) / l
+		thd = (v[9] - v[3]) / l
+		ks=self.bendCurveShare(v, l, material, sect)
+		kpy = ks[0]
+		kpz = ks[1]
+		sy = ks[2]
+		sz = ks[3]
 		for i in range(2):
-			str=sect.strainStress(material,ex,thd,kpy[i],kpz[i],sy,sz)
-			strain1[i]= Strain(str[0])
-			stress1[i]= Stress(str[1])
-			strain2[i]= Strain(str[2])
-			stress2[i]= Stress(str[3])
-			strain1[i].rotate(d)
-			stress1[i].rotate(d)
-			strain2[i].rotate(d)
-			stress2[i].rotate(d)
-			energy1[i]=0.5*strain1[i].innerProduct(stress1[i])
-			energy2[i]=0.5*strain2[i].innerProduct(stress2[i])
+			str = sect.strainStress(material,ex,thd,kpy[i],kpz[i],sy,sz)
+			sin1 = Strain(str[0])
+			str1 = Stress(str[1])
+			sin2 = Strain(str[2])
+			str2 = Stress(str[3])
+			sin1.rotate(d)
+			str1.rotate(d)
+			sin2.rotate(d)
+			str2.rotate(d)
 
-		return [strain1,stress1,energy1,strain2,stress2,energy2]
+			strain1.append(sin1)
+			stress1.append(str1)
+			strain2.append(sin2)
+			stress2.append(str2)
+		
+			energy1.append(0.5 * sin1.innerProduct(str1))
+			energy2.append(0.5 * sin2.innerProduct(str2))
+
+		return [strain1, stress1, energy1, strain2, stress2, energy2]
 
 
 	# 要素歪・応力を返す

@@ -301,10 +301,10 @@ class SolidElement(FElement):
         energy = []
         for i in range(count):
             eps = self.strainPart(p, v, self.nodeP[i])
-            strain[i] = Strain(eps)
+            strain.append(Strain(eps))
             str = np.dot(d1, eps)
-            stress[i] = Stress(str)
-            energy[i] = 0.5 * np.inner(strain[i], stress[i])
+            stress.append(Stress(str))
+            energy.append(0.5 * np.inner(eps, str))
 
         return [strain, stress, energy]
 
@@ -401,8 +401,8 @@ class TetraElement1(SolidElement):
 
     # 要素節点の角度を返す
     # p - 要素節点
-    def angle(self, p):
-        th = []
+    def angle(self, p) -> np.ndarray:
+        th = np.zeros(4)
         for i in range(4):
             th[i] = solidAngle( p[i], p[(i+1)%4], p[(i+2)%4], p[(i+3)%4] )
 
@@ -627,14 +627,15 @@ class TetraElement2(SolidElement):
 
     # 要素節点の角度を返す
     # p - 要素節点
-    def angle(self, p):
-        return [solidAngle(p[0], p[4], p[6], p[7]),
-                solidAngle(p[1], p[5], p[4], p[8]),
-                solidAngle(p[2], p[6], p[5], p[9]),
-                solidAngle(p[3], p[7], p[8], p[9]),
-                planeAngle(p[4], p[2], p[3]),planeAngle(p[5],p[0],p[3]),
-                planeAngle(p[6], p[1], p[3]),planeAngle(p[7],p[1],p[2]),
-                planeAngle(p[8], p[2], p[0]),planeAngle(p[9],p[0],p[1])]
+    def angle(self, p) -> np.ndarray:
+        return np.array([
+            solidAngle(p[0], p[4], p[6], p[7]),
+            solidAngle(p[1], p[5], p[4], p[8]),
+            solidAngle(p[2], p[6], p[5], p[9]),
+            solidAngle(p[3], p[7], p[8], p[9]),
+            planeAngle(p[4], p[2], p[3]), planeAngle(p[5],p[0],p[3]),
+            planeAngle(p[6], p[1], p[3]), planeAngle(p[7],p[1],p[2]),
+            planeAngle(p[8], p[2], p[0]), planeAngle(p[9],p[0],p[1])])
 
 
     # 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
@@ -700,8 +701,8 @@ class WedgeElement1(SolidElement):
 
     # 要素節点の角度を返す
     # p - 要素節点
-    def angle(self, p):
-        th = []
+    def angle(self, p) -> np.ndarray:
+        th = np.zeros(3)
         for i in range(3):
             th[i] = solidAngle( p[i], p[(i+1)%3], p[(i+2)%3], p[i+3])
             th[i+3] = solidAngle( p[i+3], p[(i+1)%3+3], p[(i+2)%3+3], p[i])
@@ -801,18 +802,19 @@ class WedgeElement2(SolidElement):
 
     # 要素節点の角度を返す
     # p - 要素節点
-    def angle(self, p):
-        return [solidAngle(p[0],p[6],p[8],p[12]),
-                        solidAngle(p[1],p[6],p[7],p[14]),
-                        solidAngle(p[2],p[7],p[8],p[14]),
-                        solidAngle(p[3],p[9],p[11],p[12]),
-                        solidAngle(p[4],p[10],p[9],p[13]),
-                        solidAngle(p[5],p[11],p[10],p[14]),
-                        planeAngle(p[6],p[2],p[9]),planeAngle(p[7],p[0],p[10]),
-                        planeAngle(p[8],p[1],p[11]),planeAngle(p[9],p[6],p[5]),
-                        planeAngle(p[10],p[7],p[3]),planeAngle(p[11],p[8],p[4]),
-                        planeAngle(p[12],p[13],p[14]),planeAngle(p[13],p[14],p[12]),
-                        planeAngle(p[14],p[12],p[13])]
+    def angle(self, p) -> np.ndarray:
+        return np.array([
+            solidAngle(p[0],  p[6],  p[8],   p[12]),
+            solidAngle(p[1],  p[6],  p[7],   p[14]),
+            solidAngle(p[2],  p[7],  p[8],   p[14]),
+            solidAngle(p[3],  p[9],  p[11],  p[12]),
+            solidAngle(p[4],  p[10], p[9],   p[13]),
+            solidAngle(p[5],  p[11], p[10],  p[14]),
+            planeAngle(p[6],  p[2],  p[9]),  planeAngle(p[7],  p[0],  p[10]),
+            planeAngle(p[8],  p[1],  p[11]), planeAngle(p[9],  p[6],  p[5]),
+            planeAngle(p[10], p[7],  p[3]),  planeAngle(p[11], p[8],  p[4]),
+            planeAngle(p[12], p[13], p[14]), planeAngle(p[13], p[14], p[12]),
+            planeAngle(p[14], p[12], p[13])])
 
 
     # 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
@@ -899,8 +901,8 @@ class HexaElement1(SolidElement):
 
     # 要素節点の角度を返す
     # p - 要素節点
-    def angle(self, p):
-        th = []
+    def angle(self, p) -> np.ndarray:
+        th = np.zeros(8)
         for i in range(4):
             th[i] = solidAngle(p[i],p[(i+1)%4],p[(i+3)%4],p[i+4])
             th[i+4] = solidAngle(p[i+4],p[(i+1)%4+4],p[(i+3)%4+4],p[i])
@@ -1006,21 +1008,22 @@ class HexaElement2(SolidElement):
 
     # 要素節点の角度を返す
     # p - 要素節点
-    def angle(self, p):
-        return [solidAngle(p[0],p[8],p[11],p[16]),
-                        solidAngle(p[1],p[9],p[8],p[17]),
-                        solidAngle(p[2],p[10],p[9],p[18]),
-                        solidAngle(p[3],p[11],p[10],p[19]),
-                        solidAngle(p[4],p[12],p[15],p[16]),
-                        solidAngle(p[5],p[13],p[12],p[17]),
-                        solidAngle(p[6],p[14],p[13],p[18]),
-                        solidAngle(p[7],p[15],p[14],p[19]),
-                        planeAngle(p[8],p[12],p[10]),planeAngle(p[9],p[13],p[11]),
-                        planeAngle(p[10],p[14],p[8]),planeAngle(p[11],p[15],p[9]),
-                        planeAngle(p[12],p[8],p[14]),planeAngle(p[13],p[9],p[15]),
-                        planeAngle(p[14],p[10],p[12]),planeAngle(p[15],p[11],p[13]),
-                        planeAngle(p[16],p[17],p[19]),planeAngle(p[17],p[18],p[16]),
-                        planeAngle(p[18],p[19],p[17]),planeAngle(p[19],p[16],p[18])]
+    def angle(self, p) -> np.ndarray:
+        return np.array([
+            solidAngle(p[0],  p[8],  p[11],  p[16]),
+            solidAngle(p[1],  p[9],  p[8],   p[17]),
+            solidAngle(p[2],  p[10], p[9],   p[18]),
+            solidAngle(p[3],  p[11], p[10],  p[19]),
+            solidAngle(p[4],  p[12], p[15],  p[16]),
+            solidAngle(p[5],  p[13], p[12],  p[17]),
+            solidAngle(p[6],  p[14], p[13],  p[18]),
+            solidAngle(p[7],  p[15], p[14],  p[19]),
+            planeAngle(p[8],  p[12], p[10]), planeAngle(p[9],  p[13], p[11]),
+            planeAngle(p[10], p[14], p[8]),  planeAngle(p[11], p[15], p[9]),
+            planeAngle(p[12], p[8],  p[14]), planeAngle(p[13], p[9],  p[15]),
+            planeAngle(p[14], p[10], p[12]), planeAngle(p[15], p[11], p[13]),
+            planeAngle(p[16], p[17], p[19]), planeAngle(p[17], p[18], p[16]),
+            planeAngle(p[18], p[19], p[17]), planeAngle(p[19], p[16], p[18])])
 
 
     # 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す

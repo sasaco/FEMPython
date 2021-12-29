@@ -434,19 +434,19 @@ class Result():
     # count - 節点数
     def initStrainAndStress(self, count):
         zeros = [0,0,0,0,0,0]
-        self.strain1 = [Strain(zeros) for i in range(count)]		# 節点歪
-        self.strain2 = [Strain(zeros) for i in range(count)]
-        self.stress1 = [Stress(zeros) for i in range(count)]		# 節点応力
-        self.stress2 = [Stress(zeros) for i in range(count)]
-        self.sEnergy1 = [0 for i in range(count)]		# 節点歪エネルギー密度
-        self.sEnergy2 = [0 for i in range(count)]
-        # for i in range(count):
-        #     self.strain1.append(Strain(zeros))
-        #     self.strain2.append(Strain(zeros))
-        #     self.stress1.append(Stress(zeros))
-        #     self.stress2.append(Stress(zeros))
-        #     self.sEnergy1.append(0)
-        #     self.sEnergy2.append(0)
+        # self.strain1 = [Strain(zeros) for i in range(count)]		# 節点歪
+        # self.strain2 = [Strain(zeros) for i in range(count)]
+        # self.stress1 = [Stress(zeros) for i in range(count)]		# 節点応力
+        # self.stress2 = [Stress(zeros) for i in range(count)]
+        # self.sEnergy1 = [0 for i in range(count)]		# 節点歪エネルギー密度
+        # self.sEnergy2 = [0 for i in range(count)]
+        for i in range(count):
+            self.strain1.append(Strain(zeros))
+            self.strain2.append(Strain(zeros))
+            self.stress1.append(Stress(zeros))
+            self.stress2.append(Stress(zeros))
+            self.sEnergy1.append(0)
+            self.sEnergy2.append(0)
 
 
     # データ文字列を返す
@@ -702,7 +702,7 @@ class Strain(SymmetricTensor3):
 # 応力
 # s - 成分
 class Stress(SymmetricTensor3):
-    def __init__(s):
+    def __init__(self, s):
         super().__init__(s)
 
 
