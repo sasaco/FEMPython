@@ -29,21 +29,23 @@ class HexaElement1WT(HexaElement1):
         k2 = np.zeros((size, 9))
         k3 = np.zeros((9, 9))
         sf0 = self.shapeFunction(0, 0, 0)
-        ja0 = self.jacobianMatrix(p, sf0)
-        ji0 = np.linalg.inv(ja0)
+        ja0 = self.jacobianMatrix(p, sf0).reshape(3,3)
+        ji0 = np.linalg.inv(ja0).reshape(9)
         jj0 = abs(np.linalg.det(ja0))
         for i in range(len(self.intP)):
             sf = self.shapeFunction(self.intP[i][0], self.intP[i][1], self.intP[i][2])
             ja = self.jacobianMatrix(p, sf)
             b = self.strainMatrix(self.grad(p, ja, sf))
             b0 = self.strainMatrix2(ji0, self.intP[i])
-            ks = self.stiffPart(d1, b, self.intP[i][3] * abs(np.linalg.det(ja)))
+            ks = self.stiffPart(d1, b, self.intP[i][3] * abs(np.linalg.det(ja.reshape(3,3))))
             cf0 = self.intP[i][3] * jj0
             addMatrix(kk, ks)
             addMatrix(k2, self.stiffPart2(d1,b,b0,cf0))
             addMatrix(k3, self.stiffPart(d1,b0,cf0))
-        k4 = np.dot(np.linalg.inv(k3), -1*k2.transpose())
-        addMatrix(kk, np.dot(k2,k4))
+        invK3 = np.linalg.inv(k3)
+        traK2 = np.transpose(k2)
+        k4 = np.dot(invK3, -1 * traK2)
+        addMatrix(kk, np.dot(k2, k4))
         self.te = np.transpose(k4)
         return kk
 
@@ -54,7 +56,7 @@ class HexaElement1WT(HexaElement1):
     def strainPart(self, p, v, x):
         sf = self.shapeFunction(x[0],x[1],x[2])
         ja = self.jacobianMatrix(p,sf)
-        ji = np.linalg.inv(ja)
+        ji = np.linalg.inv(ja.reshape(3,3)).reshape(9)
         sm = self.strainMatrix(self.grad(p,ja,sf))
         sm0 = np.dot(self.te, self.strainMatrix2(ji, x))
         count = 3 * self.nodeCount()

@@ -22,6 +22,12 @@ class FENode():
     def clone(self):
         return FENode(self.label, self.x, self.y, self.z)
 
+    def distanceTo(self, other) -> float:
+        xx = self.x - other.x
+        yy = self.y - other.y
+        zz = self.z - other.z
+        return np.sqrt(xx**2 + yy**2 + zz**2)
+
     # 節点を表す文字列を返す
     def toString(self):
         return 'Node\t'+self.label.toString(10)+'\t'+ \
