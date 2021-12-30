@@ -15,13 +15,13 @@ I_ZMY=[2,4,8,10]	# z軸方向,y軸周り成分のインデックス
 # nodes - 節点番号
 # axis - 断面基準方向ベクトル
 class BarElement(FElement):
-	def __init__(self,label,material,param,nodes,axis):
+	def __init__(self, label, material, param, nodes, axis=None):
 		super().__init__(label,material,nodes)
-		self.param=param
-		self.isBar=True
-		if axis!=None:
+		self.param = param
+		self.isBar = True
+		if not axis is None:
 			normalize(axis)
-		self.axis=axis
+		self.axis = axis
 
 
 	# 節点数を返す

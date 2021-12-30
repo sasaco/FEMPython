@@ -101,8 +101,8 @@ def dirMatrix(p: np.ndarray,axis: np.ndarray):
 # axis - 断面基準方向ベクトル
 def dirVectors(p: np.ndarray, axis: np.ndarray):
     if len(p)==2:		# 梁要素
-        v1 = normalize(p[1] - p[0])
-        if axis!=None:
+        v1 = normalize(p[1].sub(p[0]))
+        if not axis is None:
             dt = np.dot(v1, axis)
             v2 = np.array( (axis[0] - dt * v1[0],
                             axis[1] - dt * v1[1],
@@ -235,8 +235,7 @@ class FElement(Nodes):
     def toLocalArray(self, u,d):
         v = []
         for i in range(2):
-            # ux=u[i].x
-            ux = u[i][0]
+            ux = u[i].x
             for j in range(3):
                 v.append(d[0][j] * ux[0] + d[1][j] * ux[1] + d[2][j] * ux[2])
 

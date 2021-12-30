@@ -93,7 +93,7 @@ class BarParameter:
     def __init__(self,label,type,ss):
         self.label=label
         self.type=type
-        tp=type.toLowerCase()
+        tp=type.lower()
         if tp=='circle':
             self.section=CircleSection(ss)
         elif tp=='rectangle':

@@ -702,7 +702,7 @@ class WedgeElement1(SolidElement):
     # 要素節点の角度を返す
     # p - 要素節点
     def angle(self, p) -> np.ndarray:
-        th = np.zeros(3)
+        th = np.zeros(6)
         for i in range(3):
             th[i] = solidAngle( p[i], p[(i+1)%3], p[(i+2)%3], p[i+3])
             th[i+3] = solidAngle( p[i+3], p[(i+1)%3+3], p[(i+2)%3+3], p[i])
@@ -961,7 +961,7 @@ class HexaElement1(SolidElement):
 # nodes - 節点番号
 class HexaElement2(SolidElement):
     def __init__(self, label, material, nodes):
-        super().__init__(label, material, nodes, HEXA2_NODE, HEXA2_INT, self.shapeFunction)
+        super().__init__(label, material, nodes, HEXA2_NODE, HEXA2_INT(), self.shapeFunction)
 
     # 要素名称を返す
     def getName(self):

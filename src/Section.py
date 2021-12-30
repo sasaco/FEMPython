@@ -1,5 +1,7 @@
 import math
 import numpy as np
+
+from src.ShellElement import TRI1_INT
 # from Vector3 import Vector3
 #--------------------------------------------------------------------#
 
@@ -20,30 +22,36 @@ def rectCoef(ba):
     pba = 0.5 * math.pi * ba
     i = 1
     sg = 1
-    while dk1 / dk1s > 1e-10:
+    while True:
         ex = math.exp(-2 * pba * i)
         dk1 = (1 - ex) / ((i+ex)*math.pow(i, 5))	# IEは双曲線関数未実装
         dk1s += dk1
-        i += 2
+        i += 2 
+        if dk1 / dk1s > 1e-10:
+            break
 
     i = 1
-    while dk / dks > 1e-10:
+    while True:
         dk = 2 / ((math.exp(pba*i) + math.exp(-pba*i)) * i * i)
         dks += dk
         i += 2
+        if dk / dks > 1e-10:
+            break
 
     i = 1
-    while abs(db/dbs) > 1e-12:
+    while True:
         ex = math.exp(-2 * pba * i)
         db = sg * (1-ex) / ((i+ex) * i * i)
         dbs += db
         i += 2
         sg =- sg
+        if abs(db/dbs) > 1e-12:
+            break
 
-    k1=1/3-COEF_K1*dk1s/ba
-    k=1-COEF_K*dks
-    b=COEF_K*dbs
-    return [k1,k,k1/k,b/k]
+    k1 = 1/3 - COEF_K1 * dk1s / ba
+    k = 1 - COEF_K * dks
+    b = COEF_K * dbs
+    return [k1, k, k1/k, b/k]
 
 
 #--------------------------------------------------------------------#
