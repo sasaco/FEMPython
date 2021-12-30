@@ -1,4 +1,4 @@
-from Solver import Solver, LU_METHOD, ILUCG_METHOD
+from Solver import Solver
 from Result import Result, EigenValue, NODE_DATA, ELEMENT_DATA, VIBRATION, BUCKLING
 from Material import Material
 from BoundaryCondition import BoundaryCondition
@@ -104,12 +104,11 @@ class FemDataModel:
         self.mesh.clear()
         self.bc.clear()
         self.result.clear()
-        self.result.type = NODE_DATA
+        self.result.type = ELEMENT_DATA # NODE_DATA, VIBRATION, BUCKLING
 
 
     # モデルを初期化する
     def init(self):
-        self.solver.method = ILUCG_METHOD	# デフォルトは反復解法
         mats=self.materials
         sorted(mats, key=compareLabel)
         self.mesh.init()
@@ -218,8 +217,6 @@ class FemDataModel:
                                                     'は存在しません')
 
         self.hasShellBar=(shellbars>0)
-        if(self.hasShellBar):		# シェル要素・梁要素を含む場合は直接解法
-            self.solver.method = LU_METHOD
 
 
     # 局所座標系を設定する
@@ -436,38 +433,38 @@ class FemDataModel:
 
     # 要素歪・応力・歪エネルギー密度を計算する
     def calculateElementStress(self):
-        nodes=self.mesh.nodes
-        elems=self.mesh.elements
-        elemCount=len(elems)
+        nodes = self.mesh.nodes
+        elems = self.mesh.elements
+        elemCount = len(elems)
         self.result.initStrainAndStress(elemCount)
         for i in range(elemCount):
-            elem=elems[i]
-            en=elem.nodes
-            p=[]
-            v=[]
+            elem = elems[i]
+            en = elem.nodes
+            p = []
+            v = []
             for j in range(len(en)):
-                p[j]=nodes[en[j]]
-                v[j]=self.result.displacement[en[j]]
+                p.append(nodes[en[j]])
+                v.append(self.result.displacement[en[j]])
 
-            material=self.materials[elem.material]
-            mat=material.matrix
+            material = self.materials[elem.material]
+            mat = material.matrix
             if elem.isShell:
-                sp=self.shellParamss[elem.param]
+                sp = self.shellParams[elem.param]
                 if elem.getName()=='TriElement1':
-                    mmat=mat.m2d
+                    mmat = mat['m2d']
                 else:
-                    mmat=mat.msh
-                s=elem.elementStrainStress(p,v,mmat,sp)
+                    mmat = mat['msh']
+                s=elem.elementStrainStress(p, v, mmat, sp)
                 self.result.addStructureData(i,s[0],s[1],s[2],s[3],s[4],s[5])
 
             elif(elem.isBar):
                 sect=self.barParams[elem.param].section
-                s=elem.elementStrainStress(p,v,material,sect)
-                self.result.addStructureData(i,s[0],s[1],s[2],s[3],s[4],s[5])
+                s=elem.elementStrainStress(p, v, material, sect)
+                self.result.addStructureData(i, s[0], s[1], s[2], s[3], s[4], s[5])
 
             else:
-                s=elem.elementStrainStress(p,v,mat.m3d)
-                self.result.addStructureData(i,s[0],s[1],s[2],s[0],s[1],s[2])
+                s=elem.elementStrainStress(p, v, mat['m3d'])
+                self.result.addStructureData(i, s[0], s[1], s[2], s[0], s[1], s[2])
 
 
     # 固有値データの節点歪エネルギー密度を計算する
@@ -492,7 +489,7 @@ class FemDataModel:
             mat=material.matrix
             ea=elem.angle(p)
             if elem.isShell:
-                sp=self.shellParamss[elem.param]
+                sp=self.shellParams[elem.param]
                 if elem.getName()=='TriElement1':
                     mmat=mat.m2d
                 else:
@@ -558,7 +555,7 @@ class FemDataModel:
             material=self.materials[elem.material]
             mat=material.matrix
             if elem.isShell:
-                sp=self.shellParamss[elem.param]
+                sp=self.shellParams[elem.param]
                 if(elem.getName()=='TriElement1'):
                     mmat=mat.m2d
                 else:

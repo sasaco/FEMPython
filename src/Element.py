@@ -86,7 +86,7 @@ def solidAngle(p0: FENode, p1:FENode, p2:FENode, p3:FENode):
 # 方向余弦マトリックスを返す
 # p - 頂点座標
 # axis - 断面基準方向ベクトル
-def dirMatrix(p: np.ndarray,axis: np.ndarray):
+def dirMatrix(p: np.ndarray, axis = None):
     v = dirVectors(p, axis)
     return v
     # [
@@ -99,7 +99,7 @@ def dirMatrix(p: np.ndarray,axis: np.ndarray):
 # 方向余弦マトリックスを返す
 # p - 頂点座標
 # axis - 断面基準方向ベクトル
-def dirVectors(p: np.ndarray, axis: np.ndarray):
+def dirVectors(p: np.ndarray, axis):
     if len(p)==2:		# 梁要素
         v1 = normalize(p[1].sub(p[0]))
         if not axis is None:
@@ -125,7 +125,7 @@ def dirVectors(p: np.ndarray, axis: np.ndarray):
 
     elif len(p)>2:		# シェル要素
         v3 = normalVector(p)
-        v2 = p[1] - p[0]
+        v2 = p[1].sub(p[0])
         v2 = normalize(np.cross(v3, v2))
         v1 = np.cross(v2, v3)
         return [v1, v2, v3]

@@ -154,7 +154,7 @@ class BarElement(FElement):
 			stress1.append(str1)
 			strain2.append(sin2)
 			stress2.append(str2)
-		
+
 			energy1.append(0.5 * sin1.innerProduct(str1))
 			energy2.append(0.5 * sin2.innerProduct(str2))
 
