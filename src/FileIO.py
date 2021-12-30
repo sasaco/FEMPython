@@ -152,21 +152,8 @@ def readFemModel(s: List[str], model: FemDataModel):
 			else:
 				model.result.type = NODE_DATA
 
-		# elif (keyWord=='eigenvalue' and len(ss)>2) or \
-		# 		(keyWord=='displacement' and len(ss)>7) or \
-		# 		(keyWord=='strain1' and len(ss)>7) or \
-		# 		(keyWord=='stress1' and len(ss)>7) or \
-		# 		(keyWord=='strenergy1' and len(ss)>2) or \
-		# 		(keyWord=='strain2' and len(ss)>7) or \
-		# 		(keyWord=='stress2' and len(ss)>7) or \
-		# 		(keyWord=='strenergy2' and len(ss)>2) or \
-		# 		(keyWord=='temp' and len(ss)>2):
-		# 	res.append(ss)
 
 	model.init()
-
-	# if len(res)>0:
-	# 	readFemResult(res)
 
 
 # 拘束条件を読み込む
@@ -246,104 +233,3 @@ def readCoordinates(ss: List[str]) -> Coordinates:
 							c[0][1],c[1][1],c[2][1],
 							c[0][2],c[1][2],c[2][2])
 
-
-# # FEMの計算結果を読み込む
-# # s - データ文字列のリスト
-# def readFemResult(s):
-#   map1=[],map2=[],ss=[],res=model.result,p,i
-#   nodes=model.mesh.nodes,elems=model.mesh.elements
-#   for(i=0i<nodes.lengthi++):
-#     map1[nodes[i].label]=i
-#   }
-#   if(res.type==ELEMENT_DATA):
-#     for(i=0i<elems.lengthi++):
-#       map2[elems[i].label]=i
-#     }
-#   }
-#   else:
-#     map2=map1
-#   }
-#   for(i=0i<s.lengthi++):
-#     keyWord=s[i][0].lower()
-#     ss.clear()
-#     for(j=2j<s[i].lengthj++):
-#       ss[j-2]=float(s[i][j])
-#     }
-#     if(keyWord=='eigenvalue'):
-#       ev=new EigenValue(ss[0],s[i][1])
-#       model.result.addEigenValue(ev)
-#       res=ev
-#     }
-#     elif(keyWord=='displacement'):
-#       p=readDataPointer(s[i],map1)
-#       d=new Vector3R(ss[0],ss[1],ss[2],ss[3],ss[4],ss[5])
-#       res.displacement[p]=d
-#       res.dispMax=max(res.dispMax,d.magnitude())
-#       res.angleMax=max(res.angleMax,d.magnitudeR())
-#     }
-#     elif(keyWord=='strain1'):
-#       p=readDataPointer(s[i],map2)
-#       model.result.strain1[p]=new Strain(ss)
-#     }
-#     elif(keyWord=='stress1'):
-#       p=readDataPointer(s[i],map2)
-#       model.result.stress1[p]=new Stress(ss)
-#     }
-#     elif(keyWord=='strenergy1'):
-#       p=readDataPointer(s[i],map2)
-#       res.sEnergy1[p]=ss[0]
-#     }
-#     elif(keyWord=='strain2'):
-#       p=readDataPointer(s[i],map2)
-#       model.result.strain2[p]=new Strain(ss)
-#     }
-#     elif(keyWord=='stress2'):
-#       p=readDataPointer(s[i],map2)
-#       model.result.stress2[p]=new Stress(ss)
-#     }
-#     elif(keyWord=='strenergy2'):
-#       p=readDataPointer(s[i],map2)
-#       res.sEnergy2[p]=ss[0]
-#     }
-#     elif(keyWord=='temp'):
-#       p=readDataPointer(s[i],map1)
-#       model.result.temperature[p]=ss[0]
-#       model.result.tempMax=max(model.result.tempMax,ss[0])
-#     }
-#   }
-#   model.result.calculated=True
-#   if(model.result.eigenValue.length==0):
-#     resultView.setInitStatic()
-#     showInfo()
-#   }
-#   else:
-#     resultView.setInitEigen()
-#   }
-# }
-
-# # データポインタを獲得する
-# # ss - データ文字列
-# # map - ラベルマップ
-# def readDataPointer(ss,map):
-#   p=int(ss[1])
-#   if(p in map):
-#     return map[p]
-#   }
-#   else:
-#     raise Exception('計算結果'+ss[0]+'の番号'+p+
-#       	      	    'は存在しません')
-#   }
-# }
-
-# # ファイル操作ウィンドウを表示する
-# def showFileWindow():
-#   showModalWindow(FILE_WINDOW)
-# }
-
-# # ファイル操作を取り消す
-# def cancelFile():
-#   hideModalWindow(FILE_WINDOW)
-# # ファイル選択を消去する
-#   localfile=document.getElementById('localreadfile')
-#   localfile.parentNode.innerHTML=localfile.parentNode.innerHTML
-# }

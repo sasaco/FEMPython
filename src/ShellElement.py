@@ -1,6 +1,7 @@
 from Element import FElement, toDir, toDir3, swap, dirMatrix, planeAngle, C1_3, C1_12, normalVector
 from Result import Strain, Stress
 from ElementBorder import TriangleBorder1, EdgeBorder1, QuadangleBorder1, TRI2_INT, QUAD1_INT, addMatrix
+from FENode import FENode
 import math
 import numpy as np
 from typing import List
@@ -75,10 +76,10 @@ class ShellElement(FElement):
         jac = np.zeros(9)
         for i in range(count):
             sfi = sf[i]
-            ppi = p[i]
-            pix = ppi[0]
-            piy = ppi[1]
-            piz = ppi[2]
+            ppi: FENode = p[i]
+            pix = ppi.x
+            piy = ppi.y
+            piz = ppi.z
             for j in range(2):
                 sfij = sfi[j+1]
                 jac[j] += sfij * pix
@@ -95,7 +96,7 @@ class ShellElement(FElement):
     # ja - ヤコビ行列
     # d - 方向余弦マトリックス
     def jacobInv(self, ja, d) -> np.ndarray:
-        e1 = ja.elements
+        e1 = ja
         jd= np.array([
             e1[0] * d[0][0] + e1[3] * d[1][0] + e1[6] * d[2][0],
             e1[0] * d[0][1] + e1[3] * d[1][1] + e1[6] * d[2][1],
@@ -107,7 +108,7 @@ class ShellElement(FElement):
             0,
             e1[2] * d[0][2] + e1[5] * d[1][2] + e1[8] * d[2][2]
         ])
-        return np.linalg.inv(jd)
+        return np.linalg.inv(jd.reshape(3,3)).reshape(9)
 
 
     # 形状関数の勾配 [ dNi/dx dNi/dy ] を返す
@@ -379,38 +380,38 @@ class ShellElement(FElement):
     # d1 - 応力 - 歪マトリックス
     # sp - シェルパラメータ
     def elementStrainStress(self, p,u,d1,sp):
-        d=dirMatrix(p)
-        n=normalVector(p)
-        v=self.toArray(u,6)
-        t=sp.thickness
-        cf=1/len(self.intP)
-        strain1=[0,0,0,0,0,0]
-        stress1=[0,0,0,0,0,0]
-        energy1=0
-        strain2=[0,0,0,0,0,0]
-        stress2=[0,0,0,0,0,0]
-        energy2=0
+        d = dirMatrix(p)
+        n = normalVector(p)
+        v = self.toArray(u,6)
+        t = sp.thickness
+        cf = 1 / len(self.intP)
+        strain1 = np.zeros(5) # [0,0,0,0,0,0]
+        stress1 = np.zeros(5) # [0,0,0,0,0,0]
+        energy1 = 0
+        strain2 = np.zeros(5) # [0,0,0,0,0,0]
+        stress2 = np.zeros(5) # [0,0,0,0,0,0]
+        energy2 = 0
         for i in range(len(self.intP)):
-            ip=self.intP[i]
-            eps1=self.strainPart(p,v,n,d,ip[0],ip[1],1,t)
-            eps2=self.strainPart(p,v,n,d,ip[0],ip[1],-1,t)
-            strain1=numeric.add(strain1,eps1)
-            strain2=numeric.add(strain2,eps2)
-            str1=numeric.dotMV(d1,eps1)
-            str2=numeric.dotMV(d1,eps2)
-            stress1=numeric.add(stress1,str1)
-            stress2=numeric.add(stress2,str2)
-            energy1+=np.dot(eps1,str1)
-            energy2+=np.dot(eps2,str2)
+            ip = self.intP[i]
+            eps1 = self.strainPart(p, v, n, d, ip[0], ip[1], 1, t)
+            eps2 = self.strainPart(p, v, n, d, ip[0], ip[1], -1, t)
+            strain1 = np.add(strain1, eps1)
+            strain2 = np.add(strain2, eps2)
+            str1 = np.dot(d1, eps1)
+            str2 = np.dot(d1, eps2)
+            stress1 = np.add(stress1, str1)
+            stress2 = np.add(stress2, str2)
+            energy1 += np.dot(eps1, str1)
+            energy2 += np.dot(eps2, str2)
 
-        strain1=np.multiply(strain1,cf)
-        stress1=np.multiply(stress1,cf)
-        energy1*=0.5*cf
-        strain2=np.multiply(strain1,cf)
-        stress2=np.multiply(stress1,cf)
-        energy2*=0.5*cf
+        strain1 = np.multiply(strain1, cf)
+        stress1 = np.multiply(stress1, cf)
+        energy1 *= 0.5 * cf
+        strain2 = np.multiply(strain1, cf)
+        stress2 = np.multiply(stress1, cf)
+        energy2 *= 0.5 * cf
         return [self.toStrain(strain1),self.toStress(stress1),energy1,
-                        self.toStrain(strain2),self.toStress(stress2),energy2]
+                self.toStrain(strain2),self.toStress(stress2),energy2]
 
 
     # ベクトルを歪に変換する
@@ -421,7 +422,7 @@ class ShellElement(FElement):
 
     # ベクトルを歪に変換する
     # s - 歪ベクトル
-    def toStress(s) -> Stress:
+    def toStress(self, s) -> Stress:
         return Stress([s[0],s[1],0,s[2],s[3],s[4]])
 
 
@@ -981,7 +982,7 @@ class QuadElement1(ShellElement):
             self.strainMatrix1(ja2, sf2, d)]
         count = self.nodeCount()
         kk = np.zeros((6*count, 6*count))
-        jacob = abs(np.linalg.det(ja))
+        jacob = abs(np.linalg.det(ja.reshape(3,3)))
 
         tt6 = t * t/6.0
         ce1 = 1e-3 * t * t * d1[3][3]

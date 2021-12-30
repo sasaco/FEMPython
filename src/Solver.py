@@ -339,79 +339,6 @@ def extructRow(mrow, list):
     return exrow
 
 
-# 計算を開始する
-def calcStart(model):
-    # info.textContent='計算中・・・'
-    # elems=document.getElementsByName('method')
-    # if elems[0].checked:
-        model.solver.method = LU_METHOD
-
-    # elif elems[1].checked:
-        model.solver.method = ILUCG_METHOD
-
-    # elems=document.getElementsByName('restype')
-
-    # if elems[0].checked:
-        model.result.type = NODE_DATA
-
-    # elif elems[1].checked:
-        model.result.type = ELEMENT_DATA
-
-    # hideModalWindow(CALC_WINDOW)
-    # elems=document.getElementsByName('calctype')
-
-    # if elems[0].checked:
-        # setTimeout(statCalcStart,10)
-        statCalcStart(model)
-
-    # elif elems[1].checked:
-        # setTimeout(vibCalcStart,10)
-
-    # else:
-        # setTimeout(buckCalcStart,10)
-
-# 静解析の計算を開始する
-def statCalcStart(model):
-    try:
-        model.calculate()
-        # resultView.setInitStatic()
-        # showInfo()
-
-    except Exception as ex:
-        raise ex
-
-
-# 固有振動解析の計算を開始する
-def vibCalcStart(model):
-    try:
-        count = 1 # 仮）int(document.getElementById('eigennumber').value)
-        model.charVib(count)
-        # resultView.setInitEigen()
-
-    except Exception as ex:
-        raise ex
-
-
-# 線形座屈解析の計算を開始する
-def buckCalcStart(model):
-    count = 1 # 仮）int(document.getElementById('eigennumber').value)
-    model.calcBuckling(count)
-    # resultView.setInitEigen()
-
-
-# # 計算設定ウィンドウを表示する
-# def showCalc():
-#     showModalWindow(CALC_WINDOW)
-#     elems=document.getElementsByName('method')
-#     elems[model.solver.method].checked=True
-
-
-# # 計算設定を取り消す
-# def calcCancel():
-#     hideModalWindow(CALC_WINDOW)
-
-
-
 #--------------------------------------------------------------------#
 # 連立方程式求解オブジェクト
 class Solver():
@@ -531,27 +458,18 @@ class Solver():
     # 連立方程式を解く
     def solve(self):
         return np.linalg.solve(self.matrix, self.vector)
-        # if self.method == LU_METHOD:
-        #     a = numeric.ccsSparse(self.matrix)
-        #     return numeric.ccsLUPSolve(numeric.ccsLUP(a),self.vector)
-        # elif self.method == ILUCG_METHOD:
-        #     return solveILU(toSparse(self.matrix),getILU(self.matrix),self.vector)
 
 
     # ランチョス法で固有値・固有ベクトルを求める
     # n - ３重対角化行列の大きさ
     # delta - シフト量δ
     def eigenByLanczos(self, n,delta):
-        if self.method == LU_METHOD:
-            return eigByLanczosLUP(self.matrix,self.matrix2,n,delta)
-        elif self.method==ILUCG_METHOD:
-            return eigByLanczosILUCG(self.matrix,self.matrix2,n,delta)
+        return eigByLanczosLUP(self.matrix,self.matrix2,n,delta)
+        return eigByLanczosILUCG(self.matrix,self.matrix2,n,delta)
 
     # アーノルディ法で固有値・固有ベクトルを求める
     # n - ３重対角化行列の大きさ
     # delta - シフト量δ
     def eigenByArnoldi(self,n,delta):
-        if self.method == LU_METHOD:
-            return eigByArnoldiLUP(self.matrix,self.matrix2,n,delta)
-        elif self.method == ILUCG_METHOD:
-            return eigByArnoldiILUCG(self.matrix,self.matrix2,n,delta)
+        return eigByArnoldiLUP(self.matrix,self.matrix2,n,delta)
+        return eigByArnoldiILUCG(self.matrix,self.matrix2,n,delta)
