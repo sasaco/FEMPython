@@ -56,14 +56,14 @@ class BoundaryCondition():
     def setPointerStructure(self, count):
 
         # 荷重ベクトルの節点ポインタ
-        self.nodeIndex = []		
+        self.nodeIndex = []
         dofAll = 0
         for i in range(count):
             self.nodeIndex.append(dofAll)
             dofAll += self.dof[i]
 
         # 境界条件を設定した節点のリスト
-        self.bcList = [-1 for i in range(dofAll)]		
+        self.bcList = [-1 for i in range(dofAll)]
 
         for i in range(len(self.restraints)):
             r = self.restraints[i]
