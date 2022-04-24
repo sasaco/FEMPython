@@ -1,8 +1,8 @@
-import BoundaryCondition
-from Element import normalVector
-from Result import NODE_DATA, ELEMENT_DATA
-from Material import Material
-from Lanczos import eigByLanczosLUP, eigByLanczosILUCG, eigByArnoldiLUP, eigByArnoldiILUCG
+from FEMPython.BoundaryCondition import BoundaryCondition
+from FEMPython.Element import normalVector
+from FEMPython.Result import NODE_DATA, ELEMENT_DATA
+from FEMPython.Material import Material
+from FEMPython.Lanczos import eigByLanczosLUP, eigByLanczosILUCG, eigByArnoldiLUP, eigByArnoldiILUCG
 import numpy as np
 from typing import List
 #--------------------------------------------------------------------#

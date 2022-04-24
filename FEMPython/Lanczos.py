@@ -1,4 +1,4 @@
-from IterMethod import toSparse
+from FEMPython.IterMethod import toSparse
 import math
 import numpy as np
 #--------------------------------------------------------------------#

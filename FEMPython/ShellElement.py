@@ -1,7 +1,7 @@
-from Element import FElement, toDir, toDir3, swap, dirMatrix, planeAngle, C1_3, C1_12, normalVector
-from Result import Strain, Stress
-from ElementBorder import TriangleBorder1, EdgeBorder1, QuadangleBorder1, TRI2_INT, QUAD1_INT, addMatrix
-from FENode import FENode
+from FEMPython.Element import FElement, toDir, toDir3, swap, dirMatrix, planeAngle, C1_3, C1_12, normalVector
+from FEMPython.Result import Strain, Stress
+from FEMPython.ElementBorder import TriangleBorder1, EdgeBorder1, QuadangleBorder1, TRI2_INT, QUAD1_INT, addMatrix
+from FEMPython.FENode import FENode
 import math
 import numpy as np
 from typing import List

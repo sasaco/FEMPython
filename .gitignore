@@ -2,3 +2,4 @@ src/__pycache__
 src/FEMPython.egg-info/
 dist/
 tests/__pycache__/
+FEMPython/__pycache__

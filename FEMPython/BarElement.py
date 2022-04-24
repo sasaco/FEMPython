@@ -1,7 +1,7 @@
 import numpy as np
-from Element import FElement, dirMatrix, toDir3, C1_3, normalize
-from ElementBorder import EdgeBorder1
-from Result import Strain, Stress
+from FEMPython.Element import FElement, dirMatrix, toDir3, C1_3, normalize
+from FEMPython.ElementBorder import EdgeBorder1
+from FEMPython.Result import Strain, Stress
 #--------------------------------------------------------------------#
 
 I_YMZ=[1,5,7,11]	# y軸方向,z軸周り成分のインデックス

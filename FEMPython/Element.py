@@ -1,9 +1,9 @@
-from Nodes import Nodes
+from FEMPython.Nodes import Nodes
 import math
 import numpy as np
 from typing import List
 
-from FENode import FENode
+from FEMPython.FENode import FENode
 #--------------------------------------------------------------------#
 
 # 三角形2次要素のガウス積分の積分点座標
