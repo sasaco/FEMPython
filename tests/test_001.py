@@ -1,5 +1,6 @@
 import FEMPython as fem
 
-model = fem.initModel('tests/example_files/beam/sampleBeamHexa1.fem')
 
-model.calculate()
+def test_sampleBeamHexa1():
+    model = fem.initModel('tests/example_files/beam/sampleBeamHexa1.fem')
+    model.calculate()
