@@ -1,9 +1,9 @@
 import math
 from typing import List
 import numpy as np
-from FEMPython.Result import Strain, Stress
-from FEMPython.ElementBorder import TriangleBorder1, TriangleBorder2, QuadangleBorder1, QuadangleBorder2, addMatrix
-from FEMPython.Element import FElement, swap, solidAngle, planeAngle, GTETRA2, C1_3, GX2, GTRI2, GX3, C1_6, GW3, C1_24
+from Result import Strain, Stress
+from ElementBorder import TriangleBorder1, TriangleBorder2, QuadangleBorder1, QuadangleBorder2, addMatrix
+from Element import FElement, swap, solidAngle, planeAngle, GTETRA2, C1_3, GX2, GTRI2, GX3, C1_6, GW3, C1_24
 #--------------------------------------------------------------------#
 
 # 四面体2次要素の節点のξ,η,ζ座標

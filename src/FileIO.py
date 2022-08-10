@@ -3,16 +3,16 @@ from typing import List, Tuple, Dict, Set
 import numpy as np
 import math
 
-from FEMPython.FemDataModel import FemDataModel
-from FEMPython.Material import Material, ShellParameter, BarParameter
-from FEMPython.BarElement import BEBarElement, TBarElement
-from FEMPython.ShellElement import TriElement1, QuadElement1
-from FEMPython.SolidElement import TetraElement1, WedgeElement1, HexaElement1, TetraElement2, WedgeElement2, HexaElement2
-from FEMPython.AdvancedElement import HexaElement1WT
-from FEMPython.BoundaryCondition import Pressure, Temperature, HeatTransferBound, Restraint, Load
-from FEMPython.Coordinates import Coordinates
-from FEMPython.Result import ELEMENT_DATA, NODE_DATA
-from FEMPython.FENode import FENode
+from FemDataModel import FemDataModel
+from Material import Material, ShellParameter, BarParameter
+from BarElement import BEBarElement, TBarElement
+from ShellElement import TriElement1, QuadElement1
+from SolidElement import TetraElement1, WedgeElement1, HexaElement1, TetraElement2, WedgeElement2, HexaElement2
+from AdvancedElement import HexaElement1WT
+from BoundaryCondition import Pressure, Temperature, HeatTransferBound, Restraint, Load
+from Coordinates import Coordinates
+from Result import ELEMENT_DATA, NODE_DATA
+from FENode import FENode
 
 # from Vector3 import Vector3
 #--------------------------------------------------------------------#

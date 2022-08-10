@@ -1,10 +1,11 @@
 {
-    "python.testing.pytestArgs": [
-        "tests"
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "*test*.py"
     ],
-    // 単体テストツールとしてpytestを有効化
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    // ファイル保存時にテスト対象コードを自動的に探索
-    "python.testing.autoTestDiscoverOnSaveEnabled": true,
 }
