@@ -12,7 +12,7 @@ class FENode():
         self.label: int = label
 
     # 引き算
-    def sub(self, other):
+    def __sub__(self, other):
         x = self.x - other.x
         y = self.y - other.y
         z = self.z - other.z
