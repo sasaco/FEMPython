@@ -41,10 +41,10 @@ static PyMethodDef Core_methods[] = {
 /// Python コードで参照するモジュールを定義する構造体を追加します
 static PyModuleDef Core_module = {
     PyModuleDef_HEAD_INIT,
-    "superfastcode",                        // Module name to use with Python import statements
+    "Core",                                 // Module name to use with Python import statements
     "Provides some functions, but faster",  // Module description
     0,
-    Core_methods                   // Structure that defines the methods of the module
+    Core_methods                            // Structure that defines the methods of the module
 };
 
 PyMODINIT_FUNC PyInit_Core() {
