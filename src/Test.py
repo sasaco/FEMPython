@@ -6,6 +6,7 @@ DATA = [(random() - 0.5) * 3 for _ in range(COUNT)]
 
 e = 2.7182818284590452353602874713527
 
+
 def sinh(x):
     return (1 - (e ** (-2 * x))) / (2 * (e ** -x))
 
@@ -25,7 +26,11 @@ def test(fn, name):
     for d in result:
         assert -1 <= d <= 1, " incorrect values"
 
+
 if __name__ == "__main__":
     print('Running benchmarks with COUNT = {}'.format(COUNT))
 
     test(lambda d: [tanh(x) for x in d], '[tanh(x) for x in d] (Python implementation)')
+
+    from Core import fast_tanh
+    test(lambda d: [fast_tanh(x) for x in d], '[fast_tanh(x) for x in d] (CPython C++ extension)')

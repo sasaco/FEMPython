@@ -3,13 +3,14 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>f5b57d7d-136d-40c0-a4a4-8ec371bb974e</ProjectGuid>
-    <ProjectHome>.</ProjectHome>
+    <ProjectHome>
+    </ProjectHome>
     <StartupFile>Test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>FEMPython</Name>
+    <Name>Main</Name>
     <RootNamespace>src</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -22,6 +23,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Test.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\core\Core.vcxproj">
+      <Name>Core</Name>
+      <Project>{829c8d1c-09df-4b25-ac10-689786ff936a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
