@@ -1,4 +1,4 @@
-from FEMPython.Section import CircleSection, RectSection, KS_RECT
+from Section import CircleSection, RectSection, KS_RECT
 
 #--------------------------------------------------------------------#
 # 材料

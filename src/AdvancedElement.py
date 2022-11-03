@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
-from FEMPython.SolidElement import HexaElement1
-from FEMPython.ElementBorder import addMatrix
+from SolidElement import HexaElement1
+from ElementBorder import addMatrix
 #--------------------------------------------------------------------#
 
 class HexaElement1WT(HexaElement1):

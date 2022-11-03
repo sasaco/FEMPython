@@ -1,5 +1,5 @@
-from FEMPython.Nodes import Nodes
-from FEMPython.BoundaryCondition import Vector3R
+from Nodes import Nodes
+from BoundaryCondition import Vector3R
 import math
 import numpy as np
 #--------------------------------------------------------------------#

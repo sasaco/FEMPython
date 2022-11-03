@@ -1,10 +1,10 @@
-from FEMPython.Solver import Solver
-from FEMPython.Result import Result, EigenValue, NODE_DATA, ELEMENT_DATA, VIBRATION, BUCKLING
-from FEMPython.Material import Material
-from FEMPython.BoundaryCondition import BoundaryCondition
-from FEMPython.ElementBorder import EdgeBorder1, compare
-from FEMPython.Element import normalVector
-from FEMPython.FENode import FENode
+from Solver import Solver
+from Result import Result, EigenValue, NODE_DATA, ELEMENT_DATA, VIBRATION, BUCKLING
+from Material import Material
+from BoundaryCondition import BoundaryCondition
+from ElementBorder import EdgeBorder1, compare
+from Element import normalVector
+from FENode import FENode
 
 import math
 import numpy as np

@@ -1,5 +1,4 @@
-from FEMPython.IterMethod import toSparse
-import math
+from IterMethod import toSparse
 import numpy as np
 #--------------------------------------------------------------------#
 # ランチョス法による固有値計算
