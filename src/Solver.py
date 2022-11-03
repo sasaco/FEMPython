@@ -1,4 +1,4 @@
-import BoundaryCondition
+from BoundaryCondition import BoundaryCondition
 from Element import normalVector
 from Result import NODE_DATA, ELEMENT_DATA
 from Material import Material

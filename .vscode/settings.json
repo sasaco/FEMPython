@@ -1,3 +1,11 @@
 {
-  "python.pythonPath": "/Users/sasaco/.pyenv/versions/anaconda3-5.3.1/bin/python"
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "*test*.py"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
 }

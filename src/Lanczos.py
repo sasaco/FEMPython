@@ -1,5 +1,4 @@
 from IterMethod import toSparse
-import math
 import numpy as np
 #--------------------------------------------------------------------#
 # ランチョス法による固有値計算

@@ -1,5 +1,10 @@
-import FEMPython as fem
+import pytest
 
-model = fem.initModel('./data/beam/sampleBeamHexa1.fem')
+from src.FemMain import initModel
 
-model.calculate()
+
+def test_sampleBeamHexa1():
+    model = initModel('tests/example_files/beam/sampleBeamHexa1.fem')
+    model.calculate()
+    assert True
+
