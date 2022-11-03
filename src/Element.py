@@ -40,10 +40,10 @@ def normalVector(p: List[FENode]) -> np.ndarray:
         return None
 
     elif len(p) == 3 or len(p) == 6:
-        return normalize(np.cross(p[1].sub(p[0]), p[2].sub(p[0])))
+        return normalize(np.cross(p[1] - p[0], p[2] - p[0]))
 
     elif len(p)==4 or len(p)==8:
-        return normalize(np.cross(p[2].sub(p[0]), p[3].sub(p[1])))
+        return normalize(np.cross(p[2] - p[0], p[3] - p[1]))
 
     else:
         vx = 0
@@ -52,7 +52,7 @@ def normalVector(p: List[FENode]) -> np.ndarray:
         for i in range(len(p)):
             p1 = p[(i+1)%len(p)]
             p2 = p[(i+2)%len(p)]
-            norm = np.cross(p1.sub(p[i]), p2.sub(p[i]))
+            norm = np.cross(p1 - p[i], p2 - p[i])
             vx += norm[0]
             vy += norm[1]
             vz += norm[2]
@@ -63,17 +63,17 @@ def normalVector(p: List[FENode]) -> np.ndarray:
 # p0 - 基点
 # p1,p2 - 頂点
 def planeAngle(p0: FENode, p1: FENode, p2: FENode):
-    v1 = normalize(p1.sub(p0))
-    v2 = normalize(p2.sub(p0))
+    v1 = normalize(p1 - p0)
+    v2 = normalize(p2 - p0)
     return math.acos(min(max(np.dot(v1, v2),0),1))
 
 # 三角形の立体角を球面過剰から求める
 # p0 - 基点
 # p1,p2,p3 - 頂点
 def solidAngle(p0: FENode, p1:FENode, p2:FENode, p3:FENode):
-    v1 = p1.sub(p0)
-    v2 = p2.sub(p0)
-    v3 = p3.sub(p0)
+    v1:FENode = p1 - p0
+    v2:FENode = p2 - p0
+    v3:FENode = p3 - p0
     v12 = normalize(np.cross(v1, v2))
     v23 = normalize(np.cross(v2, v3))
     v31 = normalize(np.cross(v3, v1))
