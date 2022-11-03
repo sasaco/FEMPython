@@ -108,7 +108,7 @@ class FemDataModel:
 
 
     # モデルを初期化する
-    def init(self):
+    def init(self) -> None:
         mats=self.materials
         sorted(mats, key=compareLabel)
         self.mesh.init()
