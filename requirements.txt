@@ -1,1 +1,2 @@
+pybind11
 numpy==1.19.2

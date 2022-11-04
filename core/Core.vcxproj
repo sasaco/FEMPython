@@ -138,6 +138,9 @@
   <ItemGroup>
     <ClCompile Include="module.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="setup.py" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

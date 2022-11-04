@@ -14,6 +14,7 @@
     <RootNamespace>src</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <EnableNativeCodeDebugging>True</EnableNativeCodeDebugging>
+    <TestFramework>Pytest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,6 +25,21 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AdvancedElement.py" />
+    <Compile Include="BarElement.py" />
+    <Compile Include="BoundaryCondition.py" />
+    <Compile Include="Coordinates.py" />
+    <Compile Include="Element.py" />
+    <Compile Include="ElementBorder.py" />
+    <Compile Include="FemDataModel.py" />
+    <Compile Include="FemMain.py" />
+    <Compile Include="FENode.py" />
+    <Compile Include="FileIO.py" />
+    <Compile Include="Material.py" />
+    <Compile Include="Result.py" />
+    <Compile Include="ShellElement.py" />
+    <Compile Include="SolidElement.py" />
+    <Compile Include="Solver.py" />
     <Compile Include="Test.py" />
   </ItemGroup>
   <ItemGroup>
