@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Main", "src\Main.pyproj", "{F5B57D7D-136D-40C0-A4A4-8EC371BB974E}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "FEMPython", "FEMPython.pyproj", "{F5B57D7D-136D-40C0-A4A4-8EC371BB974E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "core\Core.vcxproj", "{829C8D1C-09DF-4B25-AC10-689786FF936A}"
-EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Test", "tests\Test.pyproj", "{A61308A1-F991-4315-AB0A-853EAC743199}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,12 +35,6 @@ Global
 		{829C8D1C-09DF-4B25-AC10-689786FF936A}.Release|x64.Build.0 = Release|x64
 		{829C8D1C-09DF-4B25-AC10-689786FF936A}.Release|x86.ActiveCfg = Release|Win32
 		{829C8D1C-09DF-4B25-AC10-689786FF936A}.Release|x86.Build.0 = Release|Win32
-		{A61308A1-F991-4315-AB0A-853EAC743199}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A61308A1-F991-4315-AB0A-853EAC743199}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{A61308A1-F991-4315-AB0A-853EAC743199}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{A61308A1-F991-4315-AB0A-853EAC743199}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A61308A1-F991-4315-AB0A-853EAC743199}.Release|x64.ActiveCfg = Release|Any CPU
-		{A61308A1-F991-4315-AB0A-853EAC743199}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

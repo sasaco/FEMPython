@@ -1,0 +1,193 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>f5b57d7d-136d-40c0-a4a4-8ec371bb974e</ProjectGuid>
+    <ProjectHome>
+    </ProjectHome>
+    <StartupFile>tests\test_001.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>FEMPython</Name>
+    <RootNamespace>src</RootNamespace>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <EnableNativeCodeDebugging>True</EnableNativeCodeDebugging>
+    <TestFramework>Pytest</TestFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src\AdvancedElement.py" />
+    <Compile Include="src\BarElement.py" />
+    <Compile Include="src\BoundaryCondition.py" />
+    <Compile Include="src\Coordinates.py" />
+    <Compile Include="src\Element.py" />
+    <Compile Include="src\ElementBorder.py" />
+    <Compile Include="src\FemDataModel.py" />
+    <Compile Include="src\FemMain.py" />
+    <Compile Include="src\FENode.py" />
+    <Compile Include="src\FileIO.py" />
+    <Compile Include="src\Material.py" />
+    <Compile Include="src\Result.py" />
+    <Compile Include="src\ShellElement.py" />
+    <Compile Include="src\SolidElement.py" />
+    <Compile Include="src\Solver.py" />
+    <Compile Include="src\Test.py" />
+    <Compile Include="tests\conftest.py" />
+    <Compile Include="tests\test_001.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\" />
+    <Folder Include="tests\" />
+    <Folder Include="tests\example_files\" />
+    <Folder Include="tests\example_files\bar\" />
+    <Folder Include="tests\example_files\beam\" />
+    <Folder Include="tests\example_files\bend\" />
+    <Folder Include="tests\example_files\buckling\" />
+    <Folder Include="tests\example_files\charvib\" />
+    <Folder Include="tests\example_files\coordinates\" />
+    <Folder Include="tests\example_files\heat\" />
+    <Folder Include="tests\example_files\img\" />
+    <Folder Include="tests\example_files\others\" />
+    <Folder Include="tests\example_files\patch\" />
+    <Folder Include="tests\example_files\shell\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="tests\example_files\bar\barBend1BE.fem" />
+    <Content Include="tests\example_files\bar\barBend1T.fem" />
+    <Content Include="tests\example_files\bar\barBend2BE.fem" />
+    <Content Include="tests\example_files\bar\barBend2BE_t.fem" />
+    <Content Include="tests\example_files\bar\barBend2T.fem" />
+    <Content Include="tests\example_files\bar\barRect1BE.fem" />
+    <Content Include="tests\example_files\bar\barRect1BE_t.fem" />
+    <Content Include="tests\example_files\bar\barRect1T.fem" />
+    <Content Include="tests\example_files\bar\barRect2BE.fem" />
+    <Content Include="tests\example_files\bar\barRect3BE.fem" />
+    <Content Include="tests\example_files\bar\barRectTor1BE.fem" />
+    <Content Include="tests\example_files\bar\barTensTor1BE.fem" />
+    <Content Include="tests\example_files\bar\barTensTor1T.fem" />
+    <Content Include="tests\example_files\bar\barThickBendBE.fem" />
+    <Content Include="tests\example_files\bar\barThickBendT.fem" />
+    <Content Include="tests\example_files\bar\optiBar.fem" />
+    <Content Include="tests\example_files\beam\sampleBeamHexa1.fem" />
+    <Content Include="tests\example_files\beam\sampleBeamHexa1WT.fem" />
+    <Content Include="tests\example_files\beam\sampleBeamHexa2.fem" />
+    <Content Include="tests\example_files\beam\sampleBeamTetra1.fem" />
+    <Content Include="tests\example_files\beam\sampleBeamTetra2.fem" />
+    <Content Include="tests\example_files\beam\sampleBeamWedge1.fem" />
+    <Content Include="tests\example_files\beam\sampleBeamWedge2.fem" />
+    <Content Include="tests\example_files\beam\sampleThickBeamHexa1.fem" />
+    <Content Include="tests\example_files\beam\sampleThickBeamHexa1WT.fem" />
+    <Content Include="tests\example_files\beam\sampleThickBeamHexa2.fem" />
+    <Content Include="tests\example_files\beam\sampleThickBeamTetra1.fem" />
+    <Content Include="tests\example_files\beam\sampleThickBeamTetra2.fem" />
+    <Content Include="tests\example_files\beam\sampleThickBeamWedge1.fem" />
+    <Content Include="tests\example_files\beam\sampleThickBeamWedge2.fem" />
+    <Content Include="tests\example_files\bend\sampleBendBarBE.fem" />
+    <Content Include="tests\example_files\bend\sampleBendBarT.fem" />
+    <Content Include="tests\example_files\bend\sampleBendHexa1.fem" />
+    <Content Include="tests\example_files\bend\sampleBendHexa1WT.fem" />
+    <Content Include="tests\example_files\bend\sampleBendHexa2.fem" />
+    <Content Include="tests\example_files\bend\sampleBendQuad1.fem" />
+    <Content Include="tests\example_files\bend\sampleBendTetra1.fem" />
+    <Content Include="tests\example_files\bend\sampleBendTetra2.fem" />
+    <Content Include="tests\example_files\bend\sampleBendTri1.fem" />
+    <Content Include="tests\example_files\bend\sampleBendWedge1.fem" />
+    <Content Include="tests\example_files\bend\sampleBendWedge2.fem" />
+    <Content Include="tests\example_files\buckling\buck1BEBar.fem" />
+    <Content Include="tests\example_files\buckling\buck1BEBar2.fem" />
+    <Content Include="tests\example_files\buckling\buck1BEBar_t.fem" />
+    <Content Include="tests\example_files\buckling\buck1Hex1WT.fem" />
+    <Content Include="tests\example_files\buckling\buck1Quad1.fem" />
+    <Content Include="tests\example_files\buckling\buck1Quad1_t1.fem" />
+    <Content Include="tests\example_files\buckling\buck1TBar.fem" />
+    <Content Include="tests\example_files\buckling\buck1Tri1.fem" />
+    <Content Include="tests\example_files\buckling\buck2Hex1WT.fem" />
+    <Content Include="tests\example_files\buckling\buck3Quad1t001.fem" />
+    <Content Include="tests\example_files\buckling\buck3Quad1t005.fem" />
+    <Content Include="tests\example_files\buckling\buck3Quad1t01.fem" />
+    <Content Include="tests\example_files\buckling\buck4Quad1t01.fem" />
+    <Content Include="tests\example_files\buckling\buck4Quad1t01bend.fem" />
+    <Content Include="tests\example_files\buckling\buck4Quad1t1.fem" />
+    <Content Include="tests\example_files\buckling\buck4Quad1t1bend.fem" />
+    <Content Include="tests\example_files\charvib\bar1BE.fem" />
+    <Content Include="tests\example_files\charvib\barBeamBE.fem" />
+    <Content Include="tests\example_files\charvib\barBeamBE_2.fem" />
+    <Content Include="tests\example_files\charvib\barBeamT.fem" />
+    <Content Include="tests\example_files\charvib\barRect1BE.fem" />
+    <Content Include="tests\example_files\charvib\barRect1BEFree.fem" />
+    <Content Include="tests\example_files\charvib\hex1Rect1.fem" />
+    <Content Include="tests\example_files\charvib\hex1Rect1Free.fem" />
+    <Content Include="tests\example_files\charvib\sampleBeamHexa1.fem" />
+    <Content Include="tests\example_files\charvib\sampleBeamHexa1WT.fem" />
+    <Content Include="tests\example_files\charvib\sampleBeamHexa2.fem" />
+    <Content Include="tests\example_files\charvib\sampleBeamTetra1.fem" />
+    <Content Include="tests\example_files\charvib\sampleBeamTetra2.fem" />
+    <Content Include="tests\example_files\charvib\sampleBeamWedge1.fem" />
+    <Content Include="tests\example_files\charvib\sampleBeamWedge2.fem" />
+    <Content Include="tests\example_files\charvib\shellBeamQuad1.fem" />
+    <Content Include="tests\example_files\charvib\shellBeamTri1.fem" />
+    <Content Include="tests\example_files\coordinates\shellQuad1C1.fem" />
+    <Content Include="tests\example_files\coordinates\shellQuad1C1_t1.fem" />
+    <Content Include="tests\example_files\coordinates\shellQuad1C2.fem" />
+    <Content Include="tests\example_files\coordinates\shellQuad1C2_t2.fem" />
+    <Content Include="tests\example_files\heat\heatBE.fem" />
+    <Content Include="tests\example_files\heat\heatHexa1.fem" />
+    <Content Include="tests\example_files\heat\heatHexa2.fem" />
+    <Content Include="tests\example_files\heat\heatQuad1.fem" />
+    <Content Include="tests\example_files\heat\heatTetra1.fem" />
+    <Content Include="tests\example_files\heat\heatTetra2.fem" />
+    <Content Include="tests\example_files\heat\heatTri1.fem" />
+    <Content Include="tests\example_files\heat\heatWedge1.fem" />
+    <Content Include="tests\example_files\heat\heatWedge2.fem" />
+    <Content Include="tests\example_files\img\FileFormat.pdf" />
+    <Content Include="tests\example_files\img\hexa_node_no.png" />
+    <Content Include="tests\example_files\img\shell_node_no.png" />
+    <Content Include="tests\example_files\img\tetra_node_no.png" />
+    <Content Include="tests\example_files\img\wedge_node_no.png" />
+    <Content Include="tests\example_files\others\heat1.fem" />
+    <Content Include="tests\example_files\others\heat2.fem" />
+    <Content Include="tests\example_files\others\heatFixHexa1.fem" />
+    <Content Include="tests\example_files\others\sample1.fem" />
+    <Content Include="tests\example_files\others\sample2.fem" />
+    <Content Include="tests\example_files\others\sample3.fem" />
+    <Content Include="tests\example_files\others\sample4.fem" />
+    <Content Include="tests\example_files\others\solid1.fem" />
+    <Content Include="tests\example_files\others\solid2.fem" />
+    <Content Include="tests\example_files\others\solid3.fem" />
+    <Content Include="tests\example_files\others\solid4.fem" />
+    <Content Include="tests\example_files\others\solid5.fem" />
+    <Content Include="tests\example_files\patch\patchTestHexa1.fem" />
+    <Content Include="tests\example_files\patch\patchTestHexa1WT.fem" />
+    <Content Include="tests\example_files\README.md" />
+    <Content Include="tests\example_files\shell\shellBeamQuad1.fem" />
+    <Content Include="tests\example_files\shell\shellBeamTri1.fem" />
+    <Content Include="tests\example_files\shell\shellQuad1.fem" />
+    <Content Include="tests\example_files\shell\shellQuad1_t1.fem" />
+    <Content Include="tests\example_files\shell\shellQuad1_t2.fem" />
+    <Content Include="tests\example_files\shell\shellRibQuad1.fem" />
+    <Content Include="tests\example_files\shell\shellRibTri1.fem" />
+    <Content Include="tests\example_files\shell\shellTensTorQuad1.fem" />
+    <Content Include="tests\example_files\shell\shellTensTorTri1.fem" />
+    <Content Include="tests\example_files\shell\shellThickBeamQuad1.fem" />
+    <Content Include="tests\example_files\shell\shellThickBeamTri1.fem" />
+    <Content Include="tests\example_files\shell\shellTri1.fem" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+  <!-- Uncomment the CoreCompile target to enable the Build command in
+       Visual Studio and specify your pre- and post-build commands in
+       the BeforeBuild and AfterBuild targets below. -->
+  <!--<Target Name="CoreCompile" />-->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+</Project>
