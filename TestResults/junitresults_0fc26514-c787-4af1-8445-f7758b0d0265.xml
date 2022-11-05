@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="21.651" timestamp="2022-11-05T17:51:41.571658" hostname="DESKTOP-NA3EQA2"><testcase classname="tests.test_001" name="test_sampleBeamHexa1" file="tests\test_001.py" line="5" time="21.412"><system-out>--------------------------------- Captured Log ---------------------------------
-
---------------------------------- Captured Out ---------------------------------
-Calculation time: 21.25773310661316ms
-
-</system-out><system-err>--------------------------------- Captured Err ---------------------------------
-
-</system-err></testcase></testsuite></testsuites>
