@@ -14,7 +14,9 @@
     <RootNamespace>src</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <EnableNativeCodeDebugging>True</EnableNativeCodeDebugging>
-    <TestFramework>Pytest</TestFramework>
+    <TestFramework>pytest</TestFramework>
+    <UnitTestPattern>test*.py</UnitTestPattern>
+    <UnitTestRootDirectory>.</UnitTestRootDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -40,7 +42,6 @@
     <Compile Include="src\ShellElement.py" />
     <Compile Include="src\SolidElement.py" />
     <Compile Include="src\Solver.py" />
-    <Compile Include="src\Test.py" />
     <Compile Include="tests\conftest.py" />
     <Compile Include="tests\test_001.py" />
   </ItemGroup>

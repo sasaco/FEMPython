@@ -1,66 +1,28 @@
-/*
-* https://learn.microsoft.com/ja-jp/visualstudio/python/working-with-c-cpp-python-in-visual-studio?view=vs-2022
-*/
+var PRECISION=1e-10;	// マトリックス精度
+var LU_METHOD=0;	// LU分解法
+var ILUCG_METHOD=1;	// 不完全LU分解共役勾配法
 
-
-#include <Windows.h>
-#include <cmath>
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
-
-// 剛性マトリックスを作成する
-// dof - モデル自由度
-void stiffnessMatrix(PyObject* self, PyObject* args) {
-    
- 
-}
-PYBIND11_MODULE(stiffnessMatrix, m) {
-    m.def("stiffnessMatrix", &stiffnessMatrix, R"pbdoc(
-        Compute a hyperbolic tangent of a single argument expressed in radians.
-    )pbdoc");
-
-    #ifdef VERSION_INFO
-        m.attr("__version__") = VERSION_INFO;
-    #else
-        m.attr("__version__") = "dev";
-    #endif
-}
-
-
-
-
-/*
 //--------------------------------------------------------------------//
 // 連立方程式求解オブジェクト
-class Solver {
-    double PRECISION = 1e-10;   // マトリックス精度
-    int LU_METHOD = 0;	        // LU分解法
-    int ILUCG_METHOD = 1;	    // 不完全LU分解共役勾配法
-    int method = LU_METHOD;	    // 方程式解法
-
-    double *matrix;		    // 行列 double型のポインタ後で配列として用いる
-    double *matrix2;		// 第２行列 double型のポインタ後で配列として用いる
-    double *vector;		    // ベクトル double型のポインタ後で配列として用いる
-
-    int dof = 0;			// モデル自由度
-
-    void clear();
-    void createStiffnessMatrix();
+var Solver=function(){
+  this.matrix=[];		// 行列
+  this.matrix2=[];		// 第２行列
+  this.vector=[];		// ベクトル
+  this.dof=0;			// モデル自由度
+  this.method=LU_METHOD;	// 方程式解法
 };
 
 // データを消去する
-void Solver::clear() {
-  delete[] matrix;
-  delete[] matrix2;
-  delete[] vector;
-  dof = 0;
-}
+Solver.prototype.clear=function(){
+  this.matrix.length=0;
+  this.matrix2.length=0;
+  this.vector.length=0;
+  this.dof=0;
+};
 
 // 剛性マトリックス・荷重ベクトルを作成する
-void Solver::createStiffnessMatrix(bc, bcList){
-    bc = bc;
-    bcList = bcList;
-    reducedList = [];
+Solver.prototype.createStiffnessMatrix=function(){
+  var i,bc=model.bc,bcList=bc.bcList,reducedList=[];
   for(i=0;i<bcList.length;i++){
     if(bcList[i]<0){
       reducedList.push(i);
@@ -226,6 +188,59 @@ function massMatrix(dof){
   }
 // 絶対値が小さい成分を除去する
   var eps=PRECISION*mmax;
+  for(i=0;i<dof;i++){
+    var mrow=matrix[i];
+    for(j in mrow){
+      if(mrow.hasOwnProperty(j)){
+      	j=parseInt(j);
+      	if(Math.abs(mrow[j])<eps){
+      	  delete mrow[j];
+      	}
+      }
+    }
+  }
+  return matrix;
+}
+
+// 剛性マトリックスを作成する
+// dof - モデル自由度
+function stiffnessMatrix(dof){
+  var mesh=model.mesh,elements=mesh.elements,matrix=[],i,j,km,kmax=0;
+  for(i=0;i<dof;i++) matrix[i]=[];
+  for(i=0;i<elements.length;i++){
+    var elem=elements[i];
+    var material=model.materials[elem.material],mat=material.matrix;
+    if(elem.isShell){
+      var sp=model.shellParams[elem.param];
+      if(elem.getName()==='TriElement1'){
+      	km=elem.stiffnessMatrix(mesh.getNodes(elem),mat.m2d,sp);
+      }
+      else{
+      	km=elem.stiffnessMatrix(mesh.getNodes(elem),mat.msh,sp);
+      }
+      kmax=setElementMatrix(elem,6,matrix,km,kmax);
+    }
+    else if(elem.isBar){
+      var sect=model.barParams[elem.param].section;
+      km=elem.stiffnessMatrix(mesh.getNodes(elem),material,sect);
+      kmax=setElementMatrix(elem,6,matrix,km,kmax);
+    }
+    else{
+      km=elem.stiffnessMatrix(mesh.getNodes(elem),mat.m3d);
+      kmax=setElementMatrix(elem,3,matrix,km,kmax);
+    }
+  }
+// 座標変換
+  var rests=model.bc.restraints;
+  var index=model.bc.nodeIndex,bcdof=model.bc.dof;
+  for(i=0;i<rests.length;i++){
+    var ri=rests[i];
+    if(ri.coords){
+      ri.coords.transMatrix(matrix,dof,index[ri.node],bcdof[i]);
+    }
+  }
+// 絶対値が小さい成分を除去する
+  var eps=PRECISION*kmax;
   for(i=0;i<dof;i++){
     var mrow=matrix[i];
     for(j in mrow){
@@ -527,7 +542,10 @@ function buckCalcStart(){
     var count=parseInt(document.getElementById('eigennumber').value);
     model.calcBuckling(count);
     resultView.setInitEigen();
-
+/*  }
+  catch(ex){
+    alert(ex);
+  }*/
 }
 
 // 計算設定ウィンドウを表示する
@@ -541,6 +559,3 @@ function showCalc(){
 function calcCancel(){
   hideModalWindow(CALC_WINDOW);
 }
-
-
-*/
