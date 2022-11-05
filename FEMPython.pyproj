@@ -182,6 +182,13 @@
     <Content Include="tests\example_files\shell\shellThickBeamTri1.fem" />
     <Content Include="tests\example_files\shell\shellTri1.fem" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="core\FEMCore.vcxproj">
+      <Name>FEMCore</Name>
+      <Project>{829c8d1c-09df-4b25-ac10-689786ff936a}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
        Visual Studio and specify your pre- and post-build commands in

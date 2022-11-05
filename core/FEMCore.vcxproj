@@ -139,6 +139,7 @@
     <ClCompile Include="module.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="pyproject.toml" />
     <None Include="setup.py" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
