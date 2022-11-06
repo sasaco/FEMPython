@@ -1,0 +1,209 @@
+import "RectSection.h";
+
+#include <format>
+using namespace std;         //  ñºëOãÛä‘éwíË
+
+//--------------------------------------------------------------------//
+// ãÈå`ífñ 
+// ss - ÉfÅ[É^ï∂éöóÒ
+RectSection::RectSection(double ss[4]) {
+
+    double b1 = ss[0];   // äOë§ïù
+    double h1 = ss[1];   // äOë§çÇÇ≥
+    double b2 = ss[2];   // ì‡ë§ïù
+    double h2 = ss[3];   // ì‡ë§çÇÇ≥
+
+    // ífñ êœ
+    area = b1 * h1 - b2 * h2;
+    // ífñ ÇQéüÉÇÅ[ÉÅÉìÉg
+    double i11 = b1 * b1 * b1 * h1;
+    double i12 = b1 * h1 * h1 * h1;
+    double i21 = b2 * b2 * b2 * h2;
+    double i22 = b2 * h2 * h2 * h2;
+
+    iy = (i11 - i21) / 12;
+    iz = (i12 - i22) / 12;
+
+    double ip1;
+    double ip2;
+    if (b1 >= h1) {
+        double k1[4];
+        rectCoef(b1 / h1, k1);
+        ip1 = k1[0] * i12;
+        zy = k1[1] * h1;
+        zz = k1[3] * zy;
+    }
+    else {
+        double k1[4];
+        rectCoef(h1 / b1, k1);
+        ip1 = k1[0] * i11;
+        zz = k1[1] * b1;
+        zy = k1[3] * zz;
+    }
+    if (i22 == 0) {
+        ip2 = 0;
+    }
+    else if (b2 >= h2) {
+        double k2[4];
+        rectCoef(b2 / h2, k2);
+        ip2 = k2[0] * i22;
+    }
+    else {
+        double k2[4];
+        rectCoef(h2 / b2, k2);
+        ip2 = k2[0] * i21;
+    }
+    ip = ip1 - ip2;		// ífñ ÇQéüã…ÉÇÅ[ÉÅÉìÉg
+};
+
+
+// ÇπÇÒífï‚ê≥åWêîÇï‘Ç∑
+double RectSection::shearCoef() {
+    return KS_RECT;
+};
+
+// òcÅEâûóÕÉxÉNÉgÉãÇï‘Ç∑
+// material - çﬁóø
+// ex - à¯í£à≥èkòc
+// thd - î‰ùÄÇËäp
+// kpy,kpz - ã»Ç∞Ç…ÇÊÇÈã»ó¶
+// sy,sz - ífñ ÇπÇÒífòc
+void RectSection::strainStress(Material material, double ex, double thd, double kpy, double kpz,
+    double sy, double sz, double out[4][6]) {
+
+    double sby = 0.5 * kpy * b1;
+    double sbz = 0.5 * kpz * h1;
+    double gy = zy * thd;
+    double gz = zz * thd;
+
+    double ee = material.ee;
+    double gg = material.gg;
+
+    double eps[][3] = {
+        { ex + sby,          sy,         sz + gz },
+        { ex + sby + sbz,    sy,         sz      },
+        { ex + sbz,          sy - gy,    sz      },
+        { ex - sby + sbz,    sy,         sz      },
+        { ex - sby,          sy,         sz - gz },
+        { ex - sby - sbz,    sy,         sz      },
+        { ex - sbz,          sy + gy,    sz      },
+        { ex + sby - sbz,    sy,         sz      }
+    };
+
+    int imax = 0;
+    int enmax = 0;
+
+    for (int i = 0; i < 8; i++) {
+        double en = ee * eps[i][0] * eps[i][0] + gg * (eps[i][1] * eps[i][1] + eps[i][2] * eps[i][2]);
+        if (en > enmax) {
+            imax = i;
+            enmax = en;
+        }
+    }
+    if (eps[imax][0] < 0)
+        imax = (imax + 4) % 8;
+
+    int j = (imax + 4) % 8;
+
+    out[0][0] = eps[imax][0];
+    out[0][1] = 0;
+    out[0][2] = 0;
+    out[0][3] = eps[imax][1];
+    out[0][4] = 0;
+    out[0][5] = eps[imax][2];
+
+    out[1][0] = ee * eps[imax][0];
+    out[1][1] = 0;
+    out[1][2] = 0;
+    out[1][3] = gg * eps[imax][1];
+    out[1][4] = 0;
+    out[1][5] = gg * eps[imax][2];
+
+    out[2][0] = eps[j][0];
+    out[2][1] = 0;
+    out[2][2] = 0;
+    out[2][3] = eps[j][1];
+    out[2][4] = 0;
+    out[2][5] = eps[j][2];
+
+    out[3][0] = ee * eps[j][0];
+    out[3][1] = 0;
+    out[3][2] = 0;
+    out[3][3] = gg * eps[j][1];
+    out[3][4] = 0;
+    out[3][5] = gg * eps[j][2];
+
+};
+
+
+// éøó ÅEèdêSé¸ÇËÇÃäµê´ÉÇÅ[ÉÅÉìÉgÇï‘Ç∑
+// dens - ñßìx
+// l - óvëfí∑Ç≥
+void RectSection::massInertia(double dens, double l, double out[4]) {
+    double dl = dens * l;
+    double dly = dl * iz;
+    double dlz = dl * iy;
+
+    out[0] = dl * area;
+    out[1] = dly + dlz;
+    out[2] = dly;
+    out[3] = dlz;
+
+};
+
+// ífñ Çï\Ç∑ï∂éöóÒÇï‘Ç∑
+string RectSection::toString() {
+
+    return format("{}\t{}\t{}\t{}",
+        b1, h1, b2, h2);
+};
+
+// ãÈå`ífñ ÇÃùÄÇËåWêîÇãÅÇﬂÇÈ
+// ba - ï”ÇÃí∑Ç≥î‰b/a
+void RectSection::rectCoef(double ba, double out[4]) {
+
+    double dk1s = 0;
+    double dks = 0;
+    double dbs = 0;
+    double pba = 0.5 * PI * ba;
+
+    double dk1;
+    double dk;
+    double db;
+    double ex;
+    int sg = 1;
+
+    int i = 1;
+    do {
+        ex = exp(-2 * pba * i);
+        dk1 = (1 - ex) / ((i + ex) * pow(i, 5));
+        dk1s += dk1;
+        i += 2;
+    } while (dk1 / dk1s > 1e-10);
+
+    i = 1;
+    do {
+        dk = 2 / ((exp(pba * i) + exp(-pba * i)) * i * i);
+        dks += dk;
+        i += 2;
+    } while (dk / dks > 1e-10);
+
+    i = 1;
+    do {
+        ex = exp(-2 * pba * i);
+        db = sg * (1 - ex) / ((i + ex) * i * i);
+        dbs += db;
+        i += 2;
+        sg = -sg;
+    } while (abs(db / dbs) > 1e-12);
+
+
+    double k1 = 1 / 3 - COEF_K1 * dk1s / ba;
+    double k = 1 - COEF_K * dks;
+    double b = COEF_K * dbs;
+
+    out[0] = k1;
+    out[1] = k;
+    out[2] = k1 / k;
+    out[3] = b / k;
+}

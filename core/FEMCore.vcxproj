@@ -107,6 +107,7 @@
       <AdditionalIncludeDirectories>C:\Users\sasaco\anaconda3\lib\site-packages\pybind11\include;C:\Users\sasaco\anaconda3\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\Users\sasaco\anaconda3\libs</AdditionalLibraryDirectories>
@@ -147,10 +148,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BarParameter.cpp" />
+    <ClCompile Include="CircleSection.cpp" />
+    <ClCompile Include="FemDataModel.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="module.cpp" />
+    <ClCompile Include="RectSection.cpp" />
+    <ClCompile Include="ShellParameter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="RectSection.h" />
+    <ClInclude Include="ShellParameter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

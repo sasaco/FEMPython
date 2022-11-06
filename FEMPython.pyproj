@@ -5,7 +5,7 @@
     <ProjectGuid>2b5c8505-3d84-4e5d-9a30-42d81be799d5</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>tests\test_001.py</StartupFile>
+    <StartupFile>tests\test_002.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -45,9 +45,28 @@
     <Folder Include="tests\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="src\CppAndPython.py" />
+    <Compile Include="src\AdvancedElement.py" />
+    <Compile Include="src\BarElement.py" />
+    <Compile Include="src\BoundaryCondition.py" />
+    <Compile Include="src\Coordinates.py" />
+    <Compile Include="src\Element.py" />
+    <Compile Include="src\ElementBorder.py" />
+    <Compile Include="src\FemDataModel.py" />
+    <Compile Include="src\FemMain.py" />
+    <Compile Include="src\FENode.py" />
+    <Compile Include="src\FileIO.py" />
+    <Compile Include="src\IterMethod.py" />
+    <Compile Include="src\Lanczos.py" />
+    <Compile Include="src\Material.py" />
+    <Compile Include="src\Nodes.py" />
+    <Compile Include="src\Result.py" />
+    <Compile Include="src\Section.py" />
+    <Compile Include="src\ShellElement.py" />
+    <Compile Include="src\SolidElement.py" />
+    <Compile Include="src\Solver.py" />
     <Compile Include="tests\conftest.py" />
     <Compile Include="tests\test_001.py" />
+    <Compile Include="tests\test_002.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
