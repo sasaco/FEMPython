@@ -8,5 +8,5 @@ Nodes::Nodes(int* _nodes) {
 }
 
 int Nodes::nodeCount() {
-    return nodes.size();
+    return nodes;
 }

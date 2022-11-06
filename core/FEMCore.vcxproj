@@ -150,9 +150,11 @@
   <ItemGroup>
     <ClCompile Include="BarParameter.cpp" />
     <ClCompile Include="CircleSection.cpp" />
+    <ClCompile Include="Element.cpp" />
     <ClCompile Include="FemDataModel.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="module.cpp" />
+    <ClCompile Include="Nodes.cpp" />
     <ClCompile Include="RectSection.cpp" />
     <ClCompile Include="ShellParameter.cpp" />
   </ItemGroup>
@@ -160,7 +162,10 @@
     <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BarParameter.h" />
+    <ClInclude Include="CircleSection.h" />
     <ClInclude Include="Material.h" />
+    <ClInclude Include="Nodes.h" />
     <ClInclude Include="RectSection.h" />
     <ClInclude Include="ShellParameter.h" />
   </ItemGroup>
