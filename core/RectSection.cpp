@@ -1,7 +1,5 @@
-import "RectSection.h";
-
+#include "RectSection.h";
 #include <format>
-using namespace std;         //  –¼‘O‹óŠÔŽw’è
 
 //--------------------------------------------------------------------//
 // ‹éŒ`’f–Ê

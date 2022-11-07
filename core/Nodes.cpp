@@ -1,12 +1,10 @@
-import "Nodes.h";
+#include "Nodes.h";
 
-using namespace std;         //  –¼‘O‹óŠÔŽw’è
-
-
-Nodes::Nodes(int* _nodes) {
+Nodes::Nodes(vector<int>_nodes) {
     nodes = _nodes;
 }
 
 int Nodes::nodeCount() {
-    return nodes;
+
+    return nodes.size();
 }

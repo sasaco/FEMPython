@@ -1,8 +1,6 @@
 #pragma once
-
 #include <string>
 using namespace std;         //  –¼‘O‹óŠÔw’è
-
 
 //--------------------------------------------------------------------//
 // Ş—¿
@@ -21,13 +19,14 @@ private:
     double dens;
     double hCon;
     double sHeat;
-    double cv;	// ‘ÌÏ”ä”M
+    double cv;	
 
-    void matrix2Dstrain(double out[3][3]);
-    void matrixAxiSymetric(double out[4][4]);
-    void matrixTorsion(double out[2][2]);
+    //void matrix2Dstrain(double out[3][3]);
+    //void matrixAxiSymetric(double out[4][4]);
+    //void matrixTorsion(double out[2][2]);
 
 public:
+    Material();
     Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
 
     double ee;

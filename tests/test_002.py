@@ -10,5 +10,4 @@ def test_sampleBeamHexa1():
 
 if __name__ == "__main__": 
     import conftest
-
     test_sampleBeamHexa1() 

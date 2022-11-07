@@ -1,8 +1,6 @@
 #include "ShellParameter.h"
 
 #include <format>
-#include <string>
-using namespace std;         //  –¼‘O‹óŠÔŽw’è
 
 
 //--------------------------------------------------------------------//

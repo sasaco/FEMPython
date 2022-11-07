@@ -1,12 +1,15 @@
 #pragma once
+#include <vector>
+using std::vector;
 
 class Nodes {
 
 private:
-    int nodes[];
+    vector<int> nodes;
     ;
 public:
-    Nodes(int* _nodes);
+    Nodes(vector<int> _nodes);
+
     int nodeCount();
 
 };

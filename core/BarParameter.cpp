@@ -1,7 +1,6 @@
-import "BarParameter.h";
+#include "BarParameter.h";
 
 #include <format>
-using namespace std;         //  –¼‘O‹óŠÔŽw’è
 
 
 //--------------------------------------------------------------------//
@@ -36,11 +35,11 @@ string BarParameter::toString() {
 
     if (type == "circle") {
         result = format("BarParameter\t{}\t{}\t{}",
-            label, type, circleSection.toString());
+            label, type, circleSection->toString());
     }
     else if (type == "rectangle") {
         result = format("BarParameter\t{}\t{}\t{}",
-            label, type, rectSection.toString());
+            label, type, rectSection->toString());
     }
 
     return result;

@@ -1,11 +1,11 @@
 #pragma once
+import "Material.h";
 
 #include <string>
-using namespace std;         //  名前空間指定
 #include <numbers>
+using namespace std;         //  名前空間指定
 
 
-import "Material.h";
 
 //--------------------------------------------------------------------//
 // 円形断面

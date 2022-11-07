@@ -1,9 +1,10 @@
 #pragma once
-#include <string>
-using namespace std;         //  名前空間指定
-#include <numbers>
-
 import "Material.h";
+
+#include <string>
+#include <numbers>
+using namespace std;         //  名前空間指定
+
 
 //--------------------------------------------------------------------//
 // 矩形断面

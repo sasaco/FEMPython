@@ -1,11 +1,10 @@
 #include "Material.h"
-
+#include "RectSection.h";
+#include "CircleSection.h";
 
 #include <format>
 
 
-import "RectSection.h";
-import "CircleSection.h";
 
 
 //--------------------------------------------------------------------//
@@ -16,6 +15,7 @@ import "CircleSection.h";
 // dens - 密度
 // hCon - 熱伝導率
 // sHeat - 比熱
+Material::Material() {};
 Material::Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat) {
     label = _label;
     ee = _ee;
@@ -43,6 +43,7 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
   m2d[2][2] = gg;
 }
 
+ /*
 // 平面歪問題の応力 - 歪マトリックスを作成する
  void Material::matrix2Dstrain(double out[3][3]) {
   
@@ -93,6 +94,7 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
      out[1][0] = 0;
      out[1][1] = gg;
 }
+ */
 
 // 3次元問題の応力 - 歪マトリックスを作成する
  void Material::matrix3D() {

@@ -1,9 +1,5 @@
-import "CircleSection.h";
-
-
+#include "CircleSection.h";
 #include <format>
-using namespace std;         //  –¼‘O‹óŠÔŽw’è
-
 
 //--------------------------------------------------------------------//
 // ‰~Œ`’f–Ê

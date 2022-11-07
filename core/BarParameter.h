@@ -1,10 +1,9 @@
 #pragma once
-#include <string>
-using namespace std;         //  名前空間指定
+#include "RectSection.h";
+#include "CircleSection.h";
 
 
-import "RectSection.h";
-import "CircleSection.h";
+
 
 //--------------------------------------------------------------------//
 // 梁パラメータ（円形断面）
@@ -16,8 +15,8 @@ class BarParameter {
 private:
     int label;
     string type;
-    RectSection rectSection;
-    CircleSection circleSection;
+    RectSection* rectSection;
+    CircleSection* circleSection;
 
 public:
     BarParameter(int label, string type, double* ss);
