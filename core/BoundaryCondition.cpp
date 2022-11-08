@@ -1,11 +1,11 @@
-
+#include "Restraint.h";
 
 //--------------------------------------------------------------------//
 // ‹«ŠEğŒ
 class BoundaryCondition {
 
 private:
-    restraints = [];		// S‘©ğŒ
+    vector<Restraint> restraints;		// S‘©ğŒ
     loads = [];		// ‰×dğŒ
     pressures = [];		// –Êˆ³ğŒ
     temperature = [];		// ß“_‰·“xğŒ

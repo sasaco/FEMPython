@@ -151,9 +151,12 @@
     <ClCompile Include="BarParameter.cpp" />
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="CircleSection.cpp" />
+    <ClCompile Include="Coordinates.cpp" />
     <ClCompile Include="FElement.cpp" />
     <ClCompile Include="FemDataModel.cpp" />
+    <ClCompile Include="FENode.cpp" />
     <ClCompile Include="HeatTransferBound.cpp" />
+    <ClCompile Include="Load.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="module.cpp" />
     <ClCompile Include="Nodes.cpp" />
@@ -171,9 +174,13 @@
     <ClInclude Include="BarParameter.h" />
     <ClInclude Include="CircleSection.h" />
     <ClInclude Include="FElement.h" />
+    <ClInclude Include="FENode.h" />
+    <ClInclude Include="HeatTransferBound.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Nodes.h" />
+    <ClInclude Include="Pressure.h" />
     <ClInclude Include="RectSection.h" />
+    <ClInclude Include="Restraint.h" />
     <ClInclude Include="ShellParameter.h" />
     <ClInclude Include="Temperature.h" />
     <ClInclude Include="Vector3R.h" />

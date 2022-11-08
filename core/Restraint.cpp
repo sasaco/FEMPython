@@ -1,3 +1,7 @@
+#include "Restraint.h";
+
+#include <format>
+
 //--------------------------------------------------------------------//
 // S‘©ğŒ
 // node - ß“_ƒ‰ƒxƒ‹
@@ -6,29 +10,43 @@
 // x,y,z - ‹­§•ÏˆÊ‚Ìx,y,z¬•ª
 // restrx,restry,restrz - x,y,z•ûŒü‚Ì‰ñ“]S‘©‚Ì—L–³
 // rx,ry,rz - ‹­§•ÏˆÊ‚Ìx,y,z²ü‚è‰ñ“]Šp
-var Restraint = function(node, coords, restx, resty, restz, x, y, z,
-    restrx, restry, restrz, rx, ry, rz) {
-    Vector3R.call(this, x, y, z, rx, ry, rz);
-    this.node = node;
-    this.coords = coords;
-    this.rest = [restx, resty, restz, restrx, restry, restrz];
-    this.globalX = this.x;
+Restraint::Restraint(int _node, Coordinates _coords,
+    bool restx, bool resty, bool restz,
+    double x, double y, double z,
+    bool restrx, bool restry, bool restrz, 
+    double rx, double ry, double rz) : Vector3R(x, y, z, rx, ry, rz) {
+    ;
+    node = _node;
+    coords = _coords;
+
+    rest[0] = restx; 
+    rest[1] = resty;
+    rest[2] = restz;
+    rest[3] = restrx;
+    rest[4] = restry;
+    rest[5] = restrz;
+
+    globalX = x;
 };
 
 // S‘©ğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
 // nodes - ß“_
-Restraint.prototype.toString = function(nodes) {
-    var s = 'Restraint\t' + nodes[this.node].label.toString(10);
-    for (var i = 0; i < 6; i++) {
-        if (this.rest[i]) {
-            s += '\t1\t' + this.x[i];
+string Restraint::toString(vector<FENode> nodes) {
+
+    string s =  format("Restraint\t{}", nodes[node].label);
+
+    for (int i = 0; i < 6; i++) {
+        if (rest[i]) {
+            s += '\t1\t' + x[i];
         }
         else {
-            s += '\t0\t' + this.x[i];
+            s += '\t0\t' + x[i];
         }
     }
-    if (this.coords) {
-        s += '\t' + this.coords.label.toString(10);
+    if (coords) {
+        s += '\t' + coords.label;
     }
     return s;
+
+
 };

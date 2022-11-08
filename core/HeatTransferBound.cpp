@@ -1,18 +1,23 @@
+#include "HeatTransferBound.h";
+
+#include <format>
+
 //--------------------------------------------------------------------//
 // ”M“`’B‹«ŠEğŒ
 // element - —v‘fƒ‰ƒxƒ‹
 // face - —v‘f‹«ŠE–Ê
 // htc - ”M“`’B—¦
 // outTemp - ŠO•”‰·“x
-var HeatTransferBound = function(element, face, htc, outTemp) {
-    ElementBorderBound.call(this, element, face);
-    this.htc = htc;
-    this.outTemp = outTemp;
-};
+HeatTransferBound::HeatTransferBound(int _element, string face, double _htc, double _outTemp) 
+    : ElementBorderBound.call(_element, _face){
+    htc = _htc;
+    outTemp = _outTemp;
+}
 
 // ”M“`’B‹«ŠEğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
 // elems - —v‘f
-HeatTransferBound.prototype.toString = function(elems) {
-    return 'HTC\t' + elems[this.element].label.toString(10) + '\t' +
-        this.face + '\t' + this.htc + '\t' + this.outTemp;
+string HeatTransferBound::toString(vecor<T> elems) {
+
+    return format("HTC\t{}\t{}\t{}\t{}\t{}", elems[element].label, face, htc, outTemp);
+
 };
