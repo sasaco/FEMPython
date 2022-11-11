@@ -127,5 +127,8 @@
     <ClInclude Include="HeatTransferBound.h">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClInclude>
+    <ClInclude Include="Load.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

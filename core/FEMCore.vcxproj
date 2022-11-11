@@ -176,6 +176,7 @@
     <ClInclude Include="FElement.h" />
     <ClInclude Include="FENode.h" />
     <ClInclude Include="HeatTransferBound.h" />
+    <ClInclude Include="Load.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Nodes.h" />
     <ClInclude Include="Pressure.h" />
