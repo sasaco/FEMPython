@@ -1,87 +1,92 @@
 #include "Restraint.h";
+#include "Load.h";
+#include "Pressure.h";
+#include "Temperature.h";
+#include "HeatTransferBound.h";
 
 //--------------------------------------------------------------------//
 // 境界条件
 class BoundaryCondition {
 
 private:
-    vector<Restraint> restraints;		// 拘束条件
-    loads = [];		// 荷重条件
-    pressures = [];		// 面圧条件
-    temperature = [];		// 節点温度条件
-    htcs = [];			// 熱伝達境界条件
+    vector<Restraint> restraints;	    // 拘束条件
+    vector<Load> loads;                 // 荷重条件
+    vector<Pressure> pressures;         // 面圧条件
+    vector<Temperature> temperature;    // 節点温度条件
+    vector<HeatTransferBound> htcs;	    // 熱伝達境界条件
     double loadMax;		// 最大荷重
     double pressMax;		// 最大面圧
-    dof = [];			// 節点の自由度
-    nodeIndex = [];		// 荷重ベクトルの節点ポインタ
-    bcList = [];		// 境界条件を設定した節点のリスト
+    vector<int> dof;			// 節点の自由度
+    vector<int> nodeIndex;		// 荷重ベクトルの節点ポインタ
+    vector<int> bcList;		// 境界条件を設定した節点のリスト
 
 public:
     BoundaryCondition();
 
+    void clear();
+    void init();
+    int setPointerStructure(int count);
+    int setPointerHeat(int count);
+    double getRestDisp(int bc);
+
+    void toStrings(vector<FENode> nodes, int elems, vector<string> s);
+
 };
 
 BoundaryCondition::BoundaryCondition() {
-    this.restraints = [];		// 拘束条件
-    this.loads = [];		// 荷重条件
-    this.pressures = [];		// 面圧条件
-    this.temperature = [];		// 節点温度条件
-    this.htcs = [];			// 熱伝達境界条件
-    loadMax = 0;		// 最大荷重
-    pressMax = 0;		// 最大面圧
-    this.dof = [];			// 節点の自由度
-    this.nodeIndex = [];		// 荷重ベクトルの節点ポインタ
-    this.bcList = [];		// 境界条件を設定した節点のリスト
+    clear();
 };
 
 // データを消去する
-BoundaryCondition.prototype.clear = function() {
-    this.restraints.length = 0;
-    this.loads.length = 0;
-    this.pressures.length = 0;
-    this.temperature.length = 0;
-    this.htcs.length = 0;
-    this.loadMax = 0;
-    this.pressMax = 0;
+void BoundaryCondition::clear() {
+    restraints.clear();		// 拘束条件
+    loads.clear();		    // 荷重条件
+    pressures.clear();		// 面圧条件
+    temperature.clear();    // 節点温度条件
+    htcs.clear();			// 熱伝達境界条件
+    loadMax = 0;		    // 最大荷重
+    pressMax = 0;		    // 最大面圧
+    dof.clear();			// 節点の自由度
+    nodeIndex.clear();		// 荷重ベクトルの節点ポインタ
+    bcList.clear();		    // 境界条件を設定した節点のリスト
 };
 
 // 境界条件を初期化する
-BoundaryCondition.prototype.init = function() {
-    this.restraints.sort(compareNodeLabel);
-    this.loads.sort(compareNodeLabel);
-    this.pressures.sort(compareElementLabel);
-    this.temperature.sort(compareNodeLabel);
-    this.htcs.sort(compareElementLabel);
-    this.loadMax = 0;
-    this.pressMax = 0;
-    var i;
-    for (i = 0; i < this.loads.length; i++) {
-        this.loadMax = Math.max(this.loadMax, this.loads[i].magnitude());
+void BoundaryCondition::init() {
+    restraints.sort(compareNodeLabel);
+    loads.sort(compareNodeLabel);
+    pressures.sort(compareElementLabel);
+    temperature.sort(compareNodeLabel);
+    htcs.sort(compareElementLabel);
+    loadMax = 0;
+    pressMax = 0;
+    for (int i = 0; i < loads.size(); i++) {
+        loadMax = max(loadMax, loads[i].magnitude());
     }
-    for (i = 0; i < this.pressures.length; i++) {
-        this.pressMax = Math.max(this.pressMax, this.pressures[i].press);
+    for (int i = 0; i < pressures.size(); i++) {
+        pressMax = max(pressMax, pressures[i].press);
     }
-};
+}
 
 // 構造解析の節点ポインタを設定する
 // count - 節点数
-BoundaryCondition.prototype.setPointerStructure = function(count) {
-    this.nodeIndex.length = 0;
-    this.bcList.length = 0;
-    var i, dofAll = 0;
-    for (i = 0; i < count; i++) {
-        this.nodeIndex[i] = dofAll;
-        dofAll += this.dof[i];
+int BoundaryCondition::setPointerStructure(int count) {
+    nodeIndex.clear();
+    bcList.clear();
+    int dofAll = 0;
+    for (int i = 0; i < count; i++) {
+        nodeIndex[i] = dofAll;
+        dofAll += dof[i];
     }
-    for (i = 0; i < dofAll; i++) {
-        this.bcList[i] = -1;
+    for (int i = 0; i < dofAll; i++) {
+        bcList[i] = -1;
     }
-    for (i = 0; i < this.restraints.length; i++) {
-        var r = this.restraints[i];
-        var index0 = this.nodeIndex[r.node];
-        var rdof = this.dof[r.node];
-        for (var j = 0; j < rdof; j++) {
-            if (r.rest[j]) this.bcList[index0 + j] = 6 * i + j;
+    for (int i = 0; i < restraints.size(); i++) {
+        Restraint r = restraints[i];
+        int index0 = nodeIndex[r.node];
+        int rdof = dof[r.node];
+        for (int j = 0; j < rdof; j++) {
+            if (r.rest[j]) bcList[index0 + j] = 6 * i + j;
         }
     }
     return dofAll;
@@ -89,37 +94,41 @@ BoundaryCondition.prototype.setPointerStructure = function(count) {
 
 // 熱解析の節点ポインタを設定する
 // count - 節点数
-BoundaryCondition.prototype.setPointerHeat = function(count) {
-    this.dof.length = 0;
-    this.nodeIndex.length = 0;
-    this.bcList.length = 0;
-    var i, temps = this.temperature.length;
-    for (i = 0; i < count; i++) {
-        this.bcList[i] = -1;
+int BoundaryCondition::setPointerHeat(int count) {
+    dof.clear();
+    nodeIndex.clear();
+    bcList.clear();
+    int temps = temperature.size();
+    for (int i = 0; i < count; i++) {
+        bcList[i] = -1;
     }
-    for (i = 0; i < temps; i++) {
-        var t = this.temperature[i];
-        this.bcList[t.node] = i;
+    for (int i = 0; i < temps; i++) {
+        Temperature t = temperature[i];
+        bcList[t.node] = i;
     }
     return temps;
-};
+}
 
 // 強制変位を返す
 // bc - 変位自由度ポインタ
-BoundaryCondition.prototype.getRestDisp = function(bc) {
-    return this.restraints[parseInt(bc / 6)].x[bc % 6];
+double BoundaryCondition::getRestDisp(int bc) {
+    int i = round(bc / 6);
+    Restraint r = restraints[i];
+    int j = bc % 6;
+    double result = r.x[j];
+    return result;
 };
 
 // データ文字列を返す
 // nodes - 節点
 // elems - 要素
-BoundaryCondition.prototype.toStrings = function(nodes, elems) {
-    var s = [], i;
-    for (i = 0; i < this.restraints.length; i++) {
-        s.push(this.restraints[i].toString(nodes));
+void BoundaryCondition::toStrings(vector<FENode> nodes, int elems, vector<string> s) {
+
+    for (int i = 0; i < restraints.size(); i++) {
+        s.push_back(restraints[i].toString(nodes));
     }
-    for (i = 0; i < this.loads.length; i++) {
-        s.push(this.loads[i].toString(nodes));
+    for (int i = 0; i < loads.size(); i++) {
+        s.push_back(loads[i].toString(nodes));
     }
     for (i = 0; i < this.pressures.length; i++) {
         s.push(this.pressures[i].toString(elems));

@@ -1,20 +1,6 @@
-#include "Vector3R.h";
-#include "Coordinates.h";
+#include "Load.h";
 
-class Load : public Vector3R {
-
-private:
-    double globalX;
-
-public:
-    int node;
-    Coordinates coords;
-
-    Load(int _node, Coordinates _coords, double x, double y, double z, double rx, double ry, double rz);
-
-
-};
-
+#include <format>;
 
 //--------------------------------------------------------------------//
 // 荷重条件
@@ -33,11 +19,13 @@ Load::Load(int _node, Coordinates _coords, double x, double y, double z, double 
 
 // 荷重条件を表す文字列を返す
 // nodes - 節点
-Load.prototype.toString = function(nodes) {
-    var s = 'Load\t' + nodes[this.node].label.toString(10) + '\t' +
-        this.x.join('\t');
-    if (this.coords) {
-        s += '\t' + this.coords.label.toString(10);
+string Load::toString(vector<FENode> nodes) {
+
+    string s = format("Load\t{}\t{}", nodes[node].label, globalX);
+
+    if (coords) {
+        s += '\t' + coords.label;
     }
+
     return s;
 };

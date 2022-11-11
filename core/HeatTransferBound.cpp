@@ -9,7 +9,7 @@
 // htc - ”M“`’B—¦
 // outTemp - ŠO•”‰·“x
 HeatTransferBound::HeatTransferBound(int _element, string face, double _htc, double _outTemp) 
-    : ElementBorderBound.call(_element, _face){
+    : ElementBorderBound(_element, _face){
     htc = _htc;
     outTemp = _outTemp;
 }

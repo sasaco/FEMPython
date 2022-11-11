@@ -13,10 +13,11 @@ using namespace std;         //  –¼‘O‹óŠÔŽw’è
 class Temperature {
 
 private:
-    int node;
     double t;
 
 public:
+    int node;
+
     Temperature(int _node, double _t);
 
     string toString(vector<FENode> nodes);
