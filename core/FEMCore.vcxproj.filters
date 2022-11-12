@@ -27,6 +27,15 @@
     <Filter Include="ソース ファイル\BoundaryCondition">
       <UniqueIdentifier>{4e8cc869-6b88-42c6-95a9-ed29a6ed479c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\Element\BarElement">
+      <UniqueIdentifier>{c4b6cd94-5c7b-4c9d-9dc8-0c8aeba3f131}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Element\SolidElement">
+      <UniqueIdentifier>{9177f5e1-2222-413d-ae92-d3388096415c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Element\ShellElement">
+      <UniqueIdentifier>{3edcb56a-e7b6-41cb-bba6-fd439564025b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="module.cpp">
@@ -83,6 +92,48 @@
     <ClCompile Include="Coordinates.cpp">
       <Filter>ソース ファイル\Coordinates</Filter>
     </ClCompile>
+    <ClCompile Include="BarElement.cpp">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClCompile>
+    <ClCompile Include="BEBarElement.cpp">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClCompile>
+    <ClCompile Include="TBarElement.cpp">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClCompile>
+    <ClCompile Include="HexaElement1WT.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="SolidElement.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="TetraElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="TetraElement2.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="WedgeElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="WedgeElement2.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="HexaElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="HexaElement2.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="ShellElement.cpp">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClCompile>
+    <ClCompile Include="TriElement1.cpp">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClCompile>
+    <ClCompile Include="QuadElement1.cpp">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
@@ -129,6 +180,9 @@
     </ClInclude>
     <ClInclude Include="Load.h">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Coordinates.h">
+      <Filter>ソース ファイル\Coordinates</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
