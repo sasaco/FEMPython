@@ -1,70 +1,156 @@
-// 四面体2次要素の節点のξ,η,ζ座標
-var TETRA2_NODE = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [0.5, 0, 0], [0.5, 0.5, 0],
-[0, 0.5, 0], [0, 0, 0.5], [0.5, 0, 0.5], [0, 0.5, 0.5]];
-// 四面体2次要素の積分点のξ,η,ζ座標,重み係数
-var TETRA2_INT = [[GTETRA2[0], GTETRA2[0], GTETRA2[0], C1_24],
-[GTETRA2[1], GTETRA2[0], GTETRA2[0], C1_24],
-[GTETRA2[0], GTETRA2[1], GTETRA2[0], C1_24],
-[GTETRA2[0], GTETRA2[0], GTETRA2[1], C1_24]];
-// 楔形1次要素の節点のξ,η,ζ座標
-var WEDGE1_NODE = [[0, 0, -1], [1, 0, -1], [0, 1, -1], [0, 0, 1], [1, 0, 1], [0, 1, 1]];
-// 楔形1次要素の積分点のξ,η,ζ座標,重み係数
-var WEDGE1_INT = [[C1_3, C1_3, GX2[0], 0.5], [C1_3, C1_3, GX2[1], 0.5]];
-// 楔形2次要素の節点のξ,η,ζ座標
-var WEDGE2_NODE = [[0, 0, -1], [1, 0, -1], [0, 1, -1], [0, 0, 1], [1, 0, 1], [0, 1, 1],
-[0.5, 0, -1], [0.5, 0.5, -1], [0, 0.5, -1],
-[0.5, 0, 1], [0.5, 0.5, 1], [0, 0.5, 1],
-[0, 0, 0], [1, 0, 0], [0, 1, 0]];
-// 楔形2次要素の積分点のξ,η,ζ座標,重み係数
-var WEDGE2_INT = [[GTRI2[0], GTRI2[0], GX3[0], C1_6 * GW3[0]],
-[GTRI2[1], GTRI2[0], GX3[0], C1_6 * GW3[0]],
-[GTRI2[0], GTRI2[1], GX3[0], C1_6 * GW3[0]],
-[GTRI2[0], GTRI2[0], GX3[1], C1_6 * GW3[1]],
-[GTRI2[1], GTRI2[0], GX3[1], C1_6 * GW3[1]],
-[GTRI2[0], GTRI2[1], GX3[1], C1_6 * GW3[1]],
-[GTRI2[0], GTRI2[0], GX3[2], C1_6 * GW3[2]],
-[GTRI2[1], GTRI2[0], GX3[2], C1_6 * GW3[2]],
-[GTRI2[0], GTRI2[1], GX3[2], C1_6 * GW3[2]]];
-// 六面体1次要素の節点のξ,η,ζ座標
-var HEXA1_NODE = [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
-[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]];
-// 六面体1次要素の積分点のξ,η,ζ座標,重み係数
-var HEXA1_INT = [[GX2[0], GX2[0], GX2[0], 1], [GX2[1], GX2[0], GX2[0], 1],
-[GX2[0], GX2[1], GX2[0], 1], [GX2[1], GX2[1], GX2[0], 1],
-[GX2[0], GX2[0], GX2[1], 1], [GX2[1], GX2[0], GX2[1], 1],
-[GX2[0], GX2[1], GX2[1], 1], [GX2[1], GX2[1], GX2[1], 1]];
-// 六面体2次要素の節点のξ,η,ζ座標
-var HEXA2_NODE = [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
-[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1],
-[0, -1, -1], [1, 0, -1], [0, 1, -1], [-1, 0, -1],
-[0, -1, 1], [1, 0, 1], [0, 1, 1], [-1, 0, 1],
-[-1, -1, 0], [1, -1, 0], [1, 1, 0], [-1, 1, 0]];
-// 六面体2次要素の積分点のξ,η,ζ座標,重み係数
-var HEXA2_INT = (function() {
-    var a = [];
-    for (var k = 0; k < 3; k++) {
-        for (var j = 0; j < 3; j++) {
-            for (var i = 0; i < 3; i++) {
-                a.push([GX3[i], GX3[j], GX3[k], GW3[i] * GW3[j] * GW3[k]]);
-            }
-        }
-    }
-    return a;
-}());
-// 六面体1次要素の質量マトリックス係数
-var HEXA1_MASS_BASE = (function() {
-    var v = [], abs = Math.abs;
-    for (var i = 0; i < 8; i++) {
-        v[i] = [];
-        for (var j = 0; j < 8; j++) {
-            var s = abs(HEXA1_NODE[i][0] - HEXA1_NODE[j][0]) +
-                abs(HEXA1_NODE[i][1] - HEXA1_NODE[j][1]) +
-                abs(HEXA1_NODE[i][2] - HEXA1_NODE[j][2]);
-            v[i][j] = Math.pow(0.5, 0.5 * s) / 27;
-        }
-    }
-    return v;
-}());
+#include "FElement.h";
+#include "FENode.h";
+
+#include <string>
+#include <vector>
+using namespace std;
+
+
+class SolidElement : public FElement {
+
+private:
+
+    // 四面体2次要素の節点のξ,η,ζ座標
+    const double TETRA2_NODE[10][3] = {
+        {0, 0, 0},
+        {1, 0, 0},
+        {0, 1, 0}, 
+        {0, 0, 1}, 
+        {0.5, 0, 0}, 
+        {0.5, 0.5, 0},
+        {0, 0.5, 0},
+        {0, 0, 0.5}, 
+        {0.5, 0, 0.5}, 
+        {0, 0.5, 0.5}
+    };
+
+    // 四面体2次要素の積分点のξ,η,ζ座標,重み係数
+    const double TETRA2_INT[4][4] = {
+        {GTETRA2[0], GTETRA2[0], GTETRA2[0], C1_24},
+        {GTETRA2[1], GTETRA2[0], GTETRA2[0], C1_24},
+        {GTETRA2[0], GTETRA2[1], GTETRA2[0], C1_24},
+        {GTETRA2[0], GTETRA2[0], GTETRA2[1], C1_24}
+    };
+
+    // 楔形1次要素の節点のξ,η,ζ座標
+    const double WEDGE1_NODE[6][3] = {
+        {0, 0, -1}, 
+        {1, 0, -1}, 
+        {0, 1, -1}, 
+        {0, 0, 1}, 
+        {1, 0, 1}, 
+        {0, 1, 1}
+    };
+
+    // 楔形1次要素の積分点のξ,η,ζ座標,重み係数
+    const double WEDGE1_INT[2][4] = {
+        {C1_3, C1_3, GX2[0], 0.5}, 
+        {C1_3, C1_3, GX2[1], 0.5}
+    };
+
+    // 楔形2次要素の節点のξ,η,ζ座標
+    const double WEDGE2_NODE[15][3] = {
+        {0, 0, -1}, 
+        {1, 0, -1}, 
+        {0, 1, -1}, 
+        {0, 0, 1}, 
+        {1, 0, 1}, 
+        {0, 1, 1},
+        {0.5, 0, -1},
+        {0.5, 0.5, -1},
+        {0, 0.5, -1},
+        {0.5, 0, 1},
+        {0.5, 0.5, 1}, 
+        {0, 0.5, 1},
+        {0, 0, 0}, 
+        {1, 0, 0}, 
+        {0, 1, 0}
+    };
+
+
+    // 楔形2次要素の積分点のξ,η,ζ座標,重み係数
+    const double WEDGE2_INT[9][4] = {
+        {GTRI2[0], GTRI2[0], GX3[0], C1_6 * GW3[0]},
+        {GTRI2[1], GTRI2[0], GX3[0], C1_6 * GW3[0]},
+        {GTRI2[0], GTRI2[1], GX3[0], C1_6 * GW3[0]},
+        {GTRI2[0], GTRI2[0], GX3[1], C1_6 * GW3[1]},
+        {GTRI2[1], GTRI2[0], GX3[1], C1_6 * GW3[1]},
+        {GTRI2[0], GTRI2[1], GX3[1], C1_6 * GW3[1]},
+        {GTRI2[0], GTRI2[0], GX3[2], C1_6 * GW3[2]},
+        {GTRI2[1], GTRI2[0], GX3[2], C1_6 * GW3[2]},
+        {GTRI2[0], GTRI2[1], GX3[2], C1_6 * GW3[2]}
+    };
+
+    // 六面体1次要素の節点のξ,η,ζ座標
+    const double HEXA1_NODE[8][3] = {
+        {-1, -1, -1}, 
+        {1, -1, -1}, 
+        {1, 1, -1},
+        {-1, 1, -1},
+        {-1, -1, 1},
+        {1, -1, 1},
+        {1, 1, 1},
+        {-1, 1, 1}
+    };
+
+    // 六面体1次要素の積分点のξ,η,ζ座標,重み係数
+    const double HEXA1_INT[8][4] = {
+        {GX2[0], GX2[0], GX2[0], 1},
+        {GX2[1], GX2[0], GX2[0], 1},
+        {GX2[0], GX2[1], GX2[0], 1},
+        {GX2[1], GX2[1], GX2[0], 1},
+        {GX2[0], GX2[0], GX2[1], 1},
+        {GX2[1], GX2[0], GX2[1], 1},
+        {GX2[0], GX2[1], GX2[1], 1},
+        {GX2[1], GX2[1], GX2[1], 1}
+    };
+
+    // 六面体2次要素の節点のξ,η,ζ座標
+    const double HEXA2_NODE[20][3] = {
+        {-1, -1, -1}, 
+        {1, -1, -1}, 
+        {1, 1, -1},
+        {-1, 1, -1},
+        {-1, -1, 1}, 
+        {1, -1, 1}, 
+        {1, 1, 1}, 
+        {-1, 1, 1},
+        {0, -1, -1},
+        {1, 0, -1}, 
+        {0, 1, -1}, 
+        {-1, 0, -1},
+        {0, -1, 1}, 
+        {1, 0, 1}, 
+        {0, 1, 1}, 
+        {-1, 0, 1},
+        {-1, -1, 0}, 
+        {1, -1, 0}, 
+        {1, 1, 0}, 
+        {-1, 1, 0}
+    };
+
+    // 六面体2次要素の積分点のξ,η,ζ座標,重み係数
+    double HEXA2_INT[9][4]; // コンストラクタで初期化
+
+    // 六面体1次要素の質量マトリックス係数
+    double HEXA1_MASS_BASE[8][8]; // コンストラクタで初期化
+
+
+
+    vector<vector<double>> nodeP;
+    vector<vector<double>> intP;
+
+public:
+
+    SolidElement(int label, int material, vector<int> nodes, vector <vector<double>> _nodeP, vector <vector<double>> _intP);
+
+    void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]);
+
+
+
+};
+
+
 
 //--------------------------------------------------------------------//
 // ソリッド要素
@@ -73,37 +159,77 @@ var HEXA1_MASS_BASE = (function() {
 // nodes - 節点番号
 // nodeP - 節点のξ,η,ζ座標
 // intP - 積分点のξ,η,ζ座標,重み係数
-var SolidElement = function(label, material, nodes, nodeP, intP) {
-    FElement.call(this, label, material, nodes);
-    this.nodeP = nodeP;
-    this.intP = intP;
+SolidElement::SolidElement(int label, int material, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP) :
+    FElement(label, material, nodes) {
+
+    nodeP = _nodeP;
+    intP = _intP;
+
+    // 六面体2次要素の積分点のξ,η,ζ座標,重み係数
+    int a = 0;
+    for (int k = 0; k < 3; k++) {
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < 3; i++) {
+                HEXA2_INT[a][0] = GX3[i];
+                HEXA2_INT[a][1] = GX3[j];
+                HEXA2_INT[a][2] = GX3[k];
+                HEXA2_INT[a][3] = GW3[i] * GW3[j] * GW3[k];
+                a++;
+            }
+        }
+    }
+
+    // 六面体1次要素の質量マトリックス係数
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            double s = abs(HEXA1_NODE[i][0] - HEXA1_NODE[j][0]) +
+                       abs(HEXA1_NODE[i][1] - HEXA1_NODE[j][1]) +
+                       abs(HEXA1_NODE[i][2] - HEXA1_NODE[j][2]);
+            HEXA1_MASS_BASE[i][j] = pow(0.5, 0.5 * s) / 27;
+        }
+    }
+
 };
+
 
 // ヤコビ行列を返す
 // p - 要素節点
 // sf - 形状関数行列
-SolidElement.prototype.jacobianMatrix = function(p, sf) {
-    var count = this.nodeCount(), jac = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    for (var i = 0; i < count; i++) {
-        var sfi = sf[i], pix = p[i].x, piy = p[i].y, piz = p[i].z;
-        for (var j = 0; j < 3; j++) {
-            var sfij = sfi[j + 1];
-            jac[j] += sfij * pix;
-            jac[j + 3] += sfij * piy;
-            jac[j + 6] += sfij * piz;
+void SolidElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]) {
+
+    int count = nodeCount();
+
+    for (int i = 0; i < 9; i++) {
+        out[i] = 0;
+    }
+
+    for (int i = 0; i < count; i++) {
+        vector<double> sfi = sf[i];
+        double pix = p[i].x;
+        double piy = p[i].y;
+        double piz = p[i].z;
+        for (int j = 0; j < 3; j++) {
+            double sfij = sfi[j + 1];
+            out[j] += sfij * pix;
+            out[j + 3] += sfij * piy;
+            out[j + 6] += sfij * piz;
         }
     }
-    return new THREE.Matrix3().fromArray(jac);
-};
+}
+
 
 // 形状関数の勾配 [ dNi/dx dNi/dy dNi/dz ] を返す
 // p - 要素節点
 // ja - ヤコビ行列
 // sf - 形状関数行列
-SolidElement.prototype.grad = function(p, ja, sf) {
-    var count = this.nodeCount(), gr = [];
+SolidElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, double gr[9]) {
+
+    int count = nodeCount();
+
     var ji = new THREE.Matrix3().getInverse(ja, true).elements;
-    for (var i = 0; i < count; i++) {
+
+
+    for (int i = 0; i < count; i++) {
         gr[i] = [ji[0] * sf[i][1] + ji[3] * sf[i][2] + ji[6] * sf[i][3],
             ji[1] * sf[i][1] + ji[4] * sf[i][2] + ji[7] * sf[i][3],
             ji[2] * sf[i][1] + ji[5] * sf[i][2] + ji[8] * sf[i][3]];

@@ -1,5 +1,4 @@
 #pragma once
-#include "Material.h";
 #include "Nodes.h";
 #include "BoundaryCondition.h";
 
@@ -15,6 +14,12 @@ using std::vector;
 class FElement : public Nodes {
 
 private:
+    int label;
+    int material;
+    bool isShell;
+    bool isBar;
+
+public:
     const double C1_3 = 1 / 3;
     const double C1_6 = 1 / 6;
     const double C1_12 = 1 / 12;
@@ -31,13 +36,8 @@ private:
     // ガウス積分の重み係数
     const double GW3[3] = { 5 / 9, 8 / 9, 5 / 9 };
 
-    int label;
-    Material material;
-    bool isShell;
-    bool isBar;
 
-public:
-    FElement(int _label, Material _material, vector<int> _nodes);
+    FElement(int _label, int _material, vector<int> _nodes);
 
     // 積分点の剛性マトリックスを返す
     void stiffPart(vector<vector<double>> d, vector<vector<double>> b, double coef, vector<vector<double>> k);

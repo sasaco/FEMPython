@@ -1,10 +1,23 @@
+#include "SolidElement.h";
+
+
+class HexaElement1 : public SolidElement {
+
+private:
+
+
+public:
+
+
+};
+
 
 //--------------------------------------------------------------------//
 // 六面体1次要素
 // label - 要素ラベル
 // material - 材料のインデックス
 // nodes - 節点番号
-var HexaElement1 = function(label, material, nodes) {
+HexaElement1::HexaElement1(int label, material, nodes) {
     SolidElement.call(this, label, material, nodes, HEXA1_NODE, HEXA1_INT);
 };
 

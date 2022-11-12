@@ -8,7 +8,7 @@
 // label - 要素ラベル
 // material - 材料のインデックス
 // nodes - 節点番号
-FElement::FElement(int _label, Material _material, vector<int> _nodes)
+FElement::FElement(int _label, int _material, vector<int> _nodes)
     : Nodes(_nodes) {
 
     label = label;

@@ -9,5 +9,9 @@ def test_sampleBeamHexa1():
     assert True
 
 if __name__ == "__main__": 
+    import sys 
+    import os
+    sys.path.append(os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../"))
     import conftest
+
     test_sampleBeamHexa1() 
