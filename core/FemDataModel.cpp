@@ -824,7 +824,7 @@ MeshModel.prototype.getBarGeometry=function(){
 // 節点
 // label - 節点ラベル
 // x,y,z - x,y,z座標
-var FENode=function(label,x,y,z){
+var FENode =function(label,x,y,z){
   THREE.Vector3.call(this,x,y,z);
   this.label=label;
 };

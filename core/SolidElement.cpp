@@ -679,12 +679,22 @@ void SolidElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryConditio
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
-SolidElement.prototype.strainStress = function(p, u, d1) {
-    var count = this.nodeCount(), v = this.toArray(u, 3);
-    var strain = [], stress = [], energy = [];
-    for (var i = 0; i < count; i++) {
-        var eps = this.strainPart(p, v, this.nodeP[i]);
-        strain[i] = new Strain(eps);
+void SolidElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1) {
+
+    int count = nodeCount();
+    
+    vector<double> v;
+    toArray(u, 3, v);
+
+    vector<Strain> strain;
+    vector<Stress> stress;
+    vector<double> energy;
+
+    for (int i = 0; i < count; i++) {
+        vector<double> eps;
+        strainPart(p, v, nodeP[i], eps);
+
+        strain.push_back(Strain(eps))-;
         var str = numeric.dotMV(d1, eps);
         stress[i] = new Stress(str);
         energy[i] = 0.5 * strain[i].innerProduct(stress[i]);
