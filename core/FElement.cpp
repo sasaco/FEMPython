@@ -21,7 +21,7 @@ FElement::FElement(int _label, int _material, vector<int> _nodes)
 // d - 応力-歪マトリックス
 // b - 歪-変位マトリックスの転置行列
 // coef - 係数
-void FElement::stiffPart(vector<vector<double>> d, vector<vector<double>> b, double coef, vector<vector<double>> k) {
+void FElement::stiffPart(vector<vector<double>> d, vector<vector<double>> b, double coef, vector<vector<double>> out) {
 
     int size1 = b.size();
     int size2 = d.size();
@@ -45,7 +45,7 @@ void FElement::stiffPart(vector<vector<double>> d, vector<vector<double>> b, dou
                 inner_product(a.begin(), a.end(), b[j].begin(), 0)
             );
         }
-        k.push_back(ki);
+        out.push_back(ki);
     }
 }
 
@@ -68,7 +68,7 @@ void FElement::toArray(vector<BoundaryCondition> u, int dof, vector<double> out)
 // 節点変位を局所座標系・1次元配列に変換する
 // u - 節点変位
 // d - 方向余弦マトリックス
-void FElement::toLocalArray(vector<BoundaryCondition> u, vector<vector<double>>d, vector<double> v) {
+void FElement::toLocalArray(vector<BoundaryCondition> u, vector<vector<double>> d, vector<double> v) {
 
     v.clear();
 
@@ -82,3 +82,5 @@ void FElement::toLocalArray(vector<BoundaryCondition> u, vector<vector<double>>d
         }
     }
 }
+
+
