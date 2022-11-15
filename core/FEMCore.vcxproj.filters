@@ -36,6 +36,9 @@
     <Filter Include="ソース ファイル\Element\ShellElement">
       <UniqueIdentifier>{3edcb56a-e7b6-41cb-bba6-fd439564025b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\numeric">
+      <UniqueIdentifier>{8d482bbc-6648-4aa5-a0a2-82ea398984d9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="module.cpp">
@@ -134,6 +137,9 @@
     <ClCompile Include="QuadElement1.cpp">
       <Filter>ソース ファイル\Element\ShellElement</Filter>
     </ClCompile>
+    <ClCompile Include="numeric.cpp">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
@@ -183,6 +189,15 @@
     </ClInclude>
     <ClInclude Include="Coordinates.h">
       <Filter>ソース ファイル\Coordinates</Filter>
+    </ClInclude>
+    <ClInclude Include="numeric.h">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="SolidElement.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="HexaElement1.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
