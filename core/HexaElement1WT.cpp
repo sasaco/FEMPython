@@ -1,27 +1,79 @@
+#include "HexaElement1.h";
+
+
+class HexaElement1WT : public HexaElement1 {
+
+private:
+    vector<vector<double>> te;
+
+public:
+    HexaElement1WT(int label, int material, vector<int> nodes);
+
+    string getName() override;
+
+    void stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out) override;
+};
+
+
 //--------------------------------------------------------------------//
 // Wilson-Taylor非適合六面体1次要素
 // label - 要素ラベル
 // material - 材料のインデックス
 // nodes - 節点番号
-var HexaElement1WT = function(label, material, nodes) {
-    HexaElement1.call(this, label, material, nodes);
-    this.te = null;		// 非適合モードの変換マトリックス
-};
+HexaElement1WT::HexaElement1WT(int label, int material, vector<int> nodes) :
+    HexaElement1(label, material, nodes) {
+    te.clear();		// 非適合モードの変換マトリックス
+}
+
 
 // 要素境界名称を返す
-HexaElement1WT.prototype.getName = function() {
-    return 'HexaElement1WT';
-};
+string HexaElement1WT::getName() {
+    return "HexaElement1WT";
+}
+
 
 // 剛性マトリックスを返す
 // p - 要素節点
 // d1 - 応力 - 歪マトリックス
-HexaElement1WT.prototype.stiffnessMatrix = function(p, d1) {
-    var size = 3 * this.nodeCount(), kk = numeric.rep([size, size], 0);
-    var k2 = numeric.rep([size, 9], 0), k3 = numeric.rep([9, 9], 0);
-    var sf0 = this.shapeFunction(0, 0, 0);
-    var ja0 = this.jacobianMatrix(p, sf0);
-    var ji0 = new THREE.Matrix3().getInverse(ja0, true).elements;
+void HexaElement1WT::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out) {
+    
+    int size = 3 * nodeCount();
+    for (int i = 0; i < size; ++i) {
+        vector<double> kk;
+        for (int j = 0; j < size; ++j) {
+            kk.push_back(0);
+        }
+        out.push_back(kk);
+    }
+
+    vector<vector<double>> k2;
+    for (int i = 0; i < size; ++i) {
+        vector<double> kk;
+        for (int j = 0; j < 9; ++j) {
+            kk.push_back(0);
+        }
+        k2.push_back(kk);
+    }
+
+    vector<vector<double>> k3;
+    for (int i = 0; i < 9; ++i) {
+        vector<double> kk;
+        for (int j = 0; j < 9; ++j) {
+            kk.push_back(0);
+        }
+        k3.push_back(kk);
+    }
+
+    vector<vector<double>> sf0;
+    shapeFunction(0, 0, 0 , sf0);
+
+    double ja0[9];
+    jacobianMatrix(p, sf0, ja0);
+
+    vector<vector<double>> ji0;
+    numeric::getInverse(ja0, ji0);
+
+
     var jj0 = Math.abs(ja0.determinant());
     for (var i = 0; i < this.intP.length; i++) {
         var sf = this.shapeFunction(this.intP[i][0], this.intP[i][1],

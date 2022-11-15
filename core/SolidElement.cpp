@@ -72,37 +72,17 @@ void SolidElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> s
 
     // ◆ 3x3 行列の逆行列を求める
     // 3x3の行列を入力
-    double a[3][3];
+    vector<vector<double>> a;
     for (int i = 0; i < 3; ++i) {
+        vector<double> b;
         for (int j = 0; j < 3; ++j) {
-            a[i][j] = ja[i + j];
+            b.push_back(ja[i + j]);
         }
+        a.push_back(b);
     }
 
-    //単位行列を作る
-    double inv_a[3][3];
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            inv_a[i][j] = (i == j) ? 1.0 : 0.0;
-        }
-    }
-    //掃き出し法
-    for (int i = 0; i < 3; i++) {
-        double buf = 1 / a[i][i];
-        for (int j = 0; j < 3; j++) {
-            a[i][j] *= buf;
-            inv_a[i][j] *= buf;
-        }
-        for (int j = 0; j < 3; j++) {
-            if (i != j) {
-                buf = a[j][i];
-                for (int k = 0; k < 3; k++) {
-                    a[j][k] -= a[i][k] * buf;
-                    inv_a[j][k] -= inv_a[i][k] * buf;
-                }
-            }
-        }
-    }
+    vector<vector<double>> inv_a;
+    numeric::getInverse(a, inv_a);
 
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {

@@ -83,3 +83,40 @@ void numeric::mul(vector<double> x, double y) {
     }
 }
 
+/// <summary>
+/// nxn 行列の逆行列を求める
+/// </summary>
+void numeric::getInverse(vector<vector<double>> a, vector<vector<double>> inv_a) {
+
+    inv_a.clear();
+
+    //単位行列を作る
+    for (int i = 0; i < a.size(); i++) {
+        vector<double> b;
+        for (int j = 0; j < a[i].size(); j++) {
+            b.push_back((i == j) ? 1.0 : 0.0);
+        }
+        inv_a.push_back(b);
+    }
+
+    //掃き出し法
+    for (int i = 0; i < a.size(); i++) {
+        double buf = 1 / a[i][i];
+        for (int j = 0; j < a[i].size(); j++) {
+            a[i][j] *= buf;
+            inv_a[i][j] *= buf;
+        }
+        for (int j = 0; j < a.size(); j++) {
+            if (i != j) {
+                buf = a[j][i];
+                for (int k = 0; k < a[i].size(); k++) {
+                    a[j][k] -= a[i][k] * buf;
+                    inv_a[j][k] -= inv_a[i][k] * buf;
+                }
+            }
+        }
+    }
+
+ 
+}
+

@@ -138,7 +138,7 @@ public:
 
     void addMatrix(vector<vector<double>> a, vector<vector<double>> da);
 
-    void stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out);
+    virtual void stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out);
 
     void shapeFunctionMatrix(vector<FENode> p, double coef, vector<vector<double>> out);
 

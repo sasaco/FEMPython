@@ -8,6 +8,8 @@ private:
 
 public:
 
+    static void getInverse(vector<vector<double>> a, vector<vector<double>> out);
+
     static double dotVV(vector<double> x, vector<double> y);
 
     static void dotMV(vector<vector<double>> x, vector<double> y, vector<double> out);
