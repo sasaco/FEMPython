@@ -14,8 +14,6 @@ using std::vector;
 class FElement : public Nodes {
 
 private:
-    int label;
-    int material;
     bool isShell;
     bool isBar;
 
@@ -36,6 +34,8 @@ public:
     // ƒKƒEƒXÏ•ª‚Ìd‚İŒW”
     const double GW3[3] = { 5 / 9, 8 / 9, 5 / 9 };
 
+    int label;
+    int material;
 
     FElement(int _label, int _material, vector<int> _nodes);
 

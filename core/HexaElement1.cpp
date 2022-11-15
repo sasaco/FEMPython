@@ -1,121 +1,95 @@
-#include "SolidElement.h";
-
-
-class HexaElement1 : public SolidElement {
-
-private:
-
-
-public:
-
-
-};
-
+#include "HexaElement1.h";
 
 //--------------------------------------------------------------------//
 // 六面体1次要素
 // label - 要素ラベル
 // material - 材料のインデックス
 // nodes - 節点番号
-HexaElement1::HexaElement1(int label, material, nodes) {
-    SolidElement.call(this, label, material, nodes, HEXA1_NODE, HEXA1_INT);
+HexaElement1::HexaElement1(int label, int material, vector<int> nodes) : 
+    SolidElement(label, material, nodes, HEXA1_NODE, HEXA1_INT) {
+
+    // 六面体1次要素の質量マトリックス係数
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            double s = abs(HEXA1_NODE[i][0] - HEXA1_NODE[j][0]) +
+                abs(HEXA1_NODE[i][1] - HEXA1_NODE[j][1]) +
+                abs(HEXA1_NODE[i][2] - HEXA1_NODE[j][2]);
+            HEXA1_MASS_BASE[i][j] = pow(0.5, 0.5 * s) / 27;
+        }
+    }
 };
+
 
 // 要素名称を返す
-HexaElement1.prototype.getName = function() {
-    return 'HexaElement1';
-};
+string HexaElement1::getName() {
+    return "HexaElement1";
+} 
 
-// 節点数を返す
-HexaElement1.prototype.nodeCount = function() {
-    return 8;
-};
-
-// 要素境界数を返す
-HexaElement1.prototype.borderCount = function() {
-    return 6;
-};
-
-// 要素境界を返す
-// element - 要素ラベル
-// index - 要素境界のインデックス
-HexaElement1.prototype.border = function(element, index) {
-    var p = this.nodes;
-    switch (index) {
-    default:
-        return null;
-    case 0:
-        return new QuadangleBorder1(element, [p[0], p[3], p[2], p[1]]);
-    case 1:
-        return new QuadangleBorder1(element, [p[4], p[5], p[6], p[7]]);
-    case 2:
-        return new QuadangleBorder1(element, [p[0], p[1], p[5], p[4]]);
-    case 3:
-        return new QuadangleBorder1(element, [p[1], p[2], p[6], p[5]]);
-    case 4:
-        return new QuadangleBorder1(element, [p[2], p[3], p[7], p[6]]);
-    case 5:
-        return new QuadangleBorder1(element, [p[3], p[0], p[4], p[7]]);
-    }
-};
-
-// 要素を鏡像反転する
-HexaElement1.prototype.mirror = function() {
-    swap(this.nodes, 1, 3);
-    swap(this.nodes, 5, 7);
-};
-
-// 要素節点の角度を返す
-// p - 要素節点
-HexaElement1.prototype.angle = function(p) {
-    var th = [];
-    for (var i = 0; i < 4; i++) {
-        th[i] = solidAngle(p[i], p[(i + 1) % 4], p[(i + 3) % 4], p[i + 4]);
-        th[i + 4] = solidAngle(p[i + 4], p[(i + 1) % 4 + 4], p[(i + 3) % 4 + 4], p[i]);
-    }
-    return th;
-};
 
 // 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
 // xsi,eta,zeta - 要素内部ξ,η,ζ座標
-HexaElement1.prototype.shapeFunction = function(xsi, eta, zeta) {
-    return [[0.125 * (1 - xsi) * (1 - eta) * (1 - zeta), -0.125 * (1 - eta) * (1 - zeta),
-        -0.125 * (1 - xsi) * (1 - zeta), -0.125 * (1 - xsi) * (1 - eta)],
-        [0.125 * (1 + xsi) * (1 - eta) * (1 - zeta), 0.125 * (1 - eta) * (1 - zeta),
-        -0.125 * (1 + xsi) * (1 - zeta), -0.125 * (1 + xsi) * (1 - eta)],
-        [0.125 * (1 + xsi) * (1 + eta) * (1 - zeta), 0.125 * (1 + eta) * (1 - zeta),
-        0.125 * (1 + xsi) * (1 - zeta), -0.125 * (1 + xsi) * (1 + eta)],
-        [0.125 * (1 - xsi) * (1 + eta) * (1 - zeta), -0.125 * (1 + eta) * (1 - zeta),
-        0.125 * (1 - xsi) * (1 - zeta), -0.125 * (1 - xsi) * (1 + eta)],
-        [0.125 * (1 - xsi) * (1 - eta) * (1 + zeta), -0.125 * (1 - eta) * (1 + zeta),
-        -0.125 * (1 - xsi) * (1 + zeta), 0.125 * (1 - xsi) * (1 - eta)],
-        [0.125 * (1 + xsi) * (1 - eta) * (1 + zeta), 0.125 * (1 - eta) * (1 + zeta),
-        -0.125 * (1 + xsi) * (1 + zeta), 0.125 * (1 + xsi) * (1 - eta)],
-        [0.125 * (1 + xsi) * (1 + eta) * (1 + zeta), 0.125 * (1 + eta) * (1 + zeta),
-        0.125 * (1 + xsi) * (1 + zeta), 0.125 * (1 + xsi) * (1 + eta)],
-        [0.125 * (1 - xsi) * (1 + eta) * (1 + zeta), -0.125 * (1 + eta) * (1 + zeta),
-        0.125 * (1 - xsi) * (1 + zeta), 0.125 * (1 - xsi) * (1 + eta)]];
-};
+void HexaElement1::shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) {
+
+    out = {
+        {0.125 * (1 - xsi) * (1 - eta) * (1 - zeta), -0.125 * (1 - eta) * (1 - zeta),
+        -0.125 * (1 - xsi) * (1 - zeta), -0.125 * (1 - xsi) * (1 - eta)} ,
+        {0.125 * (1 + xsi) * (1 - eta) * (1 - zeta), 0.125 * (1 - eta) * (1 - zeta),
+        -0.125 * (1 + xsi) * (1 - zeta), -0.125 * (1 + xsi) * (1 - eta)},
+        {0.125 * (1 + xsi) * (1 + eta) * (1 - zeta), 0.125 * (1 + eta) * (1 - zeta),
+        0.125 * (1 + xsi) * (1 - zeta), -0.125 * (1 + xsi) * (1 + eta)},
+        {0.125 * (1 - xsi) * (1 + eta) * (1 - zeta), -0.125 * (1 + eta) * (1 - zeta),
+        0.125 * (1 - xsi) * (1 - zeta), -0.125 * (1 - xsi) * (1 + eta)},
+        {0.125 * (1 - xsi) * (1 - eta) * (1 + zeta), -0.125 * (1 - eta) * (1 + zeta),
+        -0.125 * (1 - xsi) * (1 + zeta), 0.125 * (1 - xsi) * (1 - eta)},
+        {0.125 * (1 + xsi) * (1 - eta) * (1 + zeta), 0.125 * (1 - eta) * (1 + zeta),
+        -0.125 * (1 + xsi) * (1 + zeta), 0.125 * (1 + xsi) * (1 - eta)},
+        {0.125 * (1 + xsi) * (1 + eta) * (1 + zeta), 0.125 * (1 + eta) * (1 + zeta),
+        0.125 * (1 + xsi) * (1 + zeta), 0.125 * (1 + xsi) * (1 + eta)},
+        {0.125 * (1 - xsi) * (1 + eta) * (1 + zeta), -0.125 * (1 + eta) * (1 + zeta),
+        0.125 * (1 - xsi) * (1 + zeta), 0.125 * (1 - xsi) * (1 + eta)}
+    };
+
+}
+
 
 // 質量マトリックスを返す
 // p - 要素節点
 // dens - 材料の密度
-HexaElement1.prototype.massMatrix = function(p, dens) {
-    var ja = 0, i;
-    for (i = 0; i < 8; i++) {
-        var sf = this.shapeFunction(HEXA1_INT[i][0], HEXA1_INT[i][1],
-            HEXA1_INT[i][2]);
-        ja += Math.abs(this.jacobianMatrix(p, sf).determinant());
+void HexaElement1::massMatrix(vector<FENode> p, double dens, vector<vector<double>> out) {
+
+    double _ja = 0;
+
+    for (int i = 0; i < 8; i++) {
+
+        vector<vector<double>> sf;
+        shapeFunction(HEXA1_INT[i][0], HEXA1_INT[i][1],
+            HEXA1_INT[i][2], sf);
+
+        double ja[9];
+        jacobianMatrix(p, sf, ja);
+        double det = determinant(ja);
+
+        _ja += abs(det);
     }
-    var coef = dens * ja, m = numeric.rep([24, 24], 0);
-    for (i = 0; i < 8; i++) {
-        var i3 = 3 * i;
-        for (var j = 0; j < 8; j++) {
-            var value = coef * HEXA1_MASS_BASE[i][j], j3 = 3 * j;
-            m[i3][j3] += value;
-            m[i3 + 1][j3 + 1] += value;
-            m[i3 + 2][j3 + 2] += value;
+
+    double coef = dens * _ja;
+    
+    for (int i = 0; i < 3 * 8; ++i) {
+        vector<double> m;
+        for (int j = 0; j < 3 * 8; ++j) {
+            m.push_back(0);
+        }
+        out.push_back(m);
+    }
+
+    for (int i = 0; i < 8; i++) {
+        int i3 = 3 * i;
+        for (int j = 0; j < 8; j++) {
+            double value = coef * HEXA1_MASS_BASE[i][j];
+            int j3 = 3 * j;
+            out[i3][j3] += value;
+            out[i3 + 1][j3 + 1] += value;
+            out[i3 + 2][j3 + 2] += value;
         }
     }
-    return m;
-};
+}
