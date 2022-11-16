@@ -1,69 +1,49 @@
+#include "SolidElement.h";
+
+/// <summary>
+/// 四面体1次要素
+/// 開発途中...
+/// </summary>
+class TetraElement1 : public SolidElement {
+
+private:
+
+
+public:
+    TetraElement1(int label, int material, vector<int> nodes);
+
+    string getName() override;
+
+    void shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) override;
+};
+
 
 //--------------------------------------------------------------------//
 // 四面体1次要素
 // label - 要素ラベル
 // material - 材料のインデックス
 // nodes - 節点番号
-var TetraElement1 = function(label, material, nodes) {
-    SolidElement.call(this, label, material, nodes, null, null);
+TetraElement1::TetraElement1(int label, int material, vector<int> nodes) :
+    SolidElement(label, material, nodes) {
 };
 
 // 要素名称を返す
-TetraElement1.prototype.getName = function() {
-    return 'TetraElement1';
-};
-
-// 節点数を返す
-TetraElement1.prototype.nodeCount = function() {
-    return 4;
-};
-
-// 要素境界数を返す
-TetraElement1.prototype.borderCount = function() {
-    return 4;
-};
-
-// 要素境界を返す
-// element - 要素ラベル
-// index - 要素境界のインデックス
-TetraElement1.prototype.border = function(element, index) {
-    var p = this.nodes;
-    switch (index) {
-    default:
-        return null;
-    case 0:
-        return new TriangleBorder1(element, [p[0], p[2], p[1]]);
-    case 1:
-        return new TriangleBorder1(element, [p[0], p[1], p[3]]);
-    case 2:
-        return new TriangleBorder1(element, [p[1], p[2], p[3]]);
-    case 3:
-        return new TriangleBorder1(element, [p[2], p[0], p[3]]);
-    }
-};
-
-// 要素を鏡像反転する
-TetraElement1.prototype.mirror = function() {
-    swap(this.nodes, 1, 2);
-};
-
-// 要素節点の角度を返す
-// p - 要素節点
-TetraElement1.prototype.angle = function(p) {
-    var th = [];
-    for (var i = 0; i < 4; i++) {
-        th[i] = solidAngle(p[i], p[(i + 1) % 4], p[(i + 2) % 4], p[(i + 3) % 4]);
-    }
-    return th;
-};
+string TetraElement1::getName() {
+    return "TetraElement1";
+}
 
 // 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
 // xsi,eta,zeta - 要素内部ξ,η,ζ座標
-TetraElement1.prototype.shapeFunction = function(xsi, eta, zeta) {
-    return [[1 - xsi - eta - zeta, -1, -1, -1], [xsi, 1, 0, 0], [eta, 0, 1, 0],
-        [zeta, 0, 0, 1]];
-};
+void TetraElement1::shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) {
+    out = {
+        {1 - xsi - eta - zeta, -1, -1, -1},
+        {xsi, 1, 0, 0},
+        {eta, 0, 1, 0},
+        {zeta, 0, 0, 1}
+    };
+}
 
+/*
 // ヤコビアンを返す
 // p - 要素節点
 TetraElement1.prototype.jacobian = function(p) {
@@ -201,3 +181,4 @@ TetraElement1.prototype.elementStrainStress = function(p, u, d1) {
     var energy = 0.5 * numeric.dotVV(eps, str);
     return[new Strain(eps), new Stress(str), energy];
 };
+*/

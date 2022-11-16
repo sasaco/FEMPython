@@ -1,74 +1,66 @@
+#include "SolidElement.h";
+
+/// <summary>
+/// 四面体2次要素
+/// 開発途中...
+/// </summary>
+class TetraElement2 : SolidElement {
+
+private:
+    // 四面体2次要素の節点のξ,η,ζ座標
+    const vector<vector<double>> TETRA2_NODE = {
+        {0, 0, 0},
+        {1, 0, 0},
+        {0, 1, 0},
+        {0, 0, 1},
+        {0.5, 0, 0},
+        {0.5, 0.5, 0},
+        {0, 0.5, 0},
+        {0, 0, 0.5},
+        {0.5, 0, 0.5},
+        {0, 0.5, 0.5}
+    };
+
+    // 四面体2次要素の積分点のξ,η,ζ座標,重み係数
+    const vector<vector<double>> TETRA2_INT = {
+        {GTETRA2[0], GTETRA2[0], GTETRA2[0], C1_24},
+        {GTETRA2[1], GTETRA2[0], GTETRA2[0], C1_24},
+        {GTETRA2[0], GTETRA2[1], GTETRA2[0], C1_24},
+        {GTETRA2[0], GTETRA2[0], GTETRA2[1], C1_24}
+    };
+
+public:
+    TetraElement2(int label, int material, vector<int> nodes);
+
+    string getName() override;
+
+    void shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) override;
+
+};
 
 //--------------------------------------------------------------------//
 // 四面体2次要素
 // label - 要素ラベル
 // material - 材料のインデックス
 // nodes - 節点番号
-var TetraElement2 = function(label, material, nodes) {
-    SolidElement.call(this, label, material, nodes, TETRA2_NODE, TETRA2_INT);
+TetraElement2::TetraElement2(int label, int material, vector<int> nodes) :
+    SolidElement(label, material, nodes, TETRA2_NODE, TETRA2_INT) {
 };
+
 
 // 要素名称を返す
-TetraElement2.prototype.getName = function() {
-    return 'TetraElement2';
-};
+string TetraElement2::getName() {
+    return "TetraElement2";
+}
 
-// 節点数を返す
-TetraElement2.prototype.nodeCount = function() {
-    return 10;
-};
 
-// 要素境界数を返す
-TetraElement2.prototype.borderCount = function() {
-    return 4;
-};
-
-// 要素境界を返す
-// element - 要素ラベル
-// index - 要素境界のインデックス
-TetraElement2.prototype.border = function(element, index) {
-    var p = this.nodes;
-    switch (index) {
-    default:
-        return null;
-    case 0:
-        return new TriangleBorder2
-        (element, [p[0], p[2], p[1], p[6], p[5], p[4]]);
-    case 1:
-        return new TriangleBorder2
-        (element, [p[0], p[1], p[3], p[4], p[8], p[7]]);
-    case 2:
-        return new TriangleBorder2
-        (element, [p[1], p[2], p[3], p[5], p[9], p[8]]);
-    case 3:
-        return new TriangleBorder2
-        (element, [p[2], p[0], p[3], p[6], p[7], p[9]]);
-    }
-};
-
-// 要素を鏡像反転する
-TetraElement2.prototype.mirror = function() {
-    swap(this.nodes, 1, 2);
-    swap(this.nodes, 4, 6);
-    swap(this.nodes, 8, 9);
-};
-
-// 要素節点の角度を返す
-// p - 要素節点
-TetraElement2.prototype.angle = function(p) {
-    return[solidAngle(p[0], p[4], p[6], p[7]),
-        solidAngle(p[1], p[5], p[4], p[8]),
-        solidAngle(p[2], p[6], p[5], p[9]),
-        solidAngle(p[3], p[7], p[8], p[9]),
-        planeAngle(p[4], p[2], p[3]), planeAngle(p[5], p[0], p[3]),
-        planeAngle(p[6], p[1], p[3]), planeAngle(p[7], p[1], p[2]),
-        planeAngle(p[8], p[2], p[0]), planeAngle(p[9], p[0], p[1])];
-};
 
 // 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
 // xsi,eta,zeta - 要素内部ξ,η,ζ座標
-TetraElement2.prototype.shapeFunction = function(xsi, eta, zeta) {
-    var xez = 1 - xsi - eta - zeta;
+void TetraElement2::shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) {
+    
+    double xez = 1 - xsi - eta - zeta;
+
     return [[xez * (2 * xez - 1), 1 - 4 * xez, 1 - 4 * xez, 1 - 4 * xez],
         [xsi * (2 * xsi - 1), 4 * xsi - 1, 0, 0],
         [eta * (2 * eta - 1), 0, 4 * eta - 1, 0],

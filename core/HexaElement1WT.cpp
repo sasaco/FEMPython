@@ -1,6 +1,9 @@
 #include "HexaElement1.h";
 
-
+/// <summary>
+/// ６面体１次非適合要素（Wilson-Taylor型）
+/// 開発途中...
+/// </summary>
 class HexaElement1WT : public HexaElement1 {
 
 private:
@@ -11,7 +14,6 @@ public:
 
     string getName() override;
 
-    void stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out) override;
 };
 
 
@@ -31,49 +33,16 @@ string HexaElement1WT::getName() {
     return "HexaElement1WT";
 }
 
-
+/*
 // 剛性マトリックスを返す
 // p - 要素節点
 // d1 - 応力 - 歪マトリックス
 void HexaElement1WT::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out) {
-    
-    int size = 3 * nodeCount();
-    for (int i = 0; i < size; ++i) {
-        vector<double> kk;
-        for (int j = 0; j < size; ++j) {
-            kk.push_back(0);
-        }
-        out.push_back(kk);
-    }
-
-    vector<vector<double>> k2;
-    for (int i = 0; i < size; ++i) {
-        vector<double> kk;
-        for (int j = 0; j < 9; ++j) {
-            kk.push_back(0);
-        }
-        k2.push_back(kk);
-    }
-
-    vector<vector<double>> k3;
-    for (int i = 0; i < 9; ++i) {
-        vector<double> kk;
-        for (int j = 0; j < 9; ++j) {
-            kk.push_back(0);
-        }
-        k3.push_back(kk);
-    }
-
-    vector<vector<double>> sf0;
-    shapeFunction(0, 0, 0 , sf0);
-
-    double ja0[9];
-    jacobianMatrix(p, sf0, ja0);
-
-    vector<vector<double>> ji0;
-    numeric::getInverse(ja0, ji0);
-
-
+    var size = 3 * this.nodeCount(), kk = numeric.rep([size, size], 0);
+    var k2 = numeric.rep([size, 9], 0), k3 = numeric.rep([9, 9], 0);
+    var sf0 = this.shapeFunction(0, 0, 0);
+    var ja0 = this.jacobianMatrix(p, sf0);
+    var ji0 = new THREE.Matrix3().getInverse(ja0, true).elements;
     var jj0 = Math.abs(ja0.determinant());
     for (var i = 0; i < this.intP.length; i++) {
         var sf = this.shapeFunction(this.intP[i][0], this.intP[i][1],
@@ -92,6 +61,7 @@ void HexaElement1WT::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1
     addMatrix(kk, numeric.dot(k2, k4));
     this.te = numeric.transpose(k4);
     return kk;
+};
 };
 
 // 要素内の歪ベクトルを返す
@@ -161,3 +131,5 @@ HexaElement1WT.prototype.stiffPart2 = function(d, b1, b2, coef) {
     }
     return k;
 };
+
+*/

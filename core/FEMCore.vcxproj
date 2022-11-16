@@ -193,6 +193,7 @@
     <ClInclude Include="FENode.h" />
     <ClInclude Include="HeatTransferBound.h" />
     <ClInclude Include="HexaElement1.h" />
+    <ClInclude Include="HexaElement2.h" />
     <ClInclude Include="Load.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Nodes.h" />

@@ -104,22 +104,7 @@
     <ClCompile Include="TBarElement.cpp">
       <Filter>ソース ファイル\Element\BarElement</Filter>
     </ClCompile>
-    <ClCompile Include="HexaElement1WT.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
     <ClCompile Include="SolidElement.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="TetraElement1.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="TetraElement2.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="WedgeElement1.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="WedgeElement2.cpp">
       <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClCompile>
     <ClCompile Include="HexaElement1.cpp">
@@ -139,6 +124,21 @@
     </ClCompile>
     <ClCompile Include="numeric.cpp">
       <Filter>ソース ファイル\numeric</Filter>
+    </ClCompile>
+    <ClCompile Include="TetraElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="TetraElement2.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="WedgeElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="WedgeElement2.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="HexaElement1WT.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -197,6 +197,9 @@
       <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClInclude>
     <ClInclude Include="HexaElement1.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="HexaElement2.h">
       <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClInclude>
   </ItemGroup>

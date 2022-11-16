@@ -9,28 +9,14 @@
 // nodes - 節点番号
 // nodeP - 節点のξ,η,ζ座標
 // intP - 積分点のξ,η,ζ座標,重み係数
+SolidElement::SolidElement(int label, int material, vector<int> nodes) :
+    FElement(label, material, nodes) {
+}
+
 SolidElement::SolidElement(int label, int material, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP) :
     FElement(label, material, nodes) {
-
     nodeP = _nodeP;
     intP = _intP;
-
-    // 六面体2次要素の積分点のξ,η,ζ座標,重み係数
-    int a = 0;
-    for (int k = 0; k < 3; k++) {
-        for (int j = 0; j < 3; j++) {
-            for (int i = 0; i < 3; i++) {
-                HEXA2_INT[a][0] = GX3[i];
-                HEXA2_INT[a][1] = GX3[j];
-                HEXA2_INT[a][2] = GX3[k];
-                HEXA2_INT[a][3] = GW3[i] * GW3[j] * GW3[k];
-                a++;
-            }
-        }
-    }
-
-
-
 };
 
 

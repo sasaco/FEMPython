@@ -15,28 +15,6 @@ class SolidElement : public FElement {
 
 private:
 
-    // 四面体2次要素の節点のξ,η,ζ座標
-    const double TETRA2_NODE[10][3] = {
-        {0, 0, 0},
-        {1, 0, 0},
-        {0, 1, 0},
-        {0, 0, 1},
-        {0.5, 0, 0},
-        {0.5, 0.5, 0},
-        {0, 0.5, 0},
-        {0, 0, 0.5},
-        {0.5, 0, 0.5},
-        {0, 0.5, 0.5}
-    };
-
-    // 四面体2次要素の積分点のξ,η,ζ座標,重み係数
-    const double TETRA2_INT[4][4] = {
-        {GTETRA2[0], GTETRA2[0], GTETRA2[0], C1_24},
-        {GTETRA2[1], GTETRA2[0], GTETRA2[0], C1_24},
-        {GTETRA2[0], GTETRA2[1], GTETRA2[0], C1_24},
-        {GTETRA2[0], GTETRA2[0], GTETRA2[1], C1_24}
-    };
-
     // 楔形1次要素の節点のξ,η,ζ座標
     const double WEDGE1_NODE[6][3] = {
         {0, 0, -1},
@@ -85,32 +63,7 @@ private:
         {GTRI2[0], GTRI2[1], GX3[2], C1_6 * GW3[2]}
     };
 
-    // 六面体2次要素の節点のξ,η,ζ座標
-    const double HEXA2_NODE[20][3] = {
-        {-1, -1, -1},
-        {1, -1, -1},
-        {1, 1, -1},
-        {-1, 1, -1},
-        {-1, -1, 1},
-        {1, -1, 1},
-        {1, 1, 1},
-        {-1, 1, 1},
-        {0, -1, -1},
-        {1, 0, -1},
-        {0, 1, -1},
-        {-1, 0, -1},
-        {0, -1, 1},
-        {1, 0, 1},
-        {0, 1, 1},
-        {-1, 0, 1},
-        {-1, -1, 0},
-        {1, -1, 0},
-        {1, 1, 0},
-        {-1, 1, 0}
-    };
 
-    // 六面体2次要素の積分点のξ,η,ζ座標,重み係数
-    double HEXA2_INT[9][4]; // コンストラクタで初期化
 
 
     vector<vector<double>> nodeP;
@@ -118,6 +71,7 @@ private:
 
 public:
 
+    SolidElement(int label, int material, vector<int> nodes);
     SolidElement(int label, int material, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP);
 
     void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]);
