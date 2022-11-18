@@ -15,6 +15,10 @@ public:
     string getName() override;
 
     void shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) override;
+
+
+    void elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
+        Strain _Strain, Stress _Stress, double energy) override;
 };
 
 
@@ -169,16 +173,38 @@ TetraElement1.prototype.strainStress = function(p, u, d1) {
     return [[strain, strain, strain, strain], [stress, stress, stress, stress],
         [energy, energy, energy, energy]];
 };
-
+*/
 // 要素歪・応力を返す
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
-TetraElement1.prototype.elementStrainStress = function(p, u, d1) {
-    var sm = this.strainMatrix(this.grad(p, this.jacobian(p)));
-    var eps = numeric.dotVM(this.toArray(u, 3), sm);
-    var str = numeric.dotMV(d1, eps);
-    var energy = 0.5 * numeric.dotVV(eps, str);
-    return[new Strain(eps), new Stress(str), energy];
+void TetraElement1::elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
+    Strain _Strain, Stress _Stress, double energy);
+
+
+    double ja[9];
+    jacobian(p);
+
+    vector<vector<double>> gr;
+    grad(p, ja);
+
+    vector<vector<double>> sm;
+    strainMatrix(gr, sm);
+
+    vector<double> v;
+    toArray(u, 3, v);
+
+    vector<double> eps;
+    numeric::dotVM(v, sm, eps);
+
+    vector<double> str;
+    numeric::dotMV(d1, eps, str);
+
+
+    energy = 0.5 * numeric.dotVV(eps, str);
+
+    _Strain = Strain(strain);
+    _Stress = Stress(stress);
+
+
 };
-*/

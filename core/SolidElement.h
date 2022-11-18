@@ -76,7 +76,7 @@ public:
 
     void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]);
 
-    void grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> out);
+    virtual void grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> out);
 
     void strainMatrix(vector<vector<double>> grad, vector<vector<double>> out);
 
@@ -94,18 +94,18 @@ public:
 
     virtual void stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out);
 
-    void shapeFunctionMatrix(vector<FENode> p, double coef, vector<vector<double>> out);
+    virtual void shapeFunctionMatrix(vector<FENode> p, double coef, vector<vector<double>> out);
 
-    void gradMatrix(vector<FENode> p, double coef, vector<vector<double>> out);
+    virtual void gradMatrix(vector<FENode> p, double coef, vector<vector<double>> out);
 
-    void geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, vector<vector<double>> out);
+    virtual void geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, vector<vector<double>> out);
 
-    void strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
+    virtual void strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
         vector<Strain> strain, vector<Stress> stress, vector<double> energy);
 
     void strainPart(vector<FENode> p, vector<double> v, double x[3], vector<double> out);
 
-    void elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
+    virtual void elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
         Strain _Strain, Stress _Stress, double energy);
 
     virtual string getName() = 0;
