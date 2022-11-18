@@ -202,5 +202,8 @@
     <ClInclude Include="HexaElement2.h">
       <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClInclude>
+    <ClInclude Include="TetraElement2.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
