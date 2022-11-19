@@ -270,16 +270,16 @@ void ShellElement::shapePart(vector<FENode> p, vector<double> x, double w, doubl
     double ja[9];
     jacobianMatrix(p, sf, normalVector(p), t);
 
-    var count = this.nodeCount(), matrix = [];
+    int count = nodeCount();
     var coef = 2 * w * Math.abs(ja.determinant());
     for (var i = 0; i < count; i++) {
-        var matr = [], cf2 = coef * sf[i][0];
+        vector<double> matr;
+        double cf2 = coef * sf[i][0];
         for (var j = 0; j < count; j++) {
             matr[j] = cf2 * sf[j][0];
         }
-        matrix[i] = matr;
+        out.push_back(matr);
     }
-    return matrix;
 };
 
 // 積分点の拡散マトリックス [ ∇Ni・∇Nj ] を返す
