@@ -1,17 +1,50 @@
-// 三角形1次要素の節点のξ,η座標
-var TRI1_NODE = [[0, 0], [1, 0], [0, 1]];
-// 三角形1次要素の積分点のξ,η座標,重み係数
-var TRI1_INT = [[C1_3, C1_3, 0.5]];
-// 三角形2次要素の積分点のξ,η座標,重み係数
-var TRI2_INT = [[GTRI2[0], GTRI2[0], C1_6], [GTRI2[1], GTRI2[0], C1_6],
-[GTRI2[0], GTRI2[1], C1_6]];
-// 四角形1次要素の節点のξ,η座標
-var QUAD1_NODE = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
-// 四角形1次要素の積分点のξ,η座標,重み係数
-var QUAD1_INT = [[GX2[0], GX2[0], 1], [GX2[1], GX2[0], 1], [GX2[0], GX2[1], 1],
-[GX2[1], GX2[1], 1]];
-// 三角形1次要素の質量マトリックス係数
-var TRI1_MASS1 = [[1, 0.5, 0.5], [0.5, 1, 0.5], [0.5, 0.5, 1]];
+#include "FElement.h";
+#include "FENode.h";
+#include "Material.h";
+#include "numeric.h";
+
+
+#include <string>
+#include <vector>
+
+class ShellElement : public FElement {
+
+private:
+    // 三角形1次要素の節点のξ,η座標
+    vector<vector<double>> TRI1_NODE = {{0, 0}, {1, 0}, {0, 1}};
+    // 三角形1次要素の積分点のξ,η座標,重み係数
+    vector<vector<double>> TRI1_INT = {{C1_3, C1_3, 0.5}};
+    // 三角形2次要素の積分点のξ,η座標,重み係数
+    vector<vector<double>> TRI2_INT = {{GTRI2[0], GTRI2[0], C1_6}, {GTRI2[1], GTRI2[0], C1_6},
+        {GTRI2[0], GTRI2[1], C1_6}};
+    // 四角形1次要素の節点のξ,η座標
+    vector<vector<double>> QUAD1_NODE = {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
+    // 四角形1次要素の積分点のξ,η座標,重み係数
+    vector<vector<double>> QUAD1_INT = {{GX2[0], GX2[0], 1}, {GX2[1], GX2[0], 1}, {GX2[0], GX2[1], 1},
+        {GX2[1], GX2[1], 1}};
+    // 三角形1次要素の質量マトリックス係数
+    vector<vector<double>> TRI1_MASS1 = {{1, 0.5, 0.5}, {0.5, 1, 0.5}, {0.5, 0.5, 1}};
+
+
+    int param;
+    bool isShell;
+    vector<vector<double>> nodeP;
+    vector<vector<double>> intP;
+
+public:
+    ShellElement(int label, int material, int param, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP);
+
+    void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double n[3], double t, double out[9]);
+
+    void jacobInv(double ja[9], vector<vector<double>> d, vector<double> out);
+
+    void grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> d, double t, vector<vector<double>> out);
+
+    void strainMatrix1(double ja[9], vector<vector<double>> sf, vector<vector<double>> d, vector<vector<double>> out);
+
+};
+
+
 
 //--------------------------------------------------------------------//
 // シェル要素
@@ -21,66 +54,76 @@ var TRI1_MASS1 = [[1, 0.5, 0.5], [0.5, 1, 0.5], [0.5, 0.5, 1]];
 // nodes - 節点番号
 // nodeP - 節点のξ,η座標
 // intP - 積分点のξ,η座標,重み係数
-var ShellElement = function(label, material, param, nodes, nodeP, intP) {
-    FElement.call(this, label, material, nodes);
-    this.param = param;
-    this.isShell = true;
-    this.nodeP = nodeP;
-    this.intP = intP;
-};
+ShellElement::ShellElement(int label, int material, int param, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP) :
+    FElement(label, material, nodes) {
+    param = param;
+    isShell = true;
+    nodeP = _nodeP;
+    intP = _intP;
+}
 
-// 要素境界数を返す
-ShellElement.prototype.borderCount = function() {
-    return 2;
-};
-
-// 要素節点の角度を返す
-// p - 要素節点
-ShellElement.prototype.angle = function(p) {
-    var th = [], count = this.nodeCount();
-    for (var i = 0; i < count; i++) {
-        th[i] = planeAngle(p[i], p[(i + 1) % count], p[(i + count - 1) % count]);
-    }
-    return th;
-};
 
 // ヤコビ行列を返す
 // p - 要素節点
 // sf - 形状関数行列
 // n - 法線ベクトル
 // t - 要素厚さ
-ShellElement.prototype.jacobianMatrix = function(p, sf, n, t) {
-    var count = this.nodeCount(), jac = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    for (var i = 0; i < count; i++) {
-        var sfi = sf[i], ppi = p[i], pix = ppi.x, piy = ppi.y, piz = ppi.z;
-        for (var j = 0; j < 2; j++) {
-            var sfij = sfi[j + 1];
-            jac[j] += sfij * pix;
-            jac[j + 3] += sfij * piy;
-            jac[j + 6] += sfij * piz;
+void ShellElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double n[3], double t, double out[9]) {
+    
+    int count = nodeCount();
+    
+    for (int i = 0; i < 9; i++) {
+        out[i] = 0;
+
+    }
+
+    for (int i = 0; i < count; i++) {
+        
+        vector<double> sfi = sf[i];
+        FENode ppi = p[i];
+        double pix = ppi.x;
+        double piy = ppi.y;
+        double piz = ppi.z;
+
+        for (int j = 0; j < 2; j++) {
+            double sfij = sfi[j + 1];
+            out[j] += sfij * pix;
+            out[j + 3] += sfij * piy;
+            out[j + 6] += sfij * piz;
         }
     }
-    jac[2] = 0.5 * t * n.x;
-    jac[5] = 0.5 * t * n.y;
-    jac[8] = 0.5 * t * n.z;
-    return new THREE.Matrix3().fromArray(jac);
+    out[2] = 0.5 * t * n[0];
+    out[5] = 0.5 * t * n[1];
+    out[8] = 0.5 * t * n[2];
 };
+
 
 // 逆ヤコビ行列を返す
 // ja - ヤコビ行列
 // d - 方向余弦マトリックス
-ShellElement.prototype.jacobInv = function(ja, d) {
-    var e1 = ja.elements;
-    var jd = new THREE.Matrix3().set
-    (e1[0] * d[0][0] + e1[3] * d[1][0] + e1[6] * d[2][0],
+void ShellElement::jacobInv(double ja[9], vector<vector<double>> d, vector<double> out) {
+
+    vector<double> e1;
+    for (int i = 0; i < 9; i++) {
+        e1.push_back(ja[i]);
+    }
+
+    vector<double> jd = {
+        e1[0] * d[0][0] + e1[3] * d[1][0] + e1[6] * d[2][0],
         e1[0] * d[0][1] + e1[3] * d[1][1] + e1[6] * d[2][1],
         e1[0] * d[0][2] + e1[3] * d[1][2] + e1[6] * d[2][2],
         e1[1] * d[0][0] + e1[4] * d[1][0] + e1[7] * d[2][0],
         e1[1] * d[0][1] + e1[4] * d[1][1] + e1[7] * d[2][1],
         e1[1] * d[0][2] + e1[4] * d[1][2] + e1[7] * d[2][2],
-        0, 0, e1[2] * d[0][2] + e1[5] * d[1][2] + e1[8] * d[2][2]);
-    return new THREE.Matrix3().getInverse(jd, true);
+        0, 
+        0, 
+        e1[2] * d[0][2] + e1[5] * d[1][2] + e1[8] * d[2][2] 
+    };
+
+    numeric::getInverse(jd, out);
+
 };
+
 
 // 形状関数の勾配 [ dNi/dx dNi/dy ] を返す
 // p - 要素節点
@@ -88,22 +131,32 @@ ShellElement.prototype.jacobInv = function(ja, d) {
 // sf - 形状関数行列
 // d - 方向余弦マトリックス
 // t - 要素厚さ
-ShellElement.prototype.grad = function(p, ja, sf, d, t) {
-    var count = this.nodeCount(), gr = [];
-    var ji = this.jacobInv(ja, d).elements;
-    for (var i = 0; i < count; i++) {
-        var sfi = sf[i], dndxsi = sfi[1], dndeta = sfi[2];
-        gr[i] = [ji[0] * dndxsi + ji[3] * dndeta, ji[1] * dndxsi + ji[4] * dndeta,
-            ji[2] * dndxsi + ji[5] * dndeta];
+void ShellElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> d, double t, vector<vector<double>> out) {
+    
+    int count = nodeCount();
+    
+    vector<double> gr;
+
+    vector<double> ji;
+    jacobInv(ja, d, ji);
+
+    for (int i = 0; i < count; i++) {
+        vector<double> sfi = sf[i];
+        double dndxsi = sfi[1];
+        double dndeta = sfi[2];
+        gr.push_back(ji[0] * dndxsi + ji[3] * dndeta);
+        gr.push_back(ji[1] * dndxsi + ji[4] * dndeta);
+        gr.push_back(ji[2] * dndxsi + ji[5] * dndeta);
+        out.push_back(gr);
     }
-    return gr;
 };
+
 
 // 歪 - 変位マトリックスの転置行列を返す
 // ja - ヤコビ行列
 // sf - 形状関数行列
 // d - 方向余弦マトリックス
-ShellElement.prototype.strainMatrix1 = function(ja, sf, d) {
+void ShellElement::strainMatrix1(double ja[9], vector<vector<double>> sf, vector<vector<double>> d, vector<vector<double>> out) {
     var count = this.nodeCount(), m = numeric.rep([count, 4], 0);
     var ji = this.jacobInv(ja, d).elements;
     for (var i = 0; i < count; i++) {

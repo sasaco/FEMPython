@@ -15,10 +15,6 @@ class SolidElement : public FElement {
 
 private:
 
-
-
-
-
     vector<vector<double>> nodeP;
     vector<vector<double>> intP;
 
@@ -27,7 +23,7 @@ public:
     SolidElement(int label, int material, vector<int> nodes);
     SolidElement(int label, int material, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP);
 
-    void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]);
+    virtual void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]);
 
     void grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> out);
 
