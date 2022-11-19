@@ -76,7 +76,7 @@ public:
 
     void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]);
 
-    virtual void grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> out);
+    void grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> out);
 
     void strainMatrix(vector<vector<double>> grad, vector<vector<double>> out);
 
