@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RectSection.h">

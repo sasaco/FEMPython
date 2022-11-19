@@ -48,4 +48,6 @@ public:
     // 節点変位を局所座標系・1次元配列に変換する
     void toLocalArray(vector<BoundaryCondition> u, vector<vector<double>>d, vector<double> v);
 
+    void normalVector(vector<double> p, vector<double> out);
+
 };

@@ -3,7 +3,6 @@
 #include "Material.h";
 #include "numeric.h";
 
-
 #include <string>
 #include <vector>
 
@@ -267,7 +266,10 @@ void ShellElement::shapePart(vector<FENode> p, vector<double> x, double w, doubl
     vector<vector<double>> sf;
     shapeFunction(x[0], x[1] ,sf);
 
-    var ja = this.jacobianMatrix(p, sf, normalVector(p), t);
+
+    double ja[9];
+    jacobianMatrix(p, sf, normalVector(p), t);
+
     var count = this.nodeCount(), matrix = [];
     var coef = 2 * w * Math.abs(ja.determinant());
     for (var i = 0; i < count; i++) {

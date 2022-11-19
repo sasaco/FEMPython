@@ -3,3 +3,4 @@ dist/
 .vs/
 core/bin/
 core/obj/
+packages/

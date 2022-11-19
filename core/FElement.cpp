@@ -84,3 +84,30 @@ void FElement::toLocalArray(vector<BoundaryCondition> u, vector<vector<double>> 
 }
 
 
+void FElement::normalVector(vector<double> p, vector<double> out) {
+    if (p.size() < 3) {
+        return null;
+    }
+    else if ((p.size() == 3) || (p.size() == 6)) {
+        return new THREE.Vector3().subVectors(p[1], p[0]).cross
+        (new THREE.Vector3().subVectors(p[2], p[0])).normalize();
+    }
+    else if ((p.size() == 4) || (p.size() == 8)) {
+        return new THREE.Vector3().subVectors(p[2], p[0]).cross
+        (new THREE.Vector3().subVectors(p[3], p[1])).normalize();
+    }
+    else {
+        var vx = 0, vy = 0, vz = 0;
+        for (var i = 0; i < p.size(); i++) {
+            var p1 = p[(i + 1) % p.size()], p2 = p[(i + 2) % p.size()];
+            var norm = new THREE.Vector3().subVectors(p1, p[i]).cross
+            (new THREE.Vector3().subVectors(p2, p[i]));
+            vx += norm.x;
+            vy += norm.y;
+            vz += norm.z;
+        }
+        return new THREE.Vector3(vx, vy, vz).normalize();
+    }
+}
+
+

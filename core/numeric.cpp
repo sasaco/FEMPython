@@ -83,6 +83,7 @@ void numeric::mul(vector<double> x, double y) {
     }
 }
 
+
 /// <summary>
 /// nxn s—ñ‚Ì‹ts—ñ‚ğ‹‚ß‚é
 /// </summary>
@@ -119,4 +120,6 @@ void numeric::getInverse(vector<vector<double>> a, vector<vector<double>> inv_a)
 
  
 }
+
+
 
