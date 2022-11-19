@@ -10,6 +10,6 @@ private:
 public:
     Nodes(vector<int> _nodes);
 
-    int nodeCount();
+    virtual int nodeCount();
 
 };
