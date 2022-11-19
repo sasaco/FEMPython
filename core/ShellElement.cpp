@@ -42,6 +42,10 @@ public:
 
     void strainMatrix1(double ja[9], vector<vector<double>> sf, vector<vector<double>> d, vector<vector<double>> out);
 
+    void strainMatrix(double ja[9], vector<vector<double>> sf, vector<vector<double>> d, double zeta, double t, vector<vector<double>> out);
+
+    void shapePart(vector<FENode> p, vector<double> x, double w, double t, vector<vector<double>> out);
+
 };
 
 
@@ -54,7 +58,8 @@ public:
 // nodes - 節点番号
 // nodeP - 節点のξ,η座標
 // intP - 積分点のξ,η座標,重み係数
-ShellElement::ShellElement(int label, int material, int param, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP) :
+ShellElement::ShellElement(int label, int material, int param, vector<int> nodes, 
+    vector<vector<double>> _nodeP, vector<vector<double>> _intP) :
     FElement(label, material, nodes) {
     param = param;
     isShell = true;
@@ -68,7 +73,8 @@ ShellElement::ShellElement(int label, int material, int param, vector<int> nodes
 // sf - 形状関数行列
 // n - 法線ベクトル
 // t - 要素厚さ
-void ShellElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double n[3], double t, double out[9]) {
+void ShellElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, 
+    double n[3], double t, double out[9]) {
     
     int count = nodeCount();
     
@@ -131,7 +137,8 @@ void ShellElement::jacobInv(double ja[9], vector<vector<double>> d, vector<doubl
 // sf - 形状関数行列
 // d - 方向余弦マトリックス
 // t - 要素厚さ
-void ShellElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> d, double t, vector<vector<double>> out) {
+void ShellElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, 
+    vector<vector<double>> d, double t, vector<vector<double>> out) {
     
     int count = nodeCount();
     
@@ -156,17 +163,30 @@ void ShellElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> s
 // ja - ヤコビ行列
 // sf - 形状関数行列
 // d - 方向余弦マトリックス
-void ShellElement::strainMatrix1(double ja[9], vector<vector<double>> sf, vector<vector<double>> d, vector<vector<double>> out) {
-    var count = this.nodeCount(), m = numeric.rep([count, 4], 0);
-    var ji = this.jacobInv(ja, d).elements;
-    for (var i = 0; i < count; i++) {
-        var mi = m[i], sfi = sf[i];
-        for (var j = 0; j < 3; j++) {
+void ShellElement::strainMatrix1(double ja[9], vector<vector<double>> sf, 
+    vector<vector<double>> d, vector<vector<double>> out) {
+    int count = nodeCount();
+    
+    int count = nodeCount();
+    for (int i = 0; i < count; ++i) {
+        vector<double> m;
+        for (int j = 0; j < 4; ++j) {
+            m.push_back(0);
+        }
+        out.push_back(m);
+    }
+
+    vector<double> ji;
+    jacobInv(ja, d, ji);
+
+    for (int i = 0; i < count; i++) {
+        vector<double> mi = out[i];
+        vector<double> sfi = sf[i];
+        for (int j = 0; j < 3; j++) {
             mi[j] = ji[j] * sfi[1] + ji[j + 3] * sfi[2];
         }
         mi[3] = ji[8] * sfi[0];
     }
-    return m;
 };
 
 // 歪 - 変位マトリックスの転置行列を返す
@@ -176,12 +196,35 @@ void ShellElement::strainMatrix1(double ja[9], vector<vector<double>> sf, vector
 // d - 方向余弦マトリックス
 // zeta - 節点のζ座標
 // t - 要素厚さ
-ShellElement.prototype.strainMatrix = function(ja, sf, d, zeta, t) {
-    var b = this.strainMatrix1(ja, sf, d), z = 0.5 * t * zeta;
-    var count = this.nodeCount(), m1 = numeric.rep([5, 6], 0);
-    var matrix = numeric.rep([6 * count, 5], 0);
-    for (var i = 0; i < count; i++) {
-        var bi = b[i];
+void ShellElement::strainMatrix(double ja[9], vector<vector<double>> sf, 
+    vector<vector<double>> d, double zeta, double t, vector<vector<double>> out) {
+    
+    vector<vector<double>> b;
+    strainMatrix1(ja, sf, d, b);
+    double z = 0.5 * t * zeta;
+
+    int count = nodeCount();
+    
+    vector <vector<double>> m1;
+    for (int i = 0; i < 5; i++) {
+        vector<double> m2;
+        for (int j = 0; j < 6; j++) {
+            m2.push_back(0);
+        }
+        m1.push_back(m2);
+    }
+
+    for (int i = 0; i < 6 * count; i++) {
+        vector<double> matrix;
+        for (int j = 0; j < 5; j++) {
+            matrix.push_back(0);
+        }
+        out.push_back(matrix);
+    }
+
+
+    for (int i = 0; i < count; i++) {
+        vector<double> bi = b[i];
         m1[0][0] = bi[0];
         m1[0][4] = z * bi[0];
         m1[1][1] = bi[1];
@@ -196,21 +239,22 @@ ShellElement.prototype.strainMatrix = function(ja, sf, d, zeta, t) {
         m1[4][0] = bi[2];
         m1[4][2] = bi[0];
         m1[4][4] = 0.5 * t * bi[3] + z * bi[2];
-        var ib = 6 * i;
-        for (var i1 = 0; i1 < 5; i1++) {
-            var m1i = m1[i1];
-            for (var j1 = 0; j1 < 3; j1++) {
-                var dj = d[j1], s1 = 0, s2 = 0;
-                for (var k1 = 0; k1 < 3; k1++) {
+        int ib = 6 * i;
+        for (int i1 = 0; i1 < 5; i1++) {
+            vector<double> m1i = m1[i1];
+            for (int j1 = 0; j1 < 3; j1++) {
+                vector<double> dj = d[j1];
+                double s1 = 0;
+                double s2 = 0;
+                for (int k1 = 0; k1 < 3; k1++) {
                     s1 += m1i[k1] * dj[k1];
                     s2 += m1i[k1 + 3] * dj[k1];
                 }
-                matrix[ib + j1][i1] += s1;
-                matrix[ib + 3 + j1][i1] += s2;
+                out[ib + j1][i1] += s1;
+                out[ib + 3 + j1][i1] += s2;
             }
         }
     }
-    return matrix;
 };
 
 // 積分点の形状関数マトリックス [ NiNj ] を返す
@@ -218,8 +262,11 @@ ShellElement.prototype.strainMatrix = function(ja, sf, d, zeta, t) {
 // x - ξ,η,ζ座標
 // w - 重み係数
 // t - 要素厚さ
-ShellElement.prototype.shapePart = function(p, x, w, t) {
-    var sf = this.shapeFunction(x[0], x[1]);
+void ShellElement::shapePart(vector<FENode> p, vector<double> x, double w, double t, vector<vector<double>> out) {
+
+    vector<vector<double>> sf;
+    shapeFunction(x[0], x[1] ,sf);
+
     var ja = this.jacobianMatrix(p, sf, normalVector(p), t);
     var count = this.nodeCount(), matrix = [];
     var coef = 2 * w * Math.abs(ja.determinant());
