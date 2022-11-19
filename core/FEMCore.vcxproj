@@ -204,8 +204,11 @@
     <ClInclude Include="ShellParameter.h" />
     <ClInclude Include="SolidElement.h" />
     <ClInclude Include="Temperature.h" />
+    <ClInclude Include="TetraElement1.h" />
     <ClInclude Include="TetraElement2.h" />
     <ClInclude Include="Vector3R.h" />
+    <ClInclude Include="WedgeElement1.h" />
+    <ClInclude Include="WedgeElement2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

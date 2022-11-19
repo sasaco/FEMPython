@@ -205,5 +205,14 @@
     <ClInclude Include="TetraElement2.h">
       <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClInclude>
+    <ClInclude Include="TetraElement1.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="WedgeElement1.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="WedgeElement2.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
