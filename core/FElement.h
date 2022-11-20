@@ -45,9 +45,14 @@ public:
     // 節点変位を1次元配列に変換する
     void toArray(vector<BoundaryCondition> u, int dof, vector<double> out);
 
-    // 節点変位を局所座標系・1次元配列に変換する
+    // 節点変位を局所座標系・1次元配列に 変換する
     void toLocalArray(vector<BoundaryCondition> u, vector<vector<double>>d, vector<double> v);
 
     void normalVector(vector<double> p, vector<double> out);
+
+    double determinant(double ja[9]);
+
+
+    void dirVectors(vector<double> p, double axis[3], vector<double> out[3])
 
 };

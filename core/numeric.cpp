@@ -121,5 +121,20 @@ void numeric::getInverse(vector<vector<double>> a, vector<vector<double>> inv_a)
  
 }
 
+/// <summary>
+/// ƒ[ƒ–„‚ß‚Ì“ñŸŒ³”z—ñ‚ğ¶¬‚·‚é
+/// </summary>
+void numeric::rep(int row, int col, vector<vector<double>> out) {
+
+    for (int i = 0; i < row; i++) {
+        vector<double> tmp;
+        for (int j = 0; j < col; j++) {
+            tmp.push_back(0);
+        }
+        out.push_back(tmp);
+    }
+}
+
+
 
 

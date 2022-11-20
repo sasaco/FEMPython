@@ -115,24 +115,7 @@ void SolidElement::strainMatrix(vector<vector<double>> grad, vector<vector<doubl
 }
 
 
-// 3x3の行列式を返す
-double SolidElement::determinant(double ja[9]) {
-    
-    double det = 0;
-    // 3x3の行列を入力
-    double a[3][3];
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            a[i][j] = ja[i + j];
-        }
-    }
-    // 行列式の計算
-    for (int i = 0; i < 3; ++i) {
-        det = det + a[0][i] * (a[1][(i + 1) % 3] * a[2][(i + 2) % 3] - a[1][(i + 2) % 3] * a[2][(i + 1) % 3]);
-    }
 
-    return det;
-}
 
 
 // 積分点の形状関数マトリックス [ NiNj ] を返す

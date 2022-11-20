@@ -31,8 +31,6 @@ public:
 
     virtual void shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) = 0;
 
-    double determinant(double ja[9]);
-
     void shapePart(vector<FENode> p, double x[3], double w, vector<vector<double>> out);
 
     void gradPart(vector<FENode> p, double x[3], double w, vector<vector<double>> out);

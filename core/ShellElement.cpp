@@ -2,6 +2,7 @@
 #include "FENode.h";
 #include "Material.h";
 #include "numeric.h";
+#include "ShellParameter.h";
 
 #include <string>
 #include <vector>
@@ -24,7 +25,7 @@ private:
     // 三角形1次要素の質量マトリックス係数
     vector<vector<double>> TRI1_MASS1 = {{1, 0.5, 0.5}, {0.5, 1, 0.5}, {0.5, 0.5, 1}};
 
-
+    int label;
     int param;
     bool isShell;
     vector<vector<double>> nodeP;
@@ -45,6 +46,29 @@ public:
 
     void shapePart(vector<FENode> p, vector<double> x, double w, double t, vector<vector<double>> out);
 
+    void gradPart(vector<FENode> p, double x[3], double w, double t, vector<vector<double>> out);
+
+    void shapeFunctionMatrix(vector<FENode> p, double coef, ShellParameter sp, vector<vector<double>> out);
+
+    void geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp, vector<vector<double>> out);
+
+    void strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp,
+        vector<Strain> strain1, vector<Stress> stress1, vector<double> energy1,
+        vector<Strain> strain2, vector<Stress> stress2, vector<double> energy2);
+
+    void strainPart(vector<FENode> p, vector<double> v, double n[3], vector<vector<double>> d, double  xsi, double eta, double zeta, double t, vector<double> out);
+
+    void elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp,
+        vector<Strain> _Strain1, vector<Stress> _Stress1, double energy1,
+        vector<Strain> _Strain2, vector<Stress> _Stress2, double energy2);
+
+    void toStrain(vector<double> s, Strain out);
+
+    void toStress(vector<double> s, Stress out);
+
+    string toString(vector<Material> materials, vector<ShellParameter> params, vector<FENode> p);
+
+    vector<double> toLocal(d, vector<FENode> p);
 };
 
 
@@ -57,10 +81,11 @@ public:
 // nodes - 節点番号
 // nodeP - 節点のξ,η座標
 // intP - 積分点のξ,η座標,重み係数
-ShellElement::ShellElement(int label, int material, int param, vector<int> nodes, 
+ShellElement::ShellElement(int _label, int material, int _param, vector<int> nodes, 
     vector<vector<double>> _nodeP, vector<vector<double>> _intP) :
     FElement(label, material, nodes) {
-    param = param;
+    label = _label;
+    param = _param;
     isShell = true;
     nodeP = _nodeP;
     intP = _intP;
@@ -266,69 +291,115 @@ void ShellElement::shapePart(vector<FENode> p, vector<double> x, double w, doubl
     vector<vector<double>> sf;
     shapeFunction(x[0], x[1] ,sf);
 
+    double[3] n;
+    normalVector(p, n);
 
     double ja[9];
-    jacobianMatrix(p, sf, normalVector(p), t);
+    jacobianMatrix(p, sf, n, t);
 
     int count = nodeCount();
-    var coef = 2 * w * Math.abs(ja.determinant());
-    for (var i = 0; i < count; i++) {
+
+    double det = determinant(ja);
+
+    double coef = 2 * w * abs(det);
+
+    for (int i = 0; i < count; i++) {
         vector<double> matr;
         double cf2 = coef * sf[i][0];
-        for (var j = 0; j < count; j++) {
-            matr[j] = cf2 * sf[j][0];
+        for (int j = 0; j < count; j++) {
+            matr.push_back(cf2 * sf[j][0]);
         }
         out.push_back(matr);
     }
-};
+}
+
 
 // 積分点の拡散マトリックス [ ∇Ni・∇Nj ] を返す
 // p - 要素節点
 // x - ξ,η,ζ座標
 // w - 重み係数
 // t - 要素厚さ
-ShellElement.prototype.gradPart = function(p, x, w, t) {
-    var sf = this.shapeFunction(x[0], x[1]);
-    var ja = this.jacobianMatrix(p, sf, normalVector(p), t);
-    var gr = this.grad(p, ja, sf, dirMatrix(p), t);
-    var count = this.nodeCount(), matrix = [];
-    var coef = 2 * w * Math.abs(ja.determinant());
-    for (var i = 0; i < count; i++) {
-        var matr = [], gri = gr[i];
-        var c1 = coef * gri[0], c2 = coef * gri[1], c3 = coef * gri[2];
-        for (var j = 0; j < count; j++) {
-            var grj = gr[j];
-            matr[j] = c1 * grj[0] + c2 * grj[1] + c3 * grj[2];
+void ShellElement::gradPart(vector<FENode> p, double x[3], double w, double t, vector<vector<double>> out) {
+
+    vector<vector<double>> sf
+    shapeFunction(x[0], x[1], sf);
+
+    double n[3];
+    normalVector(p, n);
+
+    double ja[9];
+    jacobianMatrix(p, sf, n, t, ja);
+
+    vector<vector<double>> d;
+    dirMatrix(p, d);
+
+    vector<vector<double>> gr;
+    grad(p, ja, sf, d, t, gr);
+
+    int count = nodeCount();
+
+    double det = determinant(ja);
+
+    double coef = 2 * w * abs(det);
+
+    for (int i = 0; i < count; i++) {
+        vector<double> matr;
+        vector<double> gri = gr[i];
+        double c1 = coef * gri[0];
+        double c2 = coef * gri[1];
+        double c3 = coef * gri[2];
+        for (int j = 0; j < count; j++) {
+            vector<double> grj = gr[j];
+            matr.push_back(c1 * grj[0] + c2 * grj[1] + c3 * grj[2]);
         }
-        matrix[i] = matr;
+        out.push_back(matr);
     }
-    return matrix;
 };
 
 // 形状関数マトリックス [ ∫NiNjdV ] を返す
 // p - 要素節点
 // coef - 係数
 // sp - シェルパラメータ
-ShellElement.prototype.shapeFunctionMatrix = function(p, coef, sp) {
-    var count = this.nodeCount(), s = numeric.rep([count, count], 0);
-    var t = sp.thickness;
-    for (var i = 0; i < this.intP.length; i++) {
-        addMatrix(s, this.shapePart(p, this.intP[i], coef * this.intP[i][2], t));
+void ShellElement::shapeFunctionMatrix(vector<FENode> p, double coef, ShellParameter sp, vector<vector<double>> out) {
+    
+    int count = nodeCount();
+    
+    for (int i = 0; i < count; i++) {
+        vector<double> s;
+        for (int j = 0; j < count; j++) {
+            s.push_back(0);
+        }
+        out.push_back(s);
     }
-    return s;
+    
+    double t = sp.thickness;
+
+    for (int i = 0; i < intP.size(); i++) {
+
+        vector<vector<double>> spr;
+        shapePart(p, intP[i], coef * intP[i][2], t, spr);
+        addMatrix(out, spr);
+    }
 };
 
 // 拡散マトリックス [ ∫∇Ni・∇NjdV ] を返す
 // p - 要素節点
 // coef - 係数
 // sp - シェルパラメータ
-ShellElement.prototype.gradMatrix = function(p, coef, sp) {
-    var count = this.nodeCount(), g = numeric.rep([count, count], 0);
-    var t = sp.thickness;
-    for (var i = 0; i < this.intP.length; i++) {
-        addMatrix(g, this.gradPart(p, this.intP[i], coef * this.intP[i][2], t));
+void ShellElement::gradMatrix(vector<FENode> p, double coef, ShellParameter sp, vector<vector<double>> out) {
+    
+    int count = nodeCount();
+
+    numeric::rep(count, count, out);
+
+    double t = sp.thickness;
+
+    for (int  i = 0; i < intP.size(); i++) {
+
+        vector<vector<double>> gpr;
+        gradPart(p, intP[i], coef * intP[i][2], t, gpr);
+        addMatrix(out, gpr);
     }
-    return g;
 };
 
 // 幾何剛性マトリックスを返す
@@ -336,52 +407,112 @@ ShellElement.prototype.gradMatrix = function(p, coef, sp) {
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
-ShellElement.prototype.geomStiffnessMatrix = function(p, u, d1, sp) {
-    var count = this.nodeCount(), kk = numeric.rep([6 * count, 6 * count], 0);
-    var d = dirMatrix(p), n = normalVector(p);
-    var v = this.toArray(u, 6), t = sp.thickness;
-    for (var i = 0; i < this.intP.length; i++) {
-        var ip = this.intP[i];
-        var sf = this.shapeFunction(ip[0], ip[1]);
-        var ja = this.jacobianMatrix(p, sf, n, t);
-        var gr = this.grad(p, ja, sf, d, t);
-        var sm = this.strainMatrix(ja, sf, d, 0, t);
-        var str = this.toStress(numeric.dotMV(d1, numeric.dotVM(v, sm)));
-        var w = 2 * ip[2] * Math.abs(ja.determinant());
-        for (var i1 = 0; i1 < count; i1++) {
-            var i6 = 6 * i1, gri = gr[i1];
-            for (var j1 = 0; j1 < count; j1++) {
-                var j6 = 6 * j1, grj = gr[j1];
-                var s = w * (gri[0] * (str.xx * grj[0] + str.xy * grj[1] + str.zx * grj[2]) +
+void ShellElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp, vector<vector<double>> out) {
+    
+    int count = nodeCount();
+    
+    numeric::rep(6 * count, 6 * count, out);
+
+    vector<vector<double>> d;
+    dirMatrix(p, d);
+     
+    double[3] n;
+    normalVector(p, n);
+
+    vector<double> v;
+    toArray(u, 6, v);
+
+    double t = sp.thickness;
+
+    for (int i = 0; i < intP.size(); i++) {
+        
+        int ip = intP[i];
+        
+        vector<vector<double>> sf;
+        shapeFunction(ip[0], ip[1], sf);
+
+        double ja[9];
+        jacobianMatrix(p, sf, n, t, ja);
+
+        vector<vector<double>> gr;
+        grad(p, ja, sf, d, t, gr);
+
+        vector<vector<double>> sm;
+        strainMatrix(ja, sf, d, 0, t, sm);
+
+        vector<double> vm;
+        numeric::dotVM(v, sm, vm);
+
+        vector<double> mv;
+        numeric::dotMV(d1, vm, mv);
+
+
+        Stress str;
+        toStress(mv, str);
+
+        double det = determinant(ja);
+
+        double w = 2 * ip[2] * abs(det);
+
+        for (int i1 = 0; i1 < count; i1++) {
+
+            int i6 = 6 * i1;
+            vector<double> gri = gr[i1];
+
+            for (int j1 = 0; j1 < count; j1++) {
+                
+                int j6 = 6 * j1;
+                vector<double> grj = gr[j1];
+
+                double s = w * (gri[0] * (str.xx * grj[0] + str.xy * grj[1] + str.zx * grj[2]) +
                     gri[1] * (str.xy * grj[0] + str.yy * grj[1] + str.yz * grj[2]) +
                     gri[2] * (str.zx * grj[0] + str.yz * grj[1] + str.zz * grj[2]));
-                kk[i6][j6] += s;
-                kk[i6 + 1][j6 + 1] += s;
-                kk[i6 + 2][j6 + 2] += s;
+
+                out[i6][j6] += s;
+                out[i6 + 1][j6 + 1] += s;
+                out[i6 + 2][j6 + 2] += s;
             }
         }
     }
-    toDir3(d, kk);
-    return kk;
+    toDir3(d, out);
 };
+
 
 // 節点歪・応力を返す
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
-ShellElement.prototype.strainStress = function(p, u, d1, sp) {
-    var count = this.nodeCount(), d = dirMatrix(p), n = normalVector(p);
-    var v = this.toArray(u, 6), t = sp.thickness;
-    var strain1 = [], stress1 = [], energy1 = [], strain2 = [], stress2 = [], energy2 = [];
-    for (var i = 0; i < count; i++) {
-        var np = this.nodeP[i];
-        var eps1 = this.strainPart(p, v, n, d, np[0], np[1], 1, t);
-        var eps2 = this.strainPart(p, v, n, d, np[0], np[1], -1, t);
-        strain1[i] = this.toStrain(eps1);
-        stress1[i] = this.toStress(numeric.dotMV(d1, eps1));
-        strain2[i] = this.toStrain(eps2);
-        stress2[i] = this.toStress(numeric.dotMV(d1, eps2));
+void ShellElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp,
+                                vector<Strain> strain1, vector<Stress> stress1, vector<double> energy1, 
+                                vector<Strain> strain2, vector<Stress> stress2, vector<double> energy2) {
+
+    int count = nodeCount();
+
+    vector<vector<double>> d;
+    dirMatrix(p, d);
+
+    double[3] n;
+    normalVector(p, n);
+
+
+    vector<double> v;
+    toArray(u, 6, v);
+
+    double t = sp.thickness;
+
+    for (int i = 0; i < count; i++) {
+        vector<double> np = nodeP[i];
+
+        vector<double> eps1;
+        strainPart(p, v, n, d, np[0], np[1], 1, t, eps1);
+        vector<double> eps2;
+        strainPart(p, v, n, d, np[0], np[1], -1, t, eps2);
+
+        strain1[i] = toStrain(eps1);
+        stress1[i] = toStress(numeric::dotMV(d1, eps1));
+        strain2[i] = toStrain(eps2);
+        stress2[i] = toStress(numeric::dotMV(d1, eps2));
         strain1[i].rotate(d);
         stress1[i].rotate(d);
         strain2[i].rotate(d);
@@ -389,7 +520,6 @@ ShellElement.prototype.strainStress = function(p, u, d1, sp) {
         energy1[i] = 0.5 * strain1[i].innerProduct(stress1[i]);
         energy2[i] = 0.5 * strain2[i].innerProduct(stress2[i]);
     }
-    return[strain1, stress1, energy1, strain2, stress2, energy2];
 };
 
 // 要素内の歪ベクトルを返す
@@ -399,11 +529,18 @@ ShellElement.prototype.strainStress = function(p, u, d1, sp) {
 // d - 方向余弦マトリックス
 // xsi,eta,zeta - ξ,η,ζ座標
 // t - 要素厚さ
-ShellElement.prototype.strainPart = function(p, v, n, d, xsi, eta, zeta, t) {
-    var sf = this.shapeFunction(xsi, eta);
-    var ja = this.jacobianMatrix(p, sf, n, t);
-    var sm = this.strainMatrix(ja, sf, d, zeta, t);
-    return numeric.dotVM(v, sm);
+void ShellElement::strainPart(vector<FENode> p, vector<double> v, double n[3], vector<vector<double>> d, double  xsi, double eta, double zeta, double t, vector<double> out) {
+
+    vector<vector<double>> sf;
+    shapeFunction(xsi, eta, sf);
+
+    double ja[9];
+    jacobianMatrix(p, sf, n, t, ja);
+
+    vector<vector<double>> sm;
+    strainMatrix(ja, sf, d, zeta, t, sm);
+
+    numeric::dotVM(v, sm, out);
 };
 
 // 要素歪・応力を返す
@@ -411,72 +548,107 @@ ShellElement.prototype.strainPart = function(p, v, n, d, xsi, eta, zeta, t) {
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
-ShellElement.prototype.elementStrainStress = function(p, u, d1, sp) {
-    var d = dirMatrix(p), n = normalVector(p), v = this.toArray(u, 6);
-    var t = sp.thickness, cf = 1 / this.intP.length;
-    var strain1 = [0, 0, 0, 0, 0, 0], stress1 = [0, 0, 0, 0, 0, 0], energy1 = 0;
-    var strain2 = [0, 0, 0, 0, 0, 0], stress2 = [0, 0, 0, 0, 0, 0], energy2 = 0;
-    for (var i = 0; i < this.intP.length; i++) {
-        var ip = this.intP[i];
-        var eps1 = this.strainPart(p, v, n, d, ip[0], ip[1], 1, t);
-        var eps2 = this.strainPart(p, v, n, d, ip[0], ip[1], -1, t);
-        strain1 = numeric.add(strain1, eps1);
-        strain2 = numeric.add(strain2, eps2);
-        var str1 = numeric.dotMV(d1, eps1);
-        var str2 = numeric.dotMV(d1, eps2);
-        stress1 = numeric.add(stress1, str1);
-        stress2 = numeric.add(stress2, str2);
-        energy1 += numeric.dotVV(eps1, str1);
-        energy2 += numeric.dotVV(eps2, str2);
+void ShellElement::elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp, 
+                                        vector<Strain> _Strain1, vector<Stress> _Stress1, double energy1,
+                                        vector<Strain> _Strain2, vector<Stress> _Stress2, double energy2) {
+
+    vector<vector<double>> d;
+    dirMatrix(p, d);
+
+    double n[3];
+    normalVector(p, n);
+
+    vector<double> v;
+    toArray(u, 6, v);
+
+    double t = sp.thickness;
+    
+    double cf = 1 / intP.size();
+
+    vector<double> strain1;
+    vector<double> strain2;
+    vector<double> stress1;
+    vector<double> stress2;
+    for (int i = 0; i < intP.size(); i++) {
+        
+        vector<double> ip = intP[i];
+        
+        vector<double> eps1;
+        strainPart(p, v, n, d, ip[0], ip[1], 1, t, eps1);
+
+        vector<double> eps2;
+        strainPart(p, v, n, d, ip[0], ip[1], -1, t, eps2);
+
+        numeric::add(strain1, eps1);
+        numeric::add(strain2, eps2);
+
+        vector<double> str1;
+        numeric::dotMV(d1, eps1, str1);
+
+        vector<double> str2;
+        numeric::dotMV(d1, eps2, str2);
+
+        numeric::add(stress1, str1);
+        numeric::add(stress2, str2);
+
+        energy1 += numeric::dotVV(eps1, str1);
+        energy2 += numeric::dotVV(eps2, str2);
     }
-    strain1 = numeric.mul(strain1, cf);
-    stress1 = numeric.mul(stress1, cf);
+    numeric::mul(strain1, cf);
+    numeric::mul(stress1, cf);
     energy1 *= 0.5 * cf;
-    strain2 = numeric.mul(strain1, cf);
-    stress2 = numeric.mul(stress1, cf);
+    numeric::mul(strain1, cf);
+    numeric::mul(stress1, cf);
     energy2 *= 0.5 * cf;
-    return[this.toStrain(strain1), this.toStress(stress1), energy1,
-        this.toStrain(strain2), this.toStress(stress2), energy2];
+
+    toStrain(strain1, _Strain1);
+    toStress(stress1, _Stress1);
+    toStrain(strain2, _Strain1);
+    toStress(stress2, _Stress1);
 };
 
 // ベクトルを歪に変換する
 // s - 歪ベクトル
-ShellElement.prototype.toStrain = function(s) {
-    return new Strain([s[0], s[1], 0, s[2], s[3], s[4]]);
+void ShellElement::toStrain(vector<double> s, Strain out) {
+    out =  Strain([s[0], s[1], 0, s[2], s[3], s[4]]);
 };
 
 // ベクトルを歪に変換する
 // s - 歪ベクトル
-ShellElement.prototype.toStress = function(s) {
-    return new Stress([s[0], s[1], 0, s[2], s[3], s[4]]);
+void ShellElement::toStress(vector<double> s, Stress out) {
+    out = Stress([s[0], s[1], 0, s[2], s[3], s[4]]);
 };
 
 // 要素を表す文字列を返す
 // materials - 材料
 // params - シェルパラメータ
 // p - 節点
-ShellElement.prototype.toString = function(materials, params, p) {
-    var s = this.getName() + '\t' + this.label.toString(10) + '\t' +
-        materials[this.material].label.toString(10) + '\t' +
-        params[this.param].label.toString(10);
-    for (var i = 0; i < this.nodes.length; i++) {
-        s += '\t' + p[this.nodes[i]].label.toString(10);
+string ShellElement::toString(vector<Material> materials, vector<ShellParameter> params, vector<FENode> p) {
+
+    string s = format("{}\t{}\t{}\t{}\t{}",
+        getName(), label, materials[material].label, params[this.param].label);
+
+    for (int i = 0; i < nodes.size(); i++) {
+        s += '\t' + p[nodes[i]].label;
     }
     return s;
 };
 
 
-
 // 節点座標を局所座標系に変換する
 // d - 方向余弦マトリックス
 // p - 要素節点
-function toLocal(d, p) {
-    var x = [];
-    for (var i = 0; i < p.length; i++) {
-        x[i] = new THREE.Vector3().set
-        (d[0][0] * p[i].x + d[1][0] * p[i].y + d[2][0] * p[i].z,
+vector<double> ShellElement::toLocal(d, vector<FENode> p) {
+
+    vector<vector<double>> x;
+
+    for (int i = 0; i < p.size(); i++) {
+        vector<double> y = {
+            d[0][0] * p[i].x + d[1][0] * p[i].y + d[2][0] * p[i].z,
             d[0][1] * p[i].x + d[1][1] * p[i].y + d[2][1] * p[i].z,
-            d[0][2] * p[i].x + d[1][2] * p[i].y + d[2][2] * p[i].z);
+            d[0][2] * p[i].x + d[1][2] * p[i].y + d[2][2] * p[i].z
+        };
+        x.push_back(y);
     }
     return x;
 }

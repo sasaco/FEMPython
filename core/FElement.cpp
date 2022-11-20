@@ -83,8 +83,78 @@ void FElement::toLocalArray(vector<BoundaryCondition> u, vector<vector<double>> 
     }
 }
 
+// 3x3の行列式を返す
+double FElement::determinant(double ja[9]) {
 
-void FElement::normalVector(vector<double> p, vector<double> out) {
+    double det = 0;
+    // 3x3の行列を入力
+    double a[3][3];
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            a[i][j] = ja[i + j];
+        }
+    }
+    // 行列式の計算
+    for (int i = 0; i < 3; ++i) {
+        det = det + a[0][i] * (a[1][(i + 1) % 3] * a[2][(i + 2) % 3] - a[1][(i + 2) % 3] * a[2][(i + 1) % 3]);
+    }
+
+    return det;
+}
+
+
+// 方向余弦マトリックスを返す
+// p - 頂点座標
+// axis - 断面基準方向ベクトル
+void FElement::dirMatrix(vector<double> p, double axis[3], vector<vector<double>> out) {
+
+    vector<double> v;
+    dirVectors(p, axis, v);
+
+    return [[v[0].x, v[1].x, v[2].x], [v[0].y, v[1].y, v[2].y],
+        [v[0].z, v[1].z, v[2].z]];
+}
+
+
+// 方向余弦マトリックスを返す
+// p - 頂点座標
+// axis - 断面基準方向ベクトル
+void FElement::dirVectors(vector<double> p, double axis[3], vector<double> out[3]) {
+
+    var v1, v2, v3;
+
+    if (p.length == 2) {		// 梁要素
+        v1 = p[1].clone().sub(p[0]).normalize();
+        v2 = new THREE.Vector3();
+        v3 = new THREE.Vector3();
+        if ((axis != = null) && (axis != = undefined)) {
+            var dt = v1.dot(axis);
+            v2.set(axis.x - dt * v1.x, axis.y - dt * v1.y, axis.z - dt * v1.z);
+            if (v2.lengthSq() > 0) v2.normalize();
+        }
+        if (v2.lengthSq() == = 0) {
+            if (Math.abs(v1.x) < Math.abs(v1.y)) {
+                v2.set(1 - v1.x * v1.x, -v1.x * v1.y, -v1.x * v1.z).normalize();
+            }
+            else {
+                v2.set(-v1.y * v1.x, 1 - v1.y * v1.y, -v1.y * v1.z).normalize();
+            }
+        }
+        v3.crossVectors(v1, v2);
+        return[v1, v2, v3];
+    }
+    else if (p.length > 2) {		// シェル要素
+        v3 = normalVector(p);
+        v2 = p[1].clone().sub(p[0]);
+        v2 = v3.clone().cross(v2).normalize();
+        v1 = v2.clone().cross(v3);
+        return[v1, v2, v3];
+    }
+    return null;
+}
+
+
+void FElement::normalVector(vector<double> p, double out[3]) {
     if (p.size() < 3) {
         return null;
     }

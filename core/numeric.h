@@ -8,6 +8,7 @@ private:
 
 public:
 
+
     static void getInverse(vector<vector<double>> a, vector<vector<double>> out);
 
     static double dotVV(vector<double> x, vector<double> y);
@@ -19,4 +20,6 @@ public:
     static void add(vector<double> x, vector<double> y);
 
     static void mul(vector<double> x, double y);
+
+    static void rep(int row, int col, vector<vector<double>> out);
 };

@@ -11,9 +11,10 @@ class ShellParameter {
 
 private:
     int label;
-    double thickness;
 
 public:
+    double thickness;
+
     ShellParameter(int _label, double _thickness);
 
     string toString();
