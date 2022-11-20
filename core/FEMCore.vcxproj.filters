@@ -215,5 +215,17 @@
     <ClInclude Include="WedgeElement2.h">
       <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClInclude>
+    <ClInclude Include="ShellElement.h">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClInclude>
+    <ClInclude Include="math.hpp">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="matrix3.h">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="matrix3.ipp">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

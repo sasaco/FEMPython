@@ -197,11 +197,15 @@
     <ClInclude Include="HexaElement2.h" />
     <ClInclude Include="Load.h" />
     <ClInclude Include="Material.h" />
+    <ClInclude Include="math.hpp" />
+    <ClInclude Include="matrix3.h" />
+    <ClInclude Include="matrix3.ipp" />
     <ClInclude Include="Nodes.h" />
     <ClInclude Include="numeric.h" />
     <ClInclude Include="Pressure.h" />
     <ClInclude Include="RectSection.h" />
     <ClInclude Include="Restraint.h" />
+    <ClInclude Include="ShellElement.h" />
     <ClInclude Include="ShellParameter.h" />
     <ClInclude Include="SolidElement.h" />
     <ClInclude Include="Temperature.h" />

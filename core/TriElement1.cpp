@@ -1,5 +1,28 @@
+#include "ShellElement.h";
+#include "numeric.h";
 
 
+class TriElement1 : public ShellElement {
+
+private:
+    // 三角形1次要素の節点のξ,η座標
+    vector<vector<double>> TRI1_NODE = { {0, 0}, {1, 0}, {0, 1} };
+    // 三角形1次要素の積分点のξ,η座標,重み係数
+    vector<vector<double>> TRI1_INT = { {C1_3, C1_3, 0.5} };
+
+
+public:
+    TriElement1(int label, int material, int param, vector<int> nodes);
+    string getName() override;
+    int nodeCount() override;
+    vector<vector<double>> shapeFunction(double xsi, double eta) override;
+
+    vector<vector<double>> shapeFunction2(double xsi, double eta);
+
+    vector<vector<double>> shapeFunction3(vector<FENode> p, vector<vector<double>> d, double xsi, double eta);
+
+
+};
 
 //--------------------------------------------------------------------//
 // 三角形1次要素 (薄肉シェル)
@@ -7,83 +30,75 @@
 // material - 材料のインデックス
 // param - シェルパラメータのインデックス
 // nodes - 節点番号
-var TriElement1 = function(label, material, param, nodes) {
-    ShellElement.call(this, label, material, param, nodes, TRI1_NODE, TRI1_INT);
+TriElement1::TriElement1(int label, int material, int param, vector<int> nodes) :
+                ShellElement(label, material, param, nodes, TRI1_NODE, TRI1_INT){
 };
+
 
 // 要素名称を返す
-TriElement1.prototype.getName = function() {
-    return 'TriElement1';
+string TriElement1::getName() {
+    return "TriElement1";
 };
 
-// 節点数を返す
-TriElement1.prototype.nodeCount = function() {
-    return 3;
-};
-
-// 要素境界を返す
-// element - 要素ラベル
-// index - 要素境界のインデックス
-TriElement1.prototype.border = function(element, index) {
-    var p = this.nodes;
-    switch (index) {
-    default:
-        return null;
-    case 0:
-        return new TriangleBorder1(element, [p[0], p[1], p[2]]);
-    case 1:
-        return new TriangleBorder1(element, [p[0], p[2], p[1]]);
-    }
-};
-
-// 要素境界辺を返す
-// element - 要素ラベル
-// index - 要素境界辺のインデックス
-TriElement1.prototype.borderEdge = function(element, index) {
-    var p = this.nodes;
-    switch (index) {
-    default:
-        return null;
-    case 0:
-        return new EdgeBorder1(element, [p[0], p[1]]);
-    case 1:
-        return new EdgeBorder1(element, [p[1], p[2]]);
-    case 2:
-        return new EdgeBorder1(element, [p[2], p[0]]);
-    }
-};
-
-// 要素を鏡像反転する
-TriElement1.prototype.mirror = function() {
-    swap(this.nodes, 1, 2);
-};
 
 // １次の形状関数行列 [ Ni dNi/dξ dNi/dη ] を返す
 // xsi,eta - 要素内部ξ,η座標
-TriElement1.prototype.shapeFunction = function(xsi, eta) {
-    return [[1 - xsi - eta, -1, -1], [xsi, 1, 0], [eta, 0, 1]];
+vector<vector<double>> TriElement1::shapeFunction(double xsi, double eta) {
+    vector<vector<double>> result = {
+        { 1 - xsi - eta, -1, -1 }, 
+        { xsi,            1,  0 }, 
+        { eta,            0,  1 }
+    };
+    return result;
 };
+
 
 // ２次の形状関数行列 [ Ni dNi/dξ dNi/dη ] を返す
 // xsi,eta - 要素内部ξ,η座標
-TriElement1.prototype.shapeFunction2 = function(xsi, eta) {
-    var xe = 1 - xsi - eta;
-    return [[xe * (2 * xe - 1), 1 - 4 * xe, 1 - 4 * xe], [xsi * (2 * xsi - 1), 4 * xsi - 1, 0],
-        [eta * (2 * eta - 1), 0, 4 * eta - 1], [4 * xe * xsi, 4 * (xe - xsi), -4 * xsi],
-        [4 * xsi * eta, 4 * eta, 4 * xsi], [4 * xe * eta, -4 * eta, 4 * (xe - eta)]];
+vector<vector<double>> TriElement1::shapeFunction2(double xsi, double eta) {
+    double xe = 1 - xsi - eta;
+    vector<vector<double>> result = {
+        { xe * (2 * xe - 1),    1 - 4 * xe,     1 - 4 * xe      }, 
+        { xsi * (2 * xsi - 1),  4 * xsi - 1,    0               },
+        { eta * (2 * eta - 1),  0,              4 * eta - 1     }, 
+        { 4 * xe * xsi,         4 * (xe - xsi), -4 * xsi        },
+        { 4 * xsi * eta,        4 * eta,        4 * xsi         }, 
+        { 4 * xe * eta,         -4 * eta,       4 * (xe - eta)  }
+    };
+    return result;
 };
+
 
 // 角度の形状関数行列 [ Hxi Hyi dHxi/dξ dHyi/dξ dHxi/dη dHyi/dη ] を返す
 // p - 要素節点
 // d - 方向余弦マトリックス
 // xsi,eta - 要素内部ξ,η座標
-TriElement1.prototype.shapeFunction3 = function(p, d, xsi, eta) {
-    var count = this.nodeCount(), m = numeric.rep([3 * count, 6], 0);
-    var sf2 = this.shapeFunction2(xsi, eta);
-    var d12 = p[1].clone().sub(p[0]);
-    var d23 = p[2].clone().sub(p[1]);
-    var d31 = p[0].clone().sub(p[2]);
-    var l = [1 / d12.lengthSq(), 1 / d23.lengthSq(), 1 / d31.lengthSq()];
+vector<vector<double>> TriElement1::shapeFunction3(vector<FENode> p, vector<vector<double>> d, double xsi, double eta) {
+
+    int count = nodeCount();
+    vector<vector<double>> m;
+    numeric::rep(3 * count, 6, m);
+
+    vector<vector<double>> sf2 = shapeFunction2(xsi, eta);
+
+    FENode p1;
+    p[1].clone(p1);
+    FENode d12 = p1.sub(p[0]);
+
+    FENode p2;
+    p[2].clone(p2);
+    Vector3 d23 = p1.sub(p[1]);
+
+    FENode p0;
+    p[0].clone(p0);
+    FENode d31 = p0.sub(p[2]);
+
+    vector<double> l = [
+        1 / d12.lengthSq(), 
+        1 / d23.lengthSq(), 
+        1 / d31.lengthSq()
+    ];
+
     var x = [d[0][0] * d12.x + d[1][0] * d12.y + d[2][0] * d12.z,
         d[0][0] * d23.x + d[1][0] * d23.y + d[2][0] * d23.z,
         d[0][0] * d31.x + d[1][0] * d31.y + d[2][0] * d31.z];
