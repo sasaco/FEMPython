@@ -1,12 +1,6 @@
-#ifndef THREE_MATRIX3_IPP
-#define THREE_MATRIX3_IPP
-
 #include "matrix3.h"
 
-#include <three/core/matrix4.hpp>
-#include <three/core/math.hpp>
-
-namespace three {
+#include "math.hpp"
 
 Matrix3::Matrix3() {
   identity();
@@ -122,7 +116,3 @@ Matrix3& Matrix3::copy( const Matrix4& m ) {
 Matrix3 Matrix3::clone() {
   return Matrix3( *this );
 }
-
-} // namespace three
-
-#endif // THREE_MATRIX4_HPP

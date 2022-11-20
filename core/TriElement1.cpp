@@ -10,17 +10,30 @@ private:
     // 三角形1次要素の積分点のξ,η座標,重み係数
     vector<vector<double>> TRI1_INT = { {C1_3, C1_3, 0.5} };
 
+    // 三角形2次要素の積分点のξ,η座標,重み係数
+    vector<vector<double>> TRI2_INT = { {GTRI2[0], GTRI2[0], C1_6}, {GTRI2[1], GTRI2[0], C1_6},
+        {GTRI2[0], GTRI2[1], C1_6} };
+
+    // 三角形1次要素の質量マトリックス係数
+    vector<vector<double>> TRI1_MASS1 = { {1, 0.5, 0.5}, {0.5, 1, 0.5}, {0.5, 0.5, 1} };
+
 
 public:
     TriElement1(int label, int material, int param, vector<int> nodes);
+
     string getName() override;
+
     int nodeCount() override;
+
     vector<vector<double>> shapeFunction(double xsi, double eta) override;
 
     vector<vector<double>> shapeFunction2(double xsi, double eta);
 
     vector<vector<double>> shapeFunction3(vector<FENode> p, vector<vector<double>> d, double xsi, double eta);
 
+    double jacobian(vector<FENode> p);
+
+    vector<vector<double>> massMatrix(vector<FENode> p, double dens, double t)
 
 };
 
@@ -81,46 +94,75 @@ vector<vector<double>> TriElement1::shapeFunction3(vector<FENode> p, vector<vect
 
     vector<vector<double>> sf2 = shapeFunction2(xsi, eta);
 
-    FENode p1;
+    Vector3 p1;
     p[1].clone(p1);
-    FENode d12 = p1.sub(p[0]);
+    Vector3 d12 = p1.sub(p[0]);
 
     FENode p2;
     p[2].clone(p2);
-    Vector3 d23 = p1.sub(p[1]);
+    Vector3 d23 = p2.sub(p[1]);
 
     FENode p0;
     p[0].clone(p0);
-    FENode d31 = p0.sub(p[2]);
+    Vector3 d31 = p0.sub(p[2]);
 
-    vector<double> l = [
-        1 / d12.lengthSq(), 
-        1 / d23.lengthSq(), 
+    vector<double> l = {
+        1 / d12.lengthSq(),
+        1 / d23.lengthSq(),
         1 / d31.lengthSq()
-    ];
+    };
 
-    var x = [d[0][0] * d12.x + d[1][0] * d12.y + d[2][0] * d12.z,
+    double x[] = {
+        d[0][0] * d12.x + d[1][0] * d12.y + d[2][0] * d12.z,
         d[0][0] * d23.x + d[1][0] * d23.y + d[2][0] * d23.z,
-        d[0][0] * d31.x + d[1][0] * d31.y + d[2][0] * d31.z];
-    var y = [d[0][1] * d12.x + d[1][1] * d12.y + d[2][1] * d12.z,
+        d[0][0] * d31.x + d[1][0] * d31.y + d[2][0] * d31.z
+    };
+
+    double y[] = {
+        d[0][1] * d12.x + d[1][1] * d12.y + d[2][1] * d12.z,
         d[0][1] * d23.x + d[1][1] * d23.y + d[2][1] * d23.z,
-        d[0][1] * d31.x + d[1][1] * d31.y + d[2][1] * d31.z];
-    var a = [1.5 * l[0] * y[0], 1.5 * l[1] * y[1], 1.5 * l[2] * y[2]];
-    var b = [-1.5 * l[0] * x[0], -1.5 * l[1] * x[1], -1.5 * l[2] * x[2]];
-    var c = [0.75 * l[0] * y[0] * y[0] - 0.5, 0.75 * l[1] * y[1] * y[1] - 0.5,
-        0.75 * l[2] * y[2] * y[2] - 0.5];
-    var d1 = [0.75 * l[0] * x[0] * y[0], 0.75 * l[1] * x[1] * y[1], 0.75 * l[2] * x[2] * y[2]];
-    var e = [0.25 - 0.75 * l[0] * y[0] * y[0], 0.25 - 0.75 * l[1] * y[1] * y[1],
-        0.25 - 0.75 * l[2] * y[2] * y[2]];
-    for (var i = 0; i < 3; i++) {
-        var i1 = (i + 2) % 3;
-        var i3 = 3 * i;
-        for (var j = 0; j < 3; j++) {
-            var j2 = 2 * j;
+        d[0][1] * d31.x + d[1][1] * d31.y + d[2][1] * d31.z
+    };
+
+    double a[] = {
+        1.5 * l[0] * y[0],
+        1.5 * l[1] * y[1],
+        1.5 * l[2] * y[2]
+    };
+
+    double b[] = {
+        -1.5 * l[0] * x[0],
+        -1.5 * l[1] * x[1],
+        -1.5 * l[2] * x[2]
+    };
+
+    double c[] = {
+        0.75 * l[0] * y[0] * y[0] - 0.5,
+        0.75 * l[1] * y[1] * y[1] - 0.5,
+        0.75 * l[2] * y[2] * y[2] - 0.5
+    };
+
+    double d1[] = {
+        0.75 * l[0] * x[0] * y[0],
+        0.75 * l[1] * x[1] * y[1],
+        0.75 * l[2] * x[2] * y[2]
+    };
+
+    double e[] = {
+        0.25 - 0.75 * l[0] * y[0] * y[0],
+        0.25 - 0.75 * l[1] * y[1] * y[1],
+        0.25 - 0.75 * l[2] * y[2] * y[2]
+    };
+
+    for (int i = 0; i < 3; i++) {
+        int i1 = (i + 2) % 3;
+        int i3 = 3 * i;
+        for (int j = 0; j < 3; j++) {
+            int j2 = 2 * j;
             m[i3][j2] = a[i1] * sf2[3 + i1][j] - a[i] * sf2[3 + i][j];
             m[i3][j2 + 1] = b[i1] * sf2[3 + i1][j] - b[i] * sf2[3 + i][j];
             m[i3 + 1][j2] = sf2[i][j] - c[i1] * sf2[3 + i1][j] - c[i] * sf2[3 + i][j];
-            var dn = d1[i1] * sf2[3 + i1][j] + d1[i] * sf2[3 + i][j];
+            double dn = d1[i1] * sf2[3 + i1][j] + d1[i] * sf2[3 + i][j];
             m[i3 + 1][j2 + 1] = dn;
             m[i3 + 2][j2] = dn;
             m[i3 + 2][j2 + 1] = sf2[i][j] - e[i1] * sf2[3 + i1][j] - e[i] * sf2[3 + i][j];
@@ -129,46 +171,77 @@ vector<vector<double>> TriElement1::shapeFunction3(vector<FENode> p, vector<vect
     return m;
 };
 
+
 // ヤコビアンを返す
 // p - 要素節点
-TriElement1.prototype.jacobian = function(p) {
-    var p0x = p[0].x, p0y = p[0].y, p0z = p[0].z;
-    var j1 = (p[1].y - p0y) * (p[2].z - p0z) - (p[1].z - p0z) * (p[2].y - p0y);
-    var j2 = (p[1].z - p0z) * (p[2].x - p0x) - (p[1].x - p0x) * (p[2].z - p0z);
-    var j3 = (p[1].x - p0x) * (p[2].y - p0y) - (p[1].y - p0y) * (p[2].x - p0x);
-    return Math.sqrt(j1 * j1 + j2 * j2 + j3 * j3);
+double TriElement1::jacobian(vector<FENode> p) {
+
+    double p0x = p[0].x;
+    double p0y = p[0].y;
+    double p0z = p[0].z;
+
+    double j1 = (p[1].y - p0y) * (p[2].z - p0z) - (p[1].z - p0z) * (p[2].y - p0y);
+    double j2 = (p[1].z - p0z) * (p[2].x - p0x) - (p[1].x - p0x) * (p[2].z - p0z);
+    double j3 = (p[1].x - p0x) * (p[2].y - p0y) - (p[1].y - p0y) * (p[2].x - p0x);
+
+    return sqrt(j1 * j1 + j2 * j2 + j3 * j3);
 };
+
 
 // 質量マトリックスを返す
 // p - 要素節点
 // dens - 材料の密度
 // t - 要素厚さ
-TriElement1.prototype.massMatrix = function(p, dens, t) {
-    var count = this.nodeCount(), m = numeric.rep([6 * count, 6 * count], 0);
-    var mb = numeric.rep([3 * count, 3 * count], 0), d = dirMatrix(p);
-    var djt = dens * t * this.jacobian(p), tt = C1_12 * t * t, dm = C1_12 * djt, i, j;
+vector<vector<double>> TriElement1::massMatrix(vector<FENode> p, double dens, double t) {
+    
+    int count = nodeCount();
+    
+    vector<vector<double>> m = numeric::rep(6 * count, 6 * count);
 
-    for (var k = 0; k < 3; k++) {
-        var ipi = TRI2_INT[k], sf3 = this.shapeFunction3(p, d, ipi[0], ipi[1]);
-        var sf = this.shapeFunction(ipi[0], ipi[1]);
-        var hz = [sf[0][0], 0, 0, sf[1][0], 0, 0, sf[2][0], 0, 0], cfm = djt * ipi[2];
-        for (i = 0; i < 3 * count; i++) {
-            for (j = 0; j < 3 * count; j++) {
-                var hxhy = sf3[i][0] * sf3[j][0] + sf3[i][1] * sf3[j][1];
+    vector<vector<double>> mb = numeric::rep(3 * count, 3 * count);
+    
+    vector<vector<double>> d = dirMatrix(p);
+
+    double djt = dens * t * jacobian(p);
+    
+    double tt = C1_12 * t * t;
+    
+    double dm = C1_12 * djt;
+
+    for (int k = 0; k < 3; k++) {
+
+        vector<double> ipi = TRI2_INT[k];
+        
+        vector<vector<double>> sf3 = shapeFunction3(p, d, ipi[0], ipi[1]);
+
+        vector<vector<double>> sf = shapeFunction(ipi[0], ipi[1]);
+
+        vector<double> hz = {
+            sf[0][0], 0, 0, sf[1][0], 0, 0, sf[2][0], 0, 0
+        };
+
+        double cfm = djt * ipi[2];
+
+        for (int i = 0; i < 3 * count; i++) {
+            for (int j = 0; j < 3 * count; j++) {
+                double hxhy = sf3[i][0] * sf3[j][0] + sf3[i][1] * sf3[j][1];
                 mb[i][j] += cfm * (tt * hxhy + hz[i] * hz[j]);
             }
         }
     }
 
-    for (i = 0; i < count; i++) {
-        var i3 = 3 * i, i6 = 6 * i;
-        for (j = 0; j < count; j++) {
-            var j3 = 3 * j, j6 = 6 * j, cf1 = TRI1_MASS1[i][j];
-            var dme = cf1 * dm;
+    for (int i = 0; i < count; i++) {
+        int i3 = 3 * i;
+        int i6 = 6 * i;
+        for (int j = 0; j < count; j++) {
+            int j3 = 3 * j;
+            int j6 = 6 * j;
+            double cf1 = TRI1_MASS1[i][j];
+            double dme = cf1 * dm;
             m[i6][j6] = dme;
             m[i6 + 1][j6 + 1] = dme;
-            for (var i1 = 0; i1 < 3; i1++) {
-                for (var j1 = 0; j1 < 3; j1++) {
+            for (int i1 = 0; i1 < 3; i1++) {
+                for (int j1 = 0; j1 < 3; j1++) {
                     m[i6 + 2 + i1][j6 + 2 + j1] = mb[i3 + i1][j3 + j1];
                 }
             }
@@ -179,11 +252,12 @@ TriElement1.prototype.massMatrix = function(p, dens, t) {
     return m;
 };
 
+
 // 剛性マトリックスを返す
 // p - 要素節点
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
-TriElement1.prototype.stiffnessMatrix = function(p, d1, sp) {
+vector<vector<double>> TriElement1::stiffnessMatrix(vector<FENode> p, d1, ShellParameter sp) {
     var d = dirMatrix(p), n = normalVector(p), t = sp.thickness, i, j, ii, jj;
 
     var sf1 = this.shapeFunction(C1_3, C1_3);

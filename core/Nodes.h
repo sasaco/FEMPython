@@ -1,8 +1,9 @@
 #pragma once
+#include "vector3.hpp"
 #include <vector>
 using std::vector;
 
-class Nodes {
+class Nodes : public Vector3 {
 
 private:
     vector<int> nodes;

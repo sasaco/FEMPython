@@ -11,16 +11,11 @@
 class ShellElement : public FElement {
 
 private:
-    // 三角形2次要素の積分点のξ,η座標,重み係数
-    vector<vector<double>> TRI2_INT = { {GTRI2[0], GTRI2[0], C1_6}, {GTRI2[1], GTRI2[0], C1_6},
-        {GTRI2[0], GTRI2[1], C1_6} };
     // 四角形1次要素の節点のξ,η座標
     vector<vector<double>> QUAD1_NODE = { {-1, -1}, {1, -1}, {1, 1}, {-1, 1} };
     // 四角形1次要素の積分点のξ,η座標,重み係数
     vector<vector<double>> QUAD1_INT = { {GX2[0], GX2[0], 1}, {GX2[1], GX2[0], 1}, {GX2[0], GX2[1], 1},
         {GX2[1], GX2[1], 1} };
-    // 三角形1次要素の質量マトリックス係数
-    vector<vector<double>> TRI1_MASS1 = { {1, 0.5, 0.5}, {0.5, 1, 0.5}, {0.5, 0.5, 1} };
 
     int label;
     int param;
