@@ -257,7 +257,7 @@ vector<vector<double>> TriElement1::massMatrix(vector<FENode> p, double dens, do
 // p - 要素節点
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
-vector<vector<double>> TriElement1::stiffnessMatrix(vector<FENode> p, d1, ShellParameter sp) {
+vector<vector<double>> TriElement1::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, ShellParameter sp) {
     var d = dirMatrix(p), n = normalVector(p), t = sp.thickness, i, j, ii, jj;
 
     var sf1 = this.shapeFunction(C1_3, C1_3);
