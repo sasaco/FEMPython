@@ -224,7 +224,13 @@
     <ClInclude Include="matrix3.h">
       <Filter>ソース ファイル\numeric</Filter>
     </ClInclude>
-    <ClInclude Include="matrix3.ipp">
+    <ClInclude Include="matrix3.cpp">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="matrix4.hpp">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="vector3.hpp">
       <Filter>ソース ファイル\numeric</Filter>
     </ClInclude>
   </ItemGroup>

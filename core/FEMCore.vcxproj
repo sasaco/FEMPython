@@ -199,7 +199,8 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="math.hpp" />
     <ClInclude Include="matrix3.h" />
-    <ClInclude Include="matrix3.ipp" />
+    <ClInclude Include="matrix3.cpp" />
+    <ClInclude Include="matrix4.hpp" />
     <ClInclude Include="Nodes.h" />
     <ClInclude Include="numeric.h" />
     <ClInclude Include="Pressure.h" />
@@ -211,6 +212,7 @@
     <ClInclude Include="Temperature.h" />
     <ClInclude Include="TetraElement1.h" />
     <ClInclude Include="TetraElement2.h" />
+    <ClInclude Include="vector3.hpp" />
     <ClInclude Include="Vector3R.h" />
     <ClInclude Include="WedgeElement1.h" />
     <ClInclude Include="WedgeElement2.h" />

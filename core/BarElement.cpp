@@ -1,5 +1,18 @@
-var I_YMZ = [1, 5, 7, 11];	// y軸方向,z軸周り成分のインデックス
-var I_ZMY = [2, 4, 8, 10];	// z軸方向,y軸周り成分のインデックス
+#include "FElement.h";
+
+class BarElement : public FElement {
+
+private:
+    double I_YMZ[4] = { 1, 5, 7, 11 };	// y軸方向,z軸周り成分のインデックス
+    double I_ZMY[4] = { 2, 4, 8, 10 };	// z軸方向,y軸周り成分のインデックス
+
+
+
+public:
+    BarElement(int label, int material, int param, vector<int> nodes, Vector3 axis);
+
+};
+
 
 //--------------------------------------------------------------------//
 // 梁要素
@@ -8,8 +21,8 @@ var I_ZMY = [2, 4, 8, 10];	// z軸方向,y軸周り成分のインデックス
 // param - 梁パラメータのインデックス
 // nodes - 節点番号
 // axis - 断面基準方向ベクトル
-var BarElement = function(label, material, param, nodes, axis) {
-    FElement.call(this, label, material, nodes);
+BarElement::BarElement(int label, int material, int param, vector<int> nodes, Vector3 axis) :
+    FElement(label, material, nodes) {
     this.param = param;
     this.isBar = true;
     if ((axis != = null) && (axis != = undefined)) axis.normalize();
