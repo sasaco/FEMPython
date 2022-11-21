@@ -33,7 +33,11 @@ public:
 
     double jacobian(vector<FENode> p);
 
-    vector<vector<double>> massMatrix(vector<FENode> p, double dens, double t)
+    vector<vector<double>> massMatrix(vector<FENode> p, double dens, double t);
+
+    vector<vector<double>> stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, ShellParameter sp);
+
+
 
 };
 
@@ -258,42 +262,54 @@ vector<vector<double>> TriElement1::massMatrix(vector<FENode> p, double dens, do
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
 vector<vector<double>> TriElement1::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, ShellParameter sp) {
-    var d = dirMatrix(p), n = normalVector(p), t = sp.thickness, i, j, ii, jj;
 
-    var sf1 = this.shapeFunction(C1_3, C1_3);
-    var ja1 = this.jacobianMatrix(p, sf1, n, t);
-    var jac1 = ja1.determinant();
-    var jinv = this.jacobInv(ja1, d);
-    var b1 = this.strainMatrix1(sf1, jinv);
-    var k1 = this.stiffPart(d1, b1, Math.abs(jac1));
+    vector<vector<double>> d = dirMatrix(p);
 
-    var count = this.nodeCount(), k2 = numeric.rep([3 * count, 3 * count], 0);
-    var coef = t * t * Math.abs(jac1) / 36;
-    for (i = 0; i < 3; i++) {
-        var ipi = TRI2_INT[i], sf3 = this.shapeFunction3(p, d, ipi[0], ipi[1]);
-        var b2 = this.strainMatrix2(sf3, jinv);
-        addMatrix(k2, this.stiffPart(d1, b2, coef));
+    double *n = normalVector(p);
+    double t = sp.thickness;
+
+    vector<vector<double>> sf1 = shapeFunction(C1_3, C1_3);
+    vector<double> ja1 = jacobianMatrix(p, sf1, n, t);
+    double jac1 = ja1.determinant();
+    vector<double> jinv = jacobInv(ja1, d);
+    vector<vector<double>> b1 = strainMatrix1(sf1, jinv);
+    vector<vector<double>> k1 = stiffPart(d1, b1, abs(jac1));
+
+    int count = nodeCount();
+    vector<vector<double>> k2 = numeric::rep(3 * count, 3 * count);
+
+    double coef = t * t * abs(jac1) / 36;
+
+    for (int i = 0; i < 3; i++) {
+        double ipi = TRI2_INT[i];
+        vector<vector<double>> sf3 = shapeFunction3(p, d, ipi[0], ipi[1]);
+        vector<vector<double>> b2 = strainMatrix2(sf3, jinv);
+        addMatrix(k2, stiffPart(d1, b2, coef));
     }
 
-    var ce1 = 1e-3 * t * t * Math.abs(jac1) * d1[2][2], ce2 = -ce1 / 2;
-    var kk = numeric.rep([6 * count, 6 * count], 0), ks = numeric.rep([6, 6], 0);
-    var dir = numeric.rep([6, 6], 0);
-    for (i = 0; i < 3; i++) {
-        for (j = 0; j < 3; j++) {
+    double ce1 = 1e-3 * t * t * abs(jac1) * d1[2][2];
+    double ce2 = -ce1 / 2;
+
+    vector<vector<double>> kk = numeric::rep(6 * count, 6 * count);
+    vector<vector<double>> ks = numeric.rep(6, 6);
+    vector<vector<double>> dir = numeric.rep(6, 6);
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
             dir[i][j] = d[i][j];
             dir[i + 3][j + 3] = d[i][j];
         }
     }
-    for (i = 0; i < 3; i++) {
-        var i2 = 2 * i;
-        var i3 = 3 * i;
-        var i6 = 6 * i;
-        for (j = 0; j < count; j++) {
-            var j2 = 2 * j;
-            var j3 = 3 * j;
-            var j6 = 6 * j;
-            for (ii = 0; ii < 6; ii++) {
-                for (jj = 0; jj < 6; jj++) {
+    for (int i = 0; i < 3; i++) {
+        int i2 = 2 * i;
+        int i3 = 3 * i;
+        int i6 = 6 * i;
+        for (int j = 0; j < count; j++) {
+            int j2 = 2 * j;
+            int j3 = 3 * j;
+            int j6 = 6 * j;
+            for (int ii = 0; ii < 6; ii++) {
+                for (int jj = 0; jj < 6; jj++) {
                     ks[ii][jj] = 0;
                 }
             }
@@ -301,16 +317,16 @@ vector<vector<double>> TriElement1::stiffnessMatrix(vector<FENode> p, vector<vec
             ks[0][1] = k1[i2][j2 + 1];
             ks[1][0] = k1[i2 + 1][j2];
             ks[1][1] = k1[i2 + 1][j2 + 1];
-            for (ii = 0; ii < 3; ii++) {
-                for (jj = 0; jj < 3; jj++) {
+            for (int ii = 0; ii < 3; ii++) {
+                for (int jj = 0; jj < 3; jj++) {
                     ks[2 + ii][2 + jj] = k2[i3 + ii][j3 + jj];
                 }
             }
             if (i == j) ks[5][5] = ce1;
             else     ks[5][5] = ce2;
             toDir(dir, ks);
-            for (ii = 0; ii < 6; ii++) {
-                for (jj = 0; jj < 6; jj++) {
+            for (int ii = 0; ii < 6; ii++) {
+                for (int jj = 0; jj < 6; jj++) {
                     kk[i6 + ii][j6 + jj] = ks[ii][jj];
                 }
             }
@@ -322,9 +338,13 @@ vector<vector<double>> TriElement1::stiffnessMatrix(vector<FENode> p, vector<vec
 // 歪 - 変位マトリックスの転置行列を返す
 // sf - 形状関数行列
 // jinv - 逆ヤコビ行列
-TriElement1.prototype.strainMatrix1 = function(sf, jinv) {
-    var count = this.nodeCount(), b = numeric.rep([2 * count, 3], 0);
-    var ji = jinv.elements;
+vector<vector<double>> TriElement1::strainMatrix1(vector<vector<double>> sf, vector<vector<double>> jinv) {
+
+    int count = nodeCount();
+    vector<vector<double>> b = numeric::rep(2 * count, 3);
+
+    vector<vector<double>> ji = jinv.elements;
+
     for (var i = 0; i < count; i++) {
         var sfi = sf[i];
         var dndx = ji[0] * sfi[1] + ji[3] * sfi[2];
