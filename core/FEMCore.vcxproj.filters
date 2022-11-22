@@ -39,9 +39,6 @@
     <Filter Include="ソース ファイル\numeric">
       <UniqueIdentifier>{8d482bbc-6648-4aa5-a0a2-82ea398984d9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソース ファイル\Solver">
-      <UniqueIdentifier>{180b5dcd-2786-4707-9665-4a6da345e937}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="module.cpp">
@@ -121,9 +118,6 @@
     </ClCompile>
     <ClCompile Include="SolidElement.cpp">
       <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="Solver.cpp">
-      <Filter>ソース ファイル\Solver</Filter>
     </ClCompile>
     <ClCompile Include="TBarElement.cpp">
       <Filter>ソース ファイル\Element\BarElement</Filter>

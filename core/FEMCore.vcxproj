@@ -53,7 +53,6 @@
     <ClCompile Include="numeric.cpp" />
     <ClCompile Include="CircleSection.cpp" />
     <ClCompile Include="RectSection.cpp" />
-    <ClCompile Include="Solver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
