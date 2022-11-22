@@ -19,8 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="module.cpp" />
-<!--
+    <!--
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="HeatTransferBound.cpp" />
     <ClCompile Include="Load.cpp" />
