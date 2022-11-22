@@ -1,3 +1,16 @@
+class TBarElement : public BarElement {
+
+private:
+
+
+public:
+    TBarElement(int label, int material, int param, double* nodes, double* axis);
+
+    string getName();
+
+
+};
+
 
 //--------------------------------------------------------------------//
 // Timoshenko梁要素
@@ -6,21 +19,22 @@
 // param - 梁パラメータのインデックス
 // nodes - 節点番号
 // axis - 断面基準方向ベクトル
-var TBarElement = function(label, material, param, nodes, axis) {
-    BarElement.call(this, label, material, param, nodes, axis);
+TBarElement::TBarElement(int label, int material, int param, double* nodes, double* axis) :
+    BarElement(label, material, param, nodes, axis){
 };
 
 // 要素境界名称を返す
-TBarElement.prototype.getName = function() {
-    return 'TBarElement';
+string TBarElement::getName() {
+    return "TBarElement";
 };
 
 // 剛性マトリックスの梁曲げ成分を返す
 // l - 要素長さ
 // material - 材料
 // sect - 梁断面パラメータ
-TBarElement.prototype.stiffBend = function(l, material, sect) {
-    var kb = material.ee / l, kby = kb * sect.iy, kbz = kb * sect.iz;
+vector<vector<double>> TBarElement::stiffBend(double l, Material material, Section sect) {
+
+    double kb = material.ee / l, kby = kb * sect.iy, kbz = kb * sect.iz;
     var ksc1 = sect.shearCoef() * material.gg * sect.area / l;
     var ksc2y = 12 * kby / l, kscy = ksc1 * ksc2y / (ksc1 + ksc2y);	// MacNealの補正
     var ksc2z = 12 * kbz / l, kscz = ksc1 * ksc2z / (ksc1 + ksc2z);
