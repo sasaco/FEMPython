@@ -60,6 +60,7 @@
     <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BoundaryCondition\BoundaryCondition.h" />
     <ClInclude Include="BoundaryCondition\HeatTransferBound.h" />
     <ClInclude Include="BoundaryCondition\Load.h" />
     <ClInclude Include="BoundaryCondition\Pressure.h" />
@@ -67,6 +68,9 @@
     <ClInclude Include="BoundaryCondition\Temperature.h" />
     <ClInclude Include="BoundaryCondition\Vector3R.h" />
     <ClInclude Include="Coordinates\Coordinates.h" />
+    <ClInclude Include="Element\BarElement\BarElement.h" />
+    <ClInclude Include="Element\BarElement\BEBarElement.h" />
+    <ClInclude Include="Element\BarElement\TBarElement.h" />
     <ClInclude Include="Element\FElement.h" />
     <ClInclude Include="Element\ShellElement\ShellElement.h" />
     <ClInclude Include="Element\SolidElement\HexaElement1.h" />
@@ -86,8 +90,10 @@
     <ClInclude Include="numeric\matrix4.hpp" />
     <ClInclude Include="numeric\numeric.h" />
     <ClInclude Include="numeric\vector3.hpp" />
+    <ClInclude Include="QuadElement1.h" />
     <ClInclude Include="Section\CircleSection.h" />
     <ClInclude Include="Section\RectSection.h" />
+    <ClInclude Include="Element\ShellElement\TriElement1.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
