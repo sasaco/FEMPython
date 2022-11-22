@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "Nodes.h";
 #include "BoundaryCondition.h";
 
@@ -7,10 +7,10 @@ using std::vector;
 
 
 //--------------------------------------------------------------------//
-// —v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
+// è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
 class FElement : public Nodes {
 
 private:
@@ -23,15 +23,15 @@ public:
     const double C1_12 = 1 / 12;
     const double C1_24 = 1 / 24;
     
-    // OŠpŒ`2Ÿ—v‘f‚ÌƒKƒEƒXÏ•ª‚ÌÏ•ª“_À•W
+    // ä¸‰è§’å½¢2æ¬¡è¦ç´ ã®ã‚¬ã‚¦ã‚¹ç©åˆ†ã®ç©åˆ†ç‚¹åº§æ¨™
     const double GTRI2[2] = { 1 / 6, 2 / 3 };
-    // l–Ê‘Ì2Ÿ—v‘f‚ÌƒKƒEƒXÏ•ª‚ÌÏ•ª“_À•W
+    // å››é¢ä½“2æ¬¡è¦ç´ ã®ã‚¬ã‚¦ã‚¹ç©åˆ†ã®ç©åˆ†ç‚¹åº§æ¨™
     const double GTETRA2[2] = { 0.25 - 0.05 * sqrt(5), 0.25 + 0.15 * sqrt(5) };
-    // lŠpŒ`1Ÿ—v‘f‚ÌƒKƒEƒXÏ•ª‚ÌÏ•ª“_À•W
+    // å››è§’å½¢1æ¬¡è¦ç´ ã®ã‚¬ã‚¦ã‚¹ç©åˆ†ã®ç©åˆ†ç‚¹åº§æ¨™
     const double GX2[2] = { -1 / sqrt(3), 1 / sqrt(3) };
-    // lŠpŒ`2Ÿ—v‘f‚ÌƒKƒEƒXÏ•ª‚ÌÏ•ª“_À•W
+    // å››è§’å½¢2æ¬¡è¦ç´ ã®ã‚¬ã‚¦ã‚¹ç©åˆ†ã®ç©åˆ†ç‚¹åº§æ¨™
     const double GX3[3] = { -sqrt(0.6), 0, sqrt(0.6) };
-    // ƒKƒEƒXÏ•ª‚Ìd‚İŒW”
+    // ã‚¬ã‚¦ã‚¹ç©åˆ†ã®é‡ã¿ä¿‚æ•°
     const double GW3[3] = { 5 / 9, 8 / 9, 5 / 9 };
 
     int label;
@@ -39,13 +39,13 @@ public:
 
     FElement(int _label, int _material, vector<int> _nodes);
 
-    // Ï•ª“_‚Ì„«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
+    // ç©åˆ†ç‚¹ã®å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
     void stiffPart(vector<vector<double>> d, vector<vector<double>> b, double coef, vector<vector<double>> out);
 
-    // ß“_•ÏˆÊ‚ğ1ŸŒ³”z—ñ‚É•ÏŠ·‚·‚é
+    // ç¯€ç‚¹å¤‰ä½ã‚’1æ¬¡å…ƒé…åˆ—ã«å¤‰æ›ã™ã‚‹
     void toArray(vector<BoundaryCondition> u, int dof, vector<double> out);
 
-    // ß“_•ÏˆÊ‚ğ‹ÇŠÀ•WŒnE1ŸŒ³”z—ñ‚É •ÏŠ·‚·‚é
+    // ç¯€ç‚¹å¤‰ä½ã‚’å±€æ‰€åº§æ¨™ç³»ãƒ»1æ¬¡å…ƒé…åˆ—ã« å¤‰æ›ã™ã‚‹
     void toLocalArray(vector<BoundaryCondition> u, vector<vector<double>>d, vector<double> v);
 
     void normalVector(vector<double> p, vector<double> out);

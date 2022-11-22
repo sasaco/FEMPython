@@ -1,24 +1,24 @@
-#include "QuadElement1.h";
+ï»¿#include "QuadElement1.h";
 
 //--------------------------------------------------------------------//
-// lŠpŒ`1Ÿ—v‘f (MITC4)
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// param - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
+// å››è§’å½¢1æ¬¡è¦ç´  (MITC4)
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// param - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
 QuadElement1::QuadElement1(int label, int material, int param, vector<int> nodes) :
     ShellElement(label, material, param, nodes,
         QUAD1_NODE, QUAD1_INT){ 
 };
 
-// —v‘f–¼Ì‚ğ•Ô‚·
+// è¦ç´ åç§°ã‚’è¿”ã™
 string QuadElement1::getName() {
     return "QuadElement1";
 };
 
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ ] ‚ğ•Ô‚·
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· ] ã‚’è¿”ã™
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
 vector<vector<double>> QuadElement1::shapeFunction(double xsi, double eta) {
     vector<vector<double>> result = {
         { 0.25 * (1 - xsi) * (1 - eta), -0.25 * (1 - eta), -0.25 * (1 - xsi)},
@@ -30,10 +30,10 @@ vector<vector<double>> QuadElement1::shapeFunction(double xsi, double eta) {
     return result;
 }
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// dens - Ş—¿‚Ì–§“x
-// t - —v‘fŒú‚³
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// dens - ææ–™ã®å¯†åº¦
+// t - è¦ç´ åšã•
 vector<vector<double>> QuadElement1::massMatrix(vector<FENode> p, double dens, double t) {
 
     int count = nodeCount();
@@ -91,10 +91,10 @@ vector<vector<double>> QuadElement1::massMatrix(vector<FENode> p, double dens, d
     return m;
 };
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
-// sp - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// sp - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> QuadElement1::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, ShellParameter sp) {
     
     int size = 6 * nodeCount();
@@ -114,12 +114,12 @@ vector<vector<double>> QuadElement1::stiffnessMatrix(vector<FENode> p, vector<ve
     return kk;
 };
 
-// Ï•ª“_‚Ì„«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
-// n - –@üƒxƒNƒgƒ‹
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
-// t - —v‘fŒú‚³
+// ç©åˆ†ç‚¹ã®å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// n - æ³•ç·šãƒ™ã‚¯ãƒˆãƒ«
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
+// t - è¦ç´ åšã•
 vector<vector<double>> QuadElement1::stiffPart(vector<FENode> p, vector<vector<double>> d1, double* n, 
                                             double xsi, double eta, double t) {
 

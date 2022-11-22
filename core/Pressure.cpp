@@ -1,13 +1,13 @@
-#include "Pressure.h";
+ï»¿#include "Pressure.h";
 
 #include <format>
 
 
 //--------------------------------------------------------------------//
-// –Êˆ³ğŒ
-// element - —v‘fƒ‰ƒxƒ‹
-// face - —v‘f‹«ŠE–Ê
-// press - –Êˆ³
+// é¢åœ§æ¡ä»¶
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// face - è¦ç´ å¢ƒç•Œé¢
+// press - é¢åœ§
 Pressure::Pressure(int _element, string _face, double _press) : ElementBorderBound(_element, _face) {
 
     element = _element;
@@ -16,8 +16,8 @@ Pressure::Pressure(int _element, string _face, double _press) : ElementBorderBou
 
 };
 
-// –Êˆ³ğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// elems - —v‘f
+// é¢åœ§æ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// elems - è¦ç´ 
 string Pressure::toString(vector<T> elems) {
     return format("Pressure\t{}\t{}\t{}", elems[element].label, face press);
 };

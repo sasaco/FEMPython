@@ -1,15 +1,15 @@
-#include "HexaElement2.h";
+ï»¿#include "HexaElement2.h";
 
 
 //--------------------------------------------------------------------//
-// ˜Z–Ê‘ÌƒZƒŒƒ“ƒfƒBƒsƒeƒB‘°2Ÿ—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
+// å…­é¢ä½“ã‚»ãƒ¬ãƒ³ãƒ‡ã‚£ãƒ”ãƒ†ã‚£æ—2æ¬¡è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
 HexaElement2::HexaElement2(int label, int material, vector<int> nodes) :
     SolidElement(label, material, nodes, HEXA2_NODE, HEXA2_INT) {
 
-    // ˜Z–Ê‘Ì2Ÿ—v‘f‚ÌÏ•ª“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W,d‚İŒW”
+    // å…­é¢ä½“2æ¬¡è¦ç´ ã®ç©åˆ†ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™,é‡ã¿ä¿‚æ•°
     for (int k = 0; k < 3; k++) {
         for (int j = 0; j < 3; j++) {
             vector<double> a;
@@ -24,14 +24,14 @@ HexaElement2::HexaElement2(int label, int material, vector<int> nodes) :
     }
 }
 
-// —v‘f–¼Ì‚ğ•Ô‚·
+// è¦ç´ åç§°ã‚’è¿”ã™
 string HexaElement2::getName() {
     return "HexaElement2";
 }
 
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ dNi/dƒÄ ] ‚ğ•Ô‚·
-// xsi,eta,zeta - —v‘f“à•”ƒÌ,ƒÅ,ƒÄÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· dNi/dÎ¶ ] ã‚’è¿”ã™
+// xsi,eta,zeta - è¦ç´ å†…éƒ¨Î¾,Î·,Î¶åº§æ¨™
 void HexaElement2::shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) {
 
     out= {

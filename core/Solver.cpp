@@ -1,4 +1,4 @@
-/*
+ï»¿/*
 * https://learn.microsoft.com/ja-jp/visualstudio/python/working-with-c-cpp-python-in-visual-studio?view=vs-2022
 */
 
@@ -8,8 +8,8 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
-// dof - ƒ‚ƒfƒ‹©—R“x
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
+// dof - ãƒ¢ãƒ‡ãƒ«è‡ªç”±åº¦
 void stiffnessMatrix(PyObject* self, PyObject* args) {
     
  
@@ -31,24 +31,24 @@ PYBIND11_MODULE(stiffnessMatrix, m) {
 
 /*
 //--------------------------------------------------------------------//
-// ˜A—§•û’ö®‹‰ğƒIƒuƒWƒFƒNƒg
+// é€£ç«‹æ–¹ç¨‹å¼æ±‚è§£ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 class Solver {
-    double PRECISION = 1e-10;   // ƒ}ƒgƒŠƒbƒNƒX¸“x
-    int LU_METHOD = 0;	        // LU•ª‰ğ–@
-    int ILUCG_METHOD = 1;	    // •sŠ®‘SLU•ª‰ğ‹¤–ğŒù”z–@
-    int method = LU_METHOD;	    // •û’ö®‰ğ–@
+    double PRECISION = 1e-10;   // ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ç²¾åº¦
+    int LU_METHOD = 0;	        // LUåˆ†è§£æ³•
+    int ILUCG_METHOD = 1;	    // ä¸å®Œå…¨LUåˆ†è§£å…±å½¹å‹¾é…æ³•
+    int method = LU_METHOD;	    // æ–¹ç¨‹å¼è§£æ³•
 
-    double *matrix;		    // s—ñ doubleŒ^‚Ìƒ|ƒCƒ“ƒ^Œã‚Å”z—ñ‚Æ‚µ‚Ä—p‚¢‚é
-    double *matrix2;		// ‘æ‚Qs—ñ doubleŒ^‚Ìƒ|ƒCƒ“ƒ^Œã‚Å”z—ñ‚Æ‚µ‚Ä—p‚¢‚é
-    double *vector;		    // ƒxƒNƒgƒ‹ doubleŒ^‚Ìƒ|ƒCƒ“ƒ^Œã‚Å”z—ñ‚Æ‚µ‚Ä—p‚¢‚é
+    double *matrix;		    // è¡Œåˆ— doubleå‹ã®ãƒã‚¤ãƒ³ã‚¿å¾Œã§é…åˆ—ã¨ã—ã¦ç”¨ã„ã‚‹
+    double *matrix2;		// ç¬¬ï¼’è¡Œåˆ— doubleå‹ã®ãƒã‚¤ãƒ³ã‚¿å¾Œã§é…åˆ—ã¨ã—ã¦ç”¨ã„ã‚‹
+    double *vector;		    // ãƒ™ã‚¯ãƒˆãƒ« doubleå‹ã®ãƒã‚¤ãƒ³ã‚¿å¾Œã§é…åˆ—ã¨ã—ã¦ç”¨ã„ã‚‹
 
-    int dof = 0;			// ƒ‚ƒfƒ‹©—R“x
+    int dof = 0;			// ãƒ¢ãƒ‡ãƒ«è‡ªç”±åº¦
 
     void clear();
     void createStiffnessMatrix();
 };
 
-// ƒf[ƒ^‚ğÁ‹‚·‚é
+// ãƒ‡ãƒ¼ã‚¿ã‚’æ¶ˆå»ã™ã‚‹
 void Solver::clear() {
   delete[] matrix;
   delete[] matrix2;
@@ -56,7 +56,7 @@ void Solver::clear() {
   dof = 0;
 }
 
-// „«ƒ}ƒgƒŠƒbƒNƒXE‰×dƒxƒNƒgƒ‹‚ğì¬‚·‚é
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ãƒ»è·é‡ãƒ™ã‚¯ãƒˆãƒ«ã‚’ä½œæˆã™ã‚‹
 void Solver::createStiffnessMatrix(bc, bcList){
     bc = bc;
     bcList = bcList;
@@ -67,10 +67,10 @@ void Solver::createStiffnessMatrix(bc, bcList){
     }
   }
 
-// „«ƒ}ƒgƒŠƒbƒNƒXE‰×dƒxƒNƒgƒ‹‚Ìì¬
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ãƒ»è·é‡ãƒ™ã‚¯ãƒˆãƒ«ã®ä½œæˆ
   var matrix1=stiffnessMatrix(this.dof),vector1=loadVector(this.dof);
 
-// S‘©©—R“x‚ğœ‹‚·‚é
+// æ‹˜æŸè‡ªç”±åº¦ã‚’é™¤å»ã™ã‚‹
   for(i=0;i<bcList.length;i++){
     if(bcList[i]>=0){
       var rx=bc.getRestDisp(bcList[i]);
@@ -84,7 +84,7 @@ void Solver::createStiffnessMatrix(bc, bcList){
   this.extruct(matrix1,vector1,reducedList);
 };
 
-// „«ƒ}ƒgƒŠƒbƒNƒXE¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ãƒ»è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
 Solver.prototype.createStiffMassMatrix=function(){
   var i,bc=model.bc,bcList=bc.bcList,reducedList=[];
   for(i=0;i<bcList.length;i++){
@@ -102,7 +102,7 @@ Solver.prototype.createStiffMassMatrix=function(){
   }
 };
 
-// Šô‰½„«ƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// å¹¾ä½•å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
 Solver.prototype.createGeomStiffMatrix=function(){
   var i,bc=model.bc,bcList=bc.bcList,reducedList=[];
   for(i=0;i<bcList.length;i++){
@@ -118,7 +118,7 @@ Solver.prototype.createGeomStiffMatrix=function(){
   }
 };
 
-// ”MŒvZ‚Ìƒ}ƒgƒŠƒbƒNƒXEƒxƒNƒgƒ‹‚ğŒvZ‚·‚é
+// ç†±è¨ˆç®—ã®ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ãƒ»ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¨ˆç®—ã™ã‚‹
 Solver.prototype.createHeatMatrix=function(){
   var i,bcList=model.bc.bcList,reducedList=[];
   for(i=0;i<bcList.length;i++){
@@ -127,10 +127,10 @@ Solver.prototype.createHeatMatrix=function(){
     }
   }
 
-// “`”Mƒ}ƒgƒŠƒbƒNƒXE”M‹«ŠEğŒƒxƒNƒgƒ‹‚Ìì¬
+// ä¼ç†±ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ãƒ»ç†±å¢ƒç•Œæ¡ä»¶ãƒ™ã‚¯ãƒˆãƒ«ã®ä½œæˆ
   var matrix1=heatMatrix(),vector1=tempVector(matrix1);
 
-// S‘©©—R“x‚ğœ‹‚·‚é
+// æ‹˜æŸè‡ªç”±åº¦ã‚’é™¤å»ã™ã‚‹
   for(i=0;i<bcList.length;i++){
     if(bcList[i]>=0){
       var t=model.bc.temperature[bcList[i]];
@@ -144,9 +144,9 @@ Solver.prototype.createHeatMatrix=function(){
   this.extruct(matrix1,vector1,reducedList);
 };
 
-// s—ñ‚Ìˆê•”‚ğ’Šo‚·‚é
-// matrix1,vector1 - Œ³‚Ìƒ}ƒgƒŠƒbƒNƒX,ƒxƒNƒgƒ‹
-// list - ’Šo•”•ª‚ÌƒŠƒXƒg
+// è¡Œåˆ—ã®ä¸€éƒ¨ã‚’æŠ½å‡ºã™ã‚‹
+// matrix1,vector1 - å…ƒã®ãƒãƒˆãƒªãƒƒã‚¯ã‚¹,ãƒ™ã‚¯ãƒˆãƒ«
+// list - æŠ½å‡ºéƒ¨åˆ†ã®ãƒªã‚¹ãƒˆ
 Solver.prototype.extruct=function(matrix1,vector1,list){
   this.matrix.length=0;
   this.vector.length=0;
@@ -156,7 +156,7 @@ Solver.prototype.extruct=function(matrix1,vector1,list){
   }
 };
 
-// ˜A—§•û’ö®‚ğ‰ğ‚­
+// é€£ç«‹æ–¹ç¨‹å¼ã‚’è§£ã
 Solver.prototype.solve=function(){
   switch(this.method){
     case LU_METHOD:
@@ -168,9 +168,9 @@ Solver.prototype.solve=function(){
   }
 };
 
-// ƒ‰ƒ“ƒ`ƒ‡ƒX–@‚ÅŒÅ—L’lEŒÅ—LƒxƒNƒgƒ‹‚ğ‹‚ß‚é
-// n - ‚Rd‘ÎŠp‰»s—ñ‚Ì‘å‚«‚³
-// delta - ƒVƒtƒg—ÊƒÂ
+// ãƒ©ãƒ³ãƒãƒ§ã‚¹æ³•ã§å›ºæœ‰å€¤ãƒ»å›ºæœ‰ãƒ™ã‚¯ãƒˆãƒ«ã‚’æ±‚ã‚ã‚‹
+// n - ï¼“é‡å¯¾è§’åŒ–è¡Œåˆ—ã®å¤§ãã•
+// delta - ã‚·ãƒ•ãƒˆé‡Î´
 Solver.prototype.eigenByLanczos=function(n,delta){
   switch(this.method){
     case LU_METHOD:
@@ -180,9 +180,9 @@ Solver.prototype.eigenByLanczos=function(n,delta){
   }
 };
 
-// ƒA[ƒmƒ‹ƒfƒB–@‚ÅŒÅ—L’lEŒÅ—LƒxƒNƒgƒ‹‚ğ‹‚ß‚é
-// n - ‚Rd‘ÎŠp‰»s—ñ‚Ì‘å‚«‚³
-// delta - ƒVƒtƒg—ÊƒÂ
+// ã‚¢ãƒ¼ãƒãƒ«ãƒ‡ã‚£æ³•ã§å›ºæœ‰å€¤ãƒ»å›ºæœ‰ãƒ™ã‚¯ãƒˆãƒ«ã‚’æ±‚ã‚ã‚‹
+// n - ï¼“é‡å¯¾è§’åŒ–è¡Œåˆ—ã®å¤§ãã•
+// delta - ã‚·ãƒ•ãƒˆé‡Î´
 Solver.prototype.eigenByArnoldi=function(n,delta){
   switch(this.method){
     case LU_METHOD:
@@ -192,8 +192,8 @@ Solver.prototype.eigenByArnoldi=function(n,delta){
   }
 };
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
-// dof - ƒ‚ƒfƒ‹©—R“x
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
+// dof - ãƒ¢ãƒ‡ãƒ«è‡ªç”±åº¦
 function massMatrix(dof){
   var mesh=model.mesh,elements=mesh.elements,matrix=[],i,j,mm,mmax=0;
   for(i=0;i<dof;i++) matrix[i]=[];
@@ -215,7 +215,7 @@ function massMatrix(dof){
       mmax=setElementMatrix(elem,3,matrix,mm,mmax);
     }
   }
-// À•W•ÏŠ·
+// åº§æ¨™å¤‰æ›
   var rests=model.bc.restraints;
   var index=model.bc.nodeIndex,bcdof=model.bc.dof;
   for(i=0;i<rests.length;i++){
@@ -224,7 +224,7 @@ function massMatrix(dof){
       ri.coords.transMatrix(matrix,dof,index[ri.node],bcdof[i]);
     }
   }
-// â‘Î’l‚ª¬‚³‚¢¬•ª‚ğœ‹‚·‚é
+// çµ¶å¯¾å€¤ãŒå°ã•ã„æˆåˆ†ã‚’é™¤å»ã™ã‚‹
   var eps=PRECISION*mmax;
   for(i=0;i<dof;i++){
     var mrow=matrix[i];
@@ -240,8 +240,8 @@ function massMatrix(dof){
   return matrix;
 }
 
-// Šô‰½„«ƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
-// dof - ƒ‚ƒfƒ‹©—R“x
+// å¹¾ä½•å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
+// dof - ãƒ¢ãƒ‡ãƒ«è‡ªç”±åº¦
 function geomStiffnessMatrix(dof){
   var mesh=model.mesh,elements=mesh.elements,nodes=mesh.nodes;
   var disp=model.result.displacement;
@@ -276,7 +276,7 @@ function geomStiffnessMatrix(dof){
       kmax=setElementMatrix(elem,3,matrix,km,kmax);
     }
   }
-// À•W•ÏŠ·
+// åº§æ¨™å¤‰æ›
   var rests=model.bc.restraints;
   var index=model.bc.nodeIndex,bcdof=model.bc.dof;
   for(i=0;i<rests.length;i++){
@@ -285,7 +285,7 @@ function geomStiffnessMatrix(dof){
       ri.coords.transMatrix(matrix,dof,index[ri.node],bcdof[i]);
     }
   }
-// â‘Î’l‚ª¬‚³‚¢¬•ª‚ğœ‹E•„†”½“]
+// çµ¶å¯¾å€¤ãŒå°ã•ã„æˆåˆ†ã‚’é™¤å»ãƒ»ç¬¦å·åè»¢
   var eps=PRECISION*kmax;
   for(i=0;i<dof;i++){
     var mrow=matrix[i];
@@ -304,12 +304,12 @@ function geomStiffnessMatrix(dof){
   return matrix;
 }
 
-// —v‘f‚Ìƒ}ƒgƒŠƒbƒNƒX‚ğİ’è‚·‚é
-// element - —v‘f
-// dof - ©—R“x
-// matrix - ‘S‘Ì„«ƒ}ƒgƒŠƒbƒNƒX
-// km - —v‘f‚Ì„«ƒ}ƒgƒŠƒbƒNƒX
-// kmax - ¬•ª‚Ìâ‘Î’l‚ÌÅ‘å’l
+// è¦ç´ ã®ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¨­å®šã™ã‚‹
+// element - è¦ç´ 
+// dof - è‡ªç”±åº¦
+// matrix - å…¨ä½“å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// km - è¦ç´ ã®å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// kmax - æˆåˆ†ã®çµ¶å¯¾å€¤ã®æœ€å¤§å€¤
 function setElementMatrix(element,dof,matrix,km,kmax){
   var nodeCount=element.nodeCount();
   var index=model.bc.nodeIndex,nodes=element.nodes;
@@ -336,8 +336,8 @@ function setElementMatrix(element,dof,matrix,km,kmax){
   return kmax;
 }
 
-// ‰×dƒxƒNƒgƒ‹‚ğì¬‚·‚é
-// dof - ƒ‚ƒfƒ‹©—R“x
+// è·é‡ãƒ™ã‚¯ãƒˆãƒ«ã‚’ä½œæˆã™ã‚‹
+// dof - ãƒ¢ãƒ‡ãƒ«è‡ªç”±åº¦
 function loadVector(dof){
   var loads=model.bc.loads,press=model.bc.pressures;
   var vector=numeric.rep([dof],0);
@@ -373,7 +373,7 @@ function loadVector(dof){
   return vector;
 }
 
-// “`”Mƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// ä¼ç†±ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
 function heatMatrix(){
   var elements=model.mesh.elements,mesh=model.mesh;
   var dof=model.mesh.nodes.length,matrix=[],i;
@@ -407,8 +407,8 @@ function heatMatrix(){
   return matrix;
 }
 
-// ”M‹«ŠEğŒƒxƒNƒgƒ‹‚ğì¬‚·‚é
-// matrix - “`”Mƒ}ƒgƒŠƒbƒNƒX
+// ç†±å¢ƒç•Œæ¡ä»¶ãƒ™ã‚¯ãƒˆãƒ«ã‚’ä½œæˆã™ã‚‹
+// matrix - ä¼ç†±ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 function tempVector(matrix){
   var htcs=model.bc.htcs,i;
   var vector=numeric.rep([model.mesh.nodes.length],0);
@@ -440,9 +440,9 @@ function tempVector(matrix){
   return vector;
 }
 
-// s—ñ‚Ìs‚©‚çˆê•”‚ğ’Šo‚·‚é
-// mrow - Œ³‚Ìƒ}ƒgƒŠƒbƒNƒX‚Ìsƒf[ƒ^
-// list - ’Šo•”•ª‚ÌƒŠƒXƒg
+// è¡Œåˆ—ã®è¡Œã‹ã‚‰ä¸€éƒ¨ã‚’æŠ½å‡ºã™ã‚‹
+// mrow - å…ƒã®ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è¡Œãƒ‡ãƒ¼ã‚¿
+// list - æŠ½å‡ºéƒ¨åˆ†ã®ãƒªã‚¹ãƒˆ
 function extructRow(mrow,list){
   var exrow=[],col=[],i1=0,j1=0;
   for(var j in mrow){
@@ -467,9 +467,9 @@ function extructRow(mrow,list){
   return exrow;
 }
 
-// ŒvZ‚ğŠJn‚·‚é
+// è¨ˆç®—ã‚’é–‹å§‹ã™ã‚‹
 function calcStart(){
-  info.textContent='ŒvZ’†EEE';
+  info.textContent='è¨ˆç®—ä¸­ãƒ»ãƒ»ãƒ»';
   var elems=document.getElementsByName('method');
   if(elems[0].checked){
     model.solver.method=LU_METHOD;
@@ -497,7 +497,7 @@ function calcStart(){
   }
 }
 
-// Ã‰ğÍ‚ÌŒvZ‚ğŠJn‚·‚é
+// é™è§£æã®è¨ˆç®—ã‚’é–‹å§‹ã™ã‚‹
 function statCalcStart(){
   try{
     model.calculate();
@@ -509,7 +509,7 @@ function statCalcStart(){
   }
 }
 
-// ŒÅ—LU“®‰ğÍ‚ÌŒvZ‚ğŠJn‚·‚é
+// å›ºæœ‰æŒ¯å‹•è§£æã®è¨ˆç®—ã‚’é–‹å§‹ã™ã‚‹
 function vibCalcStart(){
   try{
     var count=parseInt(document.getElementById('eigennumber').value);
@@ -521,7 +521,7 @@ function vibCalcStart(){
   }
 }
 
-// üŒ`À‹ü‰ğÍ‚ÌŒvZ‚ğŠJn‚·‚é
+// ç·šå½¢åº§å±ˆè§£æã®è¨ˆç®—ã‚’é–‹å§‹ã™ã‚‹
 function buckCalcStart(){
 //  try{
     var count=parseInt(document.getElementById('eigennumber').value);
@@ -530,14 +530,14 @@ function buckCalcStart(){
 
 }
 
-// ŒvZİ’èƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
+// è¨ˆç®—è¨­å®šã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
 function showCalc(){
   showModalWindow(CALC_WINDOW);
   var elems=document.getElementsByName('method');
   elems[model.solver.method].checked=true;
 }
 
-// ŒvZİ’è‚ğæ‚èÁ‚·
+// è¨ˆç®—è¨­å®šã‚’å–ã‚Šæ¶ˆã™
 function calcCancel(){
   hideModalWindow(CALC_WINDOW);
 }

@@ -1,12 +1,12 @@
-#pragma once
+ï»¿#pragma once
 #include "ShellElement.h";
 
 class QuadElement1 : public ShellElement {
 
 private:
-    // lŠpŒ`1Ÿ—v‘f‚Ìß“_‚ÌƒÌ,ƒÅÀ•W
+    // å››è§’å½¢1æ¬¡è¦ç´ ã®ç¯€ç‚¹ã®Î¾,Î·åº§æ¨™
     vector<vector<double>> QUAD1_NODE = { {-1, -1}, {1, -1}, {1, 1}, {-1, 1} };
-    // lŠpŒ`1Ÿ—v‘f‚ÌÏ•ª“_‚ÌƒÌ,ƒÅÀ•W,d‚İŒW”
+    // å››è§’å½¢1æ¬¡è¦ç´ ã®ç©åˆ†ç‚¹ã®Î¾,Î·åº§æ¨™,é‡ã¿ä¿‚æ•°
     vector<vector<double>> QUAD1_INT = { {GX2[0], GX2[0], 1}, {GX2[1], GX2[0], 1}, {GX2[0], GX2[1], 1},
         {GX2[1], GX2[1], 1} };
 

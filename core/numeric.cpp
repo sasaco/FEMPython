@@ -1,4 +1,4 @@
-#include "numeric.h";
+ï»¿#include "numeric.h";
 
 double numeric::dotVV(vector<double> x, vector<double> y) {
 
@@ -57,7 +57,7 @@ void numeric::dotVM(vector<double> x, vector<vector<double>> y, vector<double> o
 
 
 /// <summary>
-/// x ‚É y ‚Ì’l‚ğ‰ÁZ‚·‚é
+/// x ã« y ã®å€¤ã‚’åŠ ç®—ã™ã‚‹
 /// </summary>
 /// <param name="x"></param>
 /// <param name="y"></param>
@@ -72,7 +72,7 @@ void numeric::add(vector<double> x, vector<double> y) {
 
 
 /// <summary>
-/// x ‚É y ‚Ì’l‚ğæ‚¶‚é
+/// x ã« y ã®å€¤ã‚’ä¹—ã˜ã‚‹
 /// </summary>
 /// <param name="x"></param>
 /// <param name="y"></param>
@@ -85,13 +85,13 @@ void numeric::mul(vector<double> x, double y) {
 
 
 /// <summary>
-/// nxn s—ñ‚Ì‹ts—ñ‚ğ‹‚ß‚é
+/// nxn è¡Œåˆ—ã®é€†è¡Œåˆ—ã‚’æ±‚ã‚ã‚‹
 /// </summary>
 void numeric::getInverse(vector<vector<double>> a, vector<vector<double>> inv_a) {
 
     inv_a.clear();
 
-    //’PˆÊs—ñ‚ğì‚é
+    //å˜ä½è¡Œåˆ—ã‚’ä½œã‚‹
     for (int i = 0; i < a.size(); i++) {
         vector<double> b;
         for (int j = 0; j < a[i].size(); j++) {
@@ -100,7 +100,7 @@ void numeric::getInverse(vector<vector<double>> a, vector<vector<double>> inv_a)
         inv_a.push_back(b);
     }
 
-    //‘|‚«o‚µ–@
+    //æƒãå‡ºã—æ³•
     for (int i = 0; i < a.size(); i++) {
         double buf = 1 / a[i][i];
         for (int j = 0; j < a[i].size(); j++) {
@@ -122,7 +122,7 @@ void numeric::getInverse(vector<vector<double>> a, vector<vector<double>> inv_a)
 }
 
 /// <summary>
-/// ƒ[ƒ–„‚ß‚Ì“ñŸŒ³”z—ñ‚ğ¶¬‚·‚é
+/// ã‚¼ãƒ­åŸ‹ã‚ã®äºŒæ¬¡å…ƒé…åˆ—ã‚’ç”Ÿæˆã™ã‚‹
 /// </summary>
 void numeric::rep(int row, int col, vector<vector<double>> out) {
 

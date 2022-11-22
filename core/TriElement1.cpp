@@ -1,24 +1,24 @@
-#include "TriElement1.h";
+ï»¿#include "TriElement1.h";
 
 //--------------------------------------------------------------------//
-// OŠpŒ`1Ÿ—v‘f (”–“÷ƒVƒFƒ‹)
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// param - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
+// ä¸‰è§’å½¢1æ¬¡è¦ç´  (è–„è‚‰ã‚·ã‚§ãƒ«)
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// param - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
 TriElement1::TriElement1(int label, int material, int param, vector<int> nodes) :
                 ShellElement(label, material, param, nodes, TRI1_NODE, TRI1_INT){
 };
 
 
-// —v‘f–¼Ì‚ğ•Ô‚·
+// è¦ç´ åç§°ã‚’è¿”ã™
 string TriElement1::getName() {
     return "TriElement1";
 };
 
 
-// ‚PŸ‚ÌŒ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ ] ‚ğ•Ô‚·
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
+// ï¼‘æ¬¡ã®å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· ] ã‚’è¿”ã™
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
 vector<vector<double>> TriElement1::shapeFunction(double xsi, double eta) {
     vector<vector<double>> result = {
         { 1 - xsi - eta, -1, -1 }, 
@@ -29,8 +29,8 @@ vector<vector<double>> TriElement1::shapeFunction(double xsi, double eta) {
 };
 
 
-// ‚QŸ‚ÌŒ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ ] ‚ğ•Ô‚·
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
+// ï¼’æ¬¡ã®å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· ] ã‚’è¿”ã™
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
 vector<vector<double>> TriElement1::shapeFunction2(double xsi, double eta) {
     double xe = 1 - xsi - eta;
     vector<vector<double>> result = {
@@ -45,10 +45,10 @@ vector<vector<double>> TriElement1::shapeFunction2(double xsi, double eta) {
 };
 
 
-// Šp“x‚ÌŒ`óŠÖ”s—ñ [ Hxi Hyi dHxi/dƒÌ dHyi/dƒÌ dHxi/dƒÅ dHyi/dƒÅ ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
+// è§’åº¦ã®å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Hxi Hyi dHxi/dÎ¾ dHyi/dÎ¾ dHxi/dÎ· dHyi/dÎ· ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
 vector<vector<double>> TriElement1::shapeFunction3(vector<FENode> p, vector<vector<double>> d, double xsi, double eta) {
 
     int count = nodeCount();
@@ -135,8 +135,8 @@ vector<vector<double>> TriElement1::shapeFunction3(vector<FENode> p, vector<vect
 };
 
 
-// ƒ„ƒRƒrƒAƒ“‚ğ•Ô‚·
-// p - —v‘fß“_
+// ãƒ¤ã‚³ãƒ“ã‚¢ãƒ³ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
 double TriElement1::jacobian(vector<FENode> p) {
 
     double p0x = p[0].x;
@@ -151,10 +151,10 @@ double TriElement1::jacobian(vector<FENode> p) {
 };
 
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// dens - Ş—¿‚Ì–§“x
-// t - —v‘fŒú‚³
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// dens - ææ–™ã®å¯†åº¦
+// t - è¦ç´ åšã•
 vector<vector<double>> TriElement1::massMatrix(vector<FENode> p, double dens, double t) {
     
     int count = nodeCount();
@@ -216,10 +216,10 @@ vector<vector<double>> TriElement1::massMatrix(vector<FENode> p, double dens, do
 };
 
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
-// sp - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// sp - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> TriElement1::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, ShellParameter sp) {
 
     vector<vector<double>> d = dirMatrix(p);
@@ -295,9 +295,9 @@ vector<vector<double>> TriElement1::stiffnessMatrix(vector<FENode> p, vector<vec
 };
 
 
-// ˜c - •ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ‚ğ•Ô‚·
-// sf - Œ`óŠÖ”s—ñ
-// jinv - ‹tƒ„ƒRƒrs—ñ
+// æ­ª - å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ—ã‚’è¿”ã™
+// sf - å½¢çŠ¶é–¢æ•°è¡Œåˆ—
+// jinv - é€†ãƒ¤ã‚³ãƒ“è¡Œåˆ—
 vector<vector<double>> TriElement1::strainMatrix1(vector<vector<double>> sf, vector<vector<double>> jinv) {
 
     int count = nodeCount();
@@ -319,9 +319,9 @@ vector<vector<double>> TriElement1::strainMatrix1(vector<vector<double>> sf, vec
 };
 
 
-// –ÊŠO˜c - •ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ‚ğ•Ô‚·
-// sf - Œ`óŠÖ”s—ñ
-// jinv - ‹tƒ„ƒRƒrs—ñ
+// é¢å¤–æ­ª - å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ—ã‚’è¿”ã™
+// sf - å½¢çŠ¶é–¢æ•°è¡Œåˆ—
+// jinv - é€†ãƒ¤ã‚³ãƒ“è¡Œåˆ—
 vector<vector<double>> TriElement1::strainMatrix2(vector<vector<double>> sf, vector<double> jinv) {
 
     int count = 3 * nodeCount();
@@ -341,10 +341,10 @@ vector<vector<double>> TriElement1::strainMatrix2(vector<vector<double>> sf, vec
     return b;
 };
 
-// Œ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ çNiNjdV ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// coef - ŒW”
-// t - —v‘fŒú‚³
+// å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«NiNjdV ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// coef - ä¿‚æ•°
+// t - è¦ç´ åšã•
 vector<vector<double>> TriElement1::shapeFunctionMatrix(vector<FENode> p, double coef, double t) {
 
     double ds = coef * jacobian(p) / 12;
@@ -361,11 +361,11 @@ vector<vector<double>> TriElement1::shapeFunctionMatrix(vector<FENode> p, double
 };
 
 
-// Šô‰½„«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
-// sp - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
+// å¹¾ä½•å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// sp - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> TriElement1::geomStiffnessMatrix(vector<FENode> p, u, d1, ShellParameter sp) {
     
     intcount = nodeCount();
@@ -428,13 +428,13 @@ vector<vector<double>> TriElement1::geomStiffnessMatrix(vector<FENode> p, u, d1,
     return kk;
 };
 
-// —v‘f“à‚Ì˜cƒxƒNƒgƒ‹‚ğ•Ô‚·
-// p - —v‘fß“_
-// v - ß“_•ÏˆÊƒxƒNƒgƒ‹
-// n - –@üƒxƒNƒgƒ‹
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
-// xsi,eta,zeta - ƒÌ,ƒÅ,ƒÄÀ•W
-// t - —v‘fŒú‚³
+// è¦ç´ å†…ã®æ­ªãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// v - ç¯€ç‚¹å¤‰ä½ãƒ™ã‚¯ãƒˆãƒ«
+// n - æ³•ç·šãƒ™ã‚¯ãƒˆãƒ«
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// xsi,eta,zeta - Î¾,Î·,Î¶åº§æ¨™
+// t - è¦ç´ åšã•
 vector<double> TriElement1::strainPart(vector<FENode> p, vector<double> v, double n[3], vector<vector<double>> d, double xsi, double eta, double zeta, double t) {
 
     vector<vector<double>> sf1 = shapeFunction(xsi, eta);
@@ -452,14 +452,14 @@ vector<double> TriElement1::strainPart(vector<FENode> p, vector<double> v, doubl
     return vm;
 };
 
-// ˜c - •ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ‚ğ•Ô‚·
-// ‚½‚¾‚µ˜c‚Í—v‘f–ÊÀ•WA•ÏˆÊ‚Í‘S‘ÌÀ•W
-// sf1 - –Ê“à•ÏŒ`‚ÌŒ`óŠÖ”s—ñ
-// sf3 - –ÊŠO•ÏŒ`‚ÌŒ`óŠÖ”s—ñ
-// jinv - ‹tƒ„ƒRƒrs—ñ
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
-// zeta - ß“_‚ÌƒÄÀ•W
-// t - —v‘fŒú‚³
+// æ­ª - å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ—ã‚’è¿”ã™
+// ãŸã ã—æ­ªã¯è¦ç´ é¢åº§æ¨™ã€å¤‰ä½ã¯å…¨ä½“åº§æ¨™
+// sf1 - é¢å†…å¤‰å½¢ã®å½¢çŠ¶é–¢æ•°è¡Œåˆ—
+// sf3 - é¢å¤–å¤‰å½¢ã®å½¢çŠ¶é–¢æ•°è¡Œåˆ—
+// jinv - é€†ãƒ¤ã‚³ãƒ“è¡Œåˆ—
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// zeta - ç¯€ç‚¹ã®Î¶åº§æ¨™
+// t - è¦ç´ åšã•
 vector<vector<double>> TriElement1::strainMatrix(vector<vector<double>> sf1, vector<vector<double>>  sf3, vector<vector<double>> jinv, vector<vector<double>> d, double zeta, double t) {
     
     vector<vector<double>> b1 = strainMatrix1(sf1, jinv);
@@ -512,14 +512,14 @@ vector<vector<double>> TriElement1::strainMatrix(vector<vector<double>> sf1, vec
 };
 
 
-// ƒxƒNƒgƒ‹‚ğ˜c‚É•ÏŠ·‚·‚é
-// s - ˜cƒxƒNƒgƒ‹
+// ãƒ™ã‚¯ãƒˆãƒ«ã‚’æ­ªã«å¤‰æ›ã™ã‚‹
+// s - æ­ªãƒ™ã‚¯ãƒˆãƒ«
 Strain TriElement1::toStrain(double s[]) {
     return Strain([s[0], s[1], 0, s[2], 0, 0]);
 };
 
-// ƒxƒNƒgƒ‹‚ğ˜c‚É•ÏŠ·‚·‚é
-// s - ˜cƒxƒNƒgƒ‹
+// ãƒ™ã‚¯ãƒˆãƒ«ã‚’æ­ªã«å¤‰æ›ã™ã‚‹
+// s - æ­ªãƒ™ã‚¯ãƒˆãƒ«
 Stress TriElement1::toStress(double s[]) {
     return Stress([s[0], s[1], 0, s[2], 0, 0]);
 };

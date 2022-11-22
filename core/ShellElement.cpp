@@ -1,13 +1,13 @@
-#include "ShellElement.h";
+ï»¿#include "ShellElement.h";
 
 //--------------------------------------------------------------------//
-// ƒVƒFƒ‹—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// param - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
-// nodeP - ß“_‚ÌƒÌ,ƒÅÀ•W
-// intP - Ï•ª“_‚ÌƒÌ,ƒÅÀ•W,d‚İŒW”
+// ã‚·ã‚§ãƒ«è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// param - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
+// nodeP - ç¯€ç‚¹ã®Î¾,Î·åº§æ¨™
+// intP - ç©åˆ†ç‚¹ã®Î¾,Î·åº§æ¨™,é‡ã¿ä¿‚æ•°
 ShellElement::ShellElement(int _label, int material, int _param, vector<int> nodes, 
     vector<vector<double>> _nodeP, vector<vector<double>> _intP) :
     FElement(label, material, nodes) {
@@ -19,11 +19,11 @@ ShellElement::ShellElement(int _label, int material, int _param, vector<int> nod
 }
 
 
-// ƒ„ƒRƒrs—ñ‚ğ•Ô‚·
-// p - —v‘fß“_
-// sf - Œ`óŠÖ”s—ñ
-// n - –@üƒxƒNƒgƒ‹
-// t - —v‘fŒú‚³
+// ãƒ¤ã‚³ãƒ“è¡Œåˆ—ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// sf - å½¢çŠ¶é–¢æ•°è¡Œåˆ—
+// n - æ³•ç·šãƒ™ã‚¯ãƒˆãƒ«
+// t - è¦ç´ åšã•
 void ShellElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, 
     double n[3], double t, double out[9]) {
     
@@ -55,9 +55,9 @@ void ShellElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf,
 };
 
 
-// ‹tƒ„ƒRƒrs—ñ‚ğ•Ô‚·
-// ja - ƒ„ƒRƒrs—ñ
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
+// é€†ãƒ¤ã‚³ãƒ“è¡Œåˆ—ã‚’è¿”ã™
+// ja - ãƒ¤ã‚³ãƒ“è¡Œåˆ—
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void ShellElement::jacobInv(double ja[9], vector<vector<double>> d, vector<double> out) {
 
     vector<double> e1;
@@ -82,12 +82,12 @@ void ShellElement::jacobInv(double ja[9], vector<vector<double>> d, vector<doubl
 };
 
 
-// Œ`óŠÖ”‚ÌŒù”z [ dNi/dx dNi/dy ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// ja - ƒ„ƒRƒrs—ñ
-// sf - Œ`óŠÖ”s—ñ
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
-// t - —v‘fŒú‚³
+// å½¢çŠ¶é–¢æ•°ã®å‹¾é… [ dNi/dx dNi/dy ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// ja - ãƒ¤ã‚³ãƒ“è¡Œåˆ—
+// sf - å½¢çŠ¶é–¢æ•°è¡Œåˆ—
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// t - è¦ç´ åšã•
 void ShellElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, 
     vector<vector<double>> d, double t, vector<vector<double>> out) {
     
@@ -110,10 +110,10 @@ void ShellElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> s
 };
 
 
-// ˜c - •ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ‚ğ•Ô‚·
-// ja - ƒ„ƒRƒrs—ñ
-// sf - Œ`óŠÖ”s—ñ
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
+// æ­ª - å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ—ã‚’è¿”ã™
+// ja - ãƒ¤ã‚³ãƒ“è¡Œåˆ—
+// sf - å½¢çŠ¶é–¢æ•°è¡Œåˆ—
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void ShellElement::strainMatrix1(double ja[9], vector<vector<double>> sf, 
     vector<vector<double>> d, vector<vector<double>> out) {
     int count = nodeCount();
@@ -140,13 +140,13 @@ void ShellElement::strainMatrix1(double ja[9], vector<vector<double>> sf,
     }
 };
 
-// ˜c - •ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ‚ğ•Ô‚·
-// ‚½‚¾‚µ˜c‚Í—v‘f–ÊÀ•WA•ÏˆÊ‚Í‘S‘ÌÀ•W
-// ja - ƒ„ƒRƒrs—ñ
-// sf - Œ`óŠÖ”s—ñ
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
-// zeta - ß“_‚ÌƒÄÀ•W
-// t - —v‘fŒú‚³
+// æ­ª - å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ—ã‚’è¿”ã™
+// ãŸã ã—æ­ªã¯è¦ç´ é¢åº§æ¨™ã€å¤‰ä½ã¯å…¨ä½“åº§æ¨™
+// ja - ãƒ¤ã‚³ãƒ“è¡Œåˆ—
+// sf - å½¢çŠ¶é–¢æ•°è¡Œåˆ—
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// zeta - ç¯€ç‚¹ã®Î¶åº§æ¨™
+// t - è¦ç´ åšã•
 void ShellElement::strainMatrix(double ja[9], vector<vector<double>> sf, 
     vector<vector<double>> d, double zeta, double t, vector<vector<double>> out) {
     
@@ -208,11 +208,11 @@ void ShellElement::strainMatrix(double ja[9], vector<vector<double>> sf,
     }
 };
 
-// Ï•ª“_‚ÌŒ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ NiNj ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// x - ƒÌ,ƒÅ,ƒÄÀ•W
-// w - d‚İŒW”
-// t - —v‘fŒú‚³
+// ç©åˆ†ç‚¹ã®å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ NiNj ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// x - Î¾,Î·,Î¶åº§æ¨™
+// w - é‡ã¿ä¿‚æ•°
+// t - è¦ç´ åšã•
 void ShellElement::shapePart(vector<FENode> p, vector<double> x, double w, double t, vector<vector<double>> out) {
 
     vector<vector<double>> sf;
@@ -241,11 +241,11 @@ void ShellElement::shapePart(vector<FENode> p, vector<double> x, double w, doubl
 }
 
 
-// Ï•ª“_‚ÌŠgUƒ}ƒgƒŠƒbƒNƒX [ ŞNiEŞNj ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// x - ƒÌ,ƒÅ,ƒÄÀ•W
-// w - d‚İŒW”
-// t - —v‘fŒú‚³
+// ç©åˆ†ç‚¹ã®æ‹¡æ•£ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ‡Niãƒ»âˆ‡Nj ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// x - Î¾,Î·,Î¶åº§æ¨™
+// w - é‡ã¿ä¿‚æ•°
+// t - è¦ç´ åšã•
 void ShellElement::gradPart(vector<FENode> p, double x[3], double w, double t, vector<vector<double>> out) {
 
     vector<vector<double>> sf
@@ -283,10 +283,10 @@ void ShellElement::gradPart(vector<FENode> p, double x[3], double w, double t, v
     }
 };
 
-// Œ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ çNiNjdV ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// coef - ŒW”
-// sp - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
+// å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«NiNjdV ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// coef - ä¿‚æ•°
+// sp - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 void ShellElement::shapeFunctionMatrix(vector<FENode> p, double coef, ShellParameter sp, vector<vector<double>> out) {
     
     int count = nodeCount();
@@ -309,10 +309,10 @@ void ShellElement::shapeFunctionMatrix(vector<FENode> p, double coef, ShellParam
     }
 };
 
-// ŠgUƒ}ƒgƒŠƒbƒNƒX [ çŞNiEŞNjdV ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// coef - ŒW”
-// sp - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
+// æ‹¡æ•£ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«âˆ‡Niãƒ»âˆ‡NjdV ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// coef - ä¿‚æ•°
+// sp - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 void ShellElement::gradMatrix(vector<FENode> p, double coef, ShellParameter sp, vector<vector<double>> out) {
     
     int count = nodeCount();
@@ -329,11 +329,11 @@ void ShellElement::gradMatrix(vector<FENode> p, double coef, ShellParameter sp, 
     }
 };
 
-// Šô‰½„«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
-// sp - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
+// å¹¾ä½•å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// sp - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 void ShellElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp, vector<vector<double>> out) {
     
     int count = nodeCount();
@@ -405,11 +405,11 @@ void ShellElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryConditio
 };
 
 
-// ß“_˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
-// sp - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
+// ç¯€ç‚¹æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// sp - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 void ShellElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp,
                                 vector<Strain> strain1, vector<Stress> stress1, vector<double> energy1, 
                                 vector<Strain> strain2, vector<Stress> stress2, vector<double> energy2) {
@@ -449,13 +449,13 @@ void ShellElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, v
     }
 };
 
-// —v‘f“à‚Ì˜cƒxƒNƒgƒ‹‚ğ•Ô‚·
-// p - —v‘fß“_
-// v - ß“_•ÏˆÊƒxƒNƒgƒ‹
-// n - –@üƒxƒNƒgƒ‹
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
-// xsi,eta,zeta - ƒÌ,ƒÅ,ƒÄÀ•W
-// t - —v‘fŒú‚³
+// è¦ç´ å†…ã®æ­ªãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// v - ç¯€ç‚¹å¤‰ä½ãƒ™ã‚¯ãƒˆãƒ«
+// n - æ³•ç·šãƒ™ã‚¯ãƒˆãƒ«
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// xsi,eta,zeta - Î¾,Î·,Î¶åº§æ¨™
+// t - è¦ç´ åšã•
 void ShellElement::strainPart(vector<FENode> p, vector<double> v, double n[3], vector<vector<double>> d, double  xsi, double eta, double zeta, double t, vector<double> out) {
 
     vector<vector<double>> sf;
@@ -470,11 +470,11 @@ void ShellElement::strainPart(vector<FENode> p, vector<double> v, double n[3], v
     numeric::dotVM(v, sm, out);
 };
 
-// —v‘f˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
-// sp - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
+// è¦ç´ æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// sp - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 void ShellElement::elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp, 
                                         vector<Strain> _Strain1, vector<Stress> _Stress1, double energy1,
                                         vector<Strain> _Strain2, vector<Stress> _Stress2, double energy2) {
@@ -534,22 +534,22 @@ void ShellElement::elementStrainStress(vector<FENode> p, vector<BoundaryConditio
     toStress(stress2, _Stress1);
 };
 
-// ƒxƒNƒgƒ‹‚ğ˜c‚É•ÏŠ·‚·‚é
-// s - ˜cƒxƒNƒgƒ‹
+// ãƒ™ã‚¯ãƒˆãƒ«ã‚’æ­ªã«å¤‰æ›ã™ã‚‹
+// s - æ­ªãƒ™ã‚¯ãƒˆãƒ«
 void ShellElement::toStrain(vector<double> s, Strain out) {
     out =  Strain([s[0], s[1], 0, s[2], s[3], s[4]]);
 };
 
-// ƒxƒNƒgƒ‹‚ğ˜c‚É•ÏŠ·‚·‚é
-// s - ˜cƒxƒNƒgƒ‹
+// ãƒ™ã‚¯ãƒˆãƒ«ã‚’æ­ªã«å¤‰æ›ã™ã‚‹
+// s - æ­ªãƒ™ã‚¯ãƒˆãƒ«
 void ShellElement::toStress(vector<double> s, Stress out) {
     out = Stress([s[0], s[1], 0, s[2], s[3], s[4]]);
 };
 
-// —v‘f‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// materials - Ş—¿
-// params - ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
-// p - ß“_
+// è¦ç´ ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// materials - ææ–™
+// params - ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+// p - ç¯€ç‚¹
 string ShellElement::toString(vector<Material> materials, vector<ShellParameter> params, vector<FENode> p) {
 
     string s = format("{}\t{}\t{}\t{}\t{}",
@@ -562,9 +562,9 @@ string ShellElement::toString(vector<Material> materials, vector<ShellParameter>
 };
 
 
-// ß“_À•W‚ğ‹ÇŠÀ•WŒn‚É•ÏŠ·‚·‚é
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
-// p - —v‘fß“_
+// ç¯€ç‚¹åº§æ¨™ã‚’å±€æ‰€åº§æ¨™ç³»ã«å¤‰æ›ã™ã‚‹
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// p - è¦ç´ ç¯€ç‚¹
 vector<double> ShellElement::toLocal(d, vector<FENode> p) {
 
     vector<vector<double>> x;

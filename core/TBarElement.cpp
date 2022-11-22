@@ -1,4 +1,4 @@
-class TBarElement : public BarElement {
+ï»¿class TBarElement : public BarElement {
 
 private:
 
@@ -13,30 +13,30 @@ public:
 
 
 //--------------------------------------------------------------------//
-// Timoshenko—À—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// param - —Àƒpƒ‰ƒ[ƒ^‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
-// axis - ’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// Timoshenkoæ¢è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// param - æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
+// axis - æ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 TBarElement::TBarElement(int label, int material, int param, double* nodes, double* axis) :
     BarElement(label, material, param, nodes, axis){
 };
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 string TBarElement::getName() {
     return "TBarElement";
 };
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚Ì—À‹È‚°¬•ª‚ğ•Ô‚·
-// l - —v‘f’·‚³
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®æ¢æ›²ã’æˆåˆ†ã‚’è¿”ã™
+// l - è¦ç´ é•·ã•
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> TBarElement::stiffBend(double l, Material material, Section sect) {
 
     double kb = material.ee / l, kby = kb * sect.iy, kbz = kb * sect.iz;
     var ksc1 = sect.shearCoef() * material.gg * sect.area / l;
-    var ksc2y = 12 * kby / l, kscy = ksc1 * ksc2y / (ksc1 + ksc2y);	// MacNeal‚Ì•â³
+    var ksc2y = 12 * kby / l, kscy = ksc1 * ksc2y / (ksc1 + ksc2y);	// MacNealã®è£œæ­£
     var ksc2z = 12 * kbz / l, kscz = ksc1 * ksc2z / (ksc1 + ksc2z);
     var lh = 0.5 * l, ksyl = kscy * lh, ksyl2 = ksyl * lh, kszl = kscz * lh, kszl2 = kszl * lh;
     return [[kscy, ksyl, -kscy, ksyl], [ksyl, kby + ksyl2, -ksyl, -kby + ksyl2],
@@ -45,11 +45,11 @@ vector<vector<double>> TBarElement::stiffBend(double l, Material material, Secti
         [-kscz, kszl, kscz, kszl], [-kszl, -kbz + kszl2, kszl, kbz + kszl2]];
 };
 
-// ‹È‚°‹È—¦E‚¹‚ñ’f˜c‚ğ•Ô‚·
-// v - ‹ÇŠÀ•WŒn‚Ì•ÏˆÊ
-// l - —v‘f’·‚³
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// æ›²ã’æ›²ç‡ãƒ»ã›ã‚“æ–­æ­ªã‚’è¿”ã™
+// v - å±€æ‰€åº§æ¨™ç³»ã®å¤‰ä½
+// l - è¦ç´ é•·ã•
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 TBarElement.prototype.bendCurveShare = function(v, l, material, sect) {
     var cs1 = sect.shearCoef() / l, cs2 = 0.5 * sect.shearCoef();
     var ckap1 = cs2 * material.gg * sect.area * l / material.ee;
@@ -68,10 +68,10 @@ TBarElement.prototype.bendCurveShare = function(v, l, material, sect) {
     return[kpy, kpz, sy, sz];
 };
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// dens - Ş—¿‚Ì–§“x
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// dens - ææ–™ã®å¯†åº¦
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 TBarElement.prototype.massMatrix = function(p, dens, sect) {
     var l = p[0].distanceTo(p[1]), d = dirMatrix(p, this.axis);
     var mi = sect.massInertia(dens, l), dm = C1_3 * mi[0];

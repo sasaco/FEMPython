@@ -1,12 +1,12 @@
-#pragma once
+ï»¿#pragma once
 #include <string>
-using namespace std;         //  –¼‘O‹óŠÔw’è
+using namespace std;         //  åå‰ç©ºé–“æŒ‡å®š
 
 
 //--------------------------------------------------------------------//
-// ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
-// label - ƒpƒ‰ƒ[ƒ^”Ô†
-// thickness - Œú‚³
+// ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+// label - ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ç•ªå·
+// thickness - åšã•
 class ShellParameter {
 
 private:

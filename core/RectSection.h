@@ -1,28 +1,28 @@
-#pragma once
+ï»¿#pragma once
 import "Material.h";
 
 #include <string>
 #include <numbers>
-using namespace std;         //  –¼‘O‹óŠÔw’è
+using namespace std;         //  åå‰ç©ºé–“æŒ‡å®š
 
 
 //--------------------------------------------------------------------//
-// ‹éŒ`’f–Ê
-// ss - ƒf[ƒ^•¶š—ñ
+// çŸ©å½¢æ–­é¢
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—
 class RectSection {
 
 private:
     const double PI = numbers::pi;
 
-    double b1;  // ŠO‘¤•
-    double h1;  // ŠO‘¤‚‚³
-    double b2;  // “à‘¤•
-    double h2;  // “à‘¤‚‚³
+    double b1;  // å¤–å´å¹…
+    double h1;  // å¤–å´é«˜ã•
+    double b2;  // å†…å´å¹…
+    double h2;  // å†…å´é«˜ã•
 
-    // ’f–ÊÏ
+    // æ–­é¢ç©
     double area;
 
-    // ’f–Ê‚QŸƒ‚[ƒƒ“ƒg
+    // æ–­é¢ï¼’æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
     double iy;
     double iz;
 
@@ -30,16 +30,16 @@ private:
     double zy;
     double zz;
 
-    // ’f–Ê‚QŸ‹Éƒ‚[ƒƒ“ƒg
+    // æ–­é¢ï¼’æ¬¡æ¥µãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
     double ip;
 
-    // ‹éŒ`’f–Ê‚Ì€‚èŒW”‚ğ‹‚ß‚é
+    // çŸ©å½¢æ–­é¢ã®æ©ã‚Šä¿‚æ•°ã‚’æ±‚ã‚ã‚‹
     void rectCoef(double ba, double out[4]);
 
 public:
-    // ‹éŒ`’f–Ê‚Ì‚¹‚ñ’f•â³ŒW”
+    // çŸ©å½¢æ–­é¢ã®ã›ã‚“æ–­è£œæ­£ä¿‚æ•°
     const double KS_RECT = 5 / 6;
-    // ‹éŒ`’f–Ê‚Ì€‚èŒW”
+    // çŸ©å½¢æ–­é¢ã®æ©ã‚Šä¿‚æ•°
     const double COEF_K1 = 64 / pow(numbers::pi, 5);
     const double COEF_K = 8 / pow(numbers::pi, 2);
 
@@ -47,14 +47,14 @@ public:
     RectSection(double ss[4]);
 
 
-    // ‚¹‚ñ’f•â³ŒW”‚ğ•Ô‚·
+    // ã›ã‚“æ–­è£œæ­£ä¿‚æ•°ã‚’è¿”ã™
     double shearCoef();
 
-    // ˜cE‰—ÍƒxƒNƒgƒ‹‚ğ•Ô‚·
+    // æ­ªãƒ»å¿œåŠ›ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
     void strainStress(Material material, double ex, double thd, double kpy, double kpz,
         double sy, double sz, double out[4][6]);
 
-    // ¿—ÊEdSü‚è‚ÌŠµ«ƒ‚[ƒƒ“ƒg‚ğ•Ô‚·
+    // è³ªé‡ãƒ»é‡å¿ƒå‘¨ã‚Šã®æ…£æ€§ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã‚’è¿”ã™
     void massInertia(double dens, double l, double out[4]);
 
     string toString();

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "ShellElement.h";
 #include "numeric.h";
 
@@ -6,16 +6,16 @@
 class TriElement1 : public ShellElement {
 
 private:
-    // �O�p�`1���v�f�̐ߓ_�̃�,�ō��W
+    // 三角形1次要素の節点のξ,η座標
     vector<vector<double>> TRI1_NODE = { {0, 0}, {1, 0}, {0, 1} };
-    // �O�p�`1���v�f�̐ϕ��_�̃�,�ō��W,�d�݌W��
+    // 三角形1次要素の積分点のξ,η座標,重み係数
     vector<vector<double>> TRI1_INT = { {C1_3, C1_3, 0.5} };
 
-    // �O�p�`2���v�f�̐ϕ��_�̃�,�ō��W,�d�݌W��
+    // 三角形2次要素の積分点のξ,η座標,重み係数
     vector<vector<double>> TRI2_INT = { {GTRI2[0], GTRI2[0], C1_6}, {GTRI2[1], GTRI2[0], C1_6},
         {GTRI2[0], GTRI2[1], C1_6} };
 
-    // �O�p�`1���v�f�̎��ʃ}�g���b�N�X�W��
+    // 三角形1次要素の質量マトリックス係数
     vector<vector<double>> TRI1_MASS1 = { {1, 0.5, 0.5}, {0.5, 1, 0.5}, {0.5, 0.5, 1} };
 
 

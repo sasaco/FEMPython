@@ -1,18 +1,18 @@
-#include "ShellParameter.h"
+ï»¿#include "ShellParameter.h"
 
 #include <format>
 
 
 //--------------------------------------------------------------------//
-// ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
-// label - ƒpƒ‰ƒ[ƒ^”Ô†
-// thickness - Œú‚³
+// ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+// label - ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ç•ªå·
+// thickness - åšã•
 ShellParameter::ShellParameter(int _label, double _thickness) {
     label = _label;
     thickness = _thickness;
 };
 
-// ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 string ShellParameter::toString() {
 
     return format("ShellParameter\t{}\t{}",

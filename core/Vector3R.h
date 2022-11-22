@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 //--------------------------------------------------------------------//
-// ‚RŽŸŒ³ƒxƒNƒgƒ‹i•Ài{‰ñ“]j
-// x,y,z - x,y,z¬•ª
-// rx,ry,rz - x,y,zŽ²Žü‚è‰ñ“]Šp
+// ï¼“æ¬¡å…ƒãƒ™ã‚¯ãƒˆãƒ«ï¼ˆä¸¦é€²ï¼‹å›žè»¢ï¼‰
+// x,y,z - x,y,zæˆåˆ†
+// rx,ry,rz - x,y,zè»¸å‘¨ã‚Šå›žè»¢è§’
 class Vector3R {
 
 private:
@@ -12,17 +12,17 @@ public:
 
     double x[6];
 
-    // •Ài¬•ª‚Ì‘å‚«‚³‚ð•Ô‚·
+    // ä¸¦é€²æˆåˆ†ã®å¤§ãã•ã‚’è¿”ã™
     double magnitude();
-    // •Ài¬•ª‚Ì‘å‚«‚³‚Ì2æ‚ð•Ô‚·
+    // ä¸¦é€²æˆåˆ†ã®å¤§ãã•ã®2ä¹—ã‚’è¿”ã™
     double magnitudeSq();
 
-    // ‰ñ“]¬•ª‚Ì‘å‚«‚³‚ð•Ô‚·
+    // å›žè»¢æˆåˆ†ã®å¤§ãã•ã‚’è¿”ã™
     double magnitudeR();
 
-    // ‰ñ“]¬•ª‚Ì‘å‚«‚³‚Ì2æ‚ð•Ô‚·
+    // å›žè»¢æˆåˆ†ã®å¤§ãã•ã®2ä¹—ã‚’è¿”ã™
     double magnitudeSqR();
 
-    // ƒxƒNƒgƒ‹‚ÌƒRƒs[‚ð•Ô‚·
+    // ãƒ™ã‚¯ãƒˆãƒ«ã®ã‚³ãƒ”ãƒ¼ã‚’è¿”ã™
     void clone(Vector3R* out);
 };

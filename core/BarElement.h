@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "FElement.h"
 #include "Vector3.h"
 
@@ -6,8 +6,8 @@
 class BarElement : public FElement {
 
 private:
-    double I_YMZ[4] = { 1, 5, 7, 11 };	// y²•ûŒü,z²ü‚è¬•ª‚ÌƒCƒ“ƒfƒbƒNƒX
-    double I_ZMY[4] = { 2, 4, 8, 10 };	// z²•ûŒü,y²ü‚è¬•ª‚ÌƒCƒ“ƒfƒbƒNƒX
+    double I_YMZ[4] = { 1, 5, 7, 11 };	// yè»¸æ–¹å‘,zè»¸å‘¨ã‚Šæˆåˆ†ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+    double I_ZMY[4] = { 2, 4, 8, 10 };	// zè»¸æ–¹å‘,yè»¸å‘¨ã‚Šæˆåˆ†ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 
     int param;
     bool isBar;

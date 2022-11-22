@@ -1,33 +1,33 @@
-#include "CircleSection.h";
+ï»¿#include "CircleSection.h";
 #include <format>
 
 //--------------------------------------------------------------------//
-// ‰~Œ`’f–Ê
-// ss - ƒf[ƒ^•¶š—ñ
+// å††å½¢æ–­é¢
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—
 CircleSection::CircleSection(double ss[2]) {
 
-    d1 = ss[0];	// ŠOŒa
-    d2 = ss[1];	// “àŒa
-    // ’f–ÊÏ
+    d1 = ss[0];	// å¤–å¾„
+    d2 = ss[1];	// å†…å¾„
+    // æ–­é¢ç©
     area = 0.25 * PI * (d1 * d1 - d2 * d2);
-    // ’f–Ê‚QŸƒ‚[ƒƒ“ƒg
+    // æ–­é¢ï¼’æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
     iy = 0.0625 * area * (d1 * d1 + d2 * d2);
     iz = iy;
-    ip = iy + iz;	// ’f–Ê‚QŸ‹Éƒ‚[ƒƒ“ƒg
+    ip = iy + iz;	// æ–­é¢ï¼’æ¬¡æ¥µãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
 };
 
 
-// ‚¹‚ñ’f•â³ŒW”‚ğ•Ô‚·
+// ã›ã‚“æ–­è£œæ­£ä¿‚æ•°ã‚’è¿”ã™
 double CircleSection::shearCoef() {
     return KS_CIRCLE;
 };
 
-// ˜cE‰—ÍƒxƒNƒgƒ‹‚ğ•Ô‚·
-// material - Ş—¿
-// ex - ˆø’£ˆ³k˜c
-// thd - ”ä€‚èŠp
-// kpy,kpz - ‹È‚°‚É‚æ‚é‹È—¦
-// sy,sz - ’f–Ê‚¹‚ñ’f˜c
+// æ­ªãƒ»å¿œåŠ›ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+// material - ææ–™
+// ex - å¼•å¼µåœ§ç¸®æ­ª
+// thd - æ¯”æ©ã‚Šè§’
+// kpy,kpz - æ›²ã’ã«ã‚ˆã‚‹æ›²ç‡
+// sy,sz - æ–­é¢ã›ã‚“æ–­æ­ª
 void CircleSection::strainStress(Material material, double ex, double thd, double kpy, double kpz,
     double sy, double sz, double out[4][6]) {
 
@@ -76,9 +76,9 @@ void CircleSection::strainStress(Material material, double ex, double thd, doubl
 
 };
 
-// ¿—ÊEdSü‚è‚ÌŠµ«ƒ‚[ƒƒ“ƒg‚ğ•Ô‚·
-// dens - –§“x
-// l - —v‘f’·‚³
+// è³ªé‡ãƒ»é‡å¿ƒå‘¨ã‚Šã®æ…£æ€§ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã‚’è¿”ã™
+// dens - å¯†åº¦
+// l - è¦ç´ é•·ã•
 void CircleSection::massInertia(double dens, double l, double out[4]) {
 
     double dl = dens * l;
@@ -91,7 +91,7 @@ void CircleSection::massInertia(double dens, double l, double out[4]) {
 
 };
 
-// ’f–Ê‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// æ–­é¢ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 string CircleSection::toString() {
 
     return format("{}\t{}",

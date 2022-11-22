@@ -1,4 +1,4 @@
-#include "Material.h"
+ï»¿#include "Material.h"
 #include "RectSection.h";
 #include "CircleSection.h";
 
@@ -8,13 +8,13 @@
 
 
 //--------------------------------------------------------------------//
-// Ş—¿
-// label - Ş—¿”Ô†
-// ee - ƒ„ƒ“ƒO—¦ (c’e«ŒW”) 
-// nu - ƒ|ƒAƒ\ƒ“”ä
-// dens - –§“x
-// hCon - ”M“`“±—¦
-// sHeat - ”ä”M
+// ææ–™
+// label - ææ–™ç•ªå·
+// ee - ãƒ¤ãƒ³ã‚°ç‡ (ç¸¦å¼¾æ€§ä¿‚æ•°) 
+// nu - ãƒã‚¢ã‚½ãƒ³æ¯”
+// dens - å¯†åº¦
+// hCon - ç†±ä¼å°ç‡
+// sHeat - æ¯”ç†±
 Material::Material() {};
 Material::Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat) {
     label = _label;
@@ -23,11 +23,11 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
     dens = _dens;
     hCon = _hCon;
     sHeat = _sHeat;
-    gg = 0.5 * ee / (1 + nu);	// ‰¡’e«ŒW”
-    cv = dens * sHeat;		    // ‘ÌÏ”ä”M
+    gg = 0.5 * ee / (1 + nu);	// æ¨ªå¼¾æ€§ä¿‚æ•°
+    cv = dens * sHeat;		    // ä½“ç©æ¯”ç†±
 }
 
-// •½–Ê‰—Í–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// å¹³é¢å¿œåŠ›å•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
  void Material::matrix2Dstress(){
 
   double coef= ee / ( 1 - nu * nu );
@@ -44,7 +44,7 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
 }
 
  /*
-// •½–Ê˜c–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// å¹³é¢æ­ªå•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
  void Material::matrix2Dstrain(double out[3][3]) {
   
     double coef = ee / ( ( 1 + nu ) * ( 1 - 2 * nu ) );
@@ -60,7 +60,7 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
     out[2][2] = gg;
 }
 
-// ²‘ÎÌ–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// è»¸å¯¾ç§°å•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
  void Material::matrixAxiSymetric(double out[4][4]) {
 
     double coef = ee / ( ( 1 + nu ) * ( 1 - 2 * nu ) );
@@ -86,7 +86,7 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
 
 }
 
-// €‚è–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// æ©ã‚Šå•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
  void Material::matrixTorsion(double out[2][2]) {
 
      out[0][0] = gg;
@@ -96,7 +96,7 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
 }
  */
 
-// 3ŸŒ³–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// 3æ¬¡å…ƒå•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
  void Material::matrix3D() {
 
     double coef = ee / ( ( 1 + nu ) * ( 1 - 2 * nu ) );
@@ -147,7 +147,7 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
 
 }
 
-// ƒVƒFƒ‹—v‘f‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// ã‚·ã‚§ãƒ«è¦ç´ ã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
  void Material::matrixShell() {
 
     double coef = ee / ( 1 - nu * nu );
@@ -184,7 +184,7 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
     msh[4][4] = RectSection::KS_RECT * gg;
 }
 
-// Ş—¿‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// ææ–™ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
  string Material::toString(){
 
      return format("Material\t{}\t{}\t{}\t{}\t{}\t{}\t{}", 

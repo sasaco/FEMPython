@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Vector3R.h";
 #include "Coordinates.h";
 #include "FENode.h";

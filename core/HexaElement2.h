@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 #include "SolidElement.h";
 
 class HexaElement2 : public SolidElement {
 
 private:
 
-    // ˜Z–Ê‘Ì2Ÿ—v‘f‚Ìß“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W
+    // å…­é¢ä½“2æ¬¡è¦ç´ ã®ç¯€ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™
     const vector<vector<double>> HEXA2_NODE = {
         {-1, -1, -1},
         {1, -1, -1},
@@ -29,8 +29,8 @@ private:
         {-1, 1, 0}
     };
 
-    // ˜Z–Ê‘Ì2Ÿ—v‘f‚ÌÏ•ª“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W,d‚İŒW”
-    vector<vector<double>> HEXA2_INT; // ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚Å‰Šú‰»
+    // å…­é¢ä½“2æ¬¡è¦ç´ ã®ç©åˆ†ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™,é‡ã¿ä¿‚æ•°
+    vector<vector<double>> HEXA2_INT; // ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã§åˆæœŸåŒ–
 
 
 public:

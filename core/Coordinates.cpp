@@ -1,12 +1,12 @@
-#include "Coordinates.h";
+ï»¿#include "Coordinates.h";
 
 #include <format>
 
 
 //--------------------------------------------------------------------//
-// ‹ÇŠÀ•WŒn
-// label - À•WŒnƒ‰ƒxƒ‹
-// n11,n12,n13,n21,n22,n23,n31,n32,n33 - À•W•ÏŠ·ƒ}ƒgƒŠƒbƒNƒX‚Ì¬•ª
+// å±€æ‰€åº§æ¨™ç³»
+// label - åº§æ¨™ç³»ãƒ©ãƒ™ãƒ«
+// n11,n12,n13,n21,n22,n23,n31,n32,n33 - åº§æ¨™å¤‰æ›ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®æˆåˆ†
 Coordinates::Coordinates(int _label, 
     double n11, double n12, double n13,
     double n21, double n22, double n23, 
@@ -28,8 +28,8 @@ Coordinates::Coordinates(int _label,
 };
 
 
-// ƒOƒ[ƒoƒ‹À•WŒn‚É•ÏŠ·‚·‚é
-// x - ƒxƒNƒgƒ‹¬•ª
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«åº§æ¨™ç³»ã«å¤‰æ›ã™ã‚‹
+// x - ãƒ™ã‚¯ãƒˆãƒ«æˆåˆ†
 void Coordinates::toGlobal(double x[6], double out[9]) {
 
     double e[9] = { c[0], c[3], c[6],
@@ -45,11 +45,11 @@ void Coordinates::toGlobal(double x[6], double out[9]) {
 };
 
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğ•ÏŠ·‚·‚é
-// matrix - „«ƒ}ƒgƒŠƒbƒNƒX
-// dof - ƒ}ƒgƒŠƒbƒNƒX‚Ì©—R“x
-// idx0 - ß“_ƒ|ƒCƒ“ƒ^
-// ndof - ß“_©—R“x
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’å¤‰æ›ã™ã‚‹
+// matrix - å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// dof - ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è‡ªç”±åº¦
+// idx0 - ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿
+// ndof - ç¯€ç‚¹è‡ªç”±åº¦
 void Coordinates::transMatrix(vector<vector<double>> matrix, int dof, int idx0, int ndof) {
 
     double e[9] = { c[0], c[3], c[6],
@@ -106,11 +106,11 @@ void Coordinates::transMatrix(vector<vector<double>> matrix, int dof, int idx0, 
 }
 
 
-// ‰×dƒxƒNƒgƒ‹‚ğ•ÏŠ·‚·‚é
-// vector - ‰×dƒxƒNƒgƒ‹
-// dof - ƒ}ƒgƒŠƒbƒNƒX‚Ì©—R“x
-// idx0 - ß“_ƒ|ƒCƒ“ƒ^
-// ndof - ß“_©—R“x
+// è·é‡ãƒ™ã‚¯ãƒˆãƒ«ã‚’å¤‰æ›ã™ã‚‹
+// vector - è·é‡ãƒ™ã‚¯ãƒˆãƒ«
+// dof - ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è‡ªç”±åº¦
+// idx0 - ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿
+// ndof - ç¯€ç‚¹è‡ªç”±åº¦
 void Coordinates::transVector(vector<double> vector, int dof, int idx0, int ndof) {
     
     double e[9] = { c[0], c[3], c[6],
@@ -128,7 +128,7 @@ void Coordinates::transVector(vector<double> vector, int dof, int idx0, int ndof
 };
 
 
-// ‹ÇŠÀ•WŒn‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// å±€æ‰€åº§æ¨™ç³»ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 string Coordinates::toString() {
 
     return format("Coordinates\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", label, 

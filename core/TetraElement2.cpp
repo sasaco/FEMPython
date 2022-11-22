@@ -1,23 +1,23 @@
-#include "TetraElement2.h";
+ï»¿#include "TetraElement2.h";
 
 //--------------------------------------------------------------------//
-// l–Ê‘Ì2Ÿ—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
+// å››é¢ä½“2æ¬¡è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
 TetraElement2::TetraElement2(int label, int material, vector<int> nodes) :
     SolidElement(label, material, nodes, TETRA2_NODE, TETRA2_INT) {
 };
 
 
-// —v‘f–¼Ì‚ğ•Ô‚·
+// è¦ç´ åç§°ã‚’è¿”ã™
 string TetraElement2::getName() {
     return "TetraElement2";
 }
 
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ dNi/dƒÄ ] ‚ğ•Ô‚·
-// xsi,eta,zeta - —v‘f“à•”ƒÌ,ƒÅ,ƒÄÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· dNi/dÎ¶ ] ã‚’è¿”ã™
+// xsi,eta,zeta - è¦ç´ å†…éƒ¨Î¾,Î·,Î¶åº§æ¨™
 void TetraElement2::shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) {
     
     double xez = 1 - xsi - eta - zeta;

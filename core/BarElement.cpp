@@ -1,12 +1,12 @@
-#include "BarElement.h"
+ï»¿#include "BarElement.h"
 
 //--------------------------------------------------------------------//
-// —À—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// param - —Àƒpƒ‰ƒ[ƒ^‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
-// axis - ’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// æ¢è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// param - æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
+// axis - æ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 BarElement::BarElement(int label, int material, int _param, vector<int> nodes, Vector3 _axis) :
     FElement(label, material, nodes) {
 
@@ -18,10 +18,10 @@ BarElement::BarElement(int label, int material, int _param, vector<int> nodes, V
         axis.normalize();
 };
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> BarElement::stiffnessMatrix(vector<FENode> p, Material material, Section sect) {
     
     vector<vector<double>> kk = numeric::rep(12, 12);
@@ -60,10 +60,10 @@ vector<vector<double>> BarElement::stiffnessMatrix(vector<FENode> p, Material ma
     return kk;
 };
 
-// ŠgUƒ}ƒgƒŠƒbƒNƒX [ çŞNiEŞNjdV ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// coef - ŒW”
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// æ‹¡æ•£ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«âˆ‡Niãƒ»âˆ‡NjdV ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// coef - ä¿‚æ•°
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> BarElement::gradMatrix(vector<FENode> p, double coef, Section sect) {
     double c = coef * sect.area / p[0].distanceTo(p[1]);
     vector<vector<double>> resulr = {
@@ -73,11 +73,11 @@ vector<vector<double>> BarElement::gradMatrix(vector<FENode> p, double coef, Sec
     return result;
 };
 
-// Šô‰½„«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// å¹¾ä½•å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> BarElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, Material material, Section sect) {
     
     double l2 = p[0].distanceToSquared(p[1]);
@@ -100,11 +100,11 @@ vector<vector<double>> BarElement::geomStiffnessMatrix(vector<FENode> p, vector<
     return kk;
 };
 
-// ß“_˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// ç¯€ç‚¹æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> BarElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, Material material, Section sect) {
 
     double l = p[0].distanceTo(p[1]);
@@ -152,11 +152,11 @@ vector<vector<double>> BarElement::strainStress(vector<FENode> p, vector<Boundar
 };
 
 
-// —v‘f˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// è¦ç´ æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> BarElement::elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, Material material, Section sect) {
 
     double l = p[0].distanceTo(p[1]);
@@ -200,10 +200,10 @@ vector<vector<double>> BarElement::elementStrainStress(vector<FENode> p, vector<
 };
 
 
-// —v‘f‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// materials - Ş—¿
-// params - —Àƒpƒ‰ƒ[ƒ^
-// p - ß“_
+// è¦ç´ ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// materials - ææ–™
+// params - æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+// p - ç¯€ç‚¹
 string BarElement::toString(vector<Material> materials, vector<BarParameter> params, vector<FENode> p) {
 
     Material mat = materials[material];

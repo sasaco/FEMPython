@@ -1,18 +1,18 @@
-#include "Temperature.h"
+ï»¿#include "Temperature.h"
 
 #include <format>
 
 //--------------------------------------------------------------------//
-// ‰·“xŒÅ’èğŒ
-// node - ß“_ƒ‰ƒxƒ‹
-// t - ‰·“x
+// æ¸©åº¦å›ºå®šæ¡ä»¶
+// node - ç¯€ç‚¹ãƒ©ãƒ™ãƒ«
+// t - æ¸©åº¦
 Temperature::Temperature(int _node, double _t) {
     node = _node;
     t = _t;
 };
 
-// ‰·“xŒÅ’èğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
+// æ¸©åº¦å›ºå®šæ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
 string Temperature::toString(vector<FENode> nodes) {
     return format("Temperature\t{}\t{}", nodes[node].label, t);
 };

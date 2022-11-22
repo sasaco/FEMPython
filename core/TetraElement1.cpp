@@ -1,21 +1,21 @@
-#include "TetraElement1.h";
+ï»¿#include "TetraElement1.h";
 
 //--------------------------------------------------------------------//
-// l–Ê‘Ì1Ÿ—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
+// å››é¢ä½“1æ¬¡è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
 TetraElement1::TetraElement1(int label, int material, vector<int> nodes) :
     SolidElement(label, material, nodes) {
 };
 
-// —v‘f–¼Ì‚ğ•Ô‚·
+// è¦ç´ åç§°ã‚’è¿”ã™
 string TetraElement1::getName() {
     return "TetraElement1";
 }
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ dNi/dƒÄ ] ‚ğ•Ô‚·
-// xsi,eta,zeta - —v‘f“à•”ƒÌ,ƒÅ,ƒÄÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· dNi/dÎ¶ ] ã‚’è¿”ã™
+// xsi,eta,zeta - è¦ç´ å†…éƒ¨Î¾,Î·,Î¶åº§æ¨™
 void TetraElement1::shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) {
     out = {
         {1 - xsi - eta - zeta, -1, -1, -1},
@@ -25,8 +25,8 @@ void TetraElement1::shapeFunction(double xsi, double eta, double zeta, vector<ve
     };
 }
 
-// ƒ„ƒRƒrƒAƒ“‚ğ•Ô‚·
-// p - —v‘fß“_
+// ãƒ¤ã‚³ãƒ“ã‚¢ãƒ³ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
 double TetraElement1::jacobian(vector<FENode> p) {
     double p0x = p[0].x;
     double p0y = p[0].y;
@@ -38,9 +38,9 @@ double TetraElement1::jacobian(vector<FENode> p) {
 };
 
 
-// Œ`óŠÖ”‚ÌŒù”z [ dNi/dx dNi/dy dNi/dz ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// ja - ƒ„ƒRƒrƒAƒ“
+// å½¢çŠ¶é–¢æ•°ã®å‹¾é… [ dNi/dx dNi/dy dNi/dz ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// ja - ãƒ¤ã‚³ãƒ“ã‚¢ãƒ³
 void TetraElement1::grad(vector<FENode> p, double ja, vector<vector<double>> out) {
 
     int count = nodeCount();
@@ -65,9 +65,9 @@ void TetraElement1::grad(vector<FENode> p, double ja, vector<vector<double>> out
 };
 
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// dens - Ş—¿‚Ì–§“x
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// dens - ææ–™ã®å¯†åº¦
 void TetraElement1::massMatrix(vector<FENode> p, double dens, vector<vector<double>> out) {
 
     for (int i = 0; i < 12; ++i) {
@@ -99,9 +99,9 @@ void TetraElement1::massMatrix(vector<FENode> p, double dens, vector<vector<doub
 };
 
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void TetraElement1::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out) {
 
     double ja = jacobian(p);
@@ -117,9 +117,9 @@ void TetraElement1::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1,
 
 
 
-// Œ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ çNiNjdV ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// coef - ŒW”
+// å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«NiNjdV ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// coef - ä¿‚æ•°
 void TetraElement1::shapeFunctionMatrix(vector<FENode> p, double coef, vector<vector<double>> out) {
 
     double ja = jacobian(p);
@@ -136,9 +136,9 @@ void TetraElement1::shapeFunctionMatrix(vector<FENode> p, double coef, vector<ve
 };
 
 
-// ŠgUƒ}ƒgƒŠƒbƒNƒX [ çŞNiEŞNjdV ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// coef - ŒW”
+// æ‹¡æ•£ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«âˆ‡Niãƒ»âˆ‡NjdV ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// coef - ä¿‚æ•°
 void TetraElement1::gradMatrix(vector<FENode> p, double coef, vector<vector<double>> out) {
 
     int count = nodeCount();
@@ -167,10 +167,10 @@ void TetraElement1::gradMatrix(vector<FENode> p, double coef, vector<vector<doub
 };
 
 
-// Šô‰½„«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// å¹¾ä½•å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void TetraElement1::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, vector<vector<double>> out) {
 
     int count = nodeCount();
@@ -224,10 +224,10 @@ void TetraElement1::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryConditi
 };
 
 
-// ß“_˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// ç¯€ç‚¹æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void TetraElement1::strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
     vector<Strain> _Strain, vector<Stress> _Stress, vector<double> _Energy) {
 
@@ -262,10 +262,10 @@ void TetraElement1::strainStress(vector<FENode> p, vector<BoundaryCondition> u, 
 };
 
 
-// —v‘f˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// è¦ç´ æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void TetraElement1::elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
     Strain _Strain, Stress _Stress, double energy);
 

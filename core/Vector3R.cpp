@@ -1,11 +1,11 @@
-#include "Vector3R.h";
+ï»¿#include "Vector3R.h";
 
 #include <numbers>
 
 //--------------------------------------------------------------------//
-// ‚RŽŸŒ³ƒxƒNƒgƒ‹i•Ài{‰ñ“]j
-// x,y,z - x,y,z¬•ª
-// rx,ry,rz - x,y,zŽ²Žü‚è‰ñ“]Šp
+// ï¼“æ¬¡å…ƒãƒ™ã‚¯ãƒˆãƒ«ï¼ˆä¸¦é€²ï¼‹å›žè»¢ï¼‰
+// x,y,z - x,y,zæˆåˆ†
+// rx,ry,rz - x,y,zè»¸å‘¨ã‚Šå›žè»¢è§’
 Vector3R::Vector3R(double _x = 0, double _y = 0, double _z = 0, double _rx = 0, double _ry = 0, double _rz = 0) {
     x[0] = _x;
     x[1] = _y;
@@ -15,27 +15,27 @@ Vector3R::Vector3R(double _x = 0, double _y = 0, double _z = 0, double _rx = 0, 
     x[5] = _rz;
 };
 
-// •Ài¬•ª‚Ì‘å‚«‚³‚ð•Ô‚·
+// ä¸¦é€²æˆåˆ†ã®å¤§ãã•ã‚’è¿”ã™
 double Vector3R::magnitude() {
     return sqrt(magnitudeSq());
 };
 
-// •Ài¬•ª‚Ì‘å‚«‚³‚Ì2æ‚ð•Ô‚·
+// ä¸¦é€²æˆåˆ†ã®å¤§ãã•ã®2ä¹—ã‚’è¿”ã™
 double Vector3R::magnitudeSq() {
     return x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
 };
 
-// ‰ñ“]¬•ª‚Ì‘å‚«‚³‚ð•Ô‚·
+// å›žè»¢æˆåˆ†ã®å¤§ãã•ã‚’è¿”ã™
 double Vector3R::magnitudeR() {
     return sqrt(magnitudeSqR());
 };
 
-// ‰ñ“]¬•ª‚Ì‘å‚«‚³‚Ì2æ‚ð•Ô‚·
+// å›žè»¢æˆåˆ†ã®å¤§ãã•ã®2ä¹—ã‚’è¿”ã™
 double Vector3R::magnitudeSqR() {
     return x[3] * x[3] + x[4] * x[4] + x[5] * x[5];
 };
 
-// ƒxƒNƒgƒ‹‚ÌƒRƒs[‚ð•Ô‚·
+// ãƒ™ã‚¯ãƒˆãƒ«ã®ã‚³ãƒ”ãƒ¼ã‚’è¿”ã™
 void Vector3R::clone(Vector3R* out) {
 
     out->x[0] = x[0];

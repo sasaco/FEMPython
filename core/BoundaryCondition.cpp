@@ -1,24 +1,24 @@
-#include "Restraint.h";
+ï»¿#include "Restraint.h";
 #include "Load.h";
 #include "Pressure.h";
 #include "Temperature.h";
 #include "HeatTransferBound.h";
 
 //--------------------------------------------------------------------//
-// ‹«ŠEğŒ
+// å¢ƒç•Œæ¡ä»¶
 class BoundaryCondition {
 
 private:
-    vector<Restraint> restraints;	    // S‘©ğŒ
-    vector<Load> loads;                 // ‰×dğŒ
-    vector<Pressure> pressures;         // –Êˆ³ğŒ
-    vector<Temperature> temperature;    // ß“_‰·“xğŒ
-    vector<HeatTransferBound> htcs;	    // ”M“`’B‹«ŠEğŒ
-    double loadMax;		// Å‘å‰×d
-    double pressMax;		// Å‘å–Êˆ³
-    vector<int> dof;			// ß“_‚Ì©—R“x
-    vector<int> nodeIndex;		// ‰×dƒxƒNƒgƒ‹‚Ìß“_ƒ|ƒCƒ“ƒ^
-    vector<int> bcList;		// ‹«ŠEğŒ‚ğİ’è‚µ‚½ß“_‚ÌƒŠƒXƒg
+    vector<Restraint> restraints;	    // æ‹˜æŸæ¡ä»¶
+    vector<Load> loads;                 // è·é‡æ¡ä»¶
+    vector<Pressure> pressures;         // é¢åœ§æ¡ä»¶
+    vector<Temperature> temperature;    // ç¯€ç‚¹æ¸©åº¦æ¡ä»¶
+    vector<HeatTransferBound> htcs;	    // ç†±ä¼é”å¢ƒç•Œæ¡ä»¶
+    double loadMax;		// æœ€å¤§è·é‡
+    double pressMax;		// æœ€å¤§é¢åœ§
+    vector<int> dof;			// ç¯€ç‚¹ã®è‡ªç”±åº¦
+    vector<int> nodeIndex;		// è·é‡ãƒ™ã‚¯ãƒˆãƒ«ã®ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿
+    vector<int> bcList;		// å¢ƒç•Œæ¡ä»¶ã‚’è¨­å®šã—ãŸç¯€ç‚¹ã®ãƒªã‚¹ãƒˆ
 
 public:
     BoundaryCondition();
@@ -37,21 +37,21 @@ BoundaryCondition::BoundaryCondition() {
     clear();
 };
 
-// ƒf[ƒ^‚ğÁ‹‚·‚é
+// ãƒ‡ãƒ¼ã‚¿ã‚’æ¶ˆå»ã™ã‚‹
 void BoundaryCondition::clear() {
-    restraints.clear();		// S‘©ğŒ
-    loads.clear();		    // ‰×dğŒ
-    pressures.clear();		// –Êˆ³ğŒ
-    temperature.clear();    // ß“_‰·“xğŒ
-    htcs.clear();			// ”M“`’B‹«ŠEğŒ
-    loadMax = 0;		    // Å‘å‰×d
-    pressMax = 0;		    // Å‘å–Êˆ³
-    dof.clear();			// ß“_‚Ì©—R“x
-    nodeIndex.clear();		// ‰×dƒxƒNƒgƒ‹‚Ìß“_ƒ|ƒCƒ“ƒ^
-    bcList.clear();		    // ‹«ŠEğŒ‚ğİ’è‚µ‚½ß“_‚ÌƒŠƒXƒg
+    restraints.clear();		// æ‹˜æŸæ¡ä»¶
+    loads.clear();		    // è·é‡æ¡ä»¶
+    pressures.clear();		// é¢åœ§æ¡ä»¶
+    temperature.clear();    // ç¯€ç‚¹æ¸©åº¦æ¡ä»¶
+    htcs.clear();			// ç†±ä¼é”å¢ƒç•Œæ¡ä»¶
+    loadMax = 0;		    // æœ€å¤§è·é‡
+    pressMax = 0;		    // æœ€å¤§é¢åœ§
+    dof.clear();			// ç¯€ç‚¹ã®è‡ªç”±åº¦
+    nodeIndex.clear();		// è·é‡ãƒ™ã‚¯ãƒˆãƒ«ã®ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿
+    bcList.clear();		    // å¢ƒç•Œæ¡ä»¶ã‚’è¨­å®šã—ãŸç¯€ç‚¹ã®ãƒªã‚¹ãƒˆ
 };
 
-// ‹«ŠEğŒ‚ğ‰Šú‰»‚·‚é
+// å¢ƒç•Œæ¡ä»¶ã‚’åˆæœŸåŒ–ã™ã‚‹
 void BoundaryCondition::init() {
     restraints.sort(compareNodeLabel);
     loads.sort(compareNodeLabel);
@@ -68,8 +68,8 @@ void BoundaryCondition::init() {
     }
 }
 
-// \‘¢‰ğÍ‚Ìß“_ƒ|ƒCƒ“ƒ^‚ğİ’è‚·‚é
-// count - ß“_”
+// æ§‹é€ è§£æã®ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿ã‚’è¨­å®šã™ã‚‹
+// count - ç¯€ç‚¹æ•°
 int BoundaryCondition::setPointerStructure(int count) {
     nodeIndex.clear();
     bcList.clear();
@@ -92,8 +92,8 @@ int BoundaryCondition::setPointerStructure(int count) {
     return dofAll;
 };
 
-// ”M‰ğÍ‚Ìß“_ƒ|ƒCƒ“ƒ^‚ğİ’è‚·‚é
-// count - ß“_”
+// ç†±è§£æã®ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿ã‚’è¨­å®šã™ã‚‹
+// count - ç¯€ç‚¹æ•°
 int BoundaryCondition::setPointerHeat(int count) {
     dof.clear();
     nodeIndex.clear();
@@ -109,8 +109,8 @@ int BoundaryCondition::setPointerHeat(int count) {
     return temps;
 }
 
-// ‹­§•ÏˆÊ‚ğ•Ô‚·
-// bc - •ÏˆÊ©—R“xƒ|ƒCƒ“ƒ^
+// å¼·åˆ¶å¤‰ä½ã‚’è¿”ã™
+// bc - å¤‰ä½è‡ªç”±åº¦ãƒã‚¤ãƒ³ã‚¿
 double BoundaryCondition::getRestDisp(int bc) {
     int i = round(bc / 6);
     Restraint r = restraints[i];
@@ -119,9 +119,9 @@ double BoundaryCondition::getRestDisp(int bc) {
     return result;
 };
 
-// ƒf[ƒ^•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
-// elems - —v‘f
+// ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
+// elems - è¦ç´ 
 void BoundaryCondition::toStrings(vector<FENode> nodes, int elems, vector<string> s) {
 
     for (int i = 0; i < restraints.size(); i++) {
@@ -142,16 +142,16 @@ void BoundaryCondition::toStrings(vector<FENode> nodes, int elems, vector<string
     return s;
 };
 
-// ß“_ƒ‰ƒxƒ‹‚ğ”äŠr‚·‚é
-// bc1,bc2 - ”äŠr‚·‚é‹«ŠEğŒ
+// ç¯€ç‚¹ãƒ©ãƒ™ãƒ«ã‚’æ¯”è¼ƒã™ã‚‹
+// bc1,bc2 - æ¯”è¼ƒã™ã‚‹å¢ƒç•Œæ¡ä»¶
 function compareNodeLabel(bc1, bc2) {
     if (bc1.node < bc2.node)      return -1;
     else if (bc1.node > bc2.node) return 1;
     else                       return 0;
 }
 
-// —v‘fƒ‰ƒxƒ‹‚ğ”äŠr‚·‚é
-// bc1,bc2 - ”äŠr‚·‚é‹«ŠEğŒ
+// è¦ç´ ãƒ©ãƒ™ãƒ«ã‚’æ¯”è¼ƒã™ã‚‹
+// bc1,bc2 - æ¯”è¼ƒã™ã‚‹å¢ƒç•Œæ¡ä»¶
 function compareElementLabel(bc1, bc2) {
     if (bc1.element < bc2.element)      return -1;
     else if (bc1.element > bc2.element) return 1;
@@ -161,16 +161,16 @@ function compareElementLabel(bc1, bc2) {
 
 
 //--------------------------------------------------------------------//
-// —v‘f‹«ŠEğŒ
-// element - —v‘fƒ‰ƒxƒ‹
-// face - —v‘f‹«ŠE–Ê
+// è¦ç´ å¢ƒç•Œæ¡ä»¶
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// face - è¦ç´ å¢ƒç•Œé¢
 var ElementBorderBound = function(element, face) {
     this.element = element;
     this.face = face;
 };
 
-// —v‘f‹«ŠE‚ğ•Ô‚·
-// elem - —v‘f
+// è¦ç´ å¢ƒç•Œã‚’è¿”ã™
+// elem - è¦ç´ 
 ElementBorderBound.prototype.getBorder = function(elem) {
     if (this.face.length == = 2) {
         var j;
@@ -189,11 +189,11 @@ ElementBorderBound.prototype.getBorder = function(elem) {
 
 
 //--------------------------------------------------------------------//
-// ‰×dğŒ
-// node - ß“_ƒ‰ƒxƒ‹
-// coords - ‹ÇŠÀ•WŒn
-// x,y,z - x,y,z¬•ª
-// rx,ry,rz - x,y,z²ü‚è‰ñ“]¬•ª
+// è·é‡æ¡ä»¶
+// node - ç¯€ç‚¹ãƒ©ãƒ™ãƒ«
+// coords - å±€æ‰€åº§æ¨™ç³»
+// x,y,z - x,y,zæˆåˆ†
+// rx,ry,rz - x,y,zè»¸å‘¨ã‚Šå›è»¢æˆåˆ†
 var Load = function(node, coords, x, y, z, rx, ry, rz) {
     Vector3R.call(this, x, y, z, rx, ry, rz);
     this.node = node;
@@ -201,8 +201,8 @@ var Load = function(node, coords, x, y, z, rx, ry, rz) {
     this.globalX = this.x;
 };
 
-// ‰×dğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
+// è·é‡æ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
 Load.prototype.toString = function(nodes) {
     var s = 'Load\t' + nodes[this.node].label.toString(10) + '\t' +
         this.x.join('\t');

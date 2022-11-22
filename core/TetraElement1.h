@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 #include "SolidElement.h";
 
 /// <summary>
-/// l–Ê‘Ì1Ÿ—v‘f
+/// å››é¢ä½“1æ¬¡è¦ç´ 
 /// </summary>
 class TetraElement1 : public SolidElement {
 

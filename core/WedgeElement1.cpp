@@ -1,24 +1,24 @@
-#include "WedgeElement1.h";
+ï»¿#include "WedgeElement1.h";
 
 //--------------------------------------------------------------------//
-// ¶Œ`1Ÿ—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
+// æ¥”å½¢1æ¬¡è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
 WedgeElement1::WedgeElement1(int label, int material, vector<int> nodes) :
     SolidElement(label, material, nodes, WEDGE1_NODE, WEDGE1_INT) {
 
 
 };
 
-// —v‘f–¼Ì‚ğ•Ô‚·
+// è¦ç´ åç§°ã‚’è¿”ã™
 string WedgeElement1::getName() {
     return "WedgeElement1";
 };
 
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ dNi/dƒÄ ] ‚ğ•Ô‚·
-// xsi,eta,zeta - —v‘f“à•”ƒÌ,ƒÅ,ƒÄÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· dNi/dÎ¶ ] ã‚’è¿”ã™
+// xsi,eta,zeta - è¦ç´ å†…éƒ¨Î¾,Î·,Î¶åº§æ¨™
 void WedgeElement1::shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) {
 
     out = {
@@ -62,9 +62,9 @@ void WedgeElement1::shapeFunction(double xsi, double eta, double zeta, vector<ve
 };
 
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// dens - Ş—¿‚Ì–§“x
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// dens - ææ–™ã®å¯†åº¦
 void WedgeElement1::massMatrix(vector<FENode> p, double dens, vector<vector<double>> out) {
     
     double ja = 0;

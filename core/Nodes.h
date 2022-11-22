@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "vector3.hpp"
 #include <vector>
 using std::vector;

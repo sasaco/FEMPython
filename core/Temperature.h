@@ -1,15 +1,15 @@
-#pragma once
+ï»¿#pragma once
 #include "FENode.h"
 
 
 #include <string>
 #include <vector>
-using namespace std;         //  –¼‘O‹óŠÔw’è
+using namespace std;         //  åå‰ç©ºé–“æŒ‡å®š
 
 //--------------------------------------------------------------------//
-// ‰·“xŒÅ’èğŒ
-// node - ß“_ƒ‰ƒxƒ‹
-// t - ‰·“x
+// æ¸©åº¦å›ºå®šæ¡ä»¶
+// node - ç¯€ç‚¹ãƒ©ãƒ™ãƒ«
+// t - æ¸©åº¦
 class Temperature {
 
 private:

@@ -1,19 +1,19 @@
-#include "RectSection.h";
+ï»¿#include "RectSection.h";
 #include <format>
 
 //--------------------------------------------------------------------//
-// ‹éŒ`’f–Ê
-// ss - ƒf[ƒ^•¶š—ñ
+// çŸ©å½¢æ–­é¢
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—
 RectSection::RectSection(double ss[4]) {
 
-    double b1 = ss[0];   // ŠO‘¤•
-    double h1 = ss[1];   // ŠO‘¤‚‚³
-    double b2 = ss[2];   // “à‘¤•
-    double h2 = ss[3];   // “à‘¤‚‚³
+    double b1 = ss[0];   // å¤–å´å¹…
+    double h1 = ss[1];   // å¤–å´é«˜ã•
+    double b2 = ss[2];   // å†…å´å¹…
+    double h2 = ss[3];   // å†…å´é«˜ã•
 
-    // ’f–ÊÏ
+    // æ–­é¢ç©
     area = b1 * h1 - b2 * h2;
-    // ’f–Ê‚QŸƒ‚[ƒƒ“ƒg
+    // æ–­é¢ï¼’æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
     double i11 = b1 * b1 * b1 * h1;
     double i12 = b1 * h1 * h1 * h1;
     double i21 = b2 * b2 * b2 * h2;
@@ -51,21 +51,21 @@ RectSection::RectSection(double ss[4]) {
         rectCoef(h2 / b2, k2);
         ip2 = k2[0] * i21;
     }
-    ip = ip1 - ip2;		// ’f–Ê‚QŸ‹Éƒ‚[ƒƒ“ƒg
+    ip = ip1 - ip2;		// æ–­é¢ï¼’æ¬¡æ¥µãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
 };
 
 
-// ‚¹‚ñ’f•â³ŒW”‚ğ•Ô‚·
+// ã›ã‚“æ–­è£œæ­£ä¿‚æ•°ã‚’è¿”ã™
 double RectSection::shearCoef() {
     return KS_RECT;
 };
 
-// ˜cE‰—ÍƒxƒNƒgƒ‹‚ğ•Ô‚·
-// material - Ş—¿
-// ex - ˆø’£ˆ³k˜c
-// thd - ”ä€‚èŠp
-// kpy,kpz - ‹È‚°‚É‚æ‚é‹È—¦
-// sy,sz - ’f–Ê‚¹‚ñ’f˜c
+// æ­ªãƒ»å¿œåŠ›ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+// material - ææ–™
+// ex - å¼•å¼µåœ§ç¸®æ­ª
+// thd - æ¯”æ©ã‚Šè§’
+// kpy,kpz - æ›²ã’ã«ã‚ˆã‚‹æ›²ç‡
+// sy,sz - æ–­é¢ã›ã‚“æ–­æ­ª
 void RectSection::strainStress(Material material, double ex, double thd, double kpy, double kpz,
     double sy, double sz, double out[4][6]) {
 
@@ -134,9 +134,9 @@ void RectSection::strainStress(Material material, double ex, double thd, double 
 };
 
 
-// ¿—ÊEdSü‚è‚ÌŠµ«ƒ‚[ƒƒ“ƒg‚ğ•Ô‚·
-// dens - –§“x
-// l - —v‘f’·‚³
+// è³ªé‡ãƒ»é‡å¿ƒå‘¨ã‚Šã®æ…£æ€§ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã‚’è¿”ã™
+// dens - å¯†åº¦
+// l - è¦ç´ é•·ã•
 void RectSection::massInertia(double dens, double l, double out[4]) {
     double dl = dens * l;
     double dly = dl * iz;
@@ -149,15 +149,15 @@ void RectSection::massInertia(double dens, double l, double out[4]) {
 
 };
 
-// ’f–Ê‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// æ–­é¢ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 string RectSection::toString() {
 
     return format("{}\t{}\t{}\t{}",
         b1, h1, b2, h2);
 };
 
-// ‹éŒ`’f–Ê‚Ì€‚èŒW”‚ğ‹‚ß‚é
-// ba - •Ó‚Ì’·‚³”äb/a
+// çŸ©å½¢æ–­é¢ã®æ©ã‚Šä¿‚æ•°ã‚’æ±‚ã‚ã‚‹
+// ba - è¾ºã®é•·ã•æ¯”b/a
 void RectSection::rectCoef(double ba, double out[4]) {
 
     double dk1s = 0;

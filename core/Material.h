@@ -1,15 +1,15 @@
-#pragma once
+ï»¿#pragma once
 #include <string>
-using namespace std;         //  –¼‘O‹óŠÔw’è
+using namespace std;         //  åå‰ç©ºé–“æŒ‡å®š
 
 //--------------------------------------------------------------------//
-// Ş—¿
-// label - Ş—¿”Ô†
-// ee - ƒ„ƒ“ƒO—¦ (c’e«ŒW”) 
-// nu - ƒ|ƒAƒ\ƒ“”ä
-// dens - –§“x
-// hCon - ”M“`“±—¦
-// sHeat - ”ä”M
+// ææ–™
+// label - ææ–™ç•ªå·
+// ee - ãƒ¤ãƒ³ã‚°ç‡ (ç¸¦å¼¾æ€§ä¿‚æ•°) 
+// nu - ãƒã‚¢ã‚½ãƒ³æ¯”
+// dens - å¯†åº¦
+// hCon - ç†±ä¼å°ç‡
+// sHeat - æ¯”ç†±
 class Material {
 
 private:
@@ -34,8 +34,8 @@ public:
     //double dens;
     //double hCon;
     //double sHeat;
-    //double cv;	// ‘ÌÏ”ä”M
-    double gg;    // ‰¡’e«ŒW”
+    //double cv;	// ä½“ç©æ¯”ç†±
+    double gg;    // æ¨ªå¼¾æ€§ä¿‚æ•°
 
 
     double m2d[3][3]; // set from matrix2Dstress

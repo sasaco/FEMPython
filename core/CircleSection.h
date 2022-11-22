@@ -1,46 +1,46 @@
-#pragma once
+ï»¿#pragma once
 import "Material.h";
 
 #include <string>
 #include <numbers>
-using namespace std;         //  –¼‘O‹óŠÔw’è
+using namespace std;         //  åå‰ç©ºé–“æŒ‡å®š
 
 
 
 //--------------------------------------------------------------------//
-// ‰~Œ`’f–Ê
-// ss - ƒf[ƒ^•¶š—ñ
+// å††å½¢æ–­é¢
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—
 class CircleSection {
 
 private:
     const double PI = numbers::pi;
 
-    double d1;  // ŠOŒa
-    double d2;  // “àŒa
-    // ’f–ÊÏ
+    double d1;  // å¤–å¾„
+    double d2;  // å†…å¾„
+    // æ–­é¢ç©
     double area;
-    // ’f–Ê‚QŸƒ‚[ƒƒ“ƒg
+    // æ–­é¢ï¼’æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
     double iy;
     double iz;
-    // ’f–Ê‚QŸ‹Éƒ‚[ƒƒ“ƒg
+    // æ–­é¢ï¼’æ¬¡æ¥µãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
     double ip;
 
 public:
-    // ‰~Œ`’f–Ê‚Ì‚¹‚ñ’f•â³ŒW”
+    // å††å½¢æ–­é¢ã®ã›ã‚“æ–­è£œæ­£ä¿‚æ•°
     const double KS_CIRCLE = 6 / 7;
 
     CircleSection(double ss[2]);
 
-    // ‚¹‚ñ’f•â³ŒW”‚ğ•Ô‚·
+    // ã›ã‚“æ–­è£œæ­£ä¿‚æ•°ã‚’è¿”ã™
     double shearCoef();
 
-    // ˜cE‰—ÍƒxƒNƒgƒ‹‚ğ•Ô‚·
+    // æ­ªãƒ»å¿œåŠ›ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
     void strainStress(Material material, double ex, double thd, double kpy, double kpz,
         double sy, double sz, double out[4][6]);
 
-    // ¿—ÊEdSü‚è‚ÌŠµ«ƒ‚[ƒƒ“ƒg‚ğ•Ô‚·
+    // è³ªé‡ãƒ»é‡å¿ƒå‘¨ã‚Šã®æ…£æ€§ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã‚’è¿”ã™
     void massInertia(double dens, double l, double out[4]);
 
-    // ’f–Ê‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+    // æ–­é¢ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
     string toString();
 };

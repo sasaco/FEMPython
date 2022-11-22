@@ -1,15 +1,15 @@
-#include "Restraint.h";
+ï»¿#include "Restraint.h";
 
 #include <format>
 
 //--------------------------------------------------------------------//
-// S‘©ğŒ
-// node - ß“_ƒ‰ƒxƒ‹
-// coords - ‹ÇŠÀ•WŒn
-// restx,resty,restz - x,y,z•ûŒü‚ÌS‘©‚Ì—L–³
-// x,y,z - ‹­§•ÏˆÊ‚Ìx,y,z¬•ª
-// restrx,restry,restrz - x,y,z•ûŒü‚Ì‰ñ“]S‘©‚Ì—L–³
-// rx,ry,rz - ‹­§•ÏˆÊ‚Ìx,y,z²ü‚è‰ñ“]Šp
+// æ‹˜æŸæ¡ä»¶
+// node - ç¯€ç‚¹ãƒ©ãƒ™ãƒ«
+// coords - å±€æ‰€åº§æ¨™ç³»
+// restx,resty,restz - x,y,zæ–¹å‘ã®æ‹˜æŸã®æœ‰ç„¡
+// x,y,z - å¼·åˆ¶å¤‰ä½ã®x,y,zæˆåˆ†
+// restrx,restry,restrz - x,y,zæ–¹å‘ã®å›è»¢æ‹˜æŸã®æœ‰ç„¡
+// rx,ry,rz - å¼·åˆ¶å¤‰ä½ã®x,y,zè»¸å‘¨ã‚Šå›è»¢è§’
 Restraint::Restraint(int _node, Coordinates _coords,
     bool restx, bool resty, bool restz,
     double x, double y, double z,
@@ -29,8 +29,8 @@ Restraint::Restraint(int _node, Coordinates _coords,
     globalX = x;
 };
 
-// S‘©ğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
+// æ‹˜æŸæ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
 string Restraint::toString(vector<FENode> nodes) {
 
     string s =  format("Restraint\t{}", nodes[node].label);

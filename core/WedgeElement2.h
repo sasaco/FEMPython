@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 #include "SolidElement.h";
 
 class WedgeElement2 : public SolidElement {
 
 private:
 
-    // ¶Œ`2Ÿ—v‘f‚Ìß“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W
+    // æ¥”å½¢2æ¬¡è¦ç´ ã®ç¯€ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™
     const vector<vector<double>> WEDGE2_NODE = {
         {0, 0, -1},
         {1, 0, -1},
@@ -24,7 +24,7 @@ private:
         {0, 1, 0}
     };
 
-    // ¶Œ`2Ÿ—v‘f‚ÌÏ•ª“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W,d‚İŒW”
+    // æ¥”å½¢2æ¬¡è¦ç´ ã®ç©åˆ†ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™,é‡ã¿ä¿‚æ•°
     const vector<vector<double>> WEDGE2_INT = {
         {GTRI2[0], GTRI2[0], GX3[0], C1_6 * GW3[0]},
         {GTRI2[1], GTRI2[0], GX3[0], C1_6 * GW3[0]},

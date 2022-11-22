@@ -1,12 +1,12 @@
-#include "FENode.h";
+ï»¿#include "FENode.h";
 
 #include <format>
 
 
 //--------------------------------------------------------------------//
-// ß“_
-// label - ß“_ƒ‰ƒxƒ‹
-// x,y,z - x,y,zÀ•W
+// ç¯€ç‚¹
+// label - ç¯€ç‚¹ãƒ©ãƒ™ãƒ«
+// x,y,z - x,y,zåº§æ¨™
 FENode::FENode() {};
 FENode::FENode(int _label, double _x, double _y, double _z) {
 
@@ -16,7 +16,7 @@ FENode::FENode(int _label, double _x, double _y, double _z) {
     z = _z;
 };
 
-// ß“_‚ÌƒRƒs[‚ğ•Ô‚·
+// ç¯€ç‚¹ã®ã‚³ãƒ”ãƒ¼ã‚’è¿”ã™
 void FENode::clone(FENode out) {
 
     out.label = label;
@@ -25,7 +25,7 @@ void FENode::clone(FENode out) {
     out.z = z;
 };
 
-// ß“_‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// ç¯€ç‚¹ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 string FENode::toString() {
 
     return format("Node\t{}\t{}\t{}\t{}",

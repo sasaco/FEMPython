@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 #include "Vector3R.h";
 #include "Coordinates.h";
 #include "FENode.h";
 
 #include <string>
 #include <vector>
-using namespace std;         //  –¼‘O‹óŠÔw’è
+using namespace std;         //  åå‰ç©ºé–“æŒ‡å®š
 
 class Restraint : public Vector3R {
 

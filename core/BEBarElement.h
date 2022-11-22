@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "BarElement.h";
 
 class BEBarElement : public BarElement {

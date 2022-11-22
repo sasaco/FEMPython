@@ -1,4 +1,4 @@
-#include "Nodes.h";
+﻿#include "Nodes.h";
 
 Nodes::Nodes(vector<int>_nodes) {
     nodes = _nodes;

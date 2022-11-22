@@ -1,26 +1,26 @@
-#include "BEBarElement.h";
+ï»¿#include "BEBarElement.h";
 //--------------------------------------------------------------------//
-// Bernoulli-Euler—À—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// param - —Àƒpƒ‰ƒ[ƒ^‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
-// axis - ’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// Bernoulli-Euleræ¢è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// param - æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
+// axis - æ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 BEBarElement::BEBarElement(int label, int material, int param, , vector<int> nodes, Vector3 axis) :
     BarElement(label, material, param, nodes, axis){
 };
 
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 string BEBarElement::getName() {
     return "BEBarElement";
 };
 
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚Ì—À‹È‚°¬•ª‚ğ•Ô‚·
-// l - —v‘f’·‚³
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®æ¢æ›²ã’æˆåˆ†ã‚’è¿”ã™
+// l - è¦ç´ é•·ã•
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> BEBarElement::stiffBend(double l, Material material, Section sect) {
 
     double kc = material.ee / (l * l * l);
@@ -49,11 +49,11 @@ vector<vector<double>> BEBarElement::stiffBend(double l, Material material, Sect
 };
 
 
-// ‹È‚°‹È—¦E‚¹‚ñ’f˜c‚ğ•Ô‚·
-// v - ‹ÇŠÀ•WŒn‚Ì•ÏˆÊ
-// l - —v‘f’·‚³
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// æ›²ã’æ›²ç‡ãƒ»ã›ã‚“æ–­æ­ªã‚’è¿”ã™
+// v - å±€æ‰€åº§æ¨™ç³»ã®å¤‰ä½
+// l - è¦ç´ é•·ã•
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> BEBarElement::bendCurveShare(vector<double> v, double l, Material material, Section sect) {
 
     double ckap1 = 6 / (l * l);
@@ -78,10 +78,10 @@ vector<vector<double>> BEBarElement::bendCurveShare(vector<double> v, double l, 
     return result;
 };
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// dens - Ş—¿‚Ì–§“x
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// dens - ææ–™ã®å¯†åº¦
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 vector<vector<double>> BEBarElement::massMatrix(vector<FENode> p, double dens, Section sect) {
 
     double l = p[0].distanceTo(p[1]);

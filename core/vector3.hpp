@@ -1,4 +1,4 @@
-#include <cmath>
+﻿#include <cmath>
 
 class Vector3 {
 public:

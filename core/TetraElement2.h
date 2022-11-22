@@ -1,10 +1,10 @@
-#pragma once
+ï»¿#pragma once
 #include "SolidElement.h";
 
 class TetraElement2 : SolidElement {
 
 private:
-    // l–Ê‘Ì2Ÿ—v‘f‚Ìß“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W
+    // å››é¢ä½“2æ¬¡è¦ç´ ã®ç¯€ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™
     const vector<vector<double>> TETRA2_NODE = {
         {0, 0, 0},
         {1, 0, 0},
@@ -18,7 +18,7 @@ private:
         {0, 0.5, 0.5}
     };
 
-    // l–Ê‘Ì2Ÿ—v‘f‚ÌÏ•ª“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W,d‚İŒW”
+    // å››é¢ä½“2æ¬¡è¦ç´ ã®ç©åˆ†ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™,é‡ã¿ä¿‚æ•°
     const vector<vector<double>> TETRA2_INT = {
         {GTETRA2[0], GTETRA2[0], GTETRA2[0], C1_24},
         {GTETRA2[1], GTETRA2[0], GTETRA2[0], C1_24},

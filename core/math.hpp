@@ -1,4 +1,4 @@
-#ifndef THREE_MATH_HPP
+﻿#ifndef THREE_MATH_HPP
 #define THREE_MATH_HPP
 
 #include <cmath>

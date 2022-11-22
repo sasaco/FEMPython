@@ -1,13 +1,13 @@
-#include "Load.h";
+ï»¿#include "Load.h";
 
 #include <format>;
 
 //--------------------------------------------------------------------//
-// ‰×dğŒ
-// node - ß“_ƒ‰ƒxƒ‹
-// coords - ‹ÇŠÀ•WŒn
-// x,y,z - x,y,z¬•ª
-// rx,ry,rz - x,y,z²ü‚è‰ñ“]¬•ª
+// è·é‡æ¡ä»¶
+// node - ç¯€ç‚¹ãƒ©ãƒ™ãƒ«
+// coords - å±€æ‰€åº§æ¨™ç³»
+// x,y,z - x,y,zæˆåˆ†
+// rx,ry,rz - x,y,zè»¸å‘¨ã‚Šå›è»¢æˆåˆ†
 Load::Load(int _node, Coordinates _coords, double x, double y, double z, double rx, double ry, double rz)
     : Vector3R(x, y, z, rx, ry, rz){
 
@@ -17,8 +17,8 @@ Load::Load(int _node, Coordinates _coords, double x, double y, double z, double 
 
 };
 
-// ‰×dğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
+// è·é‡æ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
 string Load::toString(vector<FENode> nodes) {
 
     string s = format("Load\t{}\t{}", nodes[node].label, globalX);

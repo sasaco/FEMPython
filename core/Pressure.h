@@ -1,9 +1,9 @@
-#pragma once
+ï»¿#pragma once
 #include "ElementBorderBound.h";
 
 #include <string>
 #include <vector>
-using namespace std;         //  –¼‘O‹óŠÔw’è
+using namespace std;         //  åå‰ç©ºé–“æŒ‡å®š
 
 
 class Pressure : public ElementBorderBound {

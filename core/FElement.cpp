@@ -1,26 +1,26 @@
-#include "FElement.h";
+ï»¿#include "FElement.h";
 
 #include <numeric>
 
 
 //--------------------------------------------------------------------//
-// —v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
+// è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
 FElement::FElement(int _label, int _material, vector<int> _nodes)
     : Nodes(_nodes) {
 
     label = label;
     material = _material;
-    isShell = false;        // ƒVƒFƒ‹—v‘f‚Å‚Í‚È‚¢
-    isBar = false;		    // —À—v‘f‚Å‚Í‚È‚¢
+    isShell = false;        // ã‚·ã‚§ãƒ«è¦ç´ ã§ã¯ãªã„
+    isBar = false;		    // æ¢è¦ç´ ã§ã¯ãªã„
 };
 
-// Ï•ª“_‚Ì„«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// d - ‰—Í-˜cƒ}ƒgƒŠƒbƒNƒX
-// b - ˜c-•ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ
-// coef - ŒW”
+// ç©åˆ†ç‚¹ã®å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// d - å¿œåŠ›-æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// b - æ­ª-å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ—
+// coef - ä¿‚æ•°
 void FElement::stiffPart(vector<vector<double>> d, vector<vector<double>> b, double coef, vector<vector<double>> out) {
 
     int size1 = b.size();
@@ -49,9 +49,9 @@ void FElement::stiffPart(vector<vector<double>> d, vector<vector<double>> b, dou
     }
 }
 
-// ß“_•ÏˆÊ‚ğ1ŸŒ³”z—ñ‚É•ÏŠ·‚·‚é
-// u - ß“_•ÏˆÊ
-// dof - ß“_©—R“x
+// ç¯€ç‚¹å¤‰ä½ã‚’1æ¬¡å…ƒé…åˆ—ã«å¤‰æ›ã™ã‚‹
+// u - ç¯€ç‚¹å¤‰ä½
+// dof - ç¯€ç‚¹è‡ªç”±åº¦
 void FElement::toArray(vector<BoundaryCondition> u, int dof, vector<double> out) {
 
     int count = nodeCount();
@@ -65,9 +65,9 @@ void FElement::toArray(vector<BoundaryCondition> u, int dof, vector<double> out)
     }
 };
 
-// ß“_•ÏˆÊ‚ğ‹ÇŠÀ•WŒnE1ŸŒ³”z—ñ‚É•ÏŠ·‚·‚é
-// u - ß“_•ÏˆÊ
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
+// ç¯€ç‚¹å¤‰ä½ã‚’å±€æ‰€åº§æ¨™ç³»ãƒ»1æ¬¡å…ƒé…åˆ—ã«å¤‰æ›ã™ã‚‹
+// u - ç¯€ç‚¹å¤‰ä½
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void FElement::toLocalArray(vector<BoundaryCondition> u, vector<vector<double>> d, vector<double> v) {
 
     v.clear();
@@ -83,18 +83,18 @@ void FElement::toLocalArray(vector<BoundaryCondition> u, vector<vector<double>> 
     }
 }
 
-// 3x3‚Ìs—ñ®‚ğ•Ô‚·
+// 3x3ã®è¡Œåˆ—å¼ã‚’è¿”ã™
 double FElement::determinant(double ja[9]) {
 
     double det = 0;
-    // 3x3‚Ìs—ñ‚ğ“ü—Í
+    // 3x3ã®è¡Œåˆ—ã‚’å…¥åŠ›
     double a[3][3];
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             a[i][j] = ja[i + j];
         }
     }
-    // s—ñ®‚ÌŒvZ
+    // è¡Œåˆ—å¼ã®è¨ˆç®—
     for (int i = 0; i < 3; ++i) {
         det = det + a[0][i] * (a[1][(i + 1) % 3] * a[2][(i + 2) % 3] - a[1][(i + 2) % 3] * a[2][(i + 1) % 3]);
     }
@@ -103,9 +103,9 @@ double FElement::determinant(double ja[9]) {
 }
 
 
-// •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - ’¸“_À•W
-// axis - ’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - é ‚ç‚¹åº§æ¨™
+// axis - æ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 void FElement::dirMatrix(vector<double> p, double axis[3], vector<vector<double>> out) {
 
     vector<double> v;
@@ -116,14 +116,14 @@ void FElement::dirMatrix(vector<double> p, double axis[3], vector<vector<double>
 }
 
 
-// •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - ’¸“_À•W
-// axis - ’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - é ‚ç‚¹åº§æ¨™
+// axis - æ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 void FElement::dirVectors(vector<double> p, double axis[3], vector<double> out[3]) {
 
     var v1, v2, v3;
 
-    if (p.length == 2) {		// —À—v‘f
+    if (p.length == 2) {		// æ¢è¦ç´ 
         v1 = p[1].clone().sub(p[0]).normalize();
         v2 = new THREE.Vector3();
         v3 = new THREE.Vector3();
@@ -143,7 +143,7 @@ void FElement::dirVectors(vector<double> p, double axis[3], vector<double> out[3
         v3.crossVectors(v1, v2);
         return[v1, v2, v3];
     }
-    else if (p.length > 2) {		// ƒVƒFƒ‹—v‘f
+    else if (p.length > 2) {		// ã‚·ã‚§ãƒ«è¦ç´ 
         v3 = normalVector(p);
         v2 = p[1].clone().sub(p[0]);
         v2 = v3.clone().cross(v2).normalize();

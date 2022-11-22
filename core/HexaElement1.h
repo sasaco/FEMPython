@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 #include "SolidElement.h";
 
 class HexaElement1 : public SolidElement {
 
 private:
 
-    // ˜Z–Ê‘Ì1Ÿ—v‘f‚Ìß“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W
+    // å…­é¢ä½“1æ¬¡è¦ç´ ã®ç¯€ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™
     const vector<vector<double>> HEXA1_NODE = {
         {-1, -1, -1},
         {1, -1, -1},
@@ -17,7 +17,7 @@ private:
         {-1, 1, 1}
     };
 
-    // ˜Z–Ê‘Ì1Ÿ—v‘f‚ÌÏ•ª“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W,d‚İŒW”
+    // å…­é¢ä½“1æ¬¡è¦ç´ ã®ç©åˆ†ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™,é‡ã¿ä¿‚æ•°
     const vector<vector<double>> HEXA1_INT = {
         {GX2[0], GX2[0], GX2[0], 1},
         {GX2[1], GX2[0], GX2[0], 1},
@@ -29,8 +29,8 @@ private:
         {GX2[1], GX2[1], GX2[1], 1}
     };
 
-    // ˜Z–Ê‘Ì1Ÿ—v‘f‚Ì¿—Êƒ}ƒgƒŠƒbƒNƒXŒW”
-    double HEXA1_MASS_BASE[8][8]; // ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚Å‰Šú‰»
+    // å…­é¢ä½“1æ¬¡è¦ç´ ã®è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ä¿‚æ•°
+    double HEXA1_MASS_BASE[8][8]; // ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã§åˆæœŸåŒ–
 
 public:
 

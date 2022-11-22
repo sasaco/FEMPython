@@ -1,13 +1,13 @@
-#include "BarParameter.h";
+ï»¿#include "BarParameter.h";
 
 #include <format>
 
 
 //--------------------------------------------------------------------//
-// —Àƒpƒ‰ƒ[ƒ^i‰~Œ`’f–Êj
-// label - ƒpƒ‰ƒ[ƒ^”Ô†
-// type - ’f–Êí—Ş
-// ss - ƒf[ƒ^•¶š—ñ
+// æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ï¼ˆå††å½¢æ–­é¢ï¼‰
+// label - ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ç•ªå·
+// type - æ–­é¢ç¨®é¡
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—
 BarParameter::BarParameter(int _label, string _type, double *ss) {
     
     label = _label;
@@ -28,7 +28,7 @@ BarParameter::~BarParameter() {
     delete rectSection;
 }
 
-// —Àƒpƒ‰ƒ[ƒ^‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 string BarParameter::toString() {
 
     string result;

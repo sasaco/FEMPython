@@ -1,6 +1,6 @@
-#pragma once
+ï»¿#pragma once
 #include <string>
-using namespace std;         //  –¼‘O‹óŠÔw’è
+using namespace std;         //  åå‰ç©ºé–“æŒ‡å®š
 
 class FENode : public Vector3 {
 

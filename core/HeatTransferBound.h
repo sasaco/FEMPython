@@ -1,8 +1,8 @@
-#include "ElementBorderBound.h";
+ï»¿#include "ElementBorderBound.h";
 
 #include <string>
 #include <vector>
-using namespace std;         //  –¼‘O‹óŠÔw’è
+using namespace std;         //  åå‰ç©ºé–“æŒ‡å®š
 
 
 class HeatTransferBound : public ElementBorderBound {

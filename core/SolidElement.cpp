@@ -1,14 +1,14 @@
-#include "SolidElement.h";
+ï»¿#include "SolidElement.h";
 
 #include <format>
 
 //--------------------------------------------------------------------//
-// ƒ\ƒŠƒbƒh—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
-// nodeP - ß“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W
-// intP - Ï•ª“_‚ÌƒÌ,ƒÅ,ƒÄÀ•W,d‚İŒW”
+// ã‚½ãƒªãƒƒãƒ‰è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
+// nodeP - ç¯€ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™
+// intP - ç©åˆ†ç‚¹ã®Î¾,Î·,Î¶åº§æ¨™,é‡ã¿ä¿‚æ•°
 SolidElement::SolidElement(int label, int material, vector<int> nodes) :
     FElement(label, material, nodes) {
 }
@@ -20,9 +20,9 @@ SolidElement::SolidElement(int label, int material, vector<int> nodes, vector<ve
 };
 
 
-// ƒ„ƒRƒrs—ñ‚ğ•Ô‚·
-// p - —v‘fß“_
-// sf - Œ`óŠÖ”s—ñ
+// ãƒ¤ã‚³ãƒ“è¡Œåˆ—ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// sf - å½¢çŠ¶é–¢æ•°è¡Œåˆ—
 void SolidElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]) {
 
     int count = nodeCount();
@@ -46,18 +46,18 @@ void SolidElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, d
 }
 
 
-// Œ`óŠÖ”‚ÌŒù”z [ dNi/dx dNi/dy dNi/dz ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// ja - ƒ„ƒRƒrs—ñ
-// sf - Œ`óŠÖ”s—ñ
+// å½¢çŠ¶é–¢æ•°ã®å‹¾é… [ dNi/dx dNi/dy dNi/dz ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// ja - ãƒ¤ã‚³ãƒ“è¡Œåˆ—
+// sf - å½¢çŠ¶é–¢æ•°è¡Œåˆ—
 void SolidElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> out) {
 
     int count = nodeCount();
 
     double ji[9];
 
-    // Ÿ 3x3 s—ñ‚Ì‹ts—ñ‚ğ‹‚ß‚é
-    // 3x3‚Ìs—ñ‚ğ“ü—Í
+    // â—† 3x3 è¡Œåˆ—ã®é€†è¡Œåˆ—ã‚’æ±‚ã‚ã‚‹
+    // 3x3ã®è¡Œåˆ—ã‚’å…¥åŠ›
     vector<vector<double>> a;
     for (int i = 0; i < 3; ++i) {
         vector<double> b;
@@ -75,7 +75,7 @@ void SolidElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> s
             ji[i + j] = inv_a[i][j];
         }
     }
-    // Ÿ 
+    // â—† 
 
 
     for (int i = 0; i < count; i++) {
@@ -86,8 +86,8 @@ void SolidElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> s
 };
 
 
-// ˜c - •ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ‚ğ•Ô‚·
-// grad - Œ`óŠÖ”‚ÌŒù”z
+// æ­ª - å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ—ã‚’è¿”ã™
+// grad - å½¢çŠ¶é–¢æ•°ã®å‹¾é…
 void SolidElement::strainMatrix(vector<vector<double>> grad, vector<vector<double>> out) {
 
     int count = nodeCount();
@@ -118,10 +118,10 @@ void SolidElement::strainMatrix(vector<vector<double>> grad, vector<vector<doubl
 
 
 
-// Ï•ª“_‚ÌŒ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ NiNj ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// x - ƒÌ,ƒÅ,ƒÄÀ•W
-// w - d‚İŒW”
+// ç©åˆ†ç‚¹ã®å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ NiNj ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// x - Î¾,Î·,Î¶åº§æ¨™
+// w - é‡ã¿ä¿‚æ•°
 void SolidElement::shapePart(vector<FENode> p, double x[3], double w, vector<vector<double>> out) {
 
     vector<vector<double>> sf;
@@ -145,10 +145,10 @@ void SolidElement::shapePart(vector<FENode> p, double x[3], double w, vector<vec
 }
 
 
-// Ï•ª“_‚ÌŠgUƒ}ƒgƒŠƒbƒNƒX [ ŞNiEŞNj ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// x - ƒÌ,ƒÅ,ƒÄÀ•W
-// w - d‚İŒW”
+// ç©åˆ†ç‚¹ã®æ‹¡æ•£ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ‡Niãƒ»âˆ‡Nj ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// x - Î¾,Î·,Î¶åº§æ¨™
+// w - é‡ã¿ä¿‚æ•°
 void SolidElement::gradPart(vector<FENode> p, double x[3], double w, vector<vector<double>> out) {
 
     vector<vector<double>> sf;
@@ -179,9 +179,9 @@ void SolidElement::gradPart(vector<FENode> p, double x[3], double w, vector<vect
 };
 
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// dens - Ş—¿‚Ì–§“x
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// dens - ææ–™ã®å¯†åº¦
 void SolidElement::massMatrix(vector<FENode> p, double dens, vector<vector<double>> out) {
     
     int count = nodeCount();
@@ -220,9 +220,9 @@ void SolidElement::massMatrix(vector<FENode> p, double dens, vector<vector<doubl
 }
 
 
-// s—ñ‚Ì˜a‚ğŒvZ‚·‚é
-// a - Šî€s—ñ
-// da - ‰Á‚¦‚és—ñ
+// è¡Œåˆ—ã®å’Œã‚’è¨ˆç®—ã™ã‚‹
+// a - åŸºæº–è¡Œåˆ—
+// da - åŠ ãˆã‚‹è¡Œåˆ—
 void SolidElement::addMatrix(vector<vector<double>> a, vector<vector<double>> da) {
     for (int i = 0; i < a.size(); i++) {
         for (int j = 0; j < a[i].size(); j++) {
@@ -232,9 +232,9 @@ void SolidElement::addMatrix(vector<vector<double>> a, vector<vector<double>> da
 }
 
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void SolidElement::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out) {
     
     int count = 3 * nodeCount();
@@ -273,9 +273,9 @@ void SolidElement::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, 
 }
 
 
-// Œ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ çNiNjdV ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// coef - ŒW”
+// å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«NiNjdV ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// coef - ä¿‚æ•°
 void SolidElement::shapeFunctionMatrix(vector<FENode> p, double coef, vector<vector<double>> out) {
 
     int count = nodeCount();
@@ -296,9 +296,9 @@ void SolidElement::shapeFunctionMatrix(vector<FENode> p, double coef, vector<vec
     }
 };
 
-// ŠgUƒ}ƒgƒŠƒbƒNƒX [ çŞNiEŞNjdV ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// coef - ŒW”
+// æ‹¡æ•£ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«âˆ‡Niãƒ»âˆ‡NjdV ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// coef - ä¿‚æ•°
 void SolidElement::gradMatrix(vector<FENode> p, double coef, vector<vector<double>> out) {
 
     int count = nodeCount();
@@ -320,10 +320,10 @@ void SolidElement::gradMatrix(vector<FENode> p, double coef, vector<vector<doubl
 };
 
 
-// Šô‰½„«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// å¹¾ä½•å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void SolidElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, vector<vector<double>> out) {
 
     int count = nodeCount();
@@ -382,10 +382,10 @@ void SolidElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryConditio
 };
 
 
-// ß“_˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// ç¯€ç‚¹æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void SolidElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
                                 vector<Strain> strain, vector<Stress> stress, vector<double> energy) {
 
@@ -410,10 +410,10 @@ void SolidElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, v
 
 }
 
-// —v‘f“à‚Ì˜cƒxƒNƒgƒ‹‚ğ•Ô‚·
-// p - —v‘fß“_
-// v - ß“_•ÏˆÊƒxƒNƒgƒ‹
-// x - ƒÌ,ƒÅ,ƒÄÀ•W
+// è¦ç´ å†…ã®æ­ªãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// v - ç¯€ç‚¹å¤‰ä½ãƒ™ã‚¯ãƒˆãƒ«
+// x - Î¾,Î·,Î¶åº§æ¨™
 void SolidElement::strainPart(vector<FENode> p, vector<double> v, double x[3], vector<double> out) {
 
     vector<vector<double>> sf;
@@ -432,10 +432,10 @@ void SolidElement::strainPart(vector<FENode> p, vector<double> v, double x[3], v
 };
 
 
-// —v‘f˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// è¦ç´ æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 void SolidElement::elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
                                         Strain _Strain, Stress _Stress, double energy) {
 
@@ -471,9 +471,9 @@ void SolidElement::elementStrainStress(vector<FENode> p, vector<BoundaryConditio
 
 }
 
-// —v‘f‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// materials - Ş—¿
-// p - ß“_
+// è¦ç´ ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// materials - ææ–™
+// p - ç¯€ç‚¹
 string SolidElement::toString(vector<Material> materials, vector<FENode> p) {
 
     Material mat = materials[material];
