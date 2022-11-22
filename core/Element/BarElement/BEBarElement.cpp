@@ -1,4 +1,8 @@
+#include "BarElement.h";
 
+class BEBarElement : public BarElement {
+
+};
 //--------------------------------------------------------------------//
 // Bernoulli-Euler—À—v‘f
 // label - —v‘fƒ‰ƒxƒ‹

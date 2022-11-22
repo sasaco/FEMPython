@@ -4,19 +4,16 @@
 #include "Material.h";
 #include "numeric.h";
 #include "ShellParameter.h";
+#include "Stress.h";
+#include "Strain.h";
 
 #include <string>
 #include <vector>
+using std::vector;
 
 class ShellElement : public FElement {
 
 private:
-    // 四角形1次要素の節点のξ,η座標
-    vector<vector<double>> QUAD1_NODE = { {-1, -1}, {1, -1}, {1, 1}, {-1, 1} };
-    // 四角形1次要素の積分点のξ,η座標,重み係数
-    vector<vector<double>> QUAD1_INT = { {GX2[0], GX2[0], 1}, {GX2[1], GX2[0], 1}, {GX2[0], GX2[1], 1},
-        {GX2[1], GX2[1], 1} };
-
     int label;
     int param;
     bool isShell;

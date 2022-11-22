@@ -22,7 +22,7 @@ public:
     const double C1_6 = 1 / 6;
     const double C1_12 = 1 / 12;
     const double C1_24 = 1 / 24;
-
+    
     // 三角形2次要素のガウス積分の積分点座標
     const double GTRI2[2] = { 1 / 6, 2 / 3 };
     // 四面体2次要素のガウス積分の積分点座標

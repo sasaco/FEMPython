@@ -1,45 +1,4 @@
-#include "ShellElement.h";
-#include "numeric.h";
-
-
-class TriElement1 : public ShellElement {
-
-private:
-    // 三角形1次要素の節点のξ,η座標
-    vector<vector<double>> TRI1_NODE = { {0, 0}, {1, 0}, {0, 1} };
-    // 三角形1次要素の積分点のξ,η座標,重み係数
-    vector<vector<double>> TRI1_INT = { {C1_3, C1_3, 0.5} };
-
-    // 三角形2次要素の積分点のξ,η座標,重み係数
-    vector<vector<double>> TRI2_INT = { {GTRI2[0], GTRI2[0], C1_6}, {GTRI2[1], GTRI2[0], C1_6},
-        {GTRI2[0], GTRI2[1], C1_6} };
-
-    // 三角形1次要素の質量マトリックス係数
-    vector<vector<double>> TRI1_MASS1 = { {1, 0.5, 0.5}, {0.5, 1, 0.5}, {0.5, 0.5, 1} };
-
-
-public:
-    TriElement1(int label, int material, int param, vector<int> nodes);
-
-    string getName() override;
-
-    int nodeCount() override;
-
-    vector<vector<double>> shapeFunction(double xsi, double eta) override;
-
-    vector<vector<double>> shapeFunction2(double xsi, double eta);
-
-    vector<vector<double>> shapeFunction3(vector<FENode> p, vector<vector<double>> d, double xsi, double eta);
-
-    double jacobian(vector<FENode> p);
-
-    vector<vector<double>> massMatrix(vector<FENode> p, double dens, double t);
-
-    vector<vector<double>> stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, ShellParameter sp);
-
-
-
-};
+#include "TriElement1.h";
 
 //--------------------------------------------------------------------//
 // 三角形1次要素 (薄肉シェル)
@@ -335,6 +294,7 @@ vector<vector<double>> TriElement1::stiffnessMatrix(vector<FENode> p, vector<vec
     return kk;
 };
 
+
 // 歪 - 変位マトリックスの転置行列を返す
 // sf - 形状関数行列
 // jinv - 逆ヤコビ行列
@@ -345,11 +305,11 @@ vector<vector<double>> TriElement1::strainMatrix1(vector<vector<double>> sf, vec
 
     vector<vector<double>> ji = jinv.elements;
 
-    for (var i = 0; i < count; i++) {
-        var sfi = sf[i];
-        var dndx = ji[0] * sfi[1] + ji[3] * sfi[2];
-        var dndy = ji[1] * sfi[1] + ji[4] * sfi[2];
-        var i2 = 2 * i;
+    for (int i = 0; i < count; i++) {
+        vector<double> sfi = sf[i];
+        double dndx = ji[0] * sfi[1] + ji[3] * sfi[2];
+        double dndy = ji[1] * sfi[1] + ji[4] * sfi[2];
+        int i2 = 2 * i;
         b[i2][0] = dndx;
         b[i2 + 1][1] = dndy;
         b[i2][2] = dndy;
@@ -358,19 +318,25 @@ vector<vector<double>> TriElement1::strainMatrix1(vector<vector<double>> sf, vec
     return b;
 };
 
+
 // 面外歪 - 変位マトリックスの転置行列を返す
 // sf - 形状関数行列
 // jinv - 逆ヤコビ行列
-TriElement1.prototype.strainMatrix2 = function(sf, jinv) {
-    var count = 3 * this.nodeCount(), b = [];
-    var ji = jinv.elements;
-    for (var i = 0; i < count; i++) {
-        var sfi = sf[i];
-        var hxx = ji[0] * sfi[2] + ji[3] * sfi[4];
-        var hxy = ji[1] * sfi[2] + ji[4] * sfi[4];
-        var hyx = ji[0] * sfi[3] + ji[3] * sfi[5];
-        var hyy = ji[1] * sfi[3] + ji[4] * sfi[5];
-        b[i] = [hyx, -hxy, hyy - hxx];
+vector<vector<double>> TriElement1::strainMatrix2(vector<vector<double>> sf, vector<double> jinv) {
+
+    int count = 3 * nodeCount();
+    vector<vector<double>> b;
+    vector<double> ji = jinv.elements;
+
+    for (int i = 0; i < count; i++) {
+        vector<double> sfi = sf[i];
+        double hxx = ji[0] * sfi[2] + ji[3] * sfi[4];
+        double hxy = ji[1] * sfi[2] + ji[4] * sfi[4];
+        double hyx = ji[0] * sfi[3] + ji[3] * sfi[5];
+        double hyy = ji[1] * sfi[3] + ji[4] * sfi[5];
+
+        vector<double> a = { hyx, -hxy, hyy - hxx };
+        b.push_back(a);
     }
     return b;
 };
@@ -379,44 +345,86 @@ TriElement1.prototype.strainMatrix2 = function(sf, jinv) {
 // p - 要素節点
 // coef - 係数
 // t - 要素厚さ
-TriElement1.prototype.shapeFunctionMatrix = function(p, coef, t) {
-    var ds = coef * this.jacobian(p) / 12;
-    var count = 3 * this.nodeCount(), s = numeric.rep([count], 0.5 * ds);
-    for (var i = 0; i < count; i++) s[i][i] = ds;
+vector<vector<double>> TriElement1::shapeFunctionMatrix(vector<FENode> p, double coef, double t) {
+
+    double ds = coef * jacobian(p) / 12;
+
+    int count = 3 * nodeCount();
+    vector<vector<double>> s;
+    for (int i = 0; i < count, i++) {
+        s.push_back(0.5 * ds);
+    }
+
+    for (int i = 0; i < count; i++) 
+        s[i][i] = ds;
     return s;
 };
+
 
 // 幾何剛性マトリックスを返す
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
-TriElement1.prototype.geomStiffnessMatrix = function(p, u, d1, sp) {
-    var count = this.nodeCount(), kk = numeric.rep([6 * count, 6 * count], 0);
-    var d = dirMatrix(p), n = normalVector(p);
-    var v = this.toArray(u, 6), t = sp.thickness;
-    var ip = this.intP[0];
-    var sf1 = this.shapeFunction(ip[0], ip[1]);
-    var ja = this.jacobianMatrix(p, sf1, n, t);
-    var gr = this.grad(p, ja, sf1, d, t);
+vector<vector<double>> TriElement1::geomStiffnessMatrix(vector<FENode> p, u, d1, ShellParameter sp) {
+    
+    intcount = nodeCount();
+    vector<vector<double>> kk = numeric::rep(6 * count, 6 * count);
+
+    vector<vector<double>> d = dirMatrix(p);
+
+    double* n = normalVector(p);
+
+    vector<double> v = toArray(u, 6);
+    
+    double t = sp.thickness;
+
+    vector<double> ip = intP[0];
+
+    vector<vector<double>> sf1 = shapeFunction(ip[0], ip[1]);
+
+    vector<vector<double>> ja = jacobianMatrix(p, sf1, n, t);
+
+    vector<vector<double>> gr = grad(p, ja, sf1, d, t);
+
     var jinv = this.jacobInv(ja, d);
-    var sf3 = this.shapeFunction3(p, d, ip[0], ip[1]);
-    var sm = this.strainMatrix(sf1, sf3, jinv, d, 0, t);
-    var str = this.toStress(numeric.dotMV(d1, numeric.dotVM(v, sm)));
-    var w = Math.abs(ja.determinant());
-    for (var i1 = 0; i1 < count; i1++) {
-        var i6 = 6 * i1, gri = gr[i1];
-        for (var j1 = 0; j1 < count; j1++) {
-            var j6 = 6 * j1, grj = gr[j1];
-            var s = w * (gri[0] * (str.xx * grj[0] + str.xy * grj[1] + str.zx * grj[2]) +
+
+    vector<vector<double>> sf3 = this.shapeFunction3(p, d, ip[0], ip[1]);
+
+    vector<vector<double>> sm = strainMatrix(sf1, sf3, jinv, d, 0, t);
+
+    vector<double> vm = numeric::dotVM(v, sm);
+
+    vector<double> mv = numeric::dotMV(d1, vm);
+
+    Stress str = toStress(mv);
+
+    double det = determinant(ja);
+
+    double w = abs(det);
+
+    for (int i1 = 0; i1 < count; i1++) {
+
+        int i6 = 6 * i1;
+        vector<double> gri = gr[i1];
+
+        for (int j1 = 0; j1 < count; j1++) {
+
+            int j6 = 6 * j1;
+            vector<double> grj = gr[j1];
+
+            double s = w * (gri[0] * (str.xx * grj[0] + str.xy * grj[1] + str.zx * grj[2]) +
                 gri[1] * (str.xy * grj[0] + str.yy * grj[1] + str.yz * grj[2]) +
                 gri[2] * (str.zx * grj[0] + str.yz * grj[1] + str.zz * grj[2]));
+
             kk[i6][j6] = s;
             kk[i6 + 1][j6 + 1] = s;
             kk[i6 + 2][j6 + 2] = s;
         }
     }
+
     toDir3(d, kk);
+
     return kk;
 };
 
@@ -427,13 +435,21 @@ TriElement1.prototype.geomStiffnessMatrix = function(p, u, d1, sp) {
 // d - 方向余弦マトリックス
 // xsi,eta,zeta - ξ,η,ζ座標
 // t - 要素厚さ
-TriElement1.prototype.strainPart = function(p, v, n, d, xsi, eta, zeta, t) {
-    var sf1 = this.shapeFunction(xsi, eta);
-    var ja = this.jacobianMatrix(p, sf1, n, t);
-    var jinv = this.jacobInv(ja, d);
-    var sf3 = this.shapeFunction3(p, d, xsi, eta);
-    var sm = this.strainMatrix(sf1, sf3, jinv, d, zeta, t);
-    return numeric.dotVM(v, sm);
+vector<double> TriElement1::strainPart(vector<FENode> p, vector<double> v, double n[3], vector<vector<double>> d, double xsi, double eta, double zeta, double t) {
+
+    vector<vector<double>> sf1 = shapeFunction(xsi, eta);
+
+    vector<vector<double>> ja = jacobianMatrix(p, sf1, n, t);
+
+    vector<vector<double>> jinv = jacobInv(ja, d);
+
+    vector<vector<double>> sf3 = shapeFunction3(p, d, xsi, eta);
+
+    vector<vector<double>> sm = strainMatrix(sf1, sf3, jinv, d, zeta, t);
+
+    vector<double> vm = numeric::dotVM(v, sm);
+
+    return vm;
 };
 
 // 歪 - 変位マトリックスの転置行列を返す
@@ -444,16 +460,27 @@ TriElement1.prototype.strainPart = function(p, v, n, d, xsi, eta, zeta, t) {
 // d - 方向余弦マトリックス
 // zeta - 節点のζ座標
 // t - 要素厚さ
-TriElement1.prototype.strainMatrix = function(sf1, sf3, jinv, d, zeta, t) {
-    var b1 = this.strainMatrix1(sf1, jinv);
-    var b2 = this.strainMatrix2(sf3, jinv);
-    var count = this.nodeCount(), m1 = numeric.rep([3, 6], 0);
-    var matrix = numeric.rep([6 * count, 3], 0), z = 0.5 * t * zeta, i1;
-    for (var i = 0; i < count; i++) {
-        var i2 = 2 * i;
-        var i3 = 3 * i;
-        var i6 = 6 * i;
-        for (i1 = 0; i1 < 3; i1++) {
+vector<vector<double>> TriElement1::strainMatrix(vector<vector<double>> sf1, vector<vector<double>>  sf3, vector<vector<double>> jinv, vector<vector<double>> d, double zeta, double t) {
+    
+    vector<vector<double>> b1 = strainMatrix1(sf1, jinv);
+
+    vector<vector<double>> b2 = strainMatrix2(sf3, jinv);
+
+    int count = nodeCount();
+
+    vector<vector<double>> m1 = numeric::rep(3, 6);
+
+    vector<vector<double>> matrix = numeric::rep(6 * count, 3);
+
+    double z = 0.5 * t * zeta;
+
+    for (int i = 0; i < count; i++) {
+
+        int i2 = 2 * i;
+        int i3 = 3 * i;
+        int i6 = 6 * i;
+
+        for (int i1 = 0; i1 < 3; i1++) {
             m1[i1][0] = b1[i2][i1];
             m1[i1][1] = b1[i2 + 1][i1];
             m1[i1][2] = z * b2[i3][i1];
@@ -461,11 +488,18 @@ TriElement1.prototype.strainMatrix = function(sf1, sf3, jinv, d, zeta, t) {
             m1[i1][4] = z * b2[i3 + 2][i1];
             m1[i1][5] = 0;
         }
-        for (i1 = 0; i1 < 3; i1++) {
-            var m1i = m1[i1];
-            for (var j1 = 0; j1 < 3; j1++) {
-                var dj = d[j1], s1 = 0, s2 = 0;
-                for (var k1 = 0; k1 < 3; k1++) {
+
+        for (int i1 = 0; i1 < 3; i1++) {
+
+            vector<double> m1i = m1[i1];
+
+            for (int j1 = 0; j1 < 3; j1++) {
+
+                vector<double> dj = d[j1];
+                
+                double s1 = 0, s2 = 0;
+
+                for (int k1 = 0; k1 < 3; k1++) {
                     s1 += m1i[k1] * dj[k1];
                     s2 += m1i[k1 + 3] * dj[k1];
                 }
@@ -477,14 +511,15 @@ TriElement1.prototype.strainMatrix = function(sf1, sf3, jinv, d, zeta, t) {
     return matrix;
 };
 
+
 // ベクトルを歪に変換する
 // s - 歪ベクトル
-TriElement1.prototype.toStrain = function(s) {
-    return new Strain([s[0], s[1], 0, s[2], 0, 0]);
+Strain TriElement1::toStrain(double s[]) {
+    return Strain([s[0], s[1], 0, s[2], 0, 0]);
 };
 
 // ベクトルを歪に変換する
 // s - 歪ベクトル
-TriElement1.prototype.toStress = function(s) {
-    return new Stress([s[0], s[1], 0, s[2], 0, 0]);
+Stress TriElement1::toStress(double s[]) {
+    return Stress([s[0], s[1], 0, s[2], 0, 0]);
 };
