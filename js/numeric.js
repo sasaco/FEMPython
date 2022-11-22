@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 var numeric = (typeof exports === "undefined")?(function numeric() {}):(exports);
 if(typeof global !== "undefined") { global.numeric = numeric; }
@@ -3540,7 +3540,7 @@ mixkey(math.random(), pool);
   52    // significance: there are 52 significant digits in a double
   ));
 /* This file is a slightly modified version of quadprog.js from Alberto Santini.
- * It has been slightly modified by Sébastien Loisel to make sure that it handles
+ * It has been slightly modified by Sﾃｩbastien Loisel to make sure that it handles
  * 0-based Arrays instead of 1-based Arrays.
  * License is in resources/LICENSE.quadprog */
 (function(exports) {

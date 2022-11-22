@@ -1,13 +1,13 @@
-var I_YMZ=[1,5,7,11];	// y²•ûŒü,z²ü‚è¬•ª‚ÌƒCƒ“ƒfƒbƒNƒX
-var I_ZMY=[2,4,8,10];	// z²•ûŒü,y²ü‚è¬•ª‚ÌƒCƒ“ƒfƒbƒNƒX
+ï»¿var I_YMZ=[1,5,7,11];	// yè»¸æ–¹å‘,zè»¸å‘¨ã‚Šæˆåˆ†ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+var I_ZMY=[2,4,8,10];	// zè»¸æ–¹å‘,yè»¸å‘¨ã‚Šæˆåˆ†ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 
 //--------------------------------------------------------------------//
-// —À—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// param - —Àƒpƒ‰ƒ[ƒ^‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
-// axis - ’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// æ¢è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// param - æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
+// axis - æ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 var BarElement=function(label,material,param,nodes,axis){
   FElement.call(this,label,material,nodes);
   this.param=param;
@@ -16,19 +16,19 @@ var BarElement=function(label,material,param,nodes,axis){
   this.axis=axis;
 };
 
-// ß“_”‚ğ•Ô‚·
+// ç¯€ç‚¹æ•°ã‚’è¿”ã™
 BarElement.prototype.nodeCount=function(){
   return 2;
 };
 
-// —v‘f‹«ŠE”‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œæ•°ã‚’è¿”ã™
 BarElement.prototype.borderCount=function(){
   return 1;
 };
 
-// —v‘f‹«ŠE‚ğ•Ô‚·
-// element - —v‘fƒ‰ƒxƒ‹
-// index - —v‘f‹«ŠE‚ÌƒCƒ“ƒfƒbƒNƒX
+// è¦ç´ å¢ƒç•Œã‚’è¿”ã™
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// index - è¦ç´ å¢ƒç•Œã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 BarElement.prototype.border=function(element,index){
   var p=this.nodes;
   switch(index){
@@ -39,23 +39,23 @@ BarElement.prototype.border=function(element,index){
   }
 };
 
-// —v‘f‹«ŠE•Ó‚ğ•Ô‚· —À—v‘f‚Å‚Í—v‘f‹«ŠE‚Æ“¯‚¶
-// element - —v‘fƒ‰ƒxƒ‹
-// index - —v‘f‹«ŠE•Ó‚ÌƒCƒ“ƒfƒbƒNƒX
+// è¦ç´ å¢ƒç•Œè¾ºã‚’è¿”ã™ æ¢è¦ç´ ã§ã¯è¦ç´ å¢ƒç•Œã¨åŒã˜
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// index - è¦ç´ å¢ƒç•Œè¾ºã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 BarElement.prototype.borderEdge=function(element,index){
   return this.border(element,index);
 };
 
-// —v‘fß“_‚ÌŠp“x‚ğ•Ô‚· —À—v‘f‚Å‚Í‚P
-// p - —v‘fß“_
+// è¦ç´ ç¯€ç‚¹ã®è§’åº¦ã‚’è¿”ã™ æ¢è¦ç´ ã§ã¯ï¼‘
+// p - è¦ç´ ç¯€ç‚¹
 BarElement.prototype.angle=function(p){
   return [1,1];
 };
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 BarElement.prototype.stiffnessMatrix=function(p,material,sect){
   var kk=numeric.rep([12,12],0),l=p[0].distanceTo(p[1]);
   var d=dirMatrix(p,this.axis);
@@ -80,20 +80,20 @@ BarElement.prototype.stiffnessMatrix=function(p,material,sect){
   return kk;
 };
 
-// ŠgUƒ}ƒgƒŠƒbƒNƒX [ çŞNiEŞNjdV ] ‚ğ•Ô‚·
-// p - —v‘fß“_
-// coef - ŒW”
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// æ‹¡æ•£ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«âˆ‡Niãƒ»âˆ‡NjdV ] ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// coef - ä¿‚æ•°
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 BarElement.prototype.gradMatrix=function(p,coef,sect){
   var c=coef*sect.area/p[0].distanceTo(p[1]);
   return [[c,-c],[-c,c]];
 };
 
-// Šô‰½„«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// å¹¾ä½•å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 BarElement.prototype.geomStiffnessMatrix=function(p,u,material,sect){
   var l2=p[0].distanceToSquared(p[1]),d=dirMatrix(p,this.axis);
   var v=this.toLocalArray(u,d),kk=numeric.rep([12,12],0);
@@ -108,11 +108,11 @@ BarElement.prototype.geomStiffnessMatrix=function(p,u,material,sect){
   return kk;
 };
 
-// ß“_˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// ç¯€ç‚¹æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 BarElement.prototype.strainStress=function(p,u,material,sect){
   var l=p[0].distanceTo(p[1]),d=dirMatrix(p,this.axis);
   var v=this.toLocalArray(u,d);
@@ -136,11 +136,11 @@ BarElement.prototype.strainStress=function(p,u,material,sect){
   return [strain1,stress1,energy1,strain2,stress2,energy2];
 };
 
-// —v‘f˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// è¦ç´ æ­ªãƒ»å¿œåŠ›ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// u - ç¯€ç‚¹å¤‰ä½
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 BarElement.prototype.elementStrainStress=function(p,u,material,sect){
   var l=p[0].distanceTo(p[1]),d=dirMatrix(p,this.axis);
   var v=this.toLocalArray(u,d),i;
@@ -168,10 +168,10 @@ BarElement.prototype.elementStrainStress=function(p,u,material,sect){
   return [strain1,stress1,energy1,strain2,stress2,energy2];
 };
 
-// —v‘f‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// materials - Ş—¿
-// params - —Àƒpƒ‰ƒ[ƒ^
-// p - ß“_
+// è¦ç´ ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// materials - ææ–™
+// params - æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+// p - ç¯€ç‚¹
 BarElement.prototype.toString=function(materials,params,p){
   var s=this.getName()+'\t'+this.label.toString(10)+'\t'+
       	materials[this.material].label.toString(10)+'\t'+
@@ -183,25 +183,25 @@ BarElement.prototype.toString=function(materials,params,p){
 };
 
 //--------------------------------------------------------------------//
-// Bernoulli-Euler—À—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// param - —Àƒpƒ‰ƒ[ƒ^‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
-// axis - ’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// Bernoulli-Euleræ¢è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// param - æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
+// axis - æ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 var BEBarElement=function(label,material,param,nodes,axis){
   BarElement.call(this,label,material,param,nodes,axis);
 };
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 BEBarElement.prototype.getName=function(){
   return 'BEBarElement';
 };
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚Ì—À‹È‚°¬•ª‚ğ•Ô‚·
-// l - —v‘f’·‚³
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®æ¢æ›²ã’æˆåˆ†ã‚’è¿”ã™
+// l - è¦ç´ é•·ã•
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 BEBarElement.prototype.stiffBend=function(l,material,sect){
   var kc=material.ee/(l*l*l),kcy=kc*sect.iy,kcz=kc*sect.iz;
   var kcy12=12*kcy,kcy6l=6*kcy*l,kcyll=kcy*l*l;
@@ -213,11 +213,11 @@ BEBarElement.prototype.stiffBend=function(l,material,sect){
 };
 
 
-// ‹È‚°‹È—¦E‚¹‚ñ’f˜c‚ğ•Ô‚·
-// v - ‹ÇŠÀ•WŒn‚Ì•ÏˆÊ
-// l - —v‘f’·‚³
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// æ›²ã’æ›²ç‡ãƒ»ã›ã‚“æ–­æ­ªã‚’è¿”ã™
+// v - å±€æ‰€åº§æ¨™ç³»ã®å¤‰ä½
+// l - è¦ç´ é•·ã•
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 BEBarElement.prototype.bendCurveShare=function(v,l,material,sect){
   var ckap1=6/(l*l),ckap2=4/l,ckap3=0.5*ckap2;
   var kpy=[ckap1*(v[1]-v[7])+ckap2*v[5]+ckap3*v[11],
@@ -227,10 +227,10 @@ BEBarElement.prototype.bendCurveShare=function(v,l,material,sect){
   return [kpy,kpz,0,0];
 };
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// dens - Ş—¿‚Ì–§“x
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// dens - ææ–™ã®å¯†åº¦
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 BEBarElement.prototype.massMatrix=function(p,dens,sect){
   var l=p[0].distanceTo(p[1]),d=dirMatrix(p,this.axis);
   var mi=sect.massInertia(dens,l),m0=mi[0],dm=C1_3*m0,dix=C1_3*mi[1];
@@ -261,29 +261,29 @@ BEBarElement.prototype.massMatrix=function(p,dens,sect){
 };
 
 //--------------------------------------------------------------------//
-// Timoshenko—À—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// param - —Àƒpƒ‰ƒ[ƒ^‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
-// axis - ’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// Timoshenkoæ¢è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// param - æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
+// axis - æ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 var TBarElement=function(label,material,param,nodes,axis){
   BarElement.call(this,label,material,param,nodes,axis);
 };
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 TBarElement.prototype.getName=function(){
   return 'TBarElement';
 };
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚Ì—À‹È‚°¬•ª‚ğ•Ô‚·
-// l - —v‘f’·‚³
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®æ¢æ›²ã’æˆåˆ†ã‚’è¿”ã™
+// l - è¦ç´ é•·ã•
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 TBarElement.prototype.stiffBend=function(l,material,sect){
   var kb=material.ee/l,kby=kb*sect.iy,kbz=kb*sect.iz;
   var ksc1=sect.shearCoef()*material.gg*sect.area/l;
-  var ksc2y=12*kby/l,kscy=ksc1*ksc2y/(ksc1+ksc2y);	// MacNeal‚Ì•â³
+  var ksc2y=12*kby/l,kscy=ksc1*ksc2y/(ksc1+ksc2y);	// MacNealã®è£œæ­£
   var ksc2z=12*kbz/l,kscz=ksc1*ksc2z/(ksc1+ksc2z);
   var lh=0.5*l,ksyl=kscy*lh,ksyl2=ksyl*lh,kszl=kscz*lh,kszl2=kszl*lh;
   return [[kscy,ksyl,-kscy,ksyl],[ksyl,kby+ksyl2,-ksyl,-kby+ksyl2],
@@ -292,11 +292,11 @@ TBarElement.prototype.stiffBend=function(l,material,sect){
       	  [-kscz,kszl,kscz,kszl],[-kszl,-kbz+kszl2,kszl,kbz+kszl2]];
 };
 
-// ‹È‚°‹È—¦E‚¹‚ñ’f˜c‚ğ•Ô‚·
-// v - ‹ÇŠÀ•WŒn‚Ì•ÏˆÊ
-// l - —v‘f’·‚³
-// material - Ş—¿
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// æ›²ã’æ›²ç‡ãƒ»ã›ã‚“æ–­æ­ªã‚’è¿”ã™
+// v - å±€æ‰€åº§æ¨™ç³»ã®å¤‰ä½
+// l - è¦ç´ é•·ã•
+// material - ææ–™
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 TBarElement.prototype.bendCurveShare=function(v,l,material,sect){
   var cs1=sect.shearCoef()/l,cs2=0.5*sect.shearCoef();
   var ckap1=cs2*material.gg*sect.area*l/material.ee;
@@ -315,10 +315,10 @@ TBarElement.prototype.bendCurveShare=function(v,l,material,sect){
   return [kpy,kpz,sy,sz];
 };
 
-// ¿—Êƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// dens - Ş—¿‚Ì–§“x
-// sect - —À’f–Êƒpƒ‰ƒ[ƒ^
+// è³ªé‡ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// dens - ææ–™ã®å¯†åº¦
+// sect - æ¢æ–­é¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 TBarElement.prototype.massMatrix=function(p,dens,sect){
   var l=p[0].distanceTo(p[1]),d=dirMatrix(p,this.axis);
   var mi=sect.massInertia(dens,l),dm=C1_3*mi[0];

@@ -1,4 +1,4 @@
-// lŠpŒ`2Ÿ—v‘f‚ÌÏ•ª“_‚ÌƒÌ,ƒÅÀ•W,d‚İŒW”
+ï»¿// å››è§’å½¢2æ¬¡è¦ç´ ã®ç©åˆ†ç‚¹ã®Î¾,Î·åº§æ¨™,é‡ã¿ä¿‚æ•°
 var QUAD2_INT=[[GX3[0],GX3[0],GW3[0]*GW3[0]],
       	       [GX3[1],GX3[0],GW3[1]*GW3[0]],
       	       [GX3[2],GX3[0],GW3[2]*GW3[0]],
@@ -10,29 +10,29 @@ var QUAD2_INT=[[GX3[0],GX3[0],GW3[0]*GW3[0]],
       	       [GX3[2],GX3[2],GW3[2]*GW3[2]]];
 
 //--------------------------------------------------------------------//
-// —v‘f‹«ŠE
-// element - —v‘fƒ‰ƒxƒ‹
-// nodes - ß“_”Ô†
-// intP - Ï•ª“_‚ÌƒÌ,ƒÅÀ•W,d‚İŒW”
+// è¦ç´ å¢ƒç•Œ
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// nodes - ç¯€ç‚¹ç•ªå·
+// intP - ç©åˆ†ç‚¹ã®Î¾,Î·åº§æ¨™,é‡ã¿ä¿‚æ•°
 var ElementBorder=function(element,nodes,intP){
   Nodes.call(this,nodes);
   this.element=element;
   this.intP=intP;
-  this.isEdge=false;		// •Ó‚Å‚Í‚È‚¢
+  this.isEdge=false;		// è¾ºã§ã¯ãªã„
 };
 
-// ü‰ñ‡‚É•À‚ñ‚¾ß“_ƒ‰ƒxƒ‹‚ğ•Ô‚·
+// å‘¨å›é †ã«ä¸¦ã‚“ã ç¯€ç‚¹ãƒ©ãƒ™ãƒ«ã‚’è¿”ã™
 ElementBorder.prototype.cycleNodes=function(){
   return this.nodes;
 };
 
-// —v‘f‹«ŠE‚ÌƒRƒs[‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œã®ã‚³ãƒ”ãƒ¼ã‚’è¿”ã™
 ElementBorder.prototype.clone=function(){
   return new this.constructor(this.element,this.nodes.concat());
 };
 
-// —v‘f‹«ŠE‚ğ”äŠr‚·‚é
-// b - ”äŠr‘ÎÛ‚Ì—v‘f‹«ŠE
+// è¦ç´ å¢ƒç•Œã‚’æ¯”è¼ƒã™ã‚‹
+// b - æ¯”è¼ƒå¯¾è±¡ã®è¦ç´ å¢ƒç•Œ
 ElementBorder.prototype.compare=function(b){
   var p1=this.nodes.concat(),p2=b.nodes.concat();
   p1.sort(function(a,b){return a-b;});
@@ -45,9 +45,9 @@ ElementBorder.prototype.compare=function(b){
   return p1.length-p2.length;
 };
 
-// ‹[—ƒ„ƒRƒrƒAƒ“‚ğ•Ô‚·
-// p - ß“_
-// sf - Œ`óŠÖ”s—ñ
+// æ“¬ä¼¼ãƒ¤ã‚³ãƒ“ã‚¢ãƒ³ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// sf - å½¢çŠ¶é–¢æ•°è¡Œåˆ—
 ElementBorder.prototype.jacobian=function(p,sf){
   var count=this.nodeCount(),jac=[0,0,0,0,0,0];
   for(var i=0;i<count;i++){
@@ -63,10 +63,10 @@ ElementBorder.prototype.jacobian=function(p,sf){
   return Math.sqrt(j1*j1+j2*j2+j3*j3);
 };
 
-// Ï•ª“_‚ÌŒ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ NiNj ] ‚ğ•Ô‚·
-// p - ß“_
-// x - ƒÌ,ƒÅÀ•W
-// w - d‚İŒW”
+// ç©åˆ†ç‚¹ã®å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ NiNj ] ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// x - Î¾,Î·åº§æ¨™
+// w - é‡ã¿ä¿‚æ•°
 ElementBorder.prototype.shapeMatrixPart=function(p,x,w){
   var sf=this.shapeFunction(x[0],x[1]);
   var coef=w*this.jacobian(p,sf);
@@ -81,10 +81,10 @@ ElementBorder.prototype.shapeMatrixPart=function(p,x,w){
   return matrix;
 };
 
-// Ï•ª“_‚ÌŒ`óŠÖ”ƒxƒNƒgƒ‹ [ Ni ] ‚ğ•Ô‚·
-// p - ß“_
-// x - ƒÌ,ƒÅÀ•W
-// w - d‚İŒW”
+// ç©åˆ†ç‚¹ã®å½¢çŠ¶é–¢æ•°ãƒ™ã‚¯ãƒˆãƒ« [ Ni ] ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// x - Î¾,Î·åº§æ¨™
+// w - é‡ã¿ä¿‚æ•°
 ElementBorder.prototype.shapeVectorPart=function(p,x,w){
   var sf=this.shapeFunction(x[0],x[1]);
   var coef=w*this.jacobian(p,sf);
@@ -95,9 +95,9 @@ ElementBorder.prototype.shapeVectorPart=function(p,x,w){
   return vector;
 };
 
-// Œ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ çNiNjdS ] ‚ğ•Ô‚·
-// p - ß“_
-// coef - ŒW”
+// å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«NiNjdS ] ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// coef - ä¿‚æ•°
 ElementBorder.prototype.shapeFunctionMatrix=function(p,coef){
   var count=this.nodeCount(),s=numeric.rep([count,count],0);
   for(var i=0;i<this.intP.length;i++){
@@ -107,9 +107,9 @@ ElementBorder.prototype.shapeFunctionMatrix=function(p,coef){
   return s;
 };
 
-// Œ`óŠÖ”ƒxƒNƒgƒ‹ [ çNidS ] ‚ğ•Ô‚·
-// p - ß“_
-// coef - ŒW”
+// å½¢çŠ¶é–¢æ•°ãƒ™ã‚¯ãƒˆãƒ« [ âˆ«NidS ] ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// coef - ä¿‚æ•°
 ElementBorder.prototype.shapeFunctionVector=function(p,coef){
   var count=this.nodeCount(),s=numeric.rep([count],0);
   for(var i=0;i<this.intP.length;i++){
@@ -120,31 +120,31 @@ ElementBorder.prototype.shapeFunctionVector=function(p,coef){
 };
 
 //--------------------------------------------------------------------//
-// •Ó1Ÿ—v‘f‹«ŠE
-// element - —v‘fƒ‰ƒxƒ‹
-// nodes - ß“_”Ô†
+// è¾º1æ¬¡è¦ç´ å¢ƒç•Œ
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// nodes - ç¯€ç‚¹ç•ªå·
 var EdgeBorder1=function(element,nodes){
   ElementBorder.call(this,element,nodes,null);
   this.isEdge=true;
 };
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 EdgeBorder1.prototype.getName=function(){
   return 'EdgeBorder1';
 };
 
-// ß“_”‚ğ•Ô‚·
+// ç¯€ç‚¹æ•°ã‚’è¿”ã™
 EdgeBorder1.prototype.nodeCount=function(){
   return 2;
 };
 
-// —v‘f‹«ŠE‚ğ•ªŠ„‚·‚é
+// è¦ç´ å¢ƒç•Œã‚’åˆ†å‰²ã™ã‚‹
 EdgeBorder1.prototype.splitBorder=function(){
   return [this.clone()];
 };
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ ] ‚ğ•Ô‚·
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· ] ã‚’è¿”ã™
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
 EdgeBorder1.prototype.shapeFunction=function(xsi,eta){
   if((eta===null) || (eta===undefined)){
     return [[0.5*(1-xsi),-0.5],[0.5*(1+xsi),0.5,1]];
@@ -154,25 +154,25 @@ EdgeBorder1.prototype.shapeFunction=function(xsi,eta){
   }
 };
 
-// Œ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ çNiNjdS ] ‚ğ•Ô‚·
-// p - ß“_
-// coef - ŒW”
+// å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«NiNjdS ] ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// coef - ä¿‚æ•°
 EdgeBorder1.prototype.shapeFunctionMatrix=function(p,coef){
   var value=C1_3*coef*p[0].distanceTo(p[1]),vh=0.5*value;
   return [[value,vh],[vh,value]];
 };
 
-// Œ`óŠÖ”ƒxƒNƒgƒ‹ [ çNidS ] ‚ğ•Ô‚·
-// p - ß“_
-// coef - ŒW”
+// å½¢çŠ¶é–¢æ•°ãƒ™ã‚¯ãƒˆãƒ« [ âˆ«NidS ] ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// coef - ä¿‚æ•°
 EdgeBorder1.prototype.shapeFunctionVector=function(p,coef){
   var value=0.5*coef*p[0].distanceTo(p[1]);
   return [value,value];
 };
 
-// •Ó‚Ì–@üƒxƒNƒgƒ‹‚ğ•Ô‚·
-// p - ß“_
-// ep - —v‘f‚Ìß“_
+// è¾ºã®æ³•ç·šãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// ep - è¦ç´ ã®ç¯€ç‚¹
 EdgeBorder1.prototype.normalVector=function(p,ep){
   var ne=normalVector(ep);
   var dir=p[1].clone().sub(p[0]);
@@ -180,36 +180,36 @@ EdgeBorder1.prototype.normalVector=function(p,ep){
 };
 
 //--------------------------------------------------------------------//
-// OŠpŒ`1Ÿ—v‘f‹«ŠE
-// element - —v‘fƒ‰ƒxƒ‹
-// nodes - ß“_”Ô†
+// ä¸‰è§’å½¢1æ¬¡è¦ç´ å¢ƒç•Œ
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// nodes - ç¯€ç‚¹ç•ªå·
 var TriangleBorder1=function(element,nodes){
   ElementBorder.call(this,element,nodes,null);
 };
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 TriangleBorder1.prototype.getName=function(){
   return 'TriangleBorder1';
 };
 
-// ß“_”‚ğ•Ô‚·
+// ç¯€ç‚¹æ•°ã‚’è¿”ã™
 TriangleBorder1.prototype.nodeCount=function(){
   return 3;
 };
 
-// —v‘f‹«ŠE‚ğ•ªŠ„‚·‚é
+// è¦ç´ å¢ƒç•Œã‚’åˆ†å‰²ã™ã‚‹
 TriangleBorder1.prototype.splitBorder=function(){
   return [this.clone()];
 };
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ ] ‚ğ•Ô‚·
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· ] ã‚’è¿”ã™
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
 TriangleBorder1.prototype.shapeFunction=function(xsi,eta){
   return [[1-xsi-eta,-1,-1],[xsi,1,0],[eta,0,1]];
 };
 
-// ‹[—ƒ„ƒRƒrƒAƒ“‚ğ•Ô‚·
-// p - ß“_
+// æ“¬ä¼¼ãƒ¤ã‚³ãƒ“ã‚¢ãƒ³ã‚’è¿”ã™
+// p - ç¯€ç‚¹
 TriangleBorder1.prototype.jacobian=function(p){
   var p0x=p[0].x,p0y=p[0].y,p0z=p[0].z;
   var j1=(p[1].y-p0y)*(p[2].z-p0z)-(p[1].z-p0z)*(p[2].y-p0y);
@@ -218,9 +218,9 @@ TriangleBorder1.prototype.jacobian=function(p){
   return Math.sqrt(j1*j1+j2*j2+j3*j3);
 };
 
-// Œ`óŠÖ”ƒ}ƒgƒŠƒbƒNƒX [ çNiNjdS ] ‚ğ•Ô‚·
-// p - ß“_
-// coef - ŒW”
+// å½¢çŠ¶é–¢æ•°ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [ âˆ«NiNjdS ] ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// coef - ä¿‚æ•°
 TriangleBorder1.prototype.shapeFunctionMatrix=function(p,coef){
   var value=coef*this.jacobian(p)/12,vh=0.5*value;
   var count=this.nodeCount(),s=numeric.rep([count,count],vh);
@@ -230,38 +230,38 @@ TriangleBorder1.prototype.shapeFunctionMatrix=function(p,coef){
   return s;
 };
 
-// Œ`óŠÖ”ƒxƒNƒgƒ‹ [ çNidS ] ‚ğ•Ô‚·
-// p - ß“_
-// coef - ŒW”
+// å½¢çŠ¶é–¢æ•°ãƒ™ã‚¯ãƒˆãƒ« [ âˆ«NidS ] ã‚’è¿”ã™
+// p - ç¯€ç‚¹
+// coef - ä¿‚æ•°
 TriangleBorder1.prototype.shapeFunctionVector=function(p,coef){
   return numeric.rep([this.nodeCount()],C1_6*coef*this.jacobian(p));
 };
 
 //--------------------------------------------------------------------//
-// OŠpŒ`2Ÿ—v‘f‹«ŠE
-// element - —v‘fƒ‰ƒxƒ‹
-// nodes - ß“_”Ô†
+// ä¸‰è§’å½¢2æ¬¡è¦ç´ å¢ƒç•Œ
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// nodes - ç¯€ç‚¹ç•ªå·
 var TriangleBorder2=function(element,nodes){
   ElementBorder.call(this,element,nodes,TRI2_INT);
 };
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 TriangleBorder2.prototype.getName=function(){
   return 'TriangleBorder2';
 };
 
-// ß“_”‚ğ•Ô‚·
+// ç¯€ç‚¹æ•°ã‚’è¿”ã™
 TriangleBorder2.prototype.nodeCount=function(){
   return 6;
 };
 
-// ü‰ñ‡‚É•À‚ñ‚¾ß“_ƒ‰ƒxƒ‹‚ğ•Ô‚·
+// å‘¨å›é †ã«ä¸¦ã‚“ã ç¯€ç‚¹ãƒ©ãƒ™ãƒ«ã‚’è¿”ã™
 TriangleBorder2.prototype.cycleNodes=function(){
   return [this.nodes[0],this.nodes[3],this.nodes[1],this.nodes[4],
       	  this.nodes[2],this.nodes[5]];
 };
 
-// —v‘f‹«ŠE‚ğ•ªŠ„‚·‚é
+// è¦ç´ å¢ƒç•Œã‚’åˆ†å‰²ã™ã‚‹
 TriangleBorder2.prototype.splitBorder=function(){
   var p=this.nodes;
   return [new TriangleBorder1(this.element,[p[0],p[3],p[5]]),
@@ -270,8 +270,8 @@ TriangleBorder2.prototype.splitBorder=function(){
       	  new TriangleBorder1(this.element,[p[3],p[4],p[5]])];
 };
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ ] ‚ğ•Ô‚·
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· ] ã‚’è¿”ã™
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
 TriangleBorder2.prototype.shapeFunction=function(xsi,eta){
   var xe=1-xsi-eta;
   return [[xe*(2*xe-1),1-4*xe,1-4*xe],[xsi*(2*xsi-1),4*xsi-1,0],
@@ -280,32 +280,32 @@ TriangleBorder2.prototype.shapeFunction=function(xsi,eta){
 };
 
 //--------------------------------------------------------------------//
-// lŠpŒ`1Ÿ—v‘f‹«ŠE
-// element - —v‘fƒ‰ƒxƒ‹
-// nodes - ß“_”Ô†
+// å››è§’å½¢1æ¬¡è¦ç´ å¢ƒç•Œ
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// nodes - ç¯€ç‚¹ç•ªå·
 var QuadangleBorder1=function(element,nodes){
   ElementBorder.call(this,element,nodes,QUAD1_INT);
 };
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 QuadangleBorder1.prototype.getName=function(){
   return 'QuadangleBorder1';
 };
 
-// ß“_”‚ğ•Ô‚·
+// ç¯€ç‚¹æ•°ã‚’è¿”ã™
 QuadangleBorder1.prototype.nodeCount=function(){
   return 4;
 };
 
-// —v‘f‹«ŠE‚ğ•ªŠ„‚·‚é
+// è¦ç´ å¢ƒç•Œã‚’åˆ†å‰²ã™ã‚‹
 QuadangleBorder1.prototype.splitBorder=function(){
   var p=this.nodes;
   return [new TriangleBorder1(this.element,[p[0],p[1],p[2]]),
       	  new TriangleBorder1(this.element,[p[2],p[3],p[0]])];
 };
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ ] ‚ğ•Ô‚·
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· ] ã‚’è¿”ã™
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
 QuadangleBorder1.prototype.shapeFunction=function(xsi,eta){
   return [[0.25*(1-xsi)*(1-eta),-0.25*(1-eta),-0.25*(1-xsi)],
       	  [0.25*(1+xsi)*(1-eta),0.25*(1-eta),-0.25*(1+xsi)],
@@ -314,30 +314,30 @@ QuadangleBorder1.prototype.shapeFunction=function(xsi,eta){
 };
 
 //--------------------------------------------------------------------//
-// lŠpŒ`2Ÿ—v‘f‹«ŠE
-// element - —v‘fƒ‰ƒxƒ‹
-// nodes - ß“_”Ô†
+// å››è§’å½¢2æ¬¡è¦ç´ å¢ƒç•Œ
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// nodes - ç¯€ç‚¹ç•ªå·
 var QuadangleBorder2=function(element,nodes){
   ElementBorder.call(this,element,nodes,QUAD2_INT);
 };
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 QuadangleBorder2.prototype.getName=function(){
   return 'QuadangleBorder2';
 };
 
-// ß“_”‚ğ•Ô‚·
+// ç¯€ç‚¹æ•°ã‚’è¿”ã™
 QuadangleBorder2.prototype.nodeCount=function(){
   return 8;
 };
 
-// ü‰ñ‡‚É•À‚ñ‚¾ß“_ƒ‰ƒxƒ‹‚ğ•Ô‚·
+// å‘¨å›é †ã«ä¸¦ã‚“ã ç¯€ç‚¹ãƒ©ãƒ™ãƒ«ã‚’è¿”ã™
 QuadangleBorder2.prototype.cycleNodes=function(){
   return [this.nodes[0],this.nodes[4],this.nodes[1],this.nodes[5],
       	  this.nodes[2],this.nodes[6],this.nodes[3],this.nodes[7]];
 };
 
-// —v‘f‹«ŠE‚ğ•ªŠ„‚·‚é
+// è¦ç´ å¢ƒç•Œã‚’åˆ†å‰²ã™ã‚‹
 QuadangleBorder2.prototype.splitBorder=function(){
   var p=this.nodes;
   return [new TriangleBorder1(this.element,[p[0],p[4],p[7]]),
@@ -348,8 +348,8 @@ QuadangleBorder2.prototype.splitBorder=function(){
       	  new TriangleBorder1(this.element,[p[6],p[7],p[4]])];
 };
 
-// Œ`óŠÖ”s—ñ [ Ni dNi/dƒÌ dNi/dƒÅ ] ‚ğ•Ô‚·
-// xsi,eta - —v‘f“à•”ƒÌ,ƒÅÀ•W
+// å½¢çŠ¶é–¢æ•°è¡Œåˆ— [ Ni dNi/dÎ¾ dNi/dÎ· ] ã‚’è¿”ã™
+// xsi,eta - è¦ç´ å†…éƒ¨Î¾,Î·åº§æ¨™
 QuadangleBorder2.prototype.shapeFunction=function(xsi,eta){
   return [[0.25*(1-xsi)*(1-eta)*(-xsi-eta-1),0.25*(1-eta)*(2*xsi+eta),
       	   0.25*(1-xsi)*(xsi+2*eta)],

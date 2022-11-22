@@ -1,10 +1,10 @@
-//--------------------------------------------------------------------//
-// ”½•œ‰ð–@i•sŠ®‘SLU•ª‰ð‹¤–ðŒù”z–@j
+ï»¿//--------------------------------------------------------------------//
+// åå¾©è§£æ³•ï¼ˆä¸å®Œå…¨LUåˆ†è§£å…±å½¹å‹¾é…æ³•ï¼‰
 
-var ILUCG_THRES=1e-10;	// •sŠ®‘SLU•ª‰ð‹¤–ðŒù”z–@‚ÌŽû‘©è‡’l‚ÌƒfƒtƒHƒ‹ƒg’l
+var ILUCG_THRES=1e-10;	// ä¸å®Œå…¨LUåˆ†è§£å…±å½¹å‹¾é…æ³•ã®åŽæŸé–¾å€¤ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤
 
-// •sŠ®‘SLU•ª‰ð‚ð‚·‚é
-// a - s—ñ
+// ä¸å®Œå…¨LUåˆ†è§£ã‚’ã™ã‚‹
+// a - è¡Œåˆ—
 function getILU(a){
   var m=a.length,i,j,diag=[],col=[],val=[],d=[],colData=[];
   for(i=0;i<m;i++){
@@ -13,7 +13,7 @@ function getILU(a){
     diag[i]=-1;
     colData[i]=[];
   }
-// —ñ‚©‚ç‚ÌŒŸõ—pƒ|ƒCƒ“ƒ^‚ðÝ’è‚·‚é
+// åˆ—ã‹ã‚‰ã®æ¤œç´¢ç”¨ãƒã‚¤ãƒ³ã‚¿ã‚’è¨­å®šã™ã‚‹
   for(i=0;i<m;i++){
     var arow=a[i];
     var cols=[];
@@ -34,10 +34,10 @@ function getILU(a){
       colData[cj].push(i);
     }
   }
-// •sŠ®‘SLU•ª‰ð‚ð‚·‚é
+// ä¸å®Œå…¨LUåˆ†è§£ã‚’ã™ã‚‹
   for(var k=0;k<m-1;k++){
     var vk=val[k],ck=col[k],dk=diag[k],cdk=colData[k];
-    if((dk<0) || (vk[dk]===0)) throw new Error('‘ÎŠp¬•ª‚ª0‚Å‚·');
+    if((dk<0) || (vk[dk]===0)) throw new Error('å¯¾è§’æˆåˆ†ãŒ0ã§ã™');
     var dkk=1/vk[dk];
     for(j=dk+1;j<ck.length;j++){
       vk[j]*=dkk;
@@ -71,9 +71,9 @@ function getILU(a){
   return [rowData,colData,valData,diag];
 }
 
-// LU•ª‰ð–@‚Å˜A—§•û’öŽ®‚Ì‰ð‚ð‹‚ß‚é
-// lu - LU•ª‰ð‚µ‚½‘as—ñ
-// p - ƒxƒNƒgƒ‹
+// LUåˆ†è§£æ³•ã§é€£ç«‹æ–¹ç¨‹å¼ã®è§£ã‚’æ±‚ã‚ã‚‹
+// lu - LUåˆ†è§£ã—ãŸç–Žè¡Œåˆ—
+// p - ãƒ™ã‚¯ãƒˆãƒ«
 function solveLU(lu,p){
   var row=lu[0],col=lu[1],val=lu[2],diag=lu[3],m=row.length-1;
   var q=[],i,j,j1;
@@ -97,12 +97,12 @@ function solveLU(lu,p){
   return q;
 }
 
-// •sŠ®‘SLU•ª‰ð‹¤–ðŒù”z–@‚Å˜A—§•û’öŽ®‚Ì‰ð‚ð‹‚ß‚é
-// matrix - Œ³‚Ìs—ñ
-// ilu - •sŠ®‘SLU•ª‰ð‚µ‚½‘as—ñ
-// p - ƒxƒNƒgƒ‹
-// iterMax - ”½•œ‰ñ”‚ÌãŒÀ
-// thres - Žû‘©è‡’l
+// ä¸å®Œå…¨LUåˆ†è§£å…±å½¹å‹¾é…æ³•ã§é€£ç«‹æ–¹ç¨‹å¼ã®è§£ã‚’æ±‚ã‚ã‚‹
+// matrix - å…ƒã®è¡Œåˆ—
+// ilu - ä¸å®Œå…¨LUåˆ†è§£ã—ãŸç–Žè¡Œåˆ—
+// p - ãƒ™ã‚¯ãƒˆãƒ«
+// iterMax - åå¾©å›žæ•°ã®ä¸Šé™
+// thres - åŽæŸé–¾å€¤
 function solveILU(matrix,ilu,p,iterMax,thres){
   iterMax=iterMax||p.length;
   thres=thres||ILUCG_THRES;
@@ -114,7 +114,7 @@ function solveILU(matrix,ilu,p,iterMax,thres){
     xq=sparseDotMV(matrix,xd);
     var r=numeric.dotVV(xd,xq);
     if(Math.abs(r)===0){
-      throw new Error('•û’öŽ®‹‰ðƒGƒ‰[ at iter='+iter);
+      throw new Error('æ–¹ç¨‹å¼æ±‚è§£ã‚¨ãƒ©ãƒ¼ at iter='+iter);
     }
     var alpha=z1/r;
     for(j=0;j<xg.length;j++){
@@ -132,9 +132,9 @@ function solveILU(matrix,ilu,p,iterMax,thres){
   return x;
 }
 
-// s—ñ‚ÆƒxƒNƒgƒ‹‚ÌÏ‚ðŒvŽZ‚·‚é
-// matrix - ‘as—ñ
-// x - ƒxƒNƒgƒ‹
+// è¡Œåˆ—ã¨ãƒ™ã‚¯ãƒˆãƒ«ã®ç©ã‚’è¨ˆç®—ã™ã‚‹
+// matrix - ç–Žè¡Œåˆ—
+// x - ãƒ™ã‚¯ãƒˆãƒ«
 function sparseDotMV(matrix,x){
   var row=matrix[0],col=matrix[1],val=matrix[2],m=row.length-1,y=[];
   for(var i=0;i<m;i++){
@@ -147,8 +147,8 @@ function sparseDotMV(matrix,x){
   return y;
 }
 
-// sƒx[ƒX‚Ì‘as—ñ‚É•ÏŠ·‚·‚é
-// a - Œ³‚Ìs—ñ
+// è¡Œãƒ™ãƒ¼ã‚¹ã®ç–Žè¡Œåˆ—ã«å¤‰æ›ã™ã‚‹
+// a - å…ƒã®è¡Œåˆ—
 function toSparse(a){
   var m=a.length,count=0,row=[],col=[],val=[],j;
   row.push(count);

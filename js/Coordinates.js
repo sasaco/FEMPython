@@ -1,14 +1,14 @@
-//--------------------------------------------------------------------//
-// ‹ÇŠÀ•WŒn
-// label - À•WŒnƒ‰ƒxƒ‹
-// n11,n12,n13,n21,n22,n23,n31,n32,n33 - À•W•ÏŠ·ƒ}ƒgƒŠƒbƒNƒX‚Ì¬•ª
+ï»¿//--------------------------------------------------------------------//
+// å±€æ‰€åº§æ¨™ç³»
+// label - åº§æ¨™ç³»ãƒ©ãƒ™ãƒ«
+// n11,n12,n13,n21,n22,n23,n31,n32,n33 - åº§æ¨™å¤‰æ›ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®æˆåˆ†
 var Coordinates=function(label,n11,n12,n13,n21,n22,n23,n31,n32,n33){
   this.label=label;
   this.c=new THREE.Matrix3().set(n11,n12,n13,n21,n22,n23,n31,n32,n33);
 };
 
-// ƒOƒ[ƒoƒ‹À•WŒn‚É•ÏŠ·‚·‚é
-// x - ƒxƒNƒgƒ‹¬•ª
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«åº§æ¨™ç³»ã«å¤‰æ›ã™ã‚‹
+// x - ãƒ™ã‚¯ãƒˆãƒ«æˆåˆ†
 Coordinates.prototype.toGlobal=function(x){
   var y=[],e=this.c.elements;
   for(var i=0;i<3;i++){
@@ -18,11 +18,11 @@ Coordinates.prototype.toGlobal=function(x){
   return y;
 };
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğ•ÏŠ·‚·‚é
-// matrix - „«ƒ}ƒgƒŠƒbƒNƒX
-// dof - ƒ}ƒgƒŠƒbƒNƒX‚Ì©—R“x
-// idx0 - ß“_ƒ|ƒCƒ“ƒ^
-// ndof - ß“_©—R“x
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’å¤‰æ›ã™ã‚‹
+// matrix - å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// dof - ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è‡ªç”±åº¦
+// idx0 - ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿
+// ndof - ç¯€ç‚¹è‡ªç”±åº¦
 Coordinates.prototype.transMatrix=function(matrix,dof,idx0,ndof){
   var e=this.c.elements,i,j,k,me,mi1,mi2,mi3;
   for(i=0;i<dof;i+=3){
@@ -61,11 +61,11 @@ Coordinates.prototype.transMatrix=function(matrix,dof,idx0,ndof){
   }
 };
 
-// ‰×dƒxƒNƒgƒ‹‚ğ•ÏŠ·‚·‚é
-// vector - ‰×dƒxƒNƒgƒ‹
-// dof - ƒ}ƒgƒŠƒbƒNƒX‚Ì©—R“x
-// idx0 - ß“_ƒ|ƒCƒ“ƒ^
-// ndof - ß“_©—R“x
+// è·é‡ãƒ™ã‚¯ãƒˆãƒ«ã‚’å¤‰æ›ã™ã‚‹
+// vector - è·é‡ãƒ™ã‚¯ãƒˆãƒ«
+// dof - ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è‡ªç”±åº¦
+// idx0 - ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿
+// ndof - ç¯€ç‚¹è‡ªç”±åº¦
 Coordinates.prototype.transVector=function(vector,dof,idx0,ndof){
   var e=this.c.elements;
   for(var j=idx0;j<idx0+ndof;j+=3){
@@ -76,7 +76,7 @@ Coordinates.prototype.transVector=function(vector,dof,idx0,ndof){
   }
 };
 
-// ‹ÇŠÀ•WŒn‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// å±€æ‰€åº§æ¨™ç³»ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 Coordinates.prototype.toString=function(){
   return 'Coordinates\t'+this.label.toString(10)+'\t'+
       	  this.c.elements.join('\t');

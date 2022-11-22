@@ -1,14 +1,14 @@
-var KS_RECT=5/6;			// ‹éŒ`’f–Ê‚Ì‚¹‚ñ’f•â³ŒW”
-var KS_CIRCLE=6/7;			// ‰~Œ`’f–Ê‚Ì‚¹‚ñ’f•â³ŒW”
+ï»¿var KS_RECT=5/6;			// çŸ©å½¢æ–­é¢ã®ã›ã‚“æ–­è£œæ­£ä¿‚æ•°
+var KS_CIRCLE=6/7;			// å††å½¢æ–­é¢ã®ã›ã‚“æ–­è£œæ­£ä¿‚æ•°
 
 //--------------------------------------------------------------------//
-// Ş—¿
-// label - Ş—¿”Ô†
-// ee - ƒ„ƒ“ƒO—¦ (c’e«ŒW”) 
-// nu - ƒ|ƒAƒ\ƒ“”ä
-// dens - –§“x
-// hCon - ”M“`“±—¦
-// sHeat - ”ä”M
+// ææ–™
+// label - ææ–™ç•ªå·
+// ee - ãƒ¤ãƒ³ã‚°ç‡ (ç¸¦å¼¾æ€§ä¿‚æ•°) 
+// nu - ãƒã‚¢ã‚½ãƒ³æ¯”
+// dens - å¯†åº¦
+// hCon - ç†±ä¼å°ç‡
+// sHeat - æ¯”ç†±
 var Material=function(label,ee,nu,dens,hCon,sHeat){
   this.label=label;
   this.ee=ee;
@@ -16,37 +16,37 @@ var Material=function(label,ee,nu,dens,hCon,sHeat){
   this.dens=dens;
   this.hCon=hCon;
   this.sHeat=sHeat;
-  this.gg=0.5*ee/(1+nu);	// ‰¡’e«ŒW”
-  this.cv=dens*sHeat;		// ‘ÌÏ”ä”M
-  this.matrix=null;		// ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+  this.gg=0.5*ee/(1+nu);	// æ¨ªå¼¾æ€§ä¿‚æ•°
+  this.cv=dens*sHeat;		// ä½“ç©æ¯”ç†±
+  this.matrix=null;		// å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 };
 
-// •½–Ê‰—Í–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// å¹³é¢å¿œåŠ›å•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
 Material.prototype.matrix2Dstress=function(){
   var coef=this.ee/(1-this.nu*this.nu);
   return [[coef,coef*this.nu,0],[coef*this.nu,coef,0],[0,0,this.gg]];
 };
 
-// •½–Ê˜c–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// å¹³é¢æ­ªå•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
 Material.prototype.matrix2Dstrain=function(){
   var coef=this.ee/((1+this.nu)*(1-2*this.nu));
   return [[coef*(1-this.nu),coef*this.nu,0],
       	  [coef*this.nu,coef*(1-this.nu),0],[0,0,this.gg]];
 };
 
-// ²‘ÎÌ–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// è»¸å¯¾ç§°å•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
 Material.prototype.matrixAxiSymetric=function(){
   var coef=this.ee/((1+this.nu)*(1-2*this.nu));
   var s1=coef*(1-this.nu),s2=coef*this.nu;
   return [[s1,s2,s2,0],[s2,s1,s2,0],[s2,s2,s1,0],[0,0,0,this.gg]];
 };
 
-// €‚è–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// æ©ã‚Šå•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
 Material.prototype.matrixTorsion=function(){
   return [[this.gg,0],[0,this.gg]];
 };
 
-// 3ŸŒ³–â‘è‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// 3æ¬¡å…ƒå•é¡Œã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
 Material.prototype.matrix3D=function(){
   var coef=this.ee/((1+this.nu)*(1-2*this.nu));
   var s1=coef*(1-this.nu),s2=coef*this.nu;
@@ -54,7 +54,7 @@ Material.prototype.matrix3D=function(){
       	  [0,0,0,this.gg,0,0],[0,0,0,0,this.gg,0],[0,0,0,0,0,this.gg]];
 };
 
-// ƒVƒFƒ‹—v‘f‚Ì‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX‚ğì¬‚·‚é
+// ã‚·ã‚§ãƒ«è¦ç´ ã®å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’ä½œæˆã™ã‚‹
 Material.prototype.matrixShell=function(){
   var coef=this.ee/(1-this.nu*this.nu);
   var s2=coef*this.nu;
@@ -62,7 +62,7 @@ Material.prototype.matrixShell=function(){
       	  [0,0,0,KS_RECT*this.gg,0],[0,0,0,0,KS_RECT*this.gg]];
 };
 
-// Ş—¿‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// ææ–™ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 Material.prototype.toString=function(){
   return 'Material\t'+this.label.toString(10)+'\t'+
       	 this.ee+'\t'+this.nu+'\t'+this.gg+'\t'+this.dens+'\t'+
@@ -70,24 +70,24 @@ Material.prototype.toString=function(){
 };
 
 //--------------------------------------------------------------------//
-// ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
-// label - ƒpƒ‰ƒ[ƒ^”Ô†
-// thickness - Œú‚³
+// ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+// label - ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ç•ªå·
+// thickness - åšã•
 var ShellParameter=function(label,thickness){
   this.label=label;
   this.thickness=thickness;
 };
 
-// ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 ShellParameter.prototype.toString=function(){
   return 'ShellParameter\t'+this.label.toString(10)+'\t'+this.thickness;
 };
 
 //--------------------------------------------------------------------//
-// —Àƒpƒ‰ƒ[ƒ^i‰~Œ`’f–Êj
-// label - ƒpƒ‰ƒ[ƒ^”Ô†
-// type - ’f–Êí—Ş
-// ss - ƒf[ƒ^•¶š—ñ
+// æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ï¼ˆå††å½¢æ–­é¢ï¼‰
+// label - ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ç•ªå·
+// type - æ–­é¢ç¨®é¡
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—
 var BarParameter=function(label,type,ss){
   this.label=label;
   this.type=type;
@@ -100,7 +100,7 @@ var BarParameter=function(label,type,ss){
   }
 };
 
-// —Àƒpƒ‰ƒ[ƒ^‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 BarParameter.prototype.toString=function(){
   return 'BarParameter\t'+this.label.toString(10)+'\t'+this.type+'\t'+
       	 this.section.toString();

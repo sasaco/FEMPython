@@ -1,21 +1,21 @@
-//--------------------------------------------------------------------//
-// Wilson-Taylor”ñ“K‡˜Z–Ê‘Ì1Ÿ—v‘f
-// label - —v‘fƒ‰ƒxƒ‹
-// material - Ş—¿‚ÌƒCƒ“ƒfƒbƒNƒX
-// nodes - ß“_”Ô†
+ï»¿//--------------------------------------------------------------------//
+// Wilson-Tayloréé©åˆå…­é¢ä½“1æ¬¡è¦ç´ 
+// label - è¦ç´ ãƒ©ãƒ™ãƒ«
+// material - ææ–™ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// nodes - ç¯€ç‚¹ç•ªå·
 var HexaElement1WT=function(label,material,nodes){
   HexaElement1.call(this,label,material,nodes);
-  this.te=null;		// ”ñ“K‡ƒ‚[ƒh‚Ì•ÏŠ·ƒ}ƒgƒŠƒbƒNƒX
+  this.te=null;		// éé©åˆãƒ¢ãƒ¼ãƒ‰ã®å¤‰æ›ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 };
 
-// —v‘f‹«ŠE–¼Ì‚ğ•Ô‚·
+// è¦ç´ å¢ƒç•Œåç§°ã‚’è¿”ã™
 HexaElement1WT.prototype.getName=function(){
   return 'HexaElement1WT';
 };
 
-// „«ƒ}ƒgƒŠƒbƒNƒX‚ğ•Ô‚·
-// p - —v‘fß“_
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// d1 - å¿œåŠ› - æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 HexaElement1WT.prototype.stiffnessMatrix=function(p,d1){
   var size=3*this.nodeCount(),kk=numeric.rep([size,size],0);
   var k2=numeric.rep([size,9],0),k3=numeric.rep([9,9],0);
@@ -42,10 +42,10 @@ HexaElement1WT.prototype.stiffnessMatrix=function(p,d1){
   return kk;
 };
 
-// —v‘f“à‚Ì˜cƒxƒNƒgƒ‹‚ğ•Ô‚·
-// p - —v‘fß“_
-// v - ß“_•ÏˆÊƒxƒNƒgƒ‹
-// x - ƒÌ,ƒÅ,ƒÄÀ•W
+// è¦ç´ å†…ã®æ­ªãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+// p - è¦ç´ ç¯€ç‚¹
+// v - ç¯€ç‚¹å¤‰ä½ãƒ™ã‚¯ãƒˆãƒ«
+// x - Î¾,Î·,Î¶åº§æ¨™
 HexaElement1WT.prototype.strainPart=function(p,v,x){
   var sf=this.shapeFunction(x[0],x[1],x[2]);
   var ja=this.jacobianMatrix(p,sf);
@@ -63,9 +63,9 @@ HexaElement1WT.prototype.strainPart=function(p,v,x){
   return eps;
 };
 
-// ”ñ“K‡ƒ‚[ƒh‚Ì˜c - •ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ‚ğ•Ô‚·
-// ji - ƒ„ƒRƒr‹ts—ñ‚Ì—v‘f”z—ñ
-// x - ƒÌ,ƒÅ,ƒÄÀ•W
+// éé©åˆãƒ¢ãƒ¼ãƒ‰ã®æ­ª - å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ—ã‚’è¿”ã™
+// ji - ãƒ¤ã‚³ãƒ“é€†è¡Œåˆ—ã®è¦ç´ é…åˆ—
+// x - Î¾,Î·,Î¶åº§æ¨™
 HexaElement1WT.prototype.strainMatrix2=function(ji,x){
   var m=numeric.rep([9,6],0);
   var d1=-2*x[0],d2=-2*x[1],d3=-2*x[2];
@@ -87,11 +87,11 @@ HexaElement1WT.prototype.strainMatrix2=function(ji,x){
   return m;
 };
 
-// Ï•ª“_‚Ì„«ƒ}ƒgƒŠƒbƒNƒX [B1t][D][B2]‚ğ•Ô‚·
-// d - ‰—Í-˜cƒ}ƒgƒŠƒbƒNƒX
-// b1 - ˜c-•ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ B1t
-// b2 - ˜c-•ÏˆÊƒ}ƒgƒŠƒbƒNƒX‚Ì“]’us—ñ B2t
-// coef - ŒW”
+// ç©åˆ†ç‚¹ã®å‰›æ€§ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ [B1t][D][B2]ã‚’è¿”ã™
+// d - å¿œåŠ›-æ­ªãƒãƒˆãƒªãƒƒã‚¯ã‚¹
+// b1 - æ­ª-å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ— B1t
+// b2 - æ­ª-å¤‰ä½ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã®è»¢ç½®è¡Œåˆ— B2t
+// coef - ä¿‚æ•°
 HexaElement1WT.prototype.stiffPart2=function(d,b1,b2,coef){
   var size1=b1.length,size2=d.length,size3=b2.length;
   var a=[],k=[],j;

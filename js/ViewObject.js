@@ -1,39 +1,39 @@
-// ƒxƒNƒgƒ‹Å¬’·‚³
-var MIN_VECTOR=1e-8;		// ƒxƒNƒgƒ‹’·‚³‚ÌÅ¬’l
-// S‘©ğŒ•\¦ƒ}ƒeƒŠƒAƒ‹
+ï»¿// ãƒ™ã‚¯ãƒˆãƒ«æœ€å°é•·ã•
+var MIN_VECTOR=1e-8;		// ãƒ™ã‚¯ãƒˆãƒ«é•·ã•ã®æœ€å°å€¤
+// æ‹˜æŸæ¡ä»¶è¡¨ç¤ºãƒãƒ†ãƒªã‚¢ãƒ«
 var REST_MAT=new THREE.MeshBasicMaterial({color:0x0066ff});
-var LOAD_COLOR=0x00ff00;	// ‰×dğŒ•\¦F
-var PRESS_COLOR=0xff00ff;	// –Êˆ³ğŒ•\¦F
-var HTC_COLOR=0xffcc00;		// ”M“`’B‹«ŠEğŒ•\¦F
-// ß“_‰·“xğŒ•\¦ƒ}ƒeƒŠƒAƒ‹
+var LOAD_COLOR=0x00ff00;	// è·é‡æ¡ä»¶è¡¨ç¤ºè‰²
+var PRESS_COLOR=0xff00ff;	// é¢åœ§æ¡ä»¶è¡¨ç¤ºè‰²
+var HTC_COLOR=0xffcc00;		// ç†±ä¼é”å¢ƒç•Œæ¡ä»¶è¡¨ç¤ºè‰²
+// ç¯€ç‚¹æ¸©åº¦æ¡ä»¶è¡¨ç¤ºãƒãƒ†ãƒªã‚¢ãƒ«
 var TEMP_MAT=new THREE.MeshBasicMaterial({color:0xff3300});
-// —v‘f•\¦ƒ}ƒeƒŠƒAƒ‹
+// è¦ç´ è¡¨ç¤ºãƒãƒ†ãƒªã‚¢ãƒ«
 var elemMat=new THREE.MeshStandardMaterial
   ({color:0xffffff,roughness:0.2,metalness:0.5,
     transparent:true,opacity:0.8,
     vertexColors:THREE.VertexColors,side:THREE.DoubleSide});
-// —v‘f•Ó‚Ì•\¦ƒ}ƒeƒŠƒAƒ‹
+// è¦ç´ è¾ºã®è¡¨ç¤ºãƒãƒ†ãƒªã‚¢ãƒ«
 var EDGE_MAT=new THREE.LineBasicMaterial({color:0xffffff});
-// —À—v‘f‚Ì•\¦ƒ}ƒeƒŠƒAƒ‹
+// æ¢è¦ç´ ã®è¡¨ç¤ºãƒãƒ†ãƒªã‚¢ãƒ«
 var BAR_MAT=new THREE.LineBasicMaterial
   ({color:0xffffff,vertexColors:THREE.VertexColors});
-var meshColors=[0.9,0.9,0.9];	// ƒƒbƒVƒ…‚ÌƒfƒtƒHƒ‹ƒg•\¦F
+var meshColors=[0.9,0.9,0.9];	// ãƒ¡ãƒƒã‚·ãƒ¥ã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆè¡¨ç¤ºè‰²
 
 //--------------------------------------------------------------------//
-// •\¦ƒIƒuƒWƒFƒNƒg
+// è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 var ViewObject=function(){
-  this.mesh=null;	// ŒvZƒƒbƒVƒ…
-  this.edge=null;	// —v‘f•Ó
-  this.bar=null;	// —À—v‘f
-  this.rest=null;	// S‘©ğŒ
-  this.load=null;	// ‰×dğŒ
-  this.press=null;	// –Êˆ³ğŒ
-  this.htc=null;	// ”M“`’B‹«ŠEğŒ
-  this.temp=null;	// ß“_‰·“xğŒ
-  this.showEdge=true;	// —v‘f•Ó•\¦ƒXƒCƒbƒ`
+  this.mesh=null;	// è¨ˆç®—ãƒ¡ãƒƒã‚·ãƒ¥
+  this.edge=null;	// è¦ç´ è¾º
+  this.bar=null;	// æ¢è¦ç´ 
+  this.rest=null;	// æ‹˜æŸæ¡ä»¶
+  this.load=null;	// è·é‡æ¡ä»¶
+  this.press=null;	// é¢åœ§æ¡ä»¶
+  this.htc=null;	// ç†±ä¼é”å¢ƒç•Œæ¡ä»¶
+  this.temp=null;	// ç¯€ç‚¹æ¸©åº¦æ¡ä»¶
+  this.showEdge=true;	// è¦ç´ è¾ºè¡¨ç¤ºã‚¹ã‚¤ãƒƒãƒ
 };
 
-// •\¦ƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚é
+// è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹
 ViewObject.prototype.create=function(){
   var geometry=model.mesh.getGeometry();
   this.mesh=new THREE.Mesh(geometry,elemMat);
@@ -52,7 +52,7 @@ ViewObject.prototype.create=function(){
   this.setEdgeView();
 };
 
-// S‘©ğŒ•\¦ƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚é
+// æ‹˜æŸæ¡ä»¶è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹
 ViewObject.prototype.createRestraint=function(){
   var hs=0.02*bounds.size,rests=model.bc.restraints;
   this.rest=new THREE.Group();
@@ -64,7 +64,7 @@ ViewObject.prototype.createRestraint=function(){
   viewModel.addObject(this.rest);
 };
 
-// ‰×dğŒ•\¦ƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚é
+// è·é‡æ¡ä»¶è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹
 ViewObject.prototype.createLoad=function(){
   var coef=0.1*bounds.size/Math.max(model.bc.loadMax,MIN_VECTOR);
   var hl=0.02*bounds.size,hw=0.5*hl,loads=model.bc.loads;
@@ -84,7 +84,7 @@ ViewObject.prototype.createLoad=function(){
   viewModel.addObject(this.load);
 };
 
-// –Êˆ³ğŒ•\¦ƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚é
+// é¢åœ§æ¡ä»¶è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹
 ViewObject.prototype.createPress=function(){
   var coef=0.1*bounds.size/Math.max(model.bc.pressMax,MIN_VECTOR);
   var hl=0.02*bounds.size,hw=0.5*hl,prs=model.bc.pressures;
@@ -106,7 +106,7 @@ ViewObject.prototype.createPress=function(){
   viewModel.addObject(this.press);
 };
 
-// ”M“`’B‹«ŠEğŒ•\¦ƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚é
+// ç†±ä¼é”å¢ƒç•Œæ¡ä»¶è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹
 ViewObject.prototype.createHTC=function(){
   var l=0.1*bounds.size;
   var hl=0.04*bounds.size,hw=0.5*hl,htcs=model.bc.htcs;
@@ -127,7 +127,7 @@ ViewObject.prototype.createHTC=function(){
   viewModel.addObject(this.htc);
 };
 
-// ß“_‰·“x•\¦ƒIƒuƒWƒFƒNƒg‚ğì¬‚·‚é
+// ç¯€ç‚¹æ¸©åº¦è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œæˆã™ã‚‹
 ViewObject.prototype.createTemperature=function(){
   var rr=0.01*bounds.size,temps=model.bc.temperature;
   this.temp=new THREE.Group();
@@ -139,9 +139,9 @@ ViewObject.prototype.createTemperature=function(){
   viewModel.addObject(this.temp);
 };
 
-// •ÏˆÊ‚ğİ’è‚·‚é
-// disp - •ÏˆÊ
-// coef - •\¦ŒW”
+// å¤‰ä½ã‚’è¨­å®šã™ã‚‹
+// disp - å¤‰ä½
+// coef - è¡¨ç¤ºä¿‚æ•°
 ViewObject.prototype.setDisplacement=function(disp,coef){
   if(disp.length===0) return;
   setGeomDisplacement(this.mesh.geometry,disp,coef);
@@ -149,10 +149,10 @@ ViewObject.prototype.setDisplacement=function(disp,coef){
   this.bar.setDisplacement(disp,coef);
 };
 
-// ƒRƒ“ƒ^[}‚ğİ’è‚·‚é
-// value - ƒRƒ“ƒ^[}ƒf[ƒ^
-// minValue,maxValue - ƒRƒ“ƒ^[}ƒf[ƒ^Å¬’l,Å‘å’l
-// type - ƒf[ƒ^•ÛŒ`‘Ô
+// ã‚³ãƒ³ã‚¿ãƒ¼å›³ã‚’è¨­å®šã™ã‚‹
+// value - ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿
+// minValue,maxValue - ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿æœ€å°å€¤,æœ€å¤§å€¤
+// type - ãƒ‡ãƒ¼ã‚¿ä¿æŒå½¢æ…‹
 ViewObject.prototype.setContour=function(value,minValue,maxValue,type){
   var coef=1;
   if(maxValue!==minValue) coef=1/(maxValue-minValue);
@@ -160,7 +160,7 @@ ViewObject.prototype.setContour=function(value,minValue,maxValue,type){
   this.bar.setContour(value,minValue,coef,type);
 };
 
-// Œ‹‰Ê•\¦‚ğÁ‹‚·‚é
+// çµæœè¡¨ç¤ºã‚’æ¶ˆå»ã™ã‚‹
 ViewObject.prototype.removeResult=function(){
   removeGeomResult(this.mesh.geometry);
   this.bar.removeResult();
@@ -179,20 +179,20 @@ ViewObject.prototype.removeResult=function(){
   geom.attributes.position.needsUpdate=true;
 };
 
-// ƒRƒ“ƒ^[}‚ğÁ‹‚·‚é
+// ã‚³ãƒ³ã‚¿ãƒ¼å›³ã‚’æ¶ˆå»ã™ã‚‹
 ViewObject.prototype.clearContour=function(){
   clearGeomContour(this.mesh.geometry);
   this.bar.clearContour();
 };
 
-// —v‘f•Ó•\¦‚ğØ‚è‘Ö‚¦‚é
-// showEdge - —v‘f•Ó‚ğ•\¦‚·‚éê‡‚Ítrue
+// è¦ç´ è¾ºè¡¨ç¤ºã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹
+// showEdge - è¦ç´ è¾ºã‚’è¡¨ç¤ºã™ã‚‹å ´åˆã¯true
 ViewObject.prototype.setShowEdge=function(showEdge){
   this.showEdge=showEdge;
   this.setEdgeView();
 };
 
-// —v‘f•Ó•\¦‚ğØ‚è‘Ö‚¦‚é
+// è¦ç´ è¾ºè¡¨ç¤ºã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹
 ViewObject.prototype.setEdgeView=function(){
   if(this.edge!==null){
     this.edge.visible=this.showEdge;
@@ -205,7 +205,7 @@ ViewObject.prototype.setEdgeView=function(){
   }
 };
 
-// •\¦ƒIƒuƒWƒFƒNƒg‚ğíœ‚·‚é
+// è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’å‰Šé™¤ã™ã‚‹
 ViewObject.prototype.remove=function(){
   var i,child;
   if(this.mesh!==null){
@@ -255,8 +255,8 @@ ViewObject.prototype.remove=function(){
   }
 };
 
-// –îˆóW‡‚Ì•\¦ƒIƒuƒWƒFƒNƒg‚ğíœ‚·‚é
-// grp - –îˆóW‡
+// çŸ¢å°é›†åˆã®è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’å‰Šé™¤ã™ã‚‹
+// grp - çŸ¢å°é›†åˆ
 ViewObject.prototype.removeAllows=function(grp){
   viewModel.removeObject(grp);
   for(var i=grp.children.length-1;i>=0;i--){
@@ -269,10 +269,10 @@ ViewObject.prototype.removeAllows=function(grp){
   }
 };
 
-// •ÏˆÊ‚ğİ’è‚·‚é
-// geometry - À•W‚ğİ’è‚·‚éŒ`óƒf[ƒ^
-// disp - •ÏˆÊ
-// coef - •\¦ŒW”
+// å¤‰ä½ã‚’è¨­å®šã™ã‚‹
+// geometry - åº§æ¨™ã‚’è¨­å®šã™ã‚‹å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿
+// disp - å¤‰ä½
+// coef - è¡¨ç¤ºä¿‚æ•°
 function setGeomDisplacement(geometry,disp,coef){
   var label=geometry.nodes,nodes=model.mesh.nodes,angle=geometry.angle;
   var pos=geometry.attributes.position.array;
@@ -288,12 +288,12 @@ function setGeomDisplacement(geometry,disp,coef){
   geometry.attributes.position.needsUpdate=true;
 }
 
-// Œ`óƒf[ƒ^‚ÌƒRƒ“ƒ^[}‚ğİ’è‚·‚é
-// geometry - ‘ÎÛ‚Æ‚È‚éŒ`óƒf[ƒ^
-// value - ƒRƒ“ƒ^[}ƒf[ƒ^
-// minValue - ƒRƒ“ƒ^[}ƒf[ƒ^Å¬’l
-// coef - ƒf[ƒ^•ÏŠ·ŒW”
-// type - ƒf[ƒ^•ÛŒ`‘Ô
+// å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã®ã‚³ãƒ³ã‚¿ãƒ¼å›³ã‚’è¨­å®šã™ã‚‹
+// geometry - å¯¾è±¡ã¨ãªã‚‹å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿
+// value - ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿
+// minValue - ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿æœ€å°å€¤
+// coef - ãƒ‡ãƒ¼ã‚¿å¤‰æ›ä¿‚æ•°
+// type - ãƒ‡ãƒ¼ã‚¿ä¿æŒå½¢æ…‹
 function setGeomContour(geometry,value,minValue,coef,type){
   var label,colors=geometry.attributes.color.array;
   if(type===ELEMENT_DATA){
@@ -312,8 +312,8 @@ function setGeomContour(geometry,value,minValue,coef,type){
   geometry.attributes.color.needsUpdate=true;
 }
 
-// Œ`óƒf[ƒ^‚ÌŒ‹‰Ê•\¦‚ğÁ‹‚·‚é
-// geometry - ‘ÎÛ‚Æ‚È‚éŒ`óƒf[ƒ^
+// å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã®çµæœè¡¨ç¤ºã‚’æ¶ˆå»ã™ã‚‹
+// geometry - å¯¾è±¡ã¨ãªã‚‹å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿
 function removeGeomResult(geometry){
   var label=geometry.nodes,nodes=model.mesh.nodes,angle=geometry.angle;
   var pos=geometry.attributes.position.array;
@@ -334,8 +334,8 @@ function removeGeomResult(geometry){
   geometry.attributes.color.needsUpdate=true;
 }
 
-// Œ`óƒf[ƒ^‚ÌƒRƒ“ƒ^[}‚ğÁ‹‚·‚é
-// geometry - ‘ÎÛ‚Æ‚È‚éŒ`óƒf[ƒ^
+// å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿ã®ã‚³ãƒ³ã‚¿ãƒ¼å›³ã‚’æ¶ˆå»ã™ã‚‹
+// geometry - å¯¾è±¡ã¨ãªã‚‹å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿
 function clearGeomContour(geometry){
   var colors=geometry.attributes.color.array;
   for(var i=0;i<colors.length;i+=3){
@@ -347,9 +347,9 @@ function clearGeomContour(geometry){
 }
 
 //--------------------------------------------------------------------//
-// S‘©ğŒ•\¦ƒIƒuƒWƒFƒNƒg
-// rest - S‘©ğŒ
-// size - •\¦ƒTƒCƒY
+// æ‹˜æŸæ¡ä»¶è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
+// rest - æ‹˜æŸæ¡ä»¶
+// size - è¡¨ç¤ºã‚µã‚¤ã‚º
 var RestraintHelper=function(rest,size){
   THREE.Group.call(this);
   var geom;
@@ -395,7 +395,7 @@ var RestraintHelper=function(rest,size){
   }
 };
 
-// •\¦ƒIƒuƒWƒFƒNƒg‚ğíœ‚·‚é
+// è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’å‰Šé™¤ã™ã‚‹
 RestraintHelper.prototype.removeChildren=function(){
   for(var i=this.children.length-1;i>=0;i--){
     var child=this.children[i];
@@ -406,14 +406,14 @@ RestraintHelper.prototype.removeChildren=function(){
 };
 
 //--------------------------------------------------------------------//
-// —À—v‘f•\¦ƒIƒuƒWƒFƒNƒg
-// geometry - —v‘f’†Sü‚ÌŒ`óƒf[ƒ^
+// æ¢è¦ç´ è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
+// geometry - è¦ç´ ä¸­å¿ƒç·šã®å½¢çŠ¶ãƒ‡ãƒ¼ã‚¿
 var BarObject=function(geometry){
   THREE.Group.call(this);
   this.center=new THREE.LineSegments(geometry,BAR_MAT);
   this.add(this.center);
   var param=geometry.param;
-  var count=2*param.length;	// ‚P—v‘f‚É’f–Ê‚Q‚Âi“à‘¤‚ÆŠO‘¤j
+  var count=2*param.length;	// ï¼‘è¦ç´ ã«æ–­é¢ï¼’ã¤ï¼ˆå†…å´ã¨å¤–å´ï¼‰
   for(var i=0;i<count;i++){
     var geom=new THREE.BufferGeometry();
     var points=3*param[parseInt(i/2)].vertexCount()+3;
@@ -430,7 +430,7 @@ var BarObject=function(geometry){
   this.setSection();
 };
 
-// ’f–Ê‚ÌˆÊ’u‚ğİ’è‚·‚é
+// æ–­é¢ã®ä½ç½®ã‚’è¨­å®šã™ã‚‹
 BarObject.prototype.setSection=function(){
   var param=this.center.geometry.param;
   var dir=this.center.geometry.dir,angle=this.center.geometry.angle;
@@ -461,35 +461,35 @@ BarObject.prototype.setSection=function(){
   }
 };
 
-// •ÏˆÊ‚ğİ’è‚·‚é
-// disp - •ÏˆÊ
-// coef - •\¦ŒW”
+// å¤‰ä½ã‚’è¨­å®šã™ã‚‹
+// disp - å¤‰ä½
+// coef - è¡¨ç¤ºä¿‚æ•°
 BarObject.prototype.setDisplacement=function(disp,coef){
   setGeomDisplacement(this.center.geometry,disp,coef);
   this.setSection();
 };
 
-// ƒRƒ“ƒ^[}‚ğİ’è‚·‚é
-// value - ƒRƒ“ƒ^[}ƒf[ƒ^
-// minValue - ƒRƒ“ƒ^[}ƒf[ƒ^Å¬’l
-// coef - ƒf[ƒ^•ÏŠ·ŒW”
-// type - ƒf[ƒ^•ÛŒ`‘Ô
+// ã‚³ãƒ³ã‚¿ãƒ¼å›³ã‚’è¨­å®šã™ã‚‹
+// value - ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿
+// minValue - ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿æœ€å°å€¤
+// coef - ãƒ‡ãƒ¼ã‚¿å¤‰æ›ä¿‚æ•°
+// type - ãƒ‡ãƒ¼ã‚¿ä¿æŒå½¢æ…‹
 BarObject.prototype.setContour=function(value,minValue,coef,type){
   setGeomContour(this.center.geometry,value,minValue,coef,type);
 };
 
-// Œ‹‰Ê•\¦‚ğÁ‹‚·‚é
+// çµæœè¡¨ç¤ºã‚’æ¶ˆå»ã™ã‚‹
 BarObject.prototype.removeResult=function(){
   removeGeomResult(this.center.geometry);
   this.setSection();
 };
 
-// ƒRƒ“ƒ^[}‚ğÁ‹‚·‚é
+// ã‚³ãƒ³ã‚¿ãƒ¼å›³ã‚’æ¶ˆå»ã™ã‚‹
 BarObject.prototype.clearContour=function(){
   clearGeomContour(this.center.geometry);
 };
 
-// •\¦ƒIƒuƒWƒFƒNƒg‚ğíœ‚·‚é
+// è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’å‰Šé™¤ã™ã‚‹
 BarObject.prototype.removeObject=function(){
   viewModel.removeObject(this);
   for(var i=this.children.length-1;i>=0;i--){
@@ -501,19 +501,19 @@ BarObject.prototype.removeObject=function(){
 };
 
 //--------------------------------------------------------------------//
-// ƒ‚ƒfƒ‹•\¦İ’è
+// ãƒ¢ãƒ‡ãƒ«è¡¨ç¤ºè¨­å®š
 var ViewConfig=function(){
-  var canvas=document.getElementById('el-color');	// —v‘f•\¦Fİ’è—p
+  var canvas=document.getElementById('el-color');	// è¦ç´ è¡¨ç¤ºè‰²è¨­å®šç”¨
   canvas.width=canvas.clientWidth;
   canvas.height=canvas.clientHeight;
-  this.cpicker=new ColorPicker(canvas);			// ƒJƒ‰[ƒsƒbƒJ[
-  this.showEdge=document.getElementById('showedge');	// —v‘f•Ó•\¦
-  this.lightx=document.getElementById('lightx');	// ŒõŒ¹ˆÊ’uİ’è—p
+  this.cpicker=new ColorPicker(canvas);			// ã‚«ãƒ©ãƒ¼ãƒ”ãƒƒã‚«ãƒ¼
+  this.showEdge=document.getElementById('showedge');	// è¦ç´ è¾ºè¡¨ç¤º
+  this.lightx=document.getElementById('lightx');	// å…‰æºä½ç½®è¨­å®šç”¨
   this.lighty=document.getElementById('lighty');
   this.lightz=document.getElementById('lightz');
 };
 
-// ƒRƒ“ƒtƒBƒOƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
+// ã‚³ãƒ³ãƒ•ã‚£ã‚°ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
 ViewConfig.prototype.show=function(){
   this.cpicker.setColor(meshColors);
   var lp=viewModel.directionalLight.position;
@@ -522,7 +522,7 @@ ViewConfig.prototype.show=function(){
   this.lightz.value=numString(lp.z);
 };
 
-// ƒRƒ“ƒtƒBƒO‚ğİ’è‚·‚é
+// ã‚³ãƒ³ãƒ•ã‚£ã‚°ã‚’è¨­å®šã™ã‚‹
 ViewConfig.prototype.set=function(){
   meshColors=this.cpicker.getColor();
   if(parseInt(resultView.contour.value)<0){
@@ -534,19 +534,19 @@ ViewConfig.prototype.set=function(){
       	 parseFloat(this.lightz.value));
 };
 
-// ƒRƒ“ƒtƒBƒOƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
+// ã‚³ãƒ³ãƒ•ã‚£ã‚°ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
 function showConfig(){
   showModalWindow(CONFIG_WINDOW);
   viewConfig.show();
 }
 
-// ƒRƒ“ƒtƒBƒO‚ğİ’è‚·‚é
+// ã‚³ãƒ³ãƒ•ã‚£ã‚°ã‚’è¨­å®šã™ã‚‹
 function setConfig(){
   hideModalWindow(CONFIG_WINDOW);
   viewConfig.set();
 }
 
-// ƒRƒ“ƒtƒBƒO‚ğæ‚èÁ‚·
+// ã‚³ãƒ³ãƒ•ã‚£ã‚°ã‚’å–ã‚Šæ¶ˆã™
 function cancelConfig(){
   hideModalWindow(CONFIG_WINDOW);
 }

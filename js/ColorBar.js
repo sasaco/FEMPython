@@ -1,19 +1,19 @@
-var cls=[];					// ƒRƒ“ƒ^[}F
-var CBAR_FONT_SIZE=14;				// ƒtƒHƒ“ƒgƒTƒCƒY
-var CBAR_FONT=CBAR_FONT_SIZE+"px 'Arial'";	// ƒtƒHƒ“ƒg
-var FG_COLOR='#ffffff';				// ‘OŒiF
+ï»¿var cls=[];					// ã‚³ãƒ³ã‚¿ãƒ¼å›³è‰²
+var CBAR_FONT_SIZE=14;				// ãƒ•ã‚©ãƒ³ãƒˆã‚µã‚¤ã‚º
+var CBAR_FONT=CBAR_FONT_SIZE+"px 'Arial'";	// ãƒ•ã‚©ãƒ³ãƒˆ
+var FG_COLOR='#ffffff';				// å‰æ™¯è‰²
 
 //--------------------------------------------------------------------//
-// ƒJƒ‰[ƒo[
-// canvasId - •\¦—ÌˆæID
+// ã‚«ãƒ©ãƒ¼ãƒãƒ¼
+// canvasId - è¡¨ç¤ºé ˜åŸŸID
 var ColorBar=function(canvasId){
-  this.canvas=document.getElementById(canvasId);	// •`‰æƒLƒƒƒ“ƒoƒX
+  this.canvas=document.getElementById(canvasId);	// æç”»ã‚­ãƒ£ãƒ³ãƒã‚¹
   this.canvas.width=this.canvas.clientWidth;
   this.canvas.height=this.canvas.clientHeight;
-  this.context=this.canvas.getContext('2d');		// ƒRƒ“ƒeƒLƒXƒg
+  this.context=this.canvas.getContext('2d');		// ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆ
   this.context.font=CBAR_FONT;
   this.context.textBaseline='top';
-  this.rect={x:parseInt(this.canvas.width/5),		// ƒJƒ‰[ƒo[‚Ì•`‰æ—Ìˆæ
+  this.rect={x:parseInt(this.canvas.width/5),		// ã‚«ãƒ©ãƒ¼ãƒãƒ¼ã®æç”»é ˜åŸŸ
       	     y:parseInt(this.canvas.height/10),
       	     width:parseInt(this.canvas.width*3/10),
       	     height:parseInt(this.canvas.height*4/5)};
@@ -25,14 +25,14 @@ var ColorBar=function(canvasId){
   this.gradient.addColorStop(0.75,'#ffff00');
   this.gradient.addColorStop(1,'#ff0000');
   var xt=this.rect.x+this.rect.width+5;
-// ”’l•\¦ˆÊ’u
+// æ•°å€¤è¡¨ç¤ºä½ç½®
   this.maxPos={x:xt,y:parseInt(this.rect.y-CBAR_FONT_SIZE/2)};
   this.minPos={x:xt,y:this.maxPos.y+this.rect.height};
 };
 
-// ƒRƒ“ƒ^[}‚ğ•`‰æ‚·‚é
-// minValue - ƒRƒ“ƒ^[}ƒf[ƒ^Å¬’l
-// maxValue - ƒRƒ“ƒ^[}ƒf[ƒ^Å‘å’l
+// ã‚³ãƒ³ã‚¿ãƒ¼å›³ã‚’æç”»ã™ã‚‹
+// minValue - ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿æœ€å°å€¤
+// maxValue - ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿æœ€å¤§å€¤
 ColorBar.prototype.draw=function(minValue,maxValue){
   this.context.clearRect(0,0,this.canvas.width,this.canvas.height);
   this.context.fillStyle=this.gradient;
@@ -46,13 +46,13 @@ ColorBar.prototype.draw=function(minValue,maxValue){
   this.context.fillText(numString(minValue),this.minPos.x,this.minPos.y);
 };
 
-// ƒRƒ“ƒ^[}‚ğÁ‹‚·‚é
+// ã‚³ãƒ³ã‚¿ãƒ¼å›³ã‚’æ¶ˆå»ã™ã‚‹
 ColorBar.prototype.clear=function(){
   this.context.clearRect(0,0,this.canvas.width,this.canvas.height);
 };
 
-// ƒRƒ“ƒ^[}‚ÌF‚ğ•Ô‚·
-// z - 0`1‚Ì’l
+// ã‚³ãƒ³ã‚¿ãƒ¼å›³ã®è‰²ã‚’è¿”ã™
+// z - 0ï½1ã®å€¤
 function contourColor(z){
   cls[0]=0;
   cls[1]=0;
