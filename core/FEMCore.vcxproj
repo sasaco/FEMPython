@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="module.cpp" />
+<!--
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="HeatTransferBound.cpp" />
     <ClCompile Include="Load.cpp" />
@@ -48,15 +50,10 @@
     <ClCompile Include="BarParameter.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="ShellParameter.cpp" />
-    <ClCompile Include="module.cpp" />
     <ClCompile Include="matrix3.cpp" />
     <ClCompile Include="numeric.cpp" />
     <ClCompile Include="CircleSection.cpp" />
     <ClCompile Include="RectSection.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BoundaryCondition.h" />
@@ -93,6 +90,11 @@
     <ClInclude Include="CircleSection.h" />
     <ClInclude Include="RectSection.h" />
     <ClInclude Include="TriElement1.h" />
+  -->
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="setup.py" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
