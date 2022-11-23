@@ -1,10 +1,14 @@
-#include <Python.h>
+#include <string>
+#include <vector>
+using namespace std;
+using std::vector;
 
-
-
-void out(const char* adrs, const char* name)
+string readFemModel(vector<string> s)
 {
-	printf("‚±‚ñ‚É‚¿‚ÍA„‚Í %s ‚Ì %s ‚Å‚·B\n", adrs, name);
+
+
+
+    return "OK";
 }
 
 
