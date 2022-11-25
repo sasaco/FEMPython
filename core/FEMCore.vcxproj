@@ -19,7 +19,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Element.cpp" />
+    <ClCompile Include="FENode.cpp" />
     <ClCompile Include="FileIO.cpp" />
+    <ClCompile Include="MeshModel.cpp" />
     <ClCompile Include="module.cpp" />
     <ClCompile Include="FemDataModel.cpp" />
     <!--
@@ -95,6 +98,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Element.h" />
+    <ClInclude Include="FemDataModel.h" />
+    <ClInclude Include="FENode.h" />
+    <ClInclude Include="vector3.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

@@ -47,8 +47,34 @@
     <ClCompile Include="module.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="FemDataModel.cpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshModel.cpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClCompile>
+    <ClCompile Include="Element.cpp">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClCompile>
+    <ClCompile Include="FENode.cpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FemDataModel.h">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClInclude>
+    <ClInclude Include="Element.h">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClInclude>
+    <ClInclude Include="vector3.hpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClInclude>
+    <ClInclude Include="FENode.h">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
