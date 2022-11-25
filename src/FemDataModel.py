@@ -117,9 +117,9 @@ class FemDataModel:
         self.resetMaterialLabel()
         self.resetParameterLabel()
         self.resetCoordinates()
-        self.mesh.checkChirality()
-        self.mesh.getFreeFaces()
-        self.mesh.getFaceEdges()
+        # self.mesh.checkChirality()
+        # self.mesh.getFreeFaces()
+        # self.mesh.getFaceEdges()
         for i in range(len(mats)):
             m2d = mats[i].matrix2Dstress()
             msh = mats[i].matrixShell()
@@ -644,7 +644,7 @@ class MeshModel():
         sorted(self.nodes, key=compareLabel)
         # bounds.set() // THREE.js に関する初期化処理`
 
-
+"""
     # 要素の鏡像向きを揃える
     def checkChirality(self):
         for i in range(len(self.elements)):
@@ -713,3 +713,4 @@ class MeshModel():
                     self.faceEdges.append(edge)
                     beforeEdge = edge
 
+"""

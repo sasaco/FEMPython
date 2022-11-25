@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="module.cpp" />
+    <ClCompile Include="FemDataModel.cpp" />
     <!--
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="HeatTransferBound.cpp" />
@@ -45,7 +46,6 @@
     <ClCompile Include="TetraElement2.cpp" />
     <ClCompile Include="WedgeElement1.cpp" />
     <ClCompile Include="WedgeElement2.cpp" />
-    <ClCompile Include="FemDataModel.cpp" />
     <ClCompile Include="FENode.cpp" />
     <ClCompile Include="Nodes.cpp" />
     <ClCompile Include="BarParameter.cpp" />
