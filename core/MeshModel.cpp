@@ -1,25 +1,4 @@
-#include "FENode.h";
-#include "Element.h";
-
-#include <vector>
-using namespace std;
-using std::vector;
-
-
-class MeshModel {
-
-    private:
-        vector<FENode> nodes;		// 節点
-        vector<FElement> elements;  // 要素
-
-    public:
-        MeshModel();
-
-        template <typename T>
-        vector<FENode> getNodes(T s);
-
-        void clear();
-};
+#include "MeshModel.h"
 
 //--------------------------------------------------------------------//
 // メッシュモデル
@@ -50,8 +29,14 @@ void MeshModel::clear(){
 
 
 // モデルを初期化する
-MeshModel.prototype.init=function(){
-  this.nodes.sort(compareLabel);
-  bounds.set();
+void MeshModel::init(){
+
+    sort(nodes.begin(), nodes.end(),
+        [](FENode o1, FENode o2) -> int {
+            if (o1.label < o2.label)        return -1;
+            else if (o1.label > o2.label)   return 1;
+            else                            return 0;
+        });
+
 };
 

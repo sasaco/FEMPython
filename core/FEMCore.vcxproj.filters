@@ -53,9 +53,6 @@
     <ClCompile Include="MeshModel.cpp">
       <Filter>ソース ファイル\FemDataModel</Filter>
     </ClCompile>
-    <ClCompile Include="Element.cpp">
-      <Filter>ソース ファイル\Element</Filter>
-    </ClCompile>
     <ClCompile Include="FENode.cpp">
       <Filter>ソース ファイル\FemDataModel</Filter>
     </ClCompile>
@@ -66,9 +63,6 @@
   <ItemGroup>
     <ClInclude Include="FemDataModel.h">
       <Filter>ソース ファイル\FemDataModel</Filter>
-    </ClInclude>
-    <ClInclude Include="Element.h">
-      <Filter>ソース ファイル\Element</Filter>
     </ClInclude>
     <ClInclude Include="vector3.hpp">
       <Filter>ソース ファイル\FemDataModel</Filter>

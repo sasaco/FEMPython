@@ -4,6 +4,11 @@
 #include "Temperature.h";
 #include "HeatTransferBound.h";
 
+#include <vector>
+#include <algorithm>
+using namespace std;
+using std::vector;
+
 //--------------------------------------------------------------------//
 // 境界条件
 class BoundaryCondition {
@@ -20,6 +25,12 @@ private:
     vector<int> nodeIndex;		// 荷重ベクトルの節点ポインタ
     vector<int> bcList;		// 境界条件を設定した節点のリスト
 
+    template <typename T>
+    void compareNodeLabel(T target);
+
+    template <typename T>
+    void compareElementLabel(T target);
+
 public:
     BoundaryCondition();
 
@@ -29,7 +40,7 @@ public:
     int setPointerHeat(int count);
     double getRestDisp(int bc);
 
-    void toStrings(vector<FENode> nodes, int elems, vector<string> s);
+    vector<string> toStrings(vector<FENode> nodes, int elems);
 
 };
 
@@ -53,20 +64,25 @@ void BoundaryCondition::clear() {
 
 // 境界条件を初期化する
 void BoundaryCondition::init() {
-    restraints.sort(compareNodeLabel);
-    loads.sort(compareNodeLabel);
-    pressures.sort(compareElementLabel);
-    temperature.sort(compareNodeLabel);
-    htcs.sort(compareElementLabel);
+
+    compareNodeLabel(restraints);
+    compareNodeLabel(loads);
+    compareElementLabel(pressures);
+    compareNodeLabel(temperature);
+    compareElementLabel(htcs);
+
     loadMax = 0;
     pressMax = 0;
+
     for (int i = 0; i < loads.size(); i++) {
         loadMax = max(loadMax, loads[i].magnitude());
     }
     for (int i = 0; i < pressures.size(); i++) {
         pressMax = max(pressMax, pressures[i].press);
     }
+
 }
+
 
 // 構造解析の節点ポインタを設定する
 // count - 節点数
@@ -122,7 +138,9 @@ double BoundaryCondition::getRestDisp(int bc) {
 // データ文字列を返す
 // nodes - 節点
 // elems - 要素
-void BoundaryCondition::toStrings(vector<FENode> nodes, int elems, vector<string> s) {
+vector<string> BoundaryCondition::toStrings(vector<FENode> nodes, vector<any> elems) {
+
+    vector<string> s;
 
     for (int i = 0; i < restraints.size(); i++) {
         s.push_back(restraints[i].toString(nodes));
@@ -130,85 +148,42 @@ void BoundaryCondition::toStrings(vector<FENode> nodes, int elems, vector<string
     for (int i = 0; i < loads.size(); i++) {
         s.push_back(loads[i].toString(nodes));
     }
-    for (i = 0; i < this.pressures.length; i++) {
-        s.push(this.pressures[i].toString(elems));
+    for (int i = 0; i < pressures.size(); i++) {
+        s.push_back(pressures[i].toString(elems));
     }
-    for (i = 0; i < this.temperature.length; i++) {
-        s.push(this.temperature[i].toString(nodes));
+    for (int i = 0; i < temperature.size(); i++) {
+        s.push_back(temperature[i].toString(nodes));
     }
-    for (i = 0; i < this.htcs.length; i++) {
-        s.push(this.htcs[i].toString(elems));
+    for (int i = 0; i < htcs.size(); i++) {
+        s.push_back(htcs[i].toString(elems));
     }
     return s;
 };
 
+
 // 節点ラベルを比較する
 // bc1,bc2 - 比較する境界条件
-function compareNodeLabel(bc1, bc2) {
-    if (bc1.node < bc2.node)      return -1;
-    else if (bc1.node > bc2.node) return 1;
-    else                       return 0;
+template <typename T>
+void BoundaryCondition::compareNodeLabel(T target) {
+
+    sort(target.begin(), target.end(),
+        [](auto bc1, auto bc2) -> int {
+            if (bc1.node < bc2.node)        return -1;
+            else if (bc1.node > bc2.node)   return 1;
+            else                            return 0;
+        });
+
 }
 
 // 要素ラベルを比較する
 // bc1,bc2 - 比較する境界条件
-function compareElementLabel(bc1, bc2) {
-    if (bc1.element < bc2.element)      return -1;
-    else if (bc1.element > bc2.element) return 1;
-    else                             return 0;
+template <typename T>
+void BoundaryCondition::compareElementLabel(T target) {
+
+    sort(target.begin(), target.end(),
+        [](auto bc1, auto bc2) -> int {
+            if (bc1.element < bc2.element)      return -1;
+            else if (bc1.element > bc2.element) return 1;
+            else                                return 0;
+        });
 }
-
-
-
-//--------------------------------------------------------------------//
-// 要素境界条件
-// element - 要素ラベル
-// face - 要素境界面
-var ElementBorderBound = function(element, face) {
-    this.element = element;
-    this.face = face;
-};
-
-// 要素境界を返す
-// elem - 要素
-ElementBorderBound.prototype.getBorder = function(elem) {
-    if (this.face.length == = 2) {
-        var j;
-        if (this.face.charAt(0) == = 'F') {
-            j = parseInt(this.face.charAt(1)) - 1;
-            return elem.border(this.element, j);
-        }
-        else if (this.face.charAt(0) == = 'E') {
-            j = parseInt(this.face.charAt(1)) - 1;
-            return elem.borderEdge(this.element, j);
-        }
-    }
-    return null;
-};
-
-
-
-//--------------------------------------------------------------------//
-// 荷重条件
-// node - 節点ラベル
-// coords - 局所座標系
-// x,y,z - x,y,z成分
-// rx,ry,rz - x,y,z軸周り回転成分
-var Load = function(node, coords, x, y, z, rx, ry, rz) {
-    Vector3R.call(this, x, y, z, rx, ry, rz);
-    this.node = node;
-    this.coords = coords;
-    this.globalX = this.x;
-};
-
-// 荷重条件を表す文字列を返す
-// nodes - 節点
-Load.prototype.toString = function(nodes) {
-    var s = 'Load\t' + nodes[this.node].label.toString(10) + '\t' +
-        this.x.join('\t');
-    if (this.coords) {
-        s += '\t' + this.coords.label.toString(10);
-    }
-    return s;
-};
-
