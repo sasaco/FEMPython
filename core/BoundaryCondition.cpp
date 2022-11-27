@@ -97,7 +97,7 @@ double BoundaryCondition::getRestDisp(int bc) {
 // データ文字列を返す
 // nodes - 節点
 // elems - 要素
-vector<string> BoundaryCondition::toStrings(vector<FENode> nodes, vector<any> elems) {
+vector<string> BoundaryCondition::toStrings(vector<FENode> nodes, vector<ElementManager> elems) {
 
     vector<string> s;
 

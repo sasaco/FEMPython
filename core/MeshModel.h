@@ -1,9 +1,8 @@
 #pragma once
 #include "FENode.h"
+#include "ElementManager.h"
 
-#include <any>
 #include <vector>
-#include <algorithm>
 using namespace std;
 using std::vector;
 
@@ -12,7 +11,7 @@ class MeshModel {
 
 private:
     vector<FENode> nodes;   // êﬂì_
-    vector<any> elements;   // óvëf
+    vector<ElementManager> elements;   // óvëf
 
 public:
     MeshModel();

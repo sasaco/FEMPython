@@ -1,6 +1,11 @@
 ﻿#pragma once
-#include "Temperature.h";
-#include "HeatTransferBound.h";
+#include "Restraint.h"
+#include "Load.h"
+#include "Pressure.h"
+#include "Temperature.h"
+#include "Restraint.h"
+#include "HeatTransferBound.h"
+#include "ElementManager.h"
 
 #include <vector>
 #include <algorithm>
@@ -38,6 +43,6 @@ public:
     int setPointerHeat(int count);
     double getRestDisp(int bc);
 
-    vector<string> toStrings(vector<FENode> nodes, int elems);
+    vector<string> toStrings(vector<FENode> nodes, vector<ElementManager> elems);
 
 };

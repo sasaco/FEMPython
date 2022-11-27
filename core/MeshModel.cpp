@@ -1,5 +1,7 @@
 #include "MeshModel.h"
 
+#include <algorithm>
+
 //--------------------------------------------------------------------//
 // メッシュモデル
 MeshModel::MeshModel(){
