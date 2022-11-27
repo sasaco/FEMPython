@@ -3,7 +3,7 @@
 
 #include <vector>
 using namespace std;         //  名前空間指定
-using vector;
+using std::vector;
 
 class Pressure : public ElementBorderBound {
 
@@ -17,6 +17,5 @@ public:
 
     Pressure(int _element, std::string _face, double _press);
 
-    template <typename T>
-    std::string toString(vector<T> elems);
+    std::string toString(vector<ElementManager> elems);
 };

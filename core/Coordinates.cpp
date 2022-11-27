@@ -7,6 +7,8 @@
 // 局所座標系
 // label - 座標系ラベル
 // n11,n12,n13,n21,n22,n23,n31,n32,n33 - 座標変換マトリックスの成分
+Coordinates::Coordinates(){}
+
 Coordinates::Coordinates(int _label, 
     double n11, double n12, double n13,
     double n21, double n22, double n23, 

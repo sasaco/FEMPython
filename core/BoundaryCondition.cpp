@@ -24,11 +24,11 @@ void BoundaryCondition::clear() {
 // 境界条件を初期化する
 void BoundaryCondition::init() {
 
-    compareNodeLabel(restraints);
-    compareNodeLabel(loads);
-    compareElementLabel(pressures);
-    compareNodeLabel(temperature);
-    compareElementLabel(htcs);
+    compareNodeLabel<Restraint>(restraints);
+    compareNodeLabel<Load>(loads);
+    compareElementLabel<Pressure>(pressures);
+    compareNodeLabel<Temperature>(temperature);
+    compareElementLabel<HeatTransferBound>(htcs);
 
     loadMax = 0;
     pressMax = 0;
@@ -122,8 +122,8 @@ vector<string> BoundaryCondition::toStrings(vector<FENode> nodes, vector<Element
 
 // 節点ラベルを比較する
 // bc1,bc2 - 比較する境界条件
-template <typename T>
-void BoundaryCondition::compareNodeLabel(T target) {
+template <typename T> 
+void BoundaryCondition::compareNodeLabel(vector<T> target) {
 
     sort(target.begin(), target.end(),
         [](auto bc1, auto bc2) -> int {
@@ -137,7 +137,7 @@ void BoundaryCondition::compareNodeLabel(T target) {
 // 要素ラベルを比較する
 // bc1,bc2 - 比較する境界条件
 template <typename T>
-void BoundaryCondition::compareElementLabel(T target) {
+void BoundaryCondition::compareElementLabel(vector<T> target) {
 
     sort(target.begin(), target.end(),
         [](auto bc1, auto bc2) -> int {

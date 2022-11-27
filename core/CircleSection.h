@@ -1,5 +1,5 @@
 ﻿#pragma once
-import "Material.h";
+#include "Material.h";
 
 #include <numbers>
 using namespace std;         //  名前空間指定

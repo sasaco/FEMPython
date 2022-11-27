@@ -6,7 +6,7 @@
 // ３次元ベクトル（並進＋回転）
 // x,y,z - x,y,z成分
 // rx,ry,rz - x,y,z軸周り回転角
-Vector3R::Vector3R(double _x = 0, double _y = 0, double _z = 0, double _rx = 0, double _ry = 0, double _rz = 0) {
+Vector3R::Vector3R(double _x, double _y, double _z, double _rx, double _ry, double _rz) {
     x[0] = _x;
     x[1] = _y;
     x[2] = _z;

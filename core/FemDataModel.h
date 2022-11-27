@@ -3,6 +3,7 @@
 #include "Material.h"
 #include "ShellParameter.h"
 #include "BarParameter.h"
+#include "BoundaryCondition.h"
 
 
 //--------------------------------------------------------------------//

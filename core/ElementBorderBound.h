@@ -1,9 +1,15 @@
 #pragma once
-#include <iostream>
+#include "BorderManager.hpp"
+#include "ElementManager.hpp"
+
+#include <string>
+#include <vector>
 #include <algorithm>
 
 using namespace std;
 using std::string;
+using std::vector;
+;
 
 class ElementBorderBound {
 
@@ -15,6 +21,7 @@ public:
 
     ElementBorderBound(int _element, string _face);
 
-    template <typename T>
-    any getBorder(T elem);
+    BorderManager getBorder(ElementManager elem);
+
 };
+

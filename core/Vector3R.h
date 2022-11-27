@@ -8,7 +8,7 @@ class Vector3R {
 private:
 
 public:
-    Vector3R(double _x = 0, double _y = 0, double _z = 0, double _rx = 0, double _ry = 0, double _rz = 0);
+    Vector3R(double _x, double _y, double _z, double _rx, double _ry, double _rz);
 
     double x[6];
 

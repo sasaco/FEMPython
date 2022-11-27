@@ -1,7 +1,8 @@
 #pragma once
 #include "FENode.h"
-#include "ElementManager.h"
+#include "ElementManager.hpp"
 
+#include <vector>
 using namespace std;
 using std::vector;
 

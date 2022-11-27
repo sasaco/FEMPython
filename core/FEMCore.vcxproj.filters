@@ -44,9 +44,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="FileIO.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="module.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -80,7 +77,7 @@
     <ClCompile Include="Temperature.cpp">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClCompile>
-    <ClCompile Include="ElementManager.cpp">
+    <ClCompile Include="ElementManager.hpp">
       <Filter>ソース ファイル\Element</Filter>
     </ClCompile>
     <ClCompile Include="ElementBorder.cpp">
@@ -100,6 +97,30 @@
     </ClCompile>
     <ClCompile Include="QuadangleBorder2.cpp">
       <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="FileIO.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Coordinates.cpp">
+      <Filter>ソース ファイル\Coordinates</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="BarParameter.cpp">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="ShellParameter.cpp">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector3R.cpp">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClCompile>
+    <ClCompile Include="CircleSection.cpp">
+      <Filter>ソース ファイル\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="RectSection.cpp">
+      <Filter>ソース ファイル\Section</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -139,9 +160,6 @@
     <ClInclude Include="ElementBorderBound.h">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClInclude>
-    <ClInclude Include="ElementManager.h">
-      <Filter>ソース ファイル\Element</Filter>
-    </ClInclude>
     <ClInclude Include="ElementBorder.h">
       <Filter>ソース ファイル\Border</Filter>
     </ClInclude>
@@ -159,6 +177,30 @@
     </ClInclude>
     <ClInclude Include="QuadangleBorder2.h">
       <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="BorderManager.hpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="Coordinates.h">
+      <Filter>ソース ファイル\Coordinates</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="BarParameter.h">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="ShellParameter.h">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector3R.h">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="CircleSection.h">
+      <Filter>ソース ファイル\Section</Filter>
+    </ClInclude>
+    <ClInclude Include="RectSection.h">
+      <Filter>ソース ファイル\Section</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

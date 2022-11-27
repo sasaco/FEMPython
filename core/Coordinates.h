@@ -2,16 +2,20 @@
 #include <string>
 #include <vector>
 using namespace std;
+using std::string;
+using std::vector;
 
 
 class Coordinates {
 
 private:
-
-    int label;
     double c[9];
 
 public:
+    int label;
+
+    Coordinates();
+
     Coordinates(int _label,
         double n11, double n12, double n13,
         double n21, double n22, double n23,

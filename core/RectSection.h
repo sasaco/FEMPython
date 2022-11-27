@@ -1,5 +1,5 @@
 ﻿#pragma once
-import "Material.h";
+#include "Material.h";
 
 #include <string>
 #include <numbers>
@@ -38,7 +38,7 @@ private:
 
 public:
     // 矩形断面のせん断補正係数
-    const double KS_RECT = 5 / 6;
+    static double KS_RECT() { return 5 / 6; };
     // 矩形断面の捩り係数
     const double COEF_K1 = 64 / pow(numbers::pi, 5);
     const double COEF_K = 8 / pow(numbers::pi, 2);

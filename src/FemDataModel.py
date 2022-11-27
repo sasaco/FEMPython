@@ -627,8 +627,8 @@ class MeshModel():
     def clear(self):
         self.nodes=[]		    # 節点
         self.elements=[]		# 要素
-        self.freeFaces=[]		# 表面
-        self.faceEdges=[]		# 表面の要素辺
+        # self.freeFaces=[]		# 表面
+        # self.faceEdges=[]		# 表面の要素辺
 
 
     # 節点を返す

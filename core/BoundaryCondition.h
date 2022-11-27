@@ -5,12 +5,13 @@
 #include "Temperature.h"
 #include "Restraint.h"
 #include "HeatTransferBound.h"
-#include "ElementManager.h"
+#include "ElementManager.hpp"
 
-#include <algorithm>
-
+#include <vector>
 using namespace std;
 using std::vector;
+#include <algorithm>
+
 //--------------------------------------------------------------------//
 // 境界条件
 class BoundaryCondition {
@@ -28,10 +29,10 @@ private:
     vector<int> bcList;		// 境界条件を設定した節点のリスト
 
     template <typename T>
-    void compareNodeLabel(T target);
+    void compareNodeLabel(vector<T> target);
 
     template <typename T>
-    void compareElementLabel(T target);
+    void compareElementLabel(vector<T> target);
 
 public:
     BoundaryCondition();
@@ -42,6 +43,6 @@ public:
     int setPointerHeat(int count);
     double getRestDisp(int bc);
 
-    vector<std::string> toStrings(vector<FENode> nodes, vector<ElementManager> elems);
+    vector<string> toStrings(vector<FENode> nodes, vector<ElementManager> elems);
 
 };
