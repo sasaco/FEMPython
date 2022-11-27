@@ -20,6 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoundaryCondition.cpp" />
+    <ClCompile Include="EdgeBorder1.cpp" />
+    <ClCompile Include="ElementBorder.cpp" />
     <ClCompile Include="ElementBorderBound.cpp" />
     <ClCompile Include="ElementManager.cpp" />
     <ClCompile Include="FENode.cpp" />
@@ -30,8 +32,12 @@
     <ClCompile Include="module.cpp" />
     <ClCompile Include="FemDataModel.cpp" />
     <ClCompile Include="Pressure.cpp" />
+    <ClCompile Include="QuadangleBorder1.cpp" />
+    <ClCompile Include="QuadangleBorder2.cpp" />
     <ClCompile Include="Restraint.cpp" />
     <ClCompile Include="Temperature.cpp" />
+    <ClCompile Include="TriangleBorder1.cpp" />
+    <ClCompile Include="TriangleBorder2.cpp" />
     <!--
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="HeatTransferBound.cpp" />
@@ -108,6 +114,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BoundaryCondition.h" />
+    <ClInclude Include="EdgeBorder1.h" />
+    <ClInclude Include="ElementBorder.h" />
     <ClInclude Include="ElementBorderBound.h" />
     <ClInclude Include="ElementManager.h" />
     <ClInclude Include="FemDataModel.h" />
@@ -116,8 +124,12 @@
     <ClInclude Include="Load.h" />
     <ClInclude Include="MeshModel.h" />
     <ClInclude Include="Pressure.h" />
+    <ClInclude Include="QuadangleBorder1.h" />
+    <ClInclude Include="QuadangleBorder2.h" />
     <ClInclude Include="Restraint.h" />
     <ClInclude Include="Temperature.h" />
+    <ClInclude Include="TriangleBorder1.h" />
+    <ClInclude Include="TriangleBorder2.h" />
     <ClInclude Include="vector3.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

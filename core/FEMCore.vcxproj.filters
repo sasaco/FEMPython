@@ -39,6 +39,9 @@
     <Filter Include="ソース ファイル\numeric">
       <UniqueIdentifier>{8d482bbc-6648-4aa5-a0a2-82ea398984d9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\Border">
+      <UniqueIdentifier>{512bab33-2422-4a9b-9b2d-c241527de2e8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FileIO.cpp">
@@ -80,6 +83,24 @@
     <ClCompile Include="ElementManager.cpp">
       <Filter>ソース ファイル\Element</Filter>
     </ClCompile>
+    <ClCompile Include="ElementBorder.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="EdgeBorder1.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="TriangleBorder1.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="TriangleBorder2.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="QuadangleBorder1.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="QuadangleBorder2.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
@@ -120,6 +141,24 @@
     </ClInclude>
     <ClInclude Include="ElementManager.h">
       <Filter>ソース ファイル\Element</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementBorder.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="EdgeBorder1.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleBorder1.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleBorder2.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="QuadangleBorder1.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="QuadangleBorder2.h">
+      <Filter>ソース ファイル\Border</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

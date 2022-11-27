@@ -7,11 +7,10 @@
 #include "HeatTransferBound.h"
 #include "ElementManager.h"
 
-#include <vector>
 #include <algorithm>
+
 using namespace std;
 using std::vector;
-
 //--------------------------------------------------------------------//
 // 境界条件
 class BoundaryCondition {
@@ -43,6 +42,6 @@ public:
     int setPointerHeat(int count);
     double getRestDisp(int bc);
 
-    vector<string> toStrings(vector<FENode> nodes, vector<ElementManager> elems);
+    vector<std::string> toStrings(vector<FENode> nodes, vector<ElementManager> elems);
 
 };

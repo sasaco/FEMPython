@@ -19,7 +19,7 @@ HeatTransferBound::HeatTransferBound(int element, string face, double _htc, doub
 // elems - 要素
 string HeatTransferBound::toString(vector<ElementManager> elems) {
 
-    return format("HTC\t{}\t{}\t{}\t{}\t{}", 
-        elems[element].label, face, htc, outTemp);
+    return format("HTC\t{}\t{}\t{}\t{}", 
+        elems[element].label(), face, htc, outTemp);
 
 };

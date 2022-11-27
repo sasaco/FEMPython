@@ -1,18 +1,18 @@
 #pragma once
-#include <string>
-#include <any>
-#include <vector>
+#include <iostream>
 #include <algorithm>
+
 using namespace std;
-using std::vector;
+using std::string;
 
 class ElementBorderBound {
 
 private:
     int element;
-    string face;
 
 public:
+    string face;
+
     ElementBorderBound(int _element, string _face);
 
     template <typename T>

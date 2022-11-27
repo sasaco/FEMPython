@@ -1,10 +1,9 @@
 ﻿#pragma once
 import "Material.h";
 
-#include <string>
 #include <numbers>
 using namespace std;         //  名前空間指定
-
+using std::string;
 
 
 //--------------------------------------------------------------------//

@@ -2,7 +2,6 @@
 #include "FENode.h"
 #include "ElementManager.h"
 
-#include <vector>
 using namespace std;
 using std::vector;
 
@@ -21,5 +20,5 @@ public:
 
     void clear();
 
-    void init()
+    void init();
 };
