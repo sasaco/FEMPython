@@ -1,19 +1,19 @@
-//--------------------------------------------------------------------//
-// ‹«ŠEğŒ
+ï»¿//--------------------------------------------------------------------//
+// å¢ƒç•Œæ¡ä»¶
 var BoundaryCondition=function(){
-  this.restraints=[];		// S‘©ğŒ
-  this.loads=[];		// ‰×dğŒ
-  this.pressures=[];		// –Êˆ³ğŒ
-  this.temperature=[];		// ß“_‰·“xğŒ
-  this.htcs=[];			// ”M“`’B‹«ŠEğŒ
-  this.loadMax=0;		// Å‘å‰×d
-  this.pressMax=0;		// Å‘å–Êˆ³
-  this.dof=[];			// ß“_‚Ì©—R“x
-  this.nodeIndex=[];		// ‰×dƒxƒNƒgƒ‹‚Ìß“_ƒ|ƒCƒ“ƒ^
-  this.bcList=[];		// ‹«ŠEğŒ‚ğİ’è‚µ‚½ß“_‚ÌƒŠƒXƒg
+  this.restraints=[];		// æ‹˜æŸæ¡ä»¶
+  this.loads=[];		// è·é‡æ¡ä»¶
+  this.pressures=[];		// é¢åœ§æ¡ä»¶
+  this.temperature=[];		// ç¯€ç‚¹æ¸©åº¦æ¡ä»¶
+  this.htcs=[];			// ç†±ä¼é”å¢ƒç•Œæ¡ä»¶
+  this.loadMax=0;		// æœ€å¤§è·é‡
+  this.pressMax=0;		// æœ€å¤§é¢åœ§
+  this.dof=[];			// ç¯€ç‚¹ã®è‡ªç”±åº¦
+  this.nodeIndex=[];		// è·é‡ãƒ™ã‚¯ãƒˆãƒ«ã®ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿
+  this.bcList=[];		// å¢ƒç•Œæ¡ä»¶ã‚’è¨­å®šã—ãŸç¯€ç‚¹ã®ãƒªã‚¹ãƒˆ
 };
 
-// ƒf[ƒ^‚ğÁ‹‚·‚é
+// ãƒ‡ãƒ¼ã‚¿ã‚’æ¶ˆå»ã™ã‚‹
 BoundaryCondition.prototype.clear=function(){
   this.restraints.length=0;
   this.loads.length=0;
@@ -24,7 +24,7 @@ BoundaryCondition.prototype.clear=function(){
   this.pressMax=0;
 };
 
-// ‹«ŠEğŒ‚ğ‰Šú‰»‚·‚é
+// å¢ƒç•Œæ¡ä»¶ã‚’åˆæœŸåŒ–ã™ã‚‹
 BoundaryCondition.prototype.init=function(){
   this.restraints.sort(compareNodeLabel);
   this.loads.sort(compareNodeLabel);
@@ -42,8 +42,8 @@ BoundaryCondition.prototype.init=function(){
   }
 };
 
-// \‘¢‰ğÍ‚Ìß“_ƒ|ƒCƒ“ƒ^‚ğİ’è‚·‚é
-// count - ß“_”
+// æ§‹é€ è§£æã®ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿ã‚’è¨­å®šã™ã‚‹
+// count - ç¯€ç‚¹æ•°
 BoundaryCondition.prototype.setPointerStructure=function(count){
   this.nodeIndex.length=0;
   this.bcList.length=0;
@@ -66,8 +66,8 @@ BoundaryCondition.prototype.setPointerStructure=function(count){
   return dofAll;
 };
 
-// ”M‰ğÍ‚Ìß“_ƒ|ƒCƒ“ƒ^‚ğİ’è‚·‚é
-// count - ß“_”
+// ç†±è§£æã®ç¯€ç‚¹ãƒã‚¤ãƒ³ã‚¿ã‚’è¨­å®šã™ã‚‹
+// count - ç¯€ç‚¹æ•°
 BoundaryCondition.prototype.setPointerHeat=function(count){
   this.dof.length=0;
   this.nodeIndex.length=0;
@@ -83,15 +83,15 @@ BoundaryCondition.prototype.setPointerHeat=function(count){
   return temps;
 };
 
-// ‹­§•ÏˆÊ‚ğ•Ô‚·
-// bc - •ÏˆÊ©—R“xƒ|ƒCƒ“ƒ^
+// å¼·åˆ¶å¤‰ä½ã‚’è¿”ã™
+// bc - å¤‰ä½è‡ªç”±åº¦ãƒã‚¤ãƒ³ã‚¿
 BoundaryCondition.prototype.getRestDisp=function(bc){
   return this.restraints[parseInt(bc/6)].x[bc%6];
 };
 
-// ƒf[ƒ^•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
-// elems - —v‘f
+// ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
+// elems - è¦ç´ 
 BoundaryCondition.prototype.toStrings=function(nodes,elems){
   var s=[],i;
   for(i=0;i<this.restraints.length;i++){
@@ -112,16 +112,16 @@ BoundaryCondition.prototype.toStrings=function(nodes,elems){
   return s;
 };
 
-// ß“_ƒ‰ƒxƒ‹‚ğ”äŠr‚·‚é
-// bc1,bc2 - ”äŠr‚·‚é‹«ŠEğŒ
+// ç¯€ç‚¹ãƒ©ãƒ™ãƒ«ã‚’æ¯”è¼ƒã™ã‚‹
+// bc1,bc2 - æ¯”è¼ƒã™ã‚‹å¢ƒç•Œæ¡ä»¶
 function compareNodeLabel(bc1,bc2){
   if(bc1.node<bc2.node)      return -1;
   else if(bc1.node>bc2.node) return 1;
   else                       return 0;
 }
 
-// —v‘fƒ‰ƒxƒ‹‚ğ”äŠr‚·‚é
-// bc1,bc2 - ”äŠr‚·‚é‹«ŠEğŒ
+// è¦ç´ ãƒ©ãƒ™ãƒ«ã‚’æ¯”è¼ƒã™ã‚‹
+// bc1,bc2 - æ¯”è¼ƒã™ã‚‹å¢ƒç•Œæ¡ä»¶
 function compareElementLabel(bc1,bc2){
   if(bc1.element<bc2.element)      return -1;
   else if(bc1.element>bc2.element) return 1;
@@ -129,50 +129,50 @@ function compareElementLabel(bc1,bc2){
 }
 
 //--------------------------------------------------------------------//
-// ‚RŸŒ³ƒxƒNƒgƒ‹i•Ài{‰ñ“]j
-// x,y,z - x,y,z¬•ª
-// rx,ry,rz - x,y,z²ü‚è‰ñ“]Šp
+// ï¼“æ¬¡å…ƒãƒ™ã‚¯ãƒˆãƒ«ï¼ˆä¸¦é€²ï¼‹å›è»¢ï¼‰
+// x,y,z - x,y,zæˆåˆ†
+// rx,ry,rz - x,y,zè»¸å‘¨ã‚Šå›è»¢è§’
 var Vector3R=function(x,y,z,rx,ry,rz){
   this.x=[x||0,y||0,z||0,rx||0,ry||0,rz||0];
 };
 
-// •Ài¬•ª‚Ì‘å‚«‚³‚ğ•Ô‚·
+// ä¸¦é€²æˆåˆ†ã®å¤§ãã•ã‚’è¿”ã™
 Vector3R.prototype.magnitude=function(){
   return Math.sqrt(this.magnitudeSq());
 };
 
-// •Ài¬•ª‚Ì‘å‚«‚³‚Ì2æ‚ğ•Ô‚·
+// ä¸¦é€²æˆåˆ†ã®å¤§ãã•ã®2ä¹—ã‚’è¿”ã™
 Vector3R.prototype.magnitudeSq=function(){
   return this.x[0]*this.x[0]+this.x[1]*this.x[1]+this.x[2]*this.x[2];
 };
 
-// ‰ñ“]¬•ª‚Ì‘å‚«‚³‚ğ•Ô‚·
+// å›è»¢æˆåˆ†ã®å¤§ãã•ã‚’è¿”ã™
 Vector3R.prototype.magnitudeR=function(){
   return Math.sqrt(this.magnitudeSqR());
 };
 
-// ‰ñ“]¬•ª‚Ì‘å‚«‚³‚Ì2æ‚ğ•Ô‚·
+// å›è»¢æˆåˆ†ã®å¤§ãã•ã®2ä¹—ã‚’è¿”ã™
 Vector3R.prototype.magnitudeSqR=function(){
   return this.x[3]*this.x[3]+this.x[4]*this.x[4]+this.x[5]*this.x[5];
 };
 
-// ƒxƒNƒgƒ‹‚ÌƒRƒs[‚ğ•Ô‚·
+// ãƒ™ã‚¯ãƒˆãƒ«ã®ã‚³ãƒ”ãƒ¼ã‚’è¿”ã™
 Vector3R.prototype.clone=function(){
   return new this.constructor(this.x[0],this.x[1],this.x[2],
       	      	      	      this.x[3],this.x[4],this.x[5]);
 };
 
 //--------------------------------------------------------------------//
-// —v‘f‹«ŠEğŒ
-// element - —v‘fƒ‰ƒxƒ‹
-// face - —v‘f‹«ŠE–Ê
+// è¦ç´ å¢ƒç•Œæ¡ä»¶
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// face - è¦ç´ å¢ƒç•Œé¢
 var ElementBorderBound=function(element,face){
   this.element=element;
   this.face=face;
 };
 
-// —v‘f‹«ŠE‚ğ•Ô‚·
-// elem - —v‘f
+// è¦ç´ å¢ƒç•Œã‚’è¿”ã™
+// elem - è¦ç´ 
 ElementBorderBound.prototype.getBorder=function(elem){
   if(this.face.length===2){
     var j;
@@ -189,13 +189,13 @@ ElementBorderBound.prototype.getBorder=function(elem){
 };
 
 //--------------------------------------------------------------------//
-// S‘©ğŒ
-// node - ß“_ƒ‰ƒxƒ‹
-// coords - ‹ÇŠÀ•WŒn
-// restx,resty,restz - x,y,z•ûŒü‚ÌS‘©‚Ì—L–³
-// x,y,z - ‹­§•ÏˆÊ‚Ìx,y,z¬•ª
-// restrx,restry,restrz - x,y,z•ûŒü‚Ì‰ñ“]S‘©‚Ì—L–³
-// rx,ry,rz - ‹­§•ÏˆÊ‚Ìx,y,z²ü‚è‰ñ“]Šp
+// æ‹˜æŸæ¡ä»¶
+// node - ç¯€ç‚¹ãƒ©ãƒ™ãƒ«
+// coords - å±€æ‰€åº§æ¨™ç³»
+// restx,resty,restz - x,y,zæ–¹å‘ã®æ‹˜æŸã®æœ‰ç„¡
+// x,y,z - å¼·åˆ¶å¤‰ä½ã®x,y,zæˆåˆ†
+// restrx,restry,restrz - x,y,zæ–¹å‘ã®å›è»¢æ‹˜æŸã®æœ‰ç„¡
+// rx,ry,rz - å¼·åˆ¶å¤‰ä½ã®x,y,zè»¸å‘¨ã‚Šå›è»¢è§’
 var Restraint=function(node,coords,restx,resty,restz,x,y,z,
       	      	       restrx,restry,restrz,rx,ry,rz){
   Vector3R.call(this,x,y,z,rx,ry,rz);
@@ -205,8 +205,8 @@ var Restraint=function(node,coords,restx,resty,restz,x,y,z,
   this.globalX=this.x;
 };
 
-// S‘©ğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
+// æ‹˜æŸæ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
 Restraint.prototype.toString=function(nodes){
   var s='Restraint\t'+nodes[this.node].label.toString(10);
   for(var i=0;i<6;i++){
@@ -224,11 +224,11 @@ Restraint.prototype.toString=function(nodes){
 };
 
 //--------------------------------------------------------------------//
-// ‰×dğŒ
-// node - ß“_ƒ‰ƒxƒ‹
-// coords - ‹ÇŠÀ•WŒn
-// x,y,z - x,y,z¬•ª
-// rx,ry,rz - x,y,z²ü‚è‰ñ“]¬•ª
+// è·é‡æ¡ä»¶
+// node - ç¯€ç‚¹ãƒ©ãƒ™ãƒ«
+// coords - å±€æ‰€åº§æ¨™ç³»
+// x,y,z - x,y,zæˆåˆ†
+// rx,ry,rz - x,y,zè»¸å‘¨ã‚Šå›è»¢æˆåˆ†
 var Load=function(node,coords,x,y,z,rx,ry,rz){
   Vector3R.call(this,x,y,z,rx,ry,rz);
   this.node=node;
@@ -236,8 +236,8 @@ var Load=function(node,coords,x,y,z,rx,ry,rz){
   this.globalX=this.x;
 };
 
-// ‰×dğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
+// è·é‡æ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
 Load.prototype.toString=function(nodes){
   var s='Load\t'+nodes[this.node].label.toString(10)+'\t'+
       	this.x.join('\t');
@@ -248,52 +248,52 @@ Load.prototype.toString=function(nodes){
 };
 
 //--------------------------------------------------------------------//
-// –Êˆ³ğŒ
-// element - —v‘fƒ‰ƒxƒ‹
-// face - —v‘f‹«ŠE–Ê
-// press - –Êˆ³
+// é¢åœ§æ¡ä»¶
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// face - è¦ç´ å¢ƒç•Œé¢
+// press - é¢åœ§
 var Pressure=function(element,face,press){
   ElementBorderBound.call(this,element,face);
   this.press=press;
 };
 
-// –Êˆ³ğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// elems - —v‘f
+// é¢åœ§æ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// elems - è¦ç´ 
 Pressure.prototype.toString=function(elems){
   return 'Pressure\t'+elems[this.element].label.toString(10)+'\t'+
       	  this.face+'\t'+this.press;
 };
 
 //--------------------------------------------------------------------//
-// ‰·“xŒÅ’èğŒ
-// node - ß“_ƒ‰ƒxƒ‹
-// t - ‰·“x
+// æ¸©åº¦å›ºå®šæ¡ä»¶
+// node - ç¯€ç‚¹ãƒ©ãƒ™ãƒ«
+// t - æ¸©åº¦
 var Temperature=function(node,t){
   this.node=node;
   this.t=t;
 };
 
-// ‰·“xŒÅ’èğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
+// æ¸©åº¦å›ºå®šæ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
 Temperature.prototype.toString=function(nodes){
   return 'Temperature\t'+nodes[this.node].label.toString(10)+'\t'+
       	 this.t;
 };
 
 //--------------------------------------------------------------------//
-// ”M“`’B‹«ŠEğŒ
-// element - —v‘fƒ‰ƒxƒ‹
-// face - —v‘f‹«ŠE–Ê
-// htc - ”M“`’B—¦
-// outTemp - ŠO•”‰·“x
+// ç†±ä¼é”å¢ƒç•Œæ¡ä»¶
+// element - è¦ç´ ãƒ©ãƒ™ãƒ«
+// face - è¦ç´ å¢ƒç•Œé¢
+// htc - ç†±ä¼é”ç‡
+// outTemp - å¤–éƒ¨æ¸©åº¦
 var HeatTransferBound=function(element,face,htc,outTemp){
   ElementBorderBound.call(this,element,face);
   this.htc=htc;
   this.outTemp=outTemp;
 };
 
-// ”M“`’B‹«ŠEğŒ‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// elems - —v‘f
+// ç†±ä¼é”å¢ƒç•Œæ¡ä»¶ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// elems - è¦ç´ 
 HeatTransferBound.prototype.toString=function(elems){
   return 'HTC\t'+elems[this.element].label.toString(10)+'\t'+
       	  this.face+'\t'+this.htc+'\t'+this.outTemp;

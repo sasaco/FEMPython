@@ -1,7 +1,9 @@
 ﻿#include "BarParameter.h";
 
+#include <algorithm>
+#include <iostream>
+#include <string>
 #include <format>
-
 
 //--------------------------------------------------------------------//
 // 梁パラメータ（円形断面）
@@ -13,7 +15,7 @@ BarParameter::BarParameter(int _label, string _type, double *ss) {
     label = _label;
     type = _type;
 
-    transform(type.begin(), type.end(), type.begin(), tolower);
+    std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
     if (type == "circle") {
         circleSection = new CircleSection(ss);

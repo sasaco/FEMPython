@@ -1,14 +1,14 @@
-var CPICK_FONT_SIZE=14;				// ƒtƒHƒ“ƒgƒTƒCƒY
-var CPICK_FONT=CPICK_FONT_SIZE+"px 'Arial'";	// ƒtƒHƒ“ƒg
+ï»¿var CPICK_FONT_SIZE=14;				// ãƒ•ã‚©ãƒ³ãƒˆã‚µã‚¤ã‚º
+var CPICK_FONT=CPICK_FONT_SIZE+"px 'Arial'";	// ãƒ•ã‚©ãƒ³ãƒˆ
 
 //--------------------------------------------------------------------//
-// ƒJƒ‰[ƒsƒbƒJ[
-// canvas - •`‰æƒLƒƒƒ“ƒoƒX
-// div - ‰~Œ`•`‰æ•ªŠ„”
-// x,y,width,height - •`‰æˆÊ’u,•,‚‚³
+// ã‚«ãƒ©ãƒ¼ãƒ”ãƒƒã‚«ãƒ¼
+// canvas - æç”»ã‚­ãƒ£ãƒ³ãƒã‚¹
+// div - å††å½¢æç”»åˆ†å‰²æ•°
+// x,y,width,height - æç”»ä½ç½®,å¹…,é«˜ã•
 var ColorPicker=function(canvas,div,x,y,width,height){
   this.canvas=canvas;
-  this.context=canvas.getContext('2d');	// ƒRƒ“ƒeƒLƒXƒg
+  this.context=canvas.getContext('2d');	// ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆ
   this.context.font=CPICK_FONT;
   this.context.textBaseline='top';
   this.div=div||360;
@@ -16,21 +16,21 @@ var ColorPicker=function(canvas,div,x,y,width,height){
   y=y||0;
   width=width||canvas.width;
   height=height||canvas.height;
-// ’†SÀ•W
+// ä¸­å¿ƒåº§æ¨™
   var size=Math.min(width,height);
   this.cx=parseInt(x+0.5*size);
   this.cy=parseInt(y+0.5*size);
-// F‘Š‰~Œ`ƒXƒ‰ƒCƒ_[”¼Œa
+// è‰²ç›¸å††å½¢ã‚¹ãƒ©ã‚¤ãƒ€ãƒ¼åŠå¾„
   this.ro=parseInt(0.48*size);
   this.rc=parseInt(0.9*this.ro);
   this.ri=parseInt(0.8*this.ro);
-// Ê“x‹P“xƒ}ƒbƒv•`‰æˆÊ’u,ƒTƒCƒY
+// å½©åº¦è¼åº¦ãƒãƒƒãƒ—æç”»ä½ç½®,ã‚µã‚¤ã‚º
   this.rect=parseInt(1.3*this.ri);
   this.rx=parseInt(this.cx-0.5*this.rect);
   this.ry=parseInt(this.cy-0.5*this.rect);
   this.pt=parseInt(Math.max(0.07*this.ri,1));
-  this.hsl=[0,0,0];			// Œ»İ‚ÌF (HSLF‹óŠÔ)
-// ƒeƒLƒXƒgˆÊ’u
+  this.hsl=[0,0,0];			// ç¾åœ¨ã®è‰² (HSLè‰²ç©ºé–“)
+// ãƒ†ã‚­ã‚¹ãƒˆä½ç½®
   if(width>=height){
     this.tx=size+10;
     this.ty=10;
@@ -42,8 +42,8 @@ var ColorPicker=function(canvas,div,x,y,width,height){
   this.initMouseEvent();
 };
 
-// Œ»İ‚ÌF‚ğİ’è‚·‚é
-// rgb - w’è‚·‚éF (RGB)
+// ç¾åœ¨ã®è‰²ã‚’è¨­å®šã™ã‚‹
+// rgb - æŒ‡å®šã™ã‚‹è‰² (RGB)
 ColorPicker.prototype.setColor=function(rgb){
   var r=rgb[0],g=rgb[1],b=rgb[2];
   var rgbmax=Math.max(Math.max(r,g),b);
@@ -63,7 +63,7 @@ ColorPicker.prototype.setColor=function(rgb){
   this.draw();
 };
 
-// Œ»İ‚ÌF (RGB) ‚ğ•Ô‚·
+// ç¾åœ¨ã®è‰² (RGB) ã‚’è¿”ã™
 ColorPicker.prototype.getColor=function(){
   var h=this.hsl[0],s=this.hsl[1],l=this.hsl[2];
   var rgbmax=l+0.5*s*(1-Math.abs(2*l-1));
@@ -72,10 +72,10 @@ ColorPicker.prototype.getColor=function(){
       	  hueToRGB(rgbmax,rgbmin,h-1/3)];
 };
 
-// ƒJƒ‰[ƒsƒbƒJ[‚ğ•`‰æ‚·‚é
+// ã‚«ãƒ©ãƒ¼ãƒ”ãƒƒã‚«ãƒ¼ã‚’æç”»ã™ã‚‹
 ColorPicker.prototype.draw=function(){
   this.context.clearRect(0,0,this.canvas.width,this.canvas.height);
-// F‘ŠƒXƒ‰ƒCƒ_[
+// è‰²ç›¸ã‚¹ãƒ©ã‚¤ãƒ€ãƒ¼
   var dth=2*Math.PI/this.div,dh=360/this.div;
   var cc0=1,ss0=0,th,h,s,l,i;
   for(i=0;i<this.div;i++){
@@ -100,7 +100,7 @@ ColorPicker.prototype.draw=function(){
   ss0=Math.sin(th);
   this.drawPointer(this.cx+this.rc*cc0,this.cy-this.rc*ss0);
 
-// Ê“x‹P“xƒ}ƒbƒv
+// å½©åº¦è¼åº¦ãƒãƒƒãƒ—
   h=360*this.hsl[0];
   var dl=100/this.rect;
   for(i=0;i<this.rect;i++){
@@ -116,7 +116,7 @@ ColorPicker.prototype.draw=function(){
   this.drawPointer(parseInt(this.rx+this.rect*this.hsl[1]),
       	      	   parseInt(this.ry+this.rect*(1-this.hsl[2])));
 
-// ƒeƒLƒXƒg
+// ãƒ†ã‚­ã‚¹ãƒˆ
   this.context.fillStyle='#000000';
   this.context.fillText('H:'+parseInt(h),this.tx,this.ty);
   s=parseInt(100*this.hsl[1]);
@@ -132,8 +132,8 @@ ColorPicker.prototype.draw=function(){
   }
 };
 
-// ƒ|ƒCƒ“ƒ^‚ğ•`‰æ‚·‚é
-// x,y - •`‰æˆÊ’u
+// ãƒã‚¤ãƒ³ã‚¿ã‚’æç”»ã™ã‚‹
+// x,y - æç”»ä½ç½®
 ColorPicker.prototype.drawPointer=function(x,y){
   var h=360*this.hsl[0],s=100*this.hsl[1],l=100*this.hsl[2];
   this.context.fillStyle='hsl('+h+','+s+'%,'+l+'%)';
@@ -153,12 +153,12 @@ ColorPicker.prototype.drawPointer=function(x,y){
   this.context.stroke();
 };
 
-// ƒ}ƒEƒXƒCƒxƒ“ƒg‚ğ‰Šú‰»‚·‚é
+// ãƒã‚¦ã‚¹ã‚¤ãƒ™ãƒ³ãƒˆã‚’åˆæœŸåŒ–ã™ã‚‹
 ColorPicker.prototype.initMouseEvent=function(){
   var mx,my,pressedArea=-1,cp=this;
   this.canvas.addEventListener('mousedown',cpMousePressed,false);
 
-// ƒ}ƒEƒXƒ{ƒ^ƒ“‚ğ‰Ÿ‚µ‚½‚Ìˆ—‚ğs‚¤
+// ãƒã‚¦ã‚¹ãƒœã‚¿ãƒ³ã‚’æŠ¼ã—ãŸæ™‚ã®å‡¦ç†ã‚’è¡Œã†
   function cpMousePressed(e){
     e.preventDefault();
     e.stopPropagation();
@@ -181,7 +181,7 @@ ColorPicker.prototype.initMouseEvent=function(){
     cp.draw();
   }
 
-// ƒ}ƒEƒXƒ{ƒ^ƒ“‚ğ—£‚µ‚½‚Ìˆ—‚ğs‚¤
+// ãƒã‚¦ã‚¹ãƒœã‚¿ãƒ³ã‚’é›¢ã—ãŸæ™‚ã®å‡¦ç†ã‚’è¡Œã†
   function cpMouseReleased(e){
     e.preventDefault();
     e.stopPropagation();
@@ -190,7 +190,7 @@ ColorPicker.prototype.initMouseEvent=function(){
     pressedArea=-1;
   }
 
-// ƒ}ƒEƒXƒ{ƒ^ƒ“‚ğˆÚ“®‚³‚¹‚½‚Ìˆ—‚ğs‚¤
+// ãƒã‚¦ã‚¹ãƒœã‚¿ãƒ³ã‚’ç§»å‹•ã•ã›ãŸæ™‚ã®å‡¦ç†ã‚’è¡Œã†
   function cpMouseMoved(e){
     var bcr=e.target.getBoundingClientRect();
     switch(pressedArea){
@@ -211,14 +211,14 @@ ColorPicker.prototype.initMouseEvent=function(){
     }
   }
 
-// F‘Š‚ğ•Ô‚·
+// è‰²ç›¸ã‚’è¿”ã™
   function hue(){
     var h=Math.atan2(cp.cy-my,mx-cp.cx)/(2*Math.PI);
     if(h<0) h+=1;
     return h;
   }
 
-// Ê“x‹P“x‚ğ•Ô‚·
+// å½©åº¦è¼åº¦ã‚’è¿”ã™
   function satLight(){
     var s=(mx-cp.rx)/cp.rect;
     var l=1-(my-cp.ry)/cp.rect;
@@ -226,9 +226,9 @@ ColorPicker.prototype.initMouseEvent=function(){
   }
 };
 
-// RGBƒJƒ‰[‚ğ•Ô‚·
-// rgbmax,rgbmin - R,G,B‚ÌÅ‘å’l,Å¬’l
-// h - F‘Š
+// RGBã‚«ãƒ©ãƒ¼ã‚’è¿”ã™
+// rgbmax,rgbmin - R,G,Bã®æœ€å¤§å€¤,æœ€å°å€¤
+// h - è‰²ç›¸
 function hueToRGB(rgbmax,rgbmin,h){
   if(h<0)      h+=1;
   else if(h>1) h-=1;

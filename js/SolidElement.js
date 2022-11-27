@@ -1,21 +1,21 @@
-// �l�ʑ�2���v�f�̐ߓ_�̃�,��,�č��W
+﻿// 四面体2次要素の節点のξ,η,ζ座標
 var TETRA2_NODE=[[0,0,0],[1,0,0],[0,1,0],[0,0,1],[0.5,0,0],[0.5,0.5,0],
       	      	 [0,0.5,0],[0,0,0.5],[0.5,0,0.5],[0,0.5,0.5]];
-// �l�ʑ�2���v�f�̐ϕ��_�̃�,��,�č��W,�d�݌W��
+// 四面体2次要素の積分点のξ,η,ζ座標,重み係数
 var TETRA2_INT=[[GTETRA2[0],GTETRA2[0],GTETRA2[0],C1_24],
       	      	[GTETRA2[1],GTETRA2[0],GTETRA2[0],C1_24],
       	      	[GTETRA2[0],GTETRA2[1],GTETRA2[0],C1_24],
       	      	[GTETRA2[0],GTETRA2[0],GTETRA2[1],C1_24]];
-// ���`1���v�f�̐ߓ_�̃�,��,�č��W
+// 楔形1次要素の節点のξ,η,ζ座標
 var WEDGE1_NODE=[[0,0,-1],[1,0,-1],[0,1,-1],[0,0,1],[1,0,1],[0,1,1]];
-// ���`1���v�f�̐ϕ��_�̃�,��,�č��W,�d�݌W��
+// 楔形1次要素の積分点のξ,η,ζ座標,重み係数
 var WEDGE1_INT=[[C1_3,C1_3,GX2[0],0.5],[C1_3,C1_3,GX2[1],0.5]];
-// ���`2���v�f�̐ߓ_�̃�,��,�č��W
+// 楔形2次要素の節点のξ,η,ζ座標
 var WEDGE2_NODE=[[0,0,-1],[1,0,-1],[0,1,-1],[0,0,1],[1,0,1],[0,1,1],
       	      	 [0.5,0,-1],[0.5,0.5,-1],[0,0.5,-1],
       	      	 [0.5,0,1],[0.5,0.5,1],[0,0.5,1],
       	      	 [0,0,0],[1,0,0],[0,1,0]];
-// ���`2���v�f�̐ϕ��_�̃�,��,�č��W,�d�݌W��
+// 楔形2次要素の積分点のξ,η,ζ座標,重み係数
 var WEDGE2_INT=[[GTRI2[0],GTRI2[0],GX3[0],C1_6*GW3[0]],
       	      	[GTRI2[1],GTRI2[0],GX3[0],C1_6*GW3[0]],
       	      	[GTRI2[0],GTRI2[1],GX3[0],C1_6*GW3[0]],
@@ -25,21 +25,21 @@ var WEDGE2_INT=[[GTRI2[0],GTRI2[0],GX3[0],C1_6*GW3[0]],
       	      	[GTRI2[0],GTRI2[0],GX3[2],C1_6*GW3[2]],
       	      	[GTRI2[1],GTRI2[0],GX3[2],C1_6*GW3[2]],
       	      	[GTRI2[0],GTRI2[1],GX3[2],C1_6*GW3[2]]];
-// �Z�ʑ�1���v�f�̐ߓ_�̃�,��,�č��W
+// 六面体1次要素の節点のξ,η,ζ座標
 var HEXA1_NODE=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
       	      	[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
-// �Z�ʑ�1���v�f�̐ϕ��_�̃�,��,�č��W,�d�݌W��
+// 六面体1次要素の積分点のξ,η,ζ座標,重み係数
 var HEXA1_INT=[[GX2[0],GX2[0],GX2[0],1],[GX2[1],GX2[0],GX2[0],1],
       	       [GX2[0],GX2[1],GX2[0],1],[GX2[1],GX2[1],GX2[0],1],
       	       [GX2[0],GX2[0],GX2[1],1],[GX2[1],GX2[0],GX2[1],1],
       	       [GX2[0],GX2[1],GX2[1],1],[GX2[1],GX2[1],GX2[1],1]];
-// �Z�ʑ�2���v�f�̐ߓ_�̃�,��,�č��W
+// 六面体2次要素の節点のξ,η,ζ座標
 var HEXA2_NODE=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
       	      	[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1],
       	      	[0,-1,-1],[1,0,-1],[0,1,-1],[-1,0,-1],
       	      	[0,-1,1],[1,0,1],[0,1,1],[-1,0,1],
       	      	[-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0]];
-// �Z�ʑ�2���v�f�̐ϕ��_�̃�,��,�č��W,�d�݌W��
+// 六面体2次要素の積分点のξ,η,ζ座標,重み係数
 var HEXA2_INT=(function(){
   var a=[];
   for(var k=0;k<3;k++){
@@ -51,7 +51,7 @@ var HEXA2_INT=(function(){
   }
   return a;
 }());
-// �Z�ʑ�1���v�f�̎��ʃ}�g���b�N�X�W��
+// 六面体1次要素の質量マトリックス係数
 var HEXA1_MASS_BASE=(function(){
   var v=[],abs=Math.abs;
   for(var i=0;i<8;i++){
@@ -67,21 +67,21 @@ var HEXA1_MASS_BASE=(function(){
 }());
 
 //--------------------------------------------------------------------//
-// �\���b�h�v�f
-// label - �v�f���x��
-// material - �ޗ��̃C���f�b�N�X
-// nodes - �ߓ_�ԍ�
-// nodeP - �ߓ_�̃�,��,�č��W
-// intP - �ϕ��_�̃�,��,�č��W,�d�݌W��
+// ソリッド要素
+// label - 要素ラベル
+// material - 材料のインデックス
+// nodes - 節点番号
+// nodeP - 節点のξ,η,ζ座標
+// intP - 積分点のξ,η,ζ座標,重み係数
 var SolidElement=function(label,material,nodes,nodeP,intP){
   FElement.call(this,label,material,nodes);
   this.nodeP=nodeP;
   this.intP=intP;
 };
 
-// ���R�r�s���Ԃ�
-// p - �v�f�ߓ_
-// sf - �`��֐��s��
+// ヤコビ行列を返す
+// p - 要素節点
+// sf - 形状関数行列
 SolidElement.prototype.jacobianMatrix=function(p,sf){
   var count=this.nodeCount(),jac=[0,0,0,0,0,0,0,0,0];
   for(var i=0;i<count;i++){
@@ -96,10 +96,10 @@ SolidElement.prototype.jacobianMatrix=function(p,sf){
   return new THREE.Matrix3().fromArray(jac);
 };
 
-// �`��֐��̌��z [ dNi/dx dNi/dy dNi/dz ] ��Ԃ�
-// p - �v�f�ߓ_
-// ja - ���R�r�s��
-// sf - �`��֐��s��
+// 形状関数の勾配 [ dNi/dx dNi/dy dNi/dz ] を返す
+// p - 要素節点
+// ja - ヤコビ行列
+// sf - 形状関数行列
 SolidElement.prototype.grad=function(p,ja,sf){
   var count=this.nodeCount(),gr=[];
   var ji=new THREE.Matrix3().getInverse(ja,true).elements;
@@ -111,8 +111,8 @@ SolidElement.prototype.grad=function(p,ja,sf){
   return gr;
 };
 
-// �c - �ψʃ}�g���b�N�X�̓]�u�s���Ԃ�
-// grad - �`��֐��̌��z
+// 歪 - 変位マトリックスの転置行列を返す
+// grad - 形状関数の勾配
 SolidElement.prototype.strainMatrix=function(grad){
   var count=this.nodeCount(),m=numeric.rep([3*count,6],0);
   for(var i=0;i<count;i++){
@@ -130,10 +130,10 @@ SolidElement.prototype.strainMatrix=function(grad){
   return m;
 };
 
-// �ϕ��_�̌`��֐��}�g���b�N�X [ NiNj ] ��Ԃ�
-// p - �v�f�ߓ_
-// x - ��,��,�č��W
-// w - �d�݌W��
+// 積分点の形状関数マトリックス [ NiNj ] を返す
+// p - 要素節点
+// x - ξ,η,ζ座標
+// w - 重み係数
 SolidElement.prototype.shapePart=function(p,x,w){
   var sf=this.shapeFunction(x[0],x[1],x[2]);
   var ja=this.jacobianMatrix(p,sf);
@@ -149,10 +149,10 @@ SolidElement.prototype.shapePart=function(p,x,w){
   return matrix;
 };
 
-// �ϕ��_�̊g�U�}�g���b�N�X [ ��Ni�E��Nj ] ��Ԃ�
-// p - �v�f�ߓ_
-// x - ��,��,�č��W
-// w - �d�݌W��
+// 積分点の拡散マトリックス [ ∇Ni・∇Nj ] を返す
+// p - 要素節点
+// x - ξ,η,ζ座標
+// w - 重み係数
 SolidElement.prototype.gradPart=function(p,x,w){
   var sf=this.shapeFunction(x[0],x[1],x[2]);
   var ja=this.jacobianMatrix(p,sf);
@@ -171,9 +171,9 @@ SolidElement.prototype.gradPart=function(p,x,w){
   return matrix;
 };
 
-// ���ʃ}�g���b�N�X��Ԃ�
-// p - �v�f�ߓ_
-// dens - �ޗ��̖��x
+// 質量マトリックスを返す
+// p - 要素節点
+// dens - 材料の密度
 SolidElement.prototype.massMatrix=function(p,dens){
   var count=this.nodeCount(),m=numeric.rep([3*count,3*count],0);
   for(var i=0;i<this.intP.length;i++){
@@ -193,9 +193,9 @@ SolidElement.prototype.massMatrix=function(p,dens){
   return m;
 };
 
-// �����}�g���b�N�X��Ԃ�
-// p - �v�f�ߓ_
-// d1 - ���� - �c�}�g���b�N�X
+// 剛性マトリックスを返す
+// p - 要素節点
+// d1 - 応力 - 歪マトリックス
 SolidElement.prototype.stiffnessMatrix=function(p,d1){
   var count=3*this.nodeCount(),kk=numeric.rep([count,count],0);
   for(var i=0;i<this.intP.length;i++){
@@ -209,9 +209,9 @@ SolidElement.prototype.stiffnessMatrix=function(p,d1){
   return kk;
 };
 
-// �`��֐��}�g���b�N�X [ ��NiNjdV ] ��Ԃ�
-// p - �v�f�ߓ_
-// coef - �W��
+// 形状関数マトリックス [ ∫NiNjdV ] を返す
+// p - 要素節点
+// coef - 係数
 SolidElement.prototype.shapeFunctionMatrix=function(p,coef){
   var count=this.nodeCount(),s=numeric.rep([count,count],0);
   for(var i=0;i<this.intP.length;i++){
@@ -220,9 +220,9 @@ SolidElement.prototype.shapeFunctionMatrix=function(p,coef){
   return s;
 };
 
-// �g�U�}�g���b�N�X [ ���Ni�E��NjdV ] ��Ԃ�
-// p - �v�f�ߓ_
-// coef - �W��
+// 拡散マトリックス [ ∫∇Ni・∇NjdV ] を返す
+// p - 要素節点
+// coef - 係数
 SolidElement.prototype.gradMatrix=function(p,coef){
   var count=this.nodeCount(),g=numeric.rep([count,count],0);
   for(var i=0;i<this.intP.length;i++){
@@ -231,10 +231,10 @@ SolidElement.prototype.gradMatrix=function(p,coef){
   return g;
 };
 
-// �􉽍����}�g���b�N�X��Ԃ�
-// p - �v�f�ߓ_
-// u - �ߓ_�ψ�
-// d1 - ���� - �c�}�g���b�N�X
+// 幾何剛性マトリックスを返す
+// p - 要素節点
+// u - 節点変位
+// d1 - 応力 - 歪マトリックス
 SolidElement.prototype.geomStiffnessMatrix=function(p,u,d1){
   var count=this.nodeCount(),kk=numeric.rep([3*count,3*count],0);
   var v=this.toArray(u,3);
@@ -262,10 +262,10 @@ SolidElement.prototype.geomStiffnessMatrix=function(p,u,d1){
   return kk;
 };
 
-// �ߓ_�c�E���͂�Ԃ�
-// p - �v�f�ߓ_
-// u - �ߓ_�ψ�
-// d1 - ���� - �c�}�g���b�N�X
+// 節点歪・応力を返す
+// p - 要素節点
+// u - 節点変位
+// d1 - 応力 - 歪マトリックス
 SolidElement.prototype.strainStress=function(p,u,d1){
   var count=this.nodeCount(),v=this.toArray(u,3);
   var strain=[],stress=[],energy=[];
@@ -279,10 +279,10 @@ SolidElement.prototype.strainStress=function(p,u,d1){
   return [strain,stress,energy];
 };
 
-// �v�f���̘c�x�N�g����Ԃ�
-// p - �v�f�ߓ_
-// v - �ߓ_�ψʃx�N�g��
-// x - ��,��,�č��W
+// 要素内の歪ベクトルを返す
+// p - 要素節点
+// v - 節点変位ベクトル
+// x - ξ,η,ζ座標
 SolidElement.prototype.strainPart=function(p,v,x){
   var sf=this.shapeFunction(x[0],x[1],x[2]);
   var ja=this.jacobianMatrix(p,sf);
@@ -290,10 +290,10 @@ SolidElement.prototype.strainPart=function(p,v,x){
   return numeric.dotVM(v,sm);
 };
 
-// �v�f�c�E���͂�Ԃ�
-// p - �v�f�ߓ_
-// u - �ߓ_�ψ�
-// d1 - ���� - �c�}�g���b�N�X
+// 要素歪・応力を返す
+// p - 要素節点
+// u - 節点変位
+// d1 - 応力 - 歪マトリックス
 SolidElement.prototype.elementStrainStress=function(p,u,d1){
   var v=this.toArray(u,3),cf=1/this.intP.length;
   var strain=[0,0,0,0,0,0],stress=[0,0,0,0,0,0],energy=0;
@@ -310,9 +310,9 @@ SolidElement.prototype.elementStrainStress=function(p,u,d1){
   return [new Strain(strain),new Stress(stress),energy];
 };
 
-// �v�f��\���������Ԃ�
-// materials - �ޗ�
-// p - �ߓ_
+// 要素を表す文字列を返す
+// materials - 材料
+// p - 節点
 SolidElement.prototype.toString=function(materials,p){
   var s=this.getName()+'\t'+this.label.toString(10)+'\t'+
       	materials[this.material].label.toString(10);
@@ -323,32 +323,32 @@ SolidElement.prototype.toString=function(materials,p){
 };
 
 //--------------------------------------------------------------------//
-// �l�ʑ�1���v�f
-// label - �v�f���x��
-// material - �ޗ��̃C���f�b�N�X
-// nodes - �ߓ_�ԍ�
+// 四面体1次要素
+// label - 要素ラベル
+// material - 材料のインデックス
+// nodes - 節点番号
 var TetraElement1=function(label,material,nodes){
   SolidElement.call(this,label,material,nodes,null,null);
 };
 
-// �v�f���̂�Ԃ�
+// 要素名称を返す
 TetraElement1.prototype.getName=function(){
   return 'TetraElement1';
 };
 
-// �ߓ_����Ԃ�
+// 節点数を返す
 TetraElement1.prototype.nodeCount=function(){
   return 4;
 };
 
-// �v�f���E����Ԃ�
+// 要素境界数を返す
 TetraElement1.prototype.borderCount=function(){
   return 4;
 };
 
-// �v�f���E��Ԃ�
-// element - �v�f���x��
-// index - �v�f���E�̃C���f�b�N�X
+// 要素境界を返す
+// element - 要素ラベル
+// index - 要素境界のインデックス
 TetraElement1.prototype.border=function(element,index){
   var p=this.nodes;
   switch(index){
@@ -365,13 +365,13 @@ TetraElement1.prototype.border=function(element,index){
   }
 };
 
-// �v�f���������]����
+// 要素を鏡像反転する
 TetraElement1.prototype.mirror=function(){
   swap(this.nodes,1,2);
 };
 
-// �v�f�ߓ_�̊p�x��Ԃ�
-// p - �v�f�ߓ_
+// 要素節点の角度を返す
+// p - 要素節点
 TetraElement1.prototype.angle=function(p){
   var th=[];
   for(var i=0;i<4;i++){
@@ -380,15 +380,15 @@ TetraElement1.prototype.angle=function(p){
   return th;
 };
 
-// �`��֐��s�� [ Ni dNi/d�� dNi/d�� dNi/d�� ] ��Ԃ�
-// xsi,eta,zeta - �v�f������,��,�č��W
+// 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
+// xsi,eta,zeta - 要素内部ξ,η,ζ座標
 TetraElement1.prototype.shapeFunction=function(xsi,eta,zeta){
   return [[1-xsi-eta-zeta,-1,-1,-1],[xsi,1,0,0],[eta,0,1,0],
       	  [zeta,0,0,1]];
 };
 
-// ���R�r�A����Ԃ�
-// p - �v�f�ߓ_
+// ヤコビアンを返す
+// p - 要素節点
 TetraElement1.prototype.jacobian=function(p){
   var p0x=p[0].x,p0y=p[0].y,p0z=p[0].z;
   var j11=(p[2].y-p0y)*(p[3].z-p0z)-(p[3].y-p0y)*(p[2].z-p0z);
@@ -397,9 +397,9 @@ TetraElement1.prototype.jacobian=function(p){
   return (p[1].x-p0x)*j11+(p[2].x-p0x)*j21+(p[3].x-p0x)*j31;
 };
 
-// �`��֐��̌��z [ dNi/dx dNi/dy dNi/dz ] ��Ԃ�
-// p - �v�f�ߓ_
-// ja - ���R�r�A��
+// 形状関数の勾配 [ dNi/dx dNi/dy dNi/dz ] を返す
+// p - 要素節点
+// ja - ヤコビアン
 TetraElement1.prototype.grad=function(p,ja){
   var count=this.nodeCount(),gr=[],ji=1/ja;
   for(var i=0;i<count;i++){
@@ -416,9 +416,9 @@ TetraElement1.prototype.grad=function(p,ja){
   return gr;
 };
 
-// ���ʃ}�g���b�N�X��Ԃ�
-// p - �v�f�ߓ_
-// dens - �ޗ��̖��x
+// 質量マトリックスを返す
+// p - 要素節点
+// dens - 材料の密度
 TetraElement1.prototype.massMatrix=function(p,dens){
   var m=numeric.rep([12,12],0);
   var value=dens*this.jacobian(p)/60,vh=0.5*value;
@@ -438,27 +438,27 @@ TetraElement1.prototype.massMatrix=function(p,dens){
   return m;
 };
 
-// �����}�g���b�N�X��Ԃ�
-// p - �v�f�ߓ_
-// d1 - ���� - �c�}�g���b�N�X
+// 剛性マトリックスを返す
+// p - 要素節点
+// d1 - 応力 - 歪マトリックス
 TetraElement1.prototype.stiffnessMatrix=function(p,d1){
   var ja=this.jacobian(p);
   return this.stiffPart(d1,this.strainMatrix(this.grad(p,ja)),
       	      	      	C1_6*Math.abs(ja));
 };
 
-// �`��֐��}�g���b�N�X [ ��NiNjdV ] ��Ԃ�
-// p - �v�f�ߓ_
-// coef - �W��
+// 形状関数マトリックス [ ∫NiNjdV ] を返す
+// p - 要素節点
+// coef - 係数
 TetraElement1.prototype.shapeFunctionMatrix=function(p,coef){
   var value=0.1*C1_6*coef*Math.abs(this.jacobian(p)),vh=0.5*value;
   return [[value,vh,vh,vh],[vh,value,vh,vh],[vh,vh,value,vh],
       	  [vh,vh,vh,value]];
 };
 
-// �g�U�}�g���b�N�X [ ���Ni�E��NjdV ] ��Ԃ�
-// p - �v�f�ߓ_
-// coef - �W��
+// 拡散マトリックス [ ∫∇Ni・∇NjdV ] を返す
+// p - 要素節点
+// coef - 係数
 TetraElement1.prototype.gradMatrix=function(p,coef){
   var g=[],ja=this.jacobian(p),gr=this.grad(p,ja);
   var coef2=C1_6*coef*Math.abs(ja);
@@ -472,10 +472,10 @@ TetraElement1.prototype.gradMatrix=function(p,coef){
   return g;
 };
 
-// �􉽍����}�g���b�N�X��Ԃ�
-// p - �v�f�ߓ_
-// u - �ߓ_�ψ�
-// d1 - ���� - �c�}�g���b�N�X
+// 幾何剛性マトリックスを返す
+// p - 要素節点
+// u - 節点変位
+// d1 - 応力 - 歪マトリックス
 TetraElement1.prototype.geomStiffnessMatrix=function(p,u,d1){
   var count=this.nodeCount(),kk=numeric.rep([3*count,3*count],0);
   var ja=this.jacobianMatrix(p);
@@ -498,10 +498,10 @@ TetraElement1.prototype.geomStiffnessMatrix=function(p,u,d1){
   return kk;
 };
 
-// �ߓ_�c�E���͂�Ԃ�
-// p - �v�f�ߓ_
-// u - �ߓ_�ψ�
-// d1 - ���� - �c�}�g���b�N�X
+// 節点歪・応力を返す
+// p - 要素節点
+// u - 節点変位
+// d1 - 応力 - 歪マトリックス
 TetraElement1.prototype.strainStress=function(p,u,d1){
   var sm=this.strainMatrix(this.grad(p,this.jacobian(p)));
   var eps=numeric.dotVM(this.toArray(u,3),sm);
@@ -513,10 +513,10 @@ TetraElement1.prototype.strainStress=function(p,u,d1){
       	  [energy,energy,energy,energy]];
 };
 
-// �v�f�c�E���͂�Ԃ�
-// p - �v�f�ߓ_
-// u - �ߓ_�ψ�
-// d1 - ���� - �c�}�g���b�N�X
+// 要素歪・応力を返す
+// p - 要素節点
+// u - 節点変位
+// d1 - 応力 - 歪マトリックス
 TetraElement1.prototype.elementStrainStress=function(p,u,d1){
   var sm=this.strainMatrix(this.grad(p,this.jacobian(p)));
   var eps=numeric.dotVM(this.toArray(u,3),sm);
@@ -526,32 +526,32 @@ TetraElement1.prototype.elementStrainStress=function(p,u,d1){
 };
 
 //--------------------------------------------------------------------//
-// �l�ʑ�2���v�f
-// label - �v�f���x��
-// material - �ޗ��̃C���f�b�N�X
-// nodes - �ߓ_�ԍ�
+// 四面体2次要素
+// label - 要素ラベル
+// material - 材料のインデックス
+// nodes - 節点番号
 var TetraElement2=function(label,material,nodes){
   SolidElement.call(this,label,material,nodes,TETRA2_NODE,TETRA2_INT);
 };
 
-// �v�f���̂�Ԃ�
+// 要素名称を返す
 TetraElement2.prototype.getName=function(){
   return 'TetraElement2';
 };
 
-// �ߓ_����Ԃ�
+// 節点数を返す
 TetraElement2.prototype.nodeCount=function(){
   return 10;
 };
 
-// �v�f���E����Ԃ�
+// 要素境界数を返す
 TetraElement2.prototype.borderCount=function(){
   return 4;
 };
 
-// �v�f���E��Ԃ�
-// element - �v�f���x��
-// index - �v�f���E�̃C���f�b�N�X
+// 要素境界を返す
+// element - 要素ラベル
+// index - 要素境界のインデックス
 TetraElement2.prototype.border=function(element,index){
   var p=this.nodes;
   switch(index){
@@ -572,15 +572,15 @@ TetraElement2.prototype.border=function(element,index){
   }
 };
 
-// �v�f���������]����
+// 要素を鏡像反転する
 TetraElement2.prototype.mirror=function(){
   swap(this.nodes,1,2);
   swap(this.nodes,4,6);
   swap(this.nodes,8,9);
 };
 
-// �v�f�ߓ_�̊p�x��Ԃ�
-// p - �v�f�ߓ_
+// 要素節点の角度を返す
+// p - 要素節点
 TetraElement2.prototype.angle=function(p){
   return [solidAngle(p[0],p[4],p[6],p[7]),
       	  solidAngle(p[1],p[5],p[4],p[8]),
@@ -591,8 +591,8 @@ TetraElement2.prototype.angle=function(p){
       	  planeAngle(p[8],p[2],p[0]),planeAngle(p[9],p[0],p[1])];
 };
 
-// �`��֐��s�� [ Ni dNi/d�� dNi/d�� dNi/d�� ] ��Ԃ�
-// xsi,eta,zeta - �v�f������,��,�č��W
+// 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
+// xsi,eta,zeta - 要素内部ξ,η,ζ座標
 TetraElement2.prototype.shapeFunction=function(xsi,eta,zeta){
   var xez=1-xsi-eta-zeta;
   return [[xez*(2*xez-1),1-4*xez,1-4*xez,1-4*xez],
@@ -608,32 +608,32 @@ TetraElement2.prototype.shapeFunction=function(xsi,eta,zeta){
 };
 
 //--------------------------------------------------------------------//
-// ���`1���v�f
-// label - �v�f���x��
-// material - �ޗ��̃C���f�b�N�X
-// nodes - �ߓ_�ԍ�
+// 楔形1次要素
+// label - 要素ラベル
+// material - 材料のインデックス
+// nodes - 節点番号
 var WedgeElement1=function(label,material,nodes){
   SolidElement.call(this,label,material,nodes,WEDGE1_NODE,WEDGE1_INT);
 };
 
-// �v�f���̂�Ԃ�
+// 要素名称を返す
 WedgeElement1.prototype.getName=function(){
   return 'WedgeElement1';
 };
 
-// �ߓ_����Ԃ�
+// 節点数を返す
 WedgeElement1.prototype.nodeCount=function(){
   return 6;
 };
 
-// �v�f���E����Ԃ�
+// 要素境界数を返す
 WedgeElement1.prototype.borderCount=function(){
   return 5;
 };
 
-// �v�f���E��Ԃ�
-// element - �v�f���x��
-// index - �v�f���E�̃C���f�b�N�X
+// 要素境界を返す
+// element - 要素ラベル
+// index - 要素境界のインデックス
 WedgeElement1.prototype.border=function(element,index){
   var p=this.nodes;
   switch(index){
@@ -652,14 +652,14 @@ WedgeElement1.prototype.border=function(element,index){
   }
 };
 
-// �v�f���������]����
+// 要素を鏡像反転する
 WedgeElement1.prototype.mirror=function(){
   swap(this.nodes,1,2);
   swap(this.nodes,4,5);
 };
 
-// �v�f�ߓ_�̊p�x��Ԃ�
-// p - �v�f�ߓ_
+// 要素節点の角度を返す
+// p - 要素節点
 WedgeElement1.prototype.angle=function(p){
   var th=[];
   for(var i=0;i<3;i++){
@@ -669,8 +669,8 @@ WedgeElement1.prototype.angle=function(p){
   return th;
 };
 
-// �`��֐��s�� [ Ni dNi/d�� dNi/d�� dNi/d�� ] ��Ԃ�
-// xsi,eta,zeta - �v�f������,��,�č��W
+// 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
+// xsi,eta,zeta - 要素内部ξ,η,ζ座標
 WedgeElement1.prototype.shapeFunction=function(xsi,eta,zeta){
   return [[0.5*(1-xsi-eta)*(1-zeta),-0.5*(1-zeta),-0.5*(1-zeta),
       	   -0.5*(1-xsi-eta)],
@@ -682,9 +682,9 @@ WedgeElement1.prototype.shapeFunction=function(xsi,eta,zeta){
       	  [0.5*eta*(1+zeta),0,0.5*(1+zeta),0.5*eta]];
 };
 
-// ���ʃ}�g���b�N�X��Ԃ�
-// p - �v�f�ߓ_
-// dens - �ޗ��̖��x
+// 質量マトリックスを返す
+// p - 要素節点
+// dens - 材料の密度
 WedgeElement1.prototype.massMatrix=function(p,dens){
   var ja=0,i;
   for(i=0;i<2;i++){
@@ -707,32 +707,32 @@ WedgeElement1.prototype.massMatrix=function(p,dens){
 };
 
 //--------------------------------------------------------------------//
-// ���`2���v�f
-// label - �v�f���x��
-// material - �ޗ��̃C���f�b�N�X
-// nodes - �ߓ_�ԍ�
+// 楔形2次要素
+// label - 要素ラベル
+// material - 材料のインデックス
+// nodes - 節点番号
 var WedgeElement2=function(label,material,nodes){
   SolidElement.call(this,label,material,nodes,WEDGE2_NODE,WEDGE2_INT);
 };
 
-// �v�f���̂�Ԃ�
+// 要素名称を返す
 WedgeElement2.prototype.getName=function(){
   return 'WedgeElement2';
 };
 
-// �ߓ_����Ԃ�
+// 節点数を返す
 WedgeElement2.prototype.nodeCount=function(){
   return 15;
 };
 
-// �v�f���E����Ԃ�
+// 要素境界数を返す
 WedgeElement2.prototype.borderCount=function(){
   return 5;
 };
 
-// �v�f���E��Ԃ�
-// element - �v�f���x��
-// index - �v�f���E�̃C���f�b�N�X
+// 要素境界を返す
+// element - 要素ラベル
+// index - 要素境界のインデックス
 WedgeElement2.prototype.border=function(element,index){
   var p=this.nodes;
   switch(index){
@@ -756,7 +756,7 @@ WedgeElement2.prototype.border=function(element,index){
   }
 };
 
-// �v�f���������]����
+// 要素を鏡像反転する
 WedgeElement2.prototype.mirror=function(){
   swap(this.nodes,1,2);
   swap(this.nodes,4,5);
@@ -765,8 +765,8 @@ WedgeElement2.prototype.mirror=function(){
   swap(this.nodes,13,14);
 };
 
-// �v�f�ߓ_�̊p�x��Ԃ�
-// p - �v�f�ߓ_
+// 要素節点の角度を返す
+// p - 要素節点
 WedgeElement2.prototype.angle=function(p){
   return [solidAngle(p[0],p[6],p[8],p[12]),
       	  solidAngle(p[1],p[6],p[7],p[14]),
@@ -781,8 +781,8 @@ WedgeElement2.prototype.angle=function(p){
       	  planeAngle(p[14],p[12],p[13])];
 };
 
-// �`��֐��s�� [ Ni dNi/d�� dNi/d�� dNi/d�� ] ��Ԃ�
-// xsi,eta,zeta - �v�f������,��,�č��W
+// 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
+// xsi,eta,zeta - 要素内部ξ,η,ζ座標
 WedgeElement2.prototype.shapeFunction=function(xsi,eta,zeta){
   var xe=1-xsi-eta;
   return [[xe*(xe-0.5*zeta-1)*(1-zeta),-(2*xe-0.5*zeta-1)*(1-zeta),
@@ -816,32 +816,32 @@ WedgeElement2.prototype.shapeFunction=function(xsi,eta,zeta){
 };
 
 //--------------------------------------------------------------------//
-// �Z�ʑ�1���v�f
-// label - �v�f���x��
-// material - �ޗ��̃C���f�b�N�X
-// nodes - �ߓ_�ԍ�
+// 六面体1次要素
+// label - 要素ラベル
+// material - 材料のインデックス
+// nodes - 節点番号
 var HexaElement1=function(label,material,nodes){
   SolidElement.call(this,label,material,nodes,HEXA1_NODE,HEXA1_INT);
 };
 
-// �v�f���̂�Ԃ�
+// 要素名称を返す
 HexaElement1.prototype.getName=function(){
   return 'HexaElement1';
 };
 
-// �ߓ_����Ԃ�
+// 節点数を返す
 HexaElement1.prototype.nodeCount=function(){
   return 8;
 };
 
-// �v�f���E����Ԃ�
+// 要素境界数を返す
 HexaElement1.prototype.borderCount=function(){
   return 6;
 };
 
-// �v�f���E��Ԃ�
-// element - �v�f���x��
-// index - �v�f���E�̃C���f�b�N�X
+// 要素境界を返す
+// element - 要素ラベル
+// index - 要素境界のインデックス
 HexaElement1.prototype.border=function(element,index){
   var p=this.nodes;
   switch(index){
@@ -862,14 +862,14 @@ HexaElement1.prototype.border=function(element,index){
   }
 };
 
-// �v�f���������]����
+// 要素を鏡像反転する
 HexaElement1.prototype.mirror=function(){
   swap(this.nodes,1,3);
   swap(this.nodes,5,7);
 };
 
-// �v�f�ߓ_�̊p�x��Ԃ�
-// p - �v�f�ߓ_
+// 要素節点の角度を返す
+// p - 要素節点
 HexaElement1.prototype.angle=function(p){
   var th=[];
   for(var i=0;i<4;i++){
@@ -879,8 +879,8 @@ HexaElement1.prototype.angle=function(p){
   return th;
 };
 
-// �`��֐��s�� [ Ni dNi/d�� dNi/d�� dNi/d�� ] ��Ԃ�
-// xsi,eta,zeta - �v�f������,��,�č��W
+// 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
+// xsi,eta,zeta - 要素内部ξ,η,ζ座標
 HexaElement1.prototype.shapeFunction=function(xsi,eta,zeta){
   return [[0.125*(1-xsi)*(1-eta)*(1-zeta),-0.125*(1-eta)*(1-zeta),
       	   -0.125*(1-xsi)*(1-zeta),-0.125*(1-xsi)*(1-eta)],
@@ -900,9 +900,9 @@ HexaElement1.prototype.shapeFunction=function(xsi,eta,zeta){
       	   0.125*(1-xsi)*(1+zeta),0.125*(1-xsi)*(1+eta)]];
 };
 
-// ���ʃ}�g���b�N�X��Ԃ�
-// p - �v�f�ߓ_
-// dens - �ޗ��̖��x
+// 質量マトリックスを返す
+// p - 要素節点
+// dens - 材料の密度
 HexaElement1.prototype.massMatrix=function(p,dens){
   var ja=0,i;
   for(i=0;i<8;i++){
@@ -924,32 +924,32 @@ HexaElement1.prototype.massMatrix=function(p,dens){
 };
 
 //--------------------------------------------------------------------//
-// �Z�ʑ̃Z�����f�B�s�e�B��2���v�f
-// label - �v�f���x��
-// material - �ޗ��̃C���f�b�N�X
-// nodes - �ߓ_�ԍ�
+// 六面体セレンディピティ族2次要素
+// label - 要素ラベル
+// material - 材料のインデックス
+// nodes - 節点番号
 var HexaElement2=function(label,material,nodes){
   SolidElement.call(this,label,material,nodes,HEXA2_NODE,HEXA2_INT);
 };
 
-// �v�f���̂�Ԃ�
+// 要素名称を返す
 HexaElement2.prototype.getName=function(){
   return 'HexaElement2';
 };
 
-// �ߓ_����Ԃ�
+// 節点数を返す
 HexaElement2.prototype.nodeCount=function(){
   return 20;
 };
 
-// �v�f���E����Ԃ�
+// 要素境界数を返す
 HexaElement2.prototype.borderCount=function(){
   return 6;
 };
 
-// �v�f���E��Ԃ�
-// element - �v�f���x��
-// index - �v�f���E�̃C���f�b�N�X
+// 要素境界を返す
+// element - 要素ラベル
+// index - 要素境界のインデックス
 HexaElement2.prototype.border=function(element,index){
   var p=this.nodes;
   switch(index){
@@ -976,7 +976,7 @@ HexaElement2.prototype.border=function(element,index){
   }
 };
 
-// �v�f���������]����
+// 要素を鏡像反転する
 HexaElement2.prototype.mirror=function(){
   swap(this.nodes,1,3);
   swap(this.nodes,5,7);
@@ -987,8 +987,8 @@ HexaElement2.prototype.mirror=function(){
   swap(this.nodes,17,19);
 };
 
-// �v�f�ߓ_�̊p�x��Ԃ�
-// p - �v�f�ߓ_
+// 要素節点の角度を返す
+// p - 要素節点
 HexaElement2.prototype.angle=function(p){
   return [solidAngle(p[0],p[8],p[11],p[16]),
       	  solidAngle(p[1],p[9],p[8],p[17]),
@@ -1006,8 +1006,8 @@ HexaElement2.prototype.angle=function(p){
       	  planeAngle(p[18],p[19],p[17]),planeAngle(p[19],p[16],p[18])];
 };
 
-// �`��֐��s�� [ Ni dNi/d�� dNi/d�� dNi/d�� ] ��Ԃ�
-// xsi,eta,zeta - �v�f������,��,�č��W
+// 形状関数行列 [ Ni dNi/dξ dNi/dη dNi/dζ ] を返す
+// xsi,eta,zeta - 要素内部ξ,η,ζ座標
 HexaElement2.prototype.shapeFunction=function(xsi,eta,zeta){
   return [[0.125*(1-xsi)*(1-eta)*(1-zeta)*(-xsi-eta-zeta-2),
       	   0.125*(1-eta)*(1-zeta)*(2*xsi+eta+zeta+1),

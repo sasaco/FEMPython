@@ -1,11 +1,11 @@
-//--------------------------------------------------------------------//
-// •\¦ƒ‚ƒfƒ‹
-// canvasId - •\¦—ÌˆæID
+ï»¿//--------------------------------------------------------------------//
+// è¡¨ç¤ºãƒ¢ãƒ‡ãƒ«
+// canvasId - è¡¨ç¤ºé ˜åŸŸID
 var ViewModel=function(canvasId){
-  this.canvasFrame=document.getElementById(canvasId);		// •`‰æƒtƒŒ[ƒ€
-  this.renderer=new THREE.WebGLRenderer({antialias:true});	// ƒŒƒ“ƒ_ƒ‰\
+  this.canvasFrame=document.getElementById(canvasId);		// æç”»ãƒ•ãƒ¬ãƒ¼ãƒ 
+  this.renderer=new THREE.WebGLRenderer({antialias:true});	// ãƒ¬ãƒ³ãƒ€ãƒ©â€•
   if(!this.renderer){
-    alert("three.js ‚Ì‰Šú‰»‚É¸”s‚µ‚Ü‚µ‚½");
+    alert("three.js ã®åˆæœŸåŒ–ã«å¤±æ•—ã—ã¾ã—ãŸ");
   }
 
   this.renderer.setSize(this.canvasFrame.clientWidth,
@@ -13,36 +13,36 @@ var ViewModel=function(canvasId){
   this.canvasFrame.appendChild(this.renderer.domElement);
 
   this.renderer.setClearColor(0x000000,1);
-  this.scene=new THREE.Scene();					// ƒV[ƒ“
+  this.scene=new THREE.Scene();					// ã‚·ãƒ¼ãƒ³
   this.initLight();
   this.initCamera();
   this.axis=null;
 };
 
-// ŒõŒ¹‚ğ‰Šú‰»‚·‚é
+// å…‰æºã‚’åˆæœŸåŒ–ã™ã‚‹
 ViewModel.prototype.initLight=function(){
-// •½sŒõŒ¹
+// å¹³è¡Œå…‰æº
   this.directionalLight=new THREE.DirectionalLight(0xffffff,1);
   bounds.setLightPosition(this.directionalLight.position);
   this.scene.add(this.directionalLight);
-// ŠÂ‹«ŒõŒ¹
+// ç’°å¢ƒå…‰æº
   this.ambientLight=new THREE.AmbientLight(0x999999);
   this.scene.add(this.ambientLight);
 };
 
-// ƒJƒƒ‰‚ğ‰Šú‰»‚·‚é
+// ã‚«ãƒ¡ãƒ©ã‚’åˆæœŸåŒ–ã™ã‚‹
 ViewModel.prototype.initCamera=function(){
   var aspect=this.canvasFrame.clientWidth/this.canvasFrame.clientHeight;
   var side=0.7*bounds.size,c=bounds.center;
-// ƒJƒƒ‰
+// ã‚«ãƒ¡ãƒ©
   this.camera=new THREE.OrthographicCamera
     (-side*aspect,side*aspect,side,-side,
      0.01*bounds.size,100*bounds.size);
   this.camera.position.set(c.x,c.y,c.z+bounds.viewPoint);
   this.camera.up.set(0,1,0);
-//  this.camera.lookAt({x:0,y:0,z:0});	Controlsg—p‚Í–³Œø‰»‚³‚ê‚é
+//  this.camera.lookAt({x:0,y:0,z:0});	Controlsä½¿ç”¨æ™‚ã¯ç„¡åŠ¹åŒ–ã•ã‚Œã‚‹
 
-// ƒgƒ‰ƒbƒNƒ{[ƒ‹ƒRƒ“ƒgƒ[ƒ‹
+// ãƒˆãƒ©ãƒƒã‚¯ãƒœãƒ¼ãƒ«ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«
   this.trackball=new THREE.OrthographicTrackballControls
       	      	   (this.camera,this.canvasFrame);
   this.trackball.screen.width=this.canvasFrame.clientWidth;
@@ -62,17 +62,17 @@ ViewModel.prototype.initCamera=function(){
   this.trackball.dynamicDampingFactor=0.3;
 };
 
-// •\¦ƒIƒuƒWƒFƒNƒg‚ğ’Ç‰Á‚·‚é
+// è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’è¿½åŠ ã™ã‚‹
 ViewModel.prototype.addObject=function(obj){
   this.scene.add(obj);
 };
 
-// •\¦ƒIƒuƒWƒFƒNƒg‚ğíœ‚·‚é
+// è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’å‰Šé™¤ã™ã‚‹
 ViewModel.prototype.removeObject=function(obj){
   this.scene.remove(obj);
 };
 
-// À•W²‚ğİ’è‚·‚é
+// åº§æ¨™è»¸ã‚’è¨­å®šã™ã‚‹
 ViewModel.prototype.setAxis=function(){
   if(this.axis!==null){
     this.scene.remove(this.axis);
@@ -82,7 +82,7 @@ ViewModel.prototype.setAxis=function(){
   this.scene.add(this.axis);
 };
 
-// ŒõŒ¹EƒJƒƒ‰ˆÊ’u‚ğXV‚·‚é
+// å…‰æºãƒ»ã‚«ãƒ¡ãƒ©ä½ç½®ã‚’æ›´æ–°ã™ã‚‹
 ViewModel.prototype.updateLightAndCamera=function(){
   bounds.setLightPosition(this.directionalLight.position);
   var aspect=this.canvasFrame.clientWidth/this.canvasFrame.clientHeight;
@@ -97,13 +97,13 @@ ViewModel.prototype.updateLightAndCamera=function(){
   this.viewZ();
 };
 
-// •\¦‚ğXV‚·‚é
+// è¡¨ç¤ºã‚’æ›´æ–°ã™ã‚‹
 ViewModel.prototype.update=function(){
   this.trackball.update();
   this.renderer.render(this.scene,this.camera);
 };
 
-// ‹“_‚ğX²•ûŒü‚É‚·‚é
+// è¦–ç‚¹ã‚’Xè»¸æ–¹å‘ã«ã™ã‚‹
 ViewModel.prototype.viewX=function(){
   var c=bounds.center;
   this.camera.position.set(c.x+bounds.viewPoint,c.y,c.z);
@@ -113,7 +113,7 @@ ViewModel.prototype.viewX=function(){
   this.trackball.target.copy(c);
 };
 
-// ‹“_‚ğY²•ûŒü‚É‚·‚é
+// è¦–ç‚¹ã‚’Yè»¸æ–¹å‘ã«ã™ã‚‹
 ViewModel.prototype.viewY=function(){
   var c=bounds.center;
   this.camera.position.set(c.x,c.y-bounds.viewPoint,c.z);
@@ -123,7 +123,7 @@ ViewModel.prototype.viewY=function(){
   this.trackball.target.copy(c);
 };
 
-// ‹“_‚ğZ²•ûŒü‚É‚·‚é
+// è¦–ç‚¹ã‚’Zè»¸æ–¹å‘ã«ã™ã‚‹
 ViewModel.prototype.viewZ=function(){
   var c=bounds.center;
   this.camera.position.set(c.x,c.y,c.z+bounds.viewPoint);
@@ -134,7 +134,7 @@ ViewModel.prototype.viewZ=function(){
 };
 
 //--------------------------------------------------------------------//
-// ƒ‚ƒfƒ‹‹«ŠE
+// ãƒ¢ãƒ‡ãƒ«å¢ƒç•Œ
 var Bounds=function(){
   this.box=new THREE.Box3();
   this.center=new THREE.Vector3();
@@ -142,7 +142,7 @@ var Bounds=function(){
   this.viewPoint=1;
 };
 
-// ƒ‚ƒfƒ‹‹«ŠE‚ğİ’è‚·‚é
+// ãƒ¢ãƒ‡ãƒ«å¢ƒç•Œã‚’è¨­å®šã™ã‚‹
 Bounds.prototype.set=function(){
   this.box.setFromPoints(model.mesh.nodes);
   this.center.copy(this.box.getCenter());
@@ -152,8 +152,8 @@ Bounds.prototype.set=function(){
   this.viewPoint=2*this.size;
 };
 
-// ŒõŒ¹ˆÊ’u‚ğİ’è‚·‚é
-// p - ŒõŒ¹ˆÊ’u
+// å…‰æºä½ç½®ã‚’è¨­å®šã™ã‚‹
+// p - å…‰æºä½ç½®
 Bounds.prototype.setLightPosition=function(p){
   p.set(this.size,-this.size,this.size);
 };

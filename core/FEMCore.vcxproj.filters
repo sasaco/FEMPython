@@ -39,223 +39,168 @@
     <Filter Include="ソース ファイル\numeric">
       <UniqueIdentifier>{8d482bbc-6648-4aa5-a0a2-82ea398984d9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ソース ファイル\Solver">
-      <UniqueIdentifier>{180b5dcd-2786-4707-9665-4a6da345e937}</UniqueIdentifier>
+    <Filter Include="ソース ファイル\Border">
+      <UniqueIdentifier>{512bab33-2422-4a9b-9b2d-c241527de2e8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="module.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="BarElement.cpp">
-      <Filter>ソース ファイル\Element\BarElement</Filter>
-    </ClCompile>
-    <ClCompile Include="BarParameter.cpp">
-      <Filter>ソース ファイル\Material</Filter>
-    </ClCompile>
-    <ClCompile Include="BEBarElement.cpp">
-      <Filter>ソース ファイル\Element\BarElement</Filter>
-    </ClCompile>
-    <ClCompile Include="BoundaryCondition.cpp">
-      <Filter>ソース ファイル\BoundaryCondition</Filter>
-    </ClCompile>
-    <ClCompile Include="CircleSection.cpp">
-      <Filter>ソース ファイル\Section</Filter>
-    </ClCompile>
-    <ClCompile Include="Coordinates.cpp">
-      <Filter>ソース ファイル\Coordinates</Filter>
-    </ClCompile>
-    <ClCompile Include="FElement.cpp">
-      <Filter>ソース ファイル\Element</Filter>
-    </ClCompile>
     <ClCompile Include="FemDataModel.cpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshModel.cpp">
       <Filter>ソース ファイル\FemDataModel</Filter>
     </ClCompile>
     <ClCompile Include="FENode.cpp">
       <Filter>ソース ファイル\FemDataModel</Filter>
     </ClCompile>
-    <ClCompile Include="HeatTransferBound.cpp">
+    <ClCompile Include="BoundaryCondition.cpp">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClCompile>
-    <ClCompile Include="HexaElement1.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="HexaElement1WT.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="HexaElement2.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    <ClCompile Include="ElementBorderBound.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClCompile>
     <ClCompile Include="Load.cpp">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>ソース ファイル\Material</Filter>
+    <ClCompile Include="Restraint.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClCompile>
-    <ClCompile Include="matrix3.cpp">
-      <Filter>ソース ファイル\numeric</Filter>
-    </ClCompile>
-    <ClCompile Include="Nodes.cpp">
-      <Filter>ソース ファイル\FemDataModel</Filter>
-    </ClCompile>
-    <ClCompile Include="numeric.cpp">
-      <Filter>ソース ファイル\numeric</Filter>
+    <ClCompile Include="HeatTransferBound.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClCompile>
     <ClCompile Include="Pressure.cpp">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClCompile>
-    <ClCompile Include="QuadElement1.cpp">
-      <Filter>ソース ファイル\Element\ShellElement</Filter>
-    </ClCompile>
-    <ClCompile Include="RectSection.cpp">
-      <Filter>ソース ファイル\Section</Filter>
-    </ClCompile>
-    <ClCompile Include="Restraint.cpp">
+    <ClCompile Include="Temperature.cpp">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClCompile>
-    <ClCompile Include="ShellElement.cpp">
-      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    <ClCompile Include="ElementManager.hpp">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementBorder.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="EdgeBorder1.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="TriangleBorder1.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="TriangleBorder2.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="QuadangleBorder1.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="QuadangleBorder2.cpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClCompile>
+    <ClCompile Include="FileIO.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Coordinates.cpp">
+      <Filter>ソース ファイル\Coordinates</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="BarParameter.cpp">
+      <Filter>ソース ファイル\Material</Filter>
     </ClCompile>
     <ClCompile Include="ShellParameter.cpp">
       <Filter>ソース ファイル\Material</Filter>
     </ClCompile>
-    <ClCompile Include="SolidElement.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="Solver.cpp">
-      <Filter>ソース ファイル\Solver</Filter>
-    </ClCompile>
-    <ClCompile Include="TBarElement.cpp">
-      <Filter>ソース ファイル\Element\BarElement</Filter>
-    </ClCompile>
-    <ClCompile Include="Temperature.cpp">
-      <Filter>ソース ファイル\BoundaryCondition</Filter>
-    </ClCompile>
-    <ClCompile Include="TetraElement1.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="TetraElement2.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="TriElement1.cpp">
-      <Filter>ソース ファイル\Element\ShellElement</Filter>
-    </ClCompile>
-    <ClCompile Include="WedgeElement1.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
-    <ClCompile Include="WedgeElement2.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
     <ClCompile Include="Vector3R.cpp">
-      <Filter>ソース ファイル\BoundaryCondition</Filter>
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClCompile>
+    <ClCompile Include="CircleSection.cpp">
+      <Filter>ソース ファイル\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="RectSection.cpp">
+      <Filter>ソース ファイル\Section</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BarParameter.h">
-      <Filter>ソース ファイル\Material</Filter>
+    <ClInclude Include="FemDataModel.h">
+      <Filter>ソース ファイル\FemDataModel</Filter>
     </ClInclude>
-    <ClInclude Include="CircleSection.h">
-      <Filter>ソース ファイル\Section</Filter>
-    </ClInclude>
-    <ClInclude Include="Coordinates.h">
-      <Filter>ソース ファイル\Coordinates</Filter>
-    </ClInclude>
-    <ClInclude Include="FElement.h">
-      <Filter>ソース ファイル\Element</Filter>
+    <ClInclude Include="vector3.hpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
     </ClInclude>
     <ClInclude Include="FENode.h">
       <Filter>ソース ファイル\FemDataModel</Filter>
     </ClInclude>
+    <ClInclude Include="MeshModel.h">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundaryCondition.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
     <ClInclude Include="Load.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Restraint.h">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClInclude>
     <ClInclude Include="HeatTransferBound.h">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClInclude>
-    <ClInclude Include="HexaElement1.h">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClInclude>
-    <ClInclude Include="HexaElement2.h">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>ソース ファイル\Material</Filter>
-    </ClInclude>
-    <ClInclude Include="matrix3.h">
-      <Filter>ソース ファイル\numeric</Filter>
-    </ClInclude>
-    <ClInclude Include="math.hpp">
-      <Filter>ソース ファイル\numeric</Filter>
-    </ClInclude>
-    <ClInclude Include="matrix4.hpp">
-      <Filter>ソース ファイル\numeric</Filter>
-    </ClInclude>
-    <ClInclude Include="Nodes.h">
-      <Filter>ソース ファイル\FemDataModel</Filter>
-    </ClInclude>
-    <ClInclude Include="numeric.h">
-      <Filter>ソース ファイル\numeric</Filter>
-    </ClInclude>
     <ClInclude Include="Pressure.h">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
-    </ClInclude>
-    <ClInclude Include="RectSection.h">
-      <Filter>ソース ファイル\Section</Filter>
-    </ClInclude>
-    <ClInclude Include="Restraint.h">
-      <Filter>ソース ファイル\BoundaryCondition</Filter>
-    </ClInclude>
-    <ClInclude Include="ShellElement.h">
-      <Filter>ソース ファイル\Element\ShellElement</Filter>
-    </ClInclude>
-    <ClInclude Include="ShellParameter.h">
-      <Filter>ソース ファイル\Material</Filter>
-    </ClInclude>
-    <ClInclude Include="SolidElement.h">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClInclude>
     <ClInclude Include="Temperature.h">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClInclude>
-    <ClInclude Include="TetraElement1.h">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    <ClInclude Include="ElementBorderBound.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClInclude>
-    <ClInclude Include="TetraElement2.h">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    <ClInclude Include="ElementBorder.h">
+      <Filter>ソース ファイル\Border</Filter>
     </ClInclude>
-    <ClInclude Include="vector3.hpp">
-      <Filter>ソース ファイル\numeric</Filter>
+    <ClInclude Include="EdgeBorder1.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleBorder1.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleBorder2.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="QuadangleBorder1.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="QuadangleBorder2.h">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="BorderManager.hpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="Coordinates.h">
+      <Filter>ソース ファイル\Coordinates</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="BarParameter.h">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="ShellParameter.h">
+      <Filter>ソース ファイル\Material</Filter>
     </ClInclude>
     <ClInclude Include="Vector3R.h">
-      <Filter>ソース ファイル\BoundaryCondition</Filter>
+      <Filter>ソース ファイル\numeric</Filter>
     </ClInclude>
-    <ClInclude Include="WedgeElement1.h">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    <ClInclude Include="CircleSection.h">
+      <Filter>ソース ファイル\Section</Filter>
     </ClInclude>
-    <ClInclude Include="WedgeElement2.h">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClInclude>
-    <ClInclude Include="TriElement1.h">
-      <Filter>ソース ファイル\Element\ShellElement</Filter>
-    </ClInclude>
-    <ClInclude Include="QuadElement1.h">
-      <Filter>ソース ファイル\Element\ShellElement</Filter>
-    </ClInclude>
-    <ClInclude Include="BarElement.h">
-      <Filter>ソース ファイル\Element\BarElement</Filter>
-    </ClInclude>
-    <ClInclude Include="BEBarElement.h">
-      <Filter>ソース ファイル\Element\BarElement</Filter>
-    </ClInclude>
-    <ClInclude Include="TBarElement.h">
-      <Filter>ソース ファイル\Element\BarElement</Filter>
-    </ClInclude>
-    <ClInclude Include="BoundaryCondition.h">
-      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    <ClInclude Include="RectSection.h">
+      <Filter>ソース ファイル\Section</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

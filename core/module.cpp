@@ -1,30 +1,48 @@
 ﻿#include <Python.h>
-#include <Windows.h>
-#include <cmath>
 
-const double e = 2.7182818284590452353602874713527;
+#include <string>
+#include <vector>
+#include <sstream> // std::stringstream
+#include <istream> // std::getline
 
-double sinh_impl(double x) {
-	return (1 - pow(e, (-2 * x))) / (2 * pow(e, -x));
-}
+using namespace std;
+using std::vector;
 
-double cosh_impl(double x) {
-	return (1 + pow(e, (-2 * x))) / (2 * pow(e, -x));
-}
+// FileIO.cpp で定義した関数を使用します。
+extern string readFemModel(vector<string> lines);
 
-PyObject* tanh_impl(PyObject *, PyObject* o) {
-	double x = PyFloat_AsDouble(o);
-	double tanh_x = sinh_impl(x) / cosh_impl(x);
-	return PyFloat_FromDouble(tanh_x);
+
+PyObject* CreadFemModel(PyObject* self, PyObject* args) {
+
+	char* str = NULL;
+	if (!PyArg_ParseTuple(args, "s", &str)) {
+		return NULL;
+	}
+
+	vector<string> lines;
+
+	string s = string(str);
+	stringstream ss{ s };
+	string buf;
+	while (getline(ss, buf, '\n')) {
+		lines.push_back(buf);
+	}
+
+	string result;
+	result = readFemModel(lines);
+
+	return Py_BuildValue("s", result);
 }
 
 static PyMethodDef FEMCore_methods[] = {
+
 	// The first property is the name exposed to Python, fast_tanh, the second is the C++
 	// function name that contains the implementation.
-	{ "fast_tanh", (PyCFunction)tanh_impl, METH_O, nullptr },
+	{ "readFemModel", (PyCFunction)CreadFemModel, METH_VARARGS, "Prints Message" },
 
 	// Terminate the array with an object containing nulls.
-{ nullptr, nullptr, 0, nullptr }
+	{ nullptr, nullptr, 0, nullptr }
+
 };
 
 static PyModuleDef FEMCore_module = {

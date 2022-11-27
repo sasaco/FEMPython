@@ -1,59 +1,59 @@
-﻿double COEF_F_W=0.5/Math.PI;	// f/ω比 1/2π
+﻿#include "FemDataModel.h"
+#include "BoundaryCondition.h"
 
-//--------------------------------------------------------------------//
-// FEM データモデル
-class FemDataModel{
-  this.materials=[];			// 材料
-  this.shellParams=[];			// シェルパラメータ
-  this.barParams=[];			// 梁パラメータ
-  this.coordinates=[];			// 局所座標系
-  this.mesh=new MeshModel();		// メッシュモデル
-  this.bc=new BoundaryCondition();	// 境界条件
-  this.solver=new Solver();		// 連立方程式求解オブジェクト
-  this.result=new Result();		// 計算結果
-  this.hasShellBar=false;		// シェル要素または梁要素を含まない
 
-  // Method
-  void clear();
-};
+FemDataModel::FemDataModel() {
+    mesh = MeshModel();		    // メッシュモデル
+    bc = BoundaryCondition();	// 境界条件
+    /*
+    solver = Solver();		    // 連立方程式求解オブジェクト
+    result = Result();          // 計算結果
+    hasShellBar = false;		// シェル要素または梁要素を含まない
+    */
+}
 
 // データを消去する
 void FemDataModel::clear(){
-  this.materials.length=0;
-  this.shellParams.length=0;
-  this.barParams.length=0;
-  this.coordinates.length=0;
-  this.mesh.clear();
-  this.bc.clear();
-  this.result.clear();
-  this.result.type=NODE_DATA;
+    /*
+    materials.clear();
+    shellParams.clear();
+    barParams.clear();
+    coordinates.clear();
+    mesh.clear();
+    bc.clear();
+    result.clear();
+    result.type=NODE_DATA;
+    */
 };
 
+/*
 // モデルを初期化する
-FemDataModel.prototype.init=function(){
-  this.solver.method=ILUCG_METHOD;	// デフォルトは反復解法
-  var mats=this.materials;
+void FemDataModel::init(){
+  solver.method=ILUCG_METHOD;   // デフォルトは反復解法
+  auto mats= materials;
   mats.sort(compareLabel);
-  this.mesh.init();
-  this.bc.init();
-  this.reNumbering();
-  this.resetMaterialLabel();
-  this.resetParameterLabel();
-  this.resetCoordinates();
-  this.mesh.checkChirality();
-  this.mesh.getFreeFaces();
-  this.mesh.getFaceEdges();
-  for(var i=0;i<mats.length;i++){
-    var m2d=mats[i].matrix2Dstress();
-    var msh=mats[i].matrixShell();
-    var m3d=mats[i].matrix3D();
-    mats[i].matrix={m2d:m2d,msh:msh,m3d:m3d};
+  mesh.init();
+  bc.init();
+  reNumbering();
+  resetMaterialLabel();
+  resetParameterLabel();
+  resetCoordinates();
+  for(iont i=0;i<mats.size(); i++) {
+    auto m2d = mats[i].matrix2Dstress();
+    auto msh = mats[i].matrixShell();
+    auto m3d = mats[i].matrix3D();
+    mats[i].matrix = { 
+        m2d:m2d,
+        msh:msh,
+        m3d:m3d
+    };
   }
 };
 
 // 節点・要素ポインタを設定する
-FemDataModel.prototype.reNumbering=function(){
-  var nodes=this.mesh.nodes,elements=this.mesh.elements;
+void FemDataModel::reNumbering(){
+
+  var nodes = mesh.nodes,elements=this.mesh.elements;
   var map=[],i;
   for(i=0;i<nodes.length;i++){
     map[nodes[i].label]=i;
@@ -548,6 +548,7 @@ FemDataModel.prototype.toStrings=function(){
   return s;
 };
 
+
 // 節点集合の節点ラベルを再設定する
 // map - ラベルマップ
 // s - 節点集合
@@ -562,6 +563,7 @@ function resetNodes(map,s){
   }
 }
 
+
 // 節点ポインタを再設定する
 // map - ラベルマップ
 // bc - 境界条件
@@ -574,6 +576,7 @@ function resetNodePointer(map,bc){
   }
 }
 
+
 // 要素ポインタを再設定する
 // map - ラベルマップ
 // bc - 境界条件
@@ -585,6 +588,7 @@ function resetElementPointer(map,bc){
     throw new Error('要素番号'+bc.element+'は存在しません');
   }
 }
+
 
 // 局所座標系を再設定する
 // map - ラベルマップ
@@ -602,322 +606,4 @@ function resetCoordinatesPointer(map,bc){
   }
 }
 
-//--------------------------------------------------------------------//
-// メッシュモデル
-var MeshModel=function(){
-  this.nodes=[];		// 節点
-  this.elements=[];		// 要素
-  this.freeFaces=[];		// 表面
-  this.faceEdges=[];		// 表面の要素辺
-};
-
-// 節点を返す
-// s - 節点集合
-MeshModel.prototype.getNodes=function(s){
-  var p=[];
-  for(var i=0;i<s.nodes.length;i++){
-    p[i]=this.nodes[s.nodes[i]];
-  }
-  return p;
-};
-
-// データを消去する
-MeshModel.prototype.clear=function(){
-  this.nodes.length=0;
-  this.elements.length=0;
-  this.freeFaces.length=0;
-  this.faceEdges.length=0;
-};
-
-// モデルを初期化する
-MeshModel.prototype.init=function(){
-  this.nodes.sort(compareLabel);
-  bounds.set();
-};
-
-// 要素の鏡像向きを揃える
-MeshModel.prototype.checkChirality=function(){
-  for(var i=0;i<this.elements.length;i++){
-    var elem=this.elements[i];
-    if(!elem.isShell && !elem.isBar){
-      var pe=this.getNodes(elem);
-      var pf=this.getNodes(elem.border(i,0));
-      var n1=normalVector(pf);
-      var n2=center(pe).sub(center(pf));
-      if(n1.dot(n2)>0){
-      	elem.mirror();
-      }
-    }
-  }
-};
-
-// 表面を取り出す
-MeshModel.prototype.getFreeFaces=function(){
-  var elems=this.elements,i;
-  if(elems.length===0) return;
-  this.freeFaces.length=0;
-  var border=[];
-  for(i=0;i<elems.length;i++){
-    if(elems[i].isShell){
-      this.freeFaces.push(elems[i].border(i,0));
-    }
-    else if(!elems[i].isBar){
-      var count=elems[i].borderCount();
-      for(var j=0;j<count;j++){
-      	border.push(elems[i].border(i,j));
-      }
-    }
-  }
-  if(border.length>0){
-    border.sort(function(b1,b2){return b1.compare(b2);});
-    var addsw=true,beforeEb=border[0];
-    for(i=1;i<border.length;i++){
-      var eb=border[i];
-      if(beforeEb.compare(eb)===0){
-      	addsw=false;
-      }
-      else{
-      	if(addsw) this.freeFaces.push(beforeEb);
-      	beforeEb=eb;
-      	addsw=true;
-      }
-    }
-    if(addsw) this.freeFaces.push(beforeEb);
-  }
-};
-
-// 表面の要素辺を取り出す
-MeshModel.prototype.getFaceEdges=function(){
-  if(this.freeFaces.length===0) return;
-  this.faceEdges.length=0;
-  var edges=[],i;
-  for(i=0;i<this.freeFaces.length;i++){
-    var nds=this.freeFaces[i].cycleNodes();
-    for(var j=0;j<nds.length;j++){
-      edges.push(new EdgeBorder1(i,[nds[j],nds[(j+1)%nds.length]]));
-    }
-  }
-  if(edges.length>0){
-    edges.sort(function(b1,b2){return b1.compare(b2);});
-    var beforeEdge=edges[0];
-    this.faceEdges.push(beforeEdge);
-    for(i=1;i<edges.length;i++){
-      var edge=edges[i];
-      if(beforeEdge.compare(edge)!==0){
-      	this.faceEdges.push(edge);
-      	beforeEdge=edge;
-      }
-    }
-  }
-};
-
-// 形状データを取り出す
-MeshModel.prototype.getGeometry=function(){
-  var sb=[],i;
-  for(i=0;i<this.freeFaces.length;i++){
-    Array.prototype.push.apply(sb,this.freeFaces[i].splitBorder());
-  }
-  var pos=new Float32Array(9*sb.length);
-  var norm=new Float32Array(9*sb.length);
-  var colors=new Float32Array(9*sb.length);
-  var geometry=new THREE.BufferGeometry();
-  geometry.elements=new Int32Array(3*sb.length);
-  geometry.nodes=new Int32Array(3*sb.length);
-  geometry.angle=new Float32Array(9*sb.length);
-  for(i=0;i<sb.length;i++){
-    var i9=9*i,v=sb[i].nodes,elem=sb[i].element;
-    var p=[this.nodes[v[0]],this.nodes[v[1]],this.nodes[v[2]]];
-    var n=normalVector(p);
-    for(var j=0;j<3;j++){
-      var j3=i9+3*j;
-      geometry.elements[3*i+j]=elem;
-      geometry.nodes[3*i+j]=v[j];
-      pos[j3]=p[j].x;
-      pos[j3+1]=p[j].y;
-      pos[j3+2]=p[j].z;
-      norm[j3]=n.x;
-      norm[j3+1]=n.y;
-      norm[j3+2]=n.z;
-      colors[j3]=meshColors[0];
-      colors[j3+1]=meshColors[1];
-      colors[j3+2]=meshColors[2];
-      geometry.angle[j3]=0;
-      geometry.angle[j3+1]=0;
-      geometry.angle[j3+2]=0;
-    }
-  }
-  geometry.addAttribute('position',new THREE.BufferAttribute(pos,3));
-  geometry.addAttribute('normal',new THREE.BufferAttribute(norm,3));
-  geometry.addAttribute('color',new THREE.BufferAttribute(colors,3));
-  return geometry;
-};
-
-// 要素辺の形状データを取り出す
-MeshModel.prototype.getEdgeGeometry=function(){
-  var edges=this.faceEdges;
-  var pos=new Float32Array(6*edges.length);
-  var geometry=new THREE.BufferGeometry();
-  geometry.nodes=new Int32Array(2*edges.length);
-  geometry.angle=new Float32Array(6*edges.length);
-  for(var i=0;i<edges.length;i++){
-    var i2=2*i,i6=6*i,v=edges[i].nodes;
-    var p1=this.nodes[v[0]],p2=this.nodes[v[1]];
-    geometry.nodes[i2]=v[0];
-    geometry.nodes[i2+1]=v[1];
-    pos[i6]=p1.x;
-    pos[i6+1]=p1.y;
-    pos[i6+2]=p1.z;
-    pos[i6+3]=p2.x;
-    pos[i6+4]=p2.y;
-    pos[i6+5]=p2.z;
-    for(var j=0;j<6;j++) geometry.angle[i6+j]=0;
-  }
-  geometry.addAttribute('position',new THREE.BufferAttribute(pos,3));
-  return geometry;
-};
-
-// 梁要素の形状データを取り出す
-MeshModel.prototype.getBarGeometry=function(){
-  var geometry=new THREE.BufferGeometry();
-  geometry.param=[];
-  geometry.dir=[];
-  var elems=this.elements,bars=[],axis=[],i;
-  for(i=0;i<elems.length;i++){
-    if(elems[i].isBar){
-      bars.push(elems[i].border(i,0));
-      geometry.param.push(model.barParams[elems[i].param].section);
-      axis.push(elems[i].axis);
-    }
-  }
-  var pos=new Float32Array(6*bars.length);
-  var colors=new Float32Array(6*bars.length);
-  geometry.elements=new Int32Array(2*bars.length);
-  geometry.nodes=new Int32Array(2*bars.length);
-  geometry.angle=new Float32Array(6*bars.length);
-  for(i=0;i<bars.length;i++){
-    var i2=2*i,i6=6*i,v=bars[i].nodes,elem=bars[i].element;
-    var p1=this.nodes[v[0]],p2=this.nodes[v[1]];
-    geometry.dir.push(dirVectors([p1,p2],axis[i]));
-    geometry.elements[i2]=elem;
-    geometry.elements[i2+1]=elem;
-    geometry.nodes[i2]=v[0];
-    geometry.nodes[i2+1]=v[1];
-    pos[i6]=p1.x;
-    pos[i6+1]=p1.y;
-    pos[i6+2]=p1.z;
-    pos[i6+3]=p2.x;
-    pos[i6+4]=p2.y;
-    pos[i6+5]=p2.z;
-    for(var j=0;j<3;j++){
-      colors[i6+j]=meshColors[j];
-      colors[i6+j+3]=meshColors[j];
-      geometry.angle[i6+j]=0;
-      geometry.angle[i6+j+3]=0;
-    }
-  }
-  geometry.addAttribute('position',new THREE.BufferAttribute(pos,3));
-  geometry.addAttribute('color',new THREE.BufferAttribute(colors,3));
-  return geometry;
-};
-
-//--------------------------------------------------------------------//
-// 節点
-// label - 節点ラベル
-// x,y,z - x,y,z座標
-var FENode =function(label,x,y,z){
-  THREE.Vector3.call(this,x,y,z);
-  this.label=label;
-};
-
-// 節点のコピーを返す
-FENode.prototype.clone=function(){
-  return new this.constructor(this.label,this.x,this.y,this.z);
-};
-
-// 節点を表す文字列を返す
-FENode.prototype.toString=function(){
-  return 'Node\t'+this.label.toString(10)+'\t'+
-      	 this.x+'\t'+this.y+'\t'+this.z;
-};
-
-//--------------------------------------------------------------------//
-// 節点集合
-// nodes - 節点番号
-var Nodes=function(nodes){
-  this.nodes=nodes;
-};
-
-// 節点数を返す
-Nodes.prototype.nodeCount=function(){
-  return this.nodes.length;
-};
-
-// 重心位置を返す
-// p - 頂点座標
-function center(p){
-  var x=0,y=0,z=0,cc=1.0/p.length;
-  for(var i=0;i<p.length;i++){
-    x+=p[i].x;
-    y+=p[i].y;
-    z+=p[i].z;
-  }
-  return new THREE.Vector3(cc*x,cc*y,cc*z);
-}
-
-// 法線ベクトルを返す
-// p - 頂点座標
-function normalVector(p){
-  if(p.length<3){
-    return null;
-  }
-  else if((p.length==3) || (p.length==6)){
-    return new THREE.Vector3().subVectors(p[1],p[0]).cross
-      (new THREE.Vector3().subVectors(p[2],p[0])).normalize();
-  }
-  else if((p.length==4) || (p.length==8)){
-    return new THREE.Vector3().subVectors(p[2],p[0]).cross
-      (new THREE.Vector3().subVectors(p[3],p[1])).normalize();
-  }
-  else{
-    var vx=0,vy=0,vz=0;
-    for(var i=0;i<p.length;i++){
-      var p1=p[(i+1)%p.length],p2=p[(i+2)%p.length];
-      var norm=new THREE.Vector3().subVectors(p1,p[i]).cross
-      	(new THREE.Vector3().subVectors(p2,p[i]));
-      vx+=norm.x;
-      vy+=norm.y;
-      vz+=norm.z;
-    }
-    return new THREE.Vector3(vx,vy,vz).normalize();
-  }
-}
-
-// ラベルを比較する
-// o1,o2 - 比較する対象
-function compareLabel(o1,o2){
-  if(o1.label<o2.label)      return -1;
-  else if(o1.label>o2.label) return 1;
-  else                       return 0;
-}
-
-// 行列の和を計算する
-// a - 基準行列
-// da - 加える行列
-function addMatrix(a,da){
-  for(var i=0;i<a.length;i++){
-    for(var j=0;j<a[i].length;j++){
-      a[i][j]+=da[i][j];
-    }
-  }
-}
-
-// ベクトルの和を計算する
-// v - 基準ベクトル
-// dv - 加えるベクトル
-function addVector(v,dv){
-  for(var i=0;i<v.length;i++){
-    v[i]+=dv[i];
-  }
-}
-
-inherits(FENode,THREE.Vector3);
+*/

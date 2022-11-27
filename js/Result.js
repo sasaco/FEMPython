@@ -1,39 +1,39 @@
-// ƒf[ƒ^Œ^
-var NONE=-1;		// ‹óƒf[ƒ^
-var DISPLACEMENT=0;	// •ÏˆÊ
-var STRAIN=1;		// ˜c
-var STRESS=2;		// ‰—Í
-var S_ENERGY=3;		// ˜cƒGƒlƒ‹ƒM[–§“x
-var TEMPERATURE=4;	// ‰·“x
-// ¬•ª
-var X=0;		// x¬•ª
-var Y=1;		// y¬•ª
-var Z=2;		// z¬•ª
-var RX=3;		// x²‰ñ“]¬•ª
-var RY=4;		// y²‰ñ“]¬•ª
-var RZ=5;		// z²‰ñ“]¬•ª
-var XY=3;		// xy‚¹‚ñ’f¬•ª
-var YZ=4;		// yz‚¹‚ñ’f¬•ª
-var ZX=5;		// zx‚¹‚ñ’f¬•ª
-var MAGNITUDE=6;	// ‘å‚«‚³
-var MAX_PRINCIPAL=7;	// Å‘åå¬•ª
-var MIN_PRINCIPAL=8;	// Å¬å¬•ª
-var MID_PRINCIPAL=9;	// ’†ŠÔå¬•ª
-var MAX_SHARE=10;	// Å‘å‚¹‚ñ’f¬•ª
-var VON_MISES=11;	// ƒ~[ƒ[ƒX‰—Í
-var SHIFT=12;		// ¬•ªƒVƒtƒg—Ê
-// •ÏˆÊ‚Ì¬•ª
+ï»¿// ãƒ‡ãƒ¼ã‚¿å‹
+var NONE=-1;		// ç©ºãƒ‡ãƒ¼ã‚¿
+var DISPLACEMENT=0;	// å¤‰ä½
+var STRAIN=1;		// æ­ª
+var STRESS=2;		// å¿œåŠ›
+var S_ENERGY=3;		// æ­ªã‚¨ãƒãƒ«ã‚®ãƒ¼å¯†åº¦
+var TEMPERATURE=4;	// æ¸©åº¦
+// æˆåˆ†
+var X=0;		// xæˆåˆ†
+var Y=1;		// yæˆåˆ†
+var Z=2;		// zæˆåˆ†
+var RX=3;		// xè»¸å›è»¢æˆåˆ†
+var RY=4;		// yè»¸å›è»¢æˆåˆ†
+var RZ=5;		// zè»¸å›è»¢æˆåˆ†
+var XY=3;		// xyã›ã‚“æ–­æˆåˆ†
+var YZ=4;		// yzã›ã‚“æ–­æˆåˆ†
+var ZX=5;		// zxã›ã‚“æ–­æˆåˆ†
+var MAGNITUDE=6;	// å¤§ãã•
+var MAX_PRINCIPAL=7;	// æœ€å¤§ä¸»æˆåˆ†
+var MIN_PRINCIPAL=8;	// æœ€å°ä¸»æˆåˆ†
+var MID_PRINCIPAL=9;	// ä¸­é–“ä¸»æˆåˆ†
+var MAX_SHARE=10;	// æœ€å¤§ã›ã‚“æ–­æˆåˆ†
+var VON_MISES=11;	// ãƒŸãƒ¼ã‚¼ã‚¹å¿œåŠ›
+var SHIFT=12;		// æˆåˆ†ã‚·ãƒ•ãƒˆé‡
+// å¤‰ä½ã®æˆåˆ†
 var DISP_COMPONENT=['Mag.','x','y','z'];
 var DISP2_COMPONENT=['Mag.','x','y','z','rotx','roty','rotz'];
-// ˜c‚Ì¬•ª
+// æ­ªã®æˆåˆ†
 var STRAIN_COMPONENT=['Max.prin.','Min.prin.','Mid.prin.',
       	      	      'Max.share',
       	      	      'x','y','z','xy','yz','zx'];
-// ‰—Í‚Ì¬•ª
+// å¿œåŠ›ã®æˆåˆ†
 var STRESS_COMPONENT=['Max.prin.','Min.prin.','Mid.prin.',
       	      	      'Max.share','Von mises',
       	      	      'x','y','z','xy','yz','zx'];
-// ˜cƒGƒlƒ‹ƒM[–§“x‚Ì¬•ª
+// æ­ªã‚¨ãƒãƒ«ã‚®ãƒ¼å¯†åº¦ã®æˆåˆ†
 var ENERGY_COMPONENT=['Energy'];
 var COMP_MAP={'Mag.':MAGNITUDE,'x':X,'y':Y,'z':Z,
       	      'rotx':RX,'roty':RY,'rotz':RZ,'xy':XY,'yz':YZ,'zx':ZX,
@@ -51,35 +51,35 @@ var COMP_MAP={'Mag.':MAGNITUDE,'x':X,'y':Y,'z':Z,
       	      'Mid.prin. 2':MID_PRINCIPAL+SHIFT,
       	      'Max.share 2':MAX_SHARE+SHIFT,
       	      'Von mises 2':VON_MISES+SHIFT,'Energy 2':1};
-var EIG_EPS=1e-10;		// ŒÅ—L’lŒvZ‚Ìû‘©è‡’l
-var NODE_DATA=0;		// ß“_ƒf[ƒ^
-var ELEMENT_DATA=1;		// —v‘fƒf[ƒ^
-var VIBRATION='Vibration';	// U“®‰ğÍ
-var BUCKLING='Buckling';	// À‹ü‰ğÍ
+var EIG_EPS=1e-10;		// å›ºæœ‰å€¤è¨ˆç®—ã®åæŸé–¾å€¤
+var NODE_DATA=0;		// ç¯€ç‚¹ãƒ‡ãƒ¼ã‚¿
+var ELEMENT_DATA=1;		// è¦ç´ ãƒ‡ãƒ¼ã‚¿
+var VIBRATION='Vibration';	// æŒ¯å‹•è§£æ
+var BUCKLING='Buckling';	// åº§å±ˆè§£æ
 
 //--------------------------------------------------------------------//
-// ŒvZŒ‹‰Ê
+// è¨ˆç®—çµæœ
 var Result=function(){
-  this.displacement=[];		// •ÏˆÊ
-  this.dispMax=0;		// •ÏˆÊ‚Ì‘å‚«‚³‚ÌÅ‘å’l
-  this.angleMax=0;		// ‰ñ“]Šp‚Ì‘å‚«‚³‚ÌÅ‘å’l
-  this.strain1=[];		// ß“_˜c
-  this.stress1=[];		// ß“_‰—Í
-  this.sEnergy1=[];		// ß“_˜cƒGƒlƒ‹ƒM[–§“x
+  this.displacement=[];		// å¤‰ä½
+  this.dispMax=0;		// å¤‰ä½ã®å¤§ãã•ã®æœ€å¤§å€¤
+  this.angleMax=0;		// å›è»¢è§’ã®å¤§ãã•ã®æœ€å¤§å€¤
+  this.strain1=[];		// ç¯€ç‚¹æ­ª
+  this.stress1=[];		// ç¯€ç‚¹å¿œåŠ›
+  this.sEnergy1=[];		// ç¯€ç‚¹æ­ªã‚¨ãƒãƒ«ã‚®ãƒ¼å¯†åº¦
   this.strain2=[];
   this.stress2=[];
   this.sEnergy2=[];
-  this.temperature=[];		// ß“_‰·“x
-  this.tempMax=0;		// ‰·“x‚ÌÅ‘å’l
-  this.eigenValue=[];		// ŒÅ—L’lƒf[ƒ^
-  this.calculated=false;	// ŒvZ‘OŒvZŒ‹‰Ê–³‚µ
-  this.type=NODE_DATA;		// ƒf[ƒ^•ÛŒ`‘ÔFß“_ƒf[ƒ^
-  this.value=[];		// ƒRƒ“ƒ^[}ƒf[ƒ^
-  this.minValue=0;		// ƒRƒ“ƒ^[}ƒf[ƒ^Å¬’l
-  this.maxValue=0;		// ƒRƒ“ƒ^[}ƒf[ƒ^Å‘å’l
+  this.temperature=[];		// ç¯€ç‚¹æ¸©åº¦
+  this.tempMax=0;		// æ¸©åº¦ã®æœ€å¤§å€¤
+  this.eigenValue=[];		// å›ºæœ‰å€¤ãƒ‡ãƒ¼ã‚¿
+  this.calculated=false;	// è¨ˆç®—å‰ï¼è¨ˆç®—çµæœç„¡ã—
+  this.type=NODE_DATA;		// ãƒ‡ãƒ¼ã‚¿ä¿æŒå½¢æ…‹ï¼šç¯€ç‚¹ãƒ‡ãƒ¼ã‚¿
+  this.value=[];		// ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿
+  this.minValue=0;		// ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿æœ€å°å€¤
+  this.maxValue=0;		// ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿æœ€å¤§å€¤
 };
 
-// ŒvZŒ‹‰Ê‚ğÁ‹‚·‚é
+// è¨ˆç®—çµæœã‚’æ¶ˆå»ã™ã‚‹
 Result.prototype.clear=function(){
   this.displacement.length=0;
   this.strain1.length=0;
@@ -99,10 +99,10 @@ Result.prototype.clear=function(){
   this.maxValue=0;
 };
 
-// ß“_•ÏˆÊ‚ğİ’è‚·‚é
-// bc - ‹«ŠEğŒ
-// disp - ß“_•ÏˆÊ‚ğ•\‚·ƒxƒNƒgƒ‹
-// nodeCount - ß“_”
+// ç¯€ç‚¹å¤‰ä½ã‚’è¨­å®šã™ã‚‹
+// bc - å¢ƒç•Œæ¡ä»¶
+// disp - ç¯€ç‚¹å¤‰ä½ã‚’è¡¨ã™ãƒ™ã‚¯ãƒˆãƒ«
+// nodeCount - ç¯€ç‚¹æ•°
 Result.prototype.setDisplacement=function(bc,disp,nodeCount){
   this.displacement.length=0;
   this.dispMax=0;
@@ -131,10 +131,10 @@ Result.prototype.setDisplacement=function(bc,disp,nodeCount){
   this.calculated=true;
 };
 
-// ß“_‰·“x‚ğİ’è‚·‚é
-// bc - ‹«ŠEğŒ
-// t - ß“_‰·“x‚ğ•\‚·ƒxƒNƒgƒ‹
-// nodeCount - ß“_”
+// ç¯€ç‚¹æ¸©åº¦ã‚’è¨­å®šã™ã‚‹
+// bc - å¢ƒç•Œæ¡ä»¶
+// t - ç¯€ç‚¹æ¸©åº¦ã‚’è¡¨ã™ãƒ™ã‚¯ãƒˆãƒ«
+// nodeCount - ç¯€ç‚¹æ•°
 Result.prototype.setTemperature=function(bc,t,nodeCount){
   this.temperature.length=0;
   var temp=bc.temperature,ii=0;
@@ -153,9 +153,9 @@ Result.prototype.setTemperature=function(bc,t,nodeCount){
   this.calculated=true;
 };
 
-// ß“_‚Ì\‘¢‰ğÍŒ‹‰Ê‚É’l‚ğ‰Á‚¦‚é
-// i - ß“_‚ÌƒCƒ“ƒfƒbƒNƒX
-// eps1,str1,se1,eps2,str2,se2 - •\–ÊE— –Ê‚Ì˜cC‰—ÍC˜cƒGƒlƒ‹ƒM[–§“x
+// ç¯€ç‚¹ã®æ§‹é€ è§£æçµæœã«å€¤ã‚’åŠ ãˆã‚‹
+// i - ç¯€ç‚¹ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// eps1,str1,se1,eps2,str2,se2 - è¡¨é¢ãƒ»è£é¢ã®æ­ªï¼Œå¿œåŠ›ï¼Œæ­ªã‚¨ãƒãƒ«ã‚®ãƒ¼å¯†åº¦
 Result.prototype.addStructureData=function(i,eps1,str1,se1,
       	      	      	      	      	   eps2,str2,se2){
   this.strain1[i].add(eps1);
@@ -166,9 +166,9 @@ Result.prototype.addStructureData=function(i,eps1,str1,se1,
   this.sEnergy2[i]+=se2;
 };
 
-// ß“_‚Ì\‘¢‰ğÍŒ‹‰Ê‚É’l‚ğŠ|‚¯‚é
-// i - ß“_‚ÌƒCƒ“ƒfƒbƒNƒX
-// coef - ŒvZŒ‹‰Ê‚ÉŠ|‚¯‚éŒW”
+// ç¯€ç‚¹ã®æ§‹é€ è§£æçµæœã«å€¤ã‚’æ›ã‘ã‚‹
+// i - ç¯€ç‚¹ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// coef - è¨ˆç®—çµæœã«æ›ã‘ã‚‹ä¿‚æ•°
 Result.prototype.mulStructureData=function(i,coef){
   this.strain1[i].mul(coef);
   this.stress1[i].mul(coef);
@@ -178,17 +178,17 @@ Result.prototype.mulStructureData=function(i,coef){
   this.sEnergy2[i]*=coef;
 };
 
-// ŒÅ—L’lƒf[ƒ^‚ğ’Ç‰Á‚·‚é
-// ev - ŒÅ—L’l
+// å›ºæœ‰å€¤ãƒ‡ãƒ¼ã‚¿ã‚’è¿½åŠ ã™ã‚‹
+// ev - å›ºæœ‰å€¤
 Result.prototype.addEigenValue=function(ev){
   this.eigenValue.push(ev);
   this.calculated=true;
 };
 
-// ƒRƒ“ƒ^[}ƒf[ƒ^‚ğİ’è‚·‚é
-// param - ƒf[ƒ^‚Ìí—Ş
-// component - ƒf[ƒ^‚Ì¬•ª
-// data - ƒRƒ“ƒ^[}QÆŒ³
+// ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿ã‚’è¨­å®šã™ã‚‹
+// param - ãƒ‡ãƒ¼ã‚¿ã®ç¨®é¡
+// component - ãƒ‡ãƒ¼ã‚¿ã®æˆåˆ†
+// data - ã‚³ãƒ³ã‚¿ãƒ¼å›³å‚ç…§å…ƒ
 Result.prototype.setContour=function(param,component,data){
   if(param<0) return;
   data=data||this;
@@ -207,10 +207,10 @@ Result.prototype.setContour=function(param,component,data){
   }
 };
 
-// ƒf[ƒ^‚ğæ‚èo‚·
-// param - ƒf[ƒ^‚Ìí—Ş
-// component - ƒf[ƒ^‚Ì¬•ª
-// index - ß“_‚ÌƒCƒ“ƒfƒbƒNƒX
+// ãƒ‡ãƒ¼ã‚¿ã‚’å–ã‚Šå‡ºã™
+// param - ãƒ‡ãƒ¼ã‚¿ã®ç¨®é¡
+// component - ãƒ‡ãƒ¼ã‚¿ã®æˆåˆ†
+// index - ç¯€ç‚¹ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 Result.prototype.getData=function(param,component,index){
   switch(param){
     case DISPLACEMENT:
@@ -256,9 +256,9 @@ Result.prototype.getData=function(param,component,index){
   return 0;
 };
 
-// ˜cE‰—Í‚ğæ‚èo‚·
-// s - ˜c or ‰—Í
-// component - ƒf[ƒ^‚Ì¬•ª
+// æ­ªãƒ»å¿œåŠ›ã‚’å–ã‚Šå‡ºã™
+// s - æ­ª or å¿œåŠ›
+// component - ãƒ‡ãƒ¼ã‚¿ã®æˆåˆ†
 Result.prototype.getTensorComp=function(s,component){
   if(component<6){
     return s.vector()[component];
@@ -276,8 +276,8 @@ Result.prototype.getTensorComp=function(s,component){
   return 0;
 };
 
-// ß“_˜cE‰—Í‚ğ‰Šú‰»‚·‚é
-// count - ß“_”
+// ç¯€ç‚¹æ­ªãƒ»å¿œåŠ›ã‚’åˆæœŸåŒ–ã™ã‚‹
+// count - ç¯€ç‚¹æ•°
 Result.prototype.initStrainAndStress=function(count){
   this.strain1.length=0;
   this.strain2.length=0;
@@ -296,9 +296,9 @@ Result.prototype.initStrainAndStress=function(count){
   }
 };
 
-// ƒf[ƒ^•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
-// elems - —v‘f
+// ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
+// elems - è¦ç´ 
 Result.prototype.toStrings=function(nodes,elems){
   var s=[],tuple,i;
   if(this.type===ELEMENT_DATA){
@@ -349,23 +349,23 @@ Result.prototype.toStrings=function(nodes,elems){
 };
 
 //--------------------------------------------------------------------//
-// ŒÅ—L’l
-// value - ŒÅ—L’lEŒÅ—LU“®”
-// type - ‰ğÍí—Ş
+// å›ºæœ‰å€¤
+// value - å›ºæœ‰å€¤ãƒ»å›ºæœ‰æŒ¯å‹•æ•°
+// type - è§£æç¨®é¡
 var EigenValue=function(value,type){
   this.value=value;
   this.type=type;
-  this.displacement=[];		// •ÏˆÊ
-  this.sEnergy1=[];		// ß“_˜cƒGƒlƒ‹ƒM[–§“x
+  this.displacement=[];		// å¤‰ä½
+  this.sEnergy1=[];		// ç¯€ç‚¹æ­ªã‚¨ãƒãƒ«ã‚®ãƒ¼å¯†åº¦
   this.sEnergy2=[];
   this.dispMax=0;
   this.angleMax=0;
 };
 
-// •ÏˆÊ‚ğİ’è‚·‚é
-// bc - ‹«ŠEğŒ
-// disp - •ÏˆÊ‚ğ•\‚·ŒÅ—LƒxƒNƒgƒ‹
-// nodeCount - ß“_”
+// å¤‰ä½ã‚’è¨­å®šã™ã‚‹
+// bc - å¢ƒç•Œæ¡ä»¶
+// disp - å¤‰ä½ã‚’è¡¨ã™å›ºæœ‰ãƒ™ã‚¯ãƒˆãƒ«
+// nodeCount - ç¯€ç‚¹æ•°
 EigenValue.prototype.setDisplacement=function(bc,disp,nodeCount){
   this.displacement.length=0;
   this.dispMax=0;
@@ -392,10 +392,10 @@ EigenValue.prototype.setDisplacement=function(bc,disp,nodeCount){
   }
 };
 
-// ƒf[ƒ^‚ğæ‚èo‚·
-// param - ƒf[ƒ^‚Ìí—Ş
-// component - ƒf[ƒ^‚Ì¬•ª
-// index - ß“_‚ÌƒCƒ“ƒfƒbƒNƒX
+// ãƒ‡ãƒ¼ã‚¿ã‚’å–ã‚Šå‡ºã™
+// param - ãƒ‡ãƒ¼ã‚¿ã®ç¨®é¡
+// component - ãƒ‡ãƒ¼ã‚¿ã®æˆåˆ†
+// index - ç¯€ç‚¹ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 EigenValue.prototype.getData=function(param,component,index){
   switch(param){
     case DISPLACEMENT:
@@ -423,8 +423,8 @@ EigenValue.prototype.getData=function(param,component,index){
   return 0;
 };
 
-// ß“_˜cE‰—Í‚ğ‰Šú‰»‚·‚é
-// count - ß“_”
+// ç¯€ç‚¹æ­ªãƒ»å¿œåŠ›ã‚’åˆæœŸåŒ–ã™ã‚‹
+// count - ç¯€ç‚¹æ•°
 EigenValue.prototype.initStrainEnergy=function(count){
   this.sEnergy1.length=0;
   this.sEnergy2.length=0;
@@ -434,9 +434,9 @@ EigenValue.prototype.initStrainEnergy=function(count){
   }
 };
 
-// ƒf[ƒ^•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
-// tuple - ß“_or—v‘f
+// ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—ã‚’è¿”ã™
+// nodes - ç¯€ç‚¹
+// tuple - ç¯€ç‚¹orè¦ç´ 
 EigenValue.prototype.toStrings=function(nodes,tuple){
   var s=[],i;
   s.push('EigenValue\t'+this.type+'\t'+this.value);
@@ -456,8 +456,8 @@ EigenValue.prototype.toStrings=function(nodes,tuple){
 };
 
 //--------------------------------------------------------------------//
-// ‚RŸŒ³‘ÎÌƒeƒ“ƒ\ƒ‹
-// s - ¬•ª
+// ï¼“æ¬¡å…ƒå¯¾ç§°ãƒ†ãƒ³ã‚½ãƒ«
+// s - æˆåˆ†
 var SymmetricTensor3=function(s){
   this.xx=s[0];
   this.yy=s[1];
@@ -467,13 +467,13 @@ var SymmetricTensor3=function(s){
   this.zx=s[5];
 };
 
-// ƒeƒ“ƒ\ƒ‹‚ğƒxƒNƒgƒ‹‚Æ‚µ‚Ä•Ô‚·
+// ãƒ†ãƒ³ã‚½ãƒ«ã‚’ãƒ™ã‚¯ãƒˆãƒ«ã¨ã—ã¦è¿”ã™
 SymmetricTensor3.prototype.vector=function(){
   return [this.xx,this.yy,this.zz,this.xy,this.yz,this.zx];
 };
 
-// ƒeƒ“ƒ\ƒ‹‚ğ‰Á‚¦‚é
-// t - ‰Á‚¦‚éƒeƒ“ƒ\ƒ‹
+// ãƒ†ãƒ³ã‚½ãƒ«ã‚’åŠ ãˆã‚‹
+// t - åŠ ãˆã‚‹ãƒ†ãƒ³ã‚½ãƒ«
 SymmetricTensor3.prototype.add=function(t){
   this.xx+=t.xx;
   this.yy+=t.yy;
@@ -483,8 +483,8 @@ SymmetricTensor3.prototype.add=function(t){
   this.zx+=t.zx;
 };
 
-// ¬•ª‚ÉƒXƒJƒ‰[‚ğŠ|‚¯‚é
-// a - Š|‚¯‚éƒXƒJƒ‰[
+// æˆåˆ†ã«ã‚¹ã‚«ãƒ©ãƒ¼ã‚’æ›ã‘ã‚‹
+// a - æ›ã‘ã‚‹ã‚¹ã‚«ãƒ©ãƒ¼
 SymmetricTensor3.prototype.mul=function(a){
   this.xx*=a;
   this.yy*=a;
@@ -494,13 +494,13 @@ SymmetricTensor3.prototype.mul=function(a){
   this.zx*=a;
 };
 
-// ŒÅ—L’l‚ğ•Ô‚·
+// å›ºæœ‰å€¤ã‚’è¿”ã™
 SymmetricTensor3.prototype.principal=function(){
   return eigenvalue(this,100).lambda;
 };
 
-// ƒeƒ“ƒ\ƒ‹‚ğ‰ñ“]‚³‚¹‚é
-// d - •ûŒü—]Œ·ƒ}ƒgƒŠƒbƒNƒX
+// ãƒ†ãƒ³ã‚½ãƒ«ã‚’å›è»¢ã•ã›ã‚‹
+// d - æ–¹å‘ä½™å¼¦ãƒãƒˆãƒªãƒƒã‚¯ã‚¹
 SymmetricTensor3.prototype.rotate=function(d){
   var mat=[[this.xx,this.xy,this.zx],[this.xy,this.yy,this.yz],
       	   [this.zx,this.yz,this.zz]];
@@ -522,26 +522,26 @@ SymmetricTensor3.prototype.rotate=function(d){
   this.zx=s[5];
 };
 
-// ƒeƒ“ƒ\ƒ‹‚Ì“àÏ‚ğŒvZ‚·‚é
-// t - ‘Šè‚Ìƒeƒ“ƒ\ƒ‹
+// ãƒ†ãƒ³ã‚½ãƒ«ã®å†…ç©ã‚’è¨ˆç®—ã™ã‚‹
+// t - ç›¸æ‰‹ã®ãƒ†ãƒ³ã‚½ãƒ«
 SymmetricTensor3.prototype.innerProduct=function(t){
   return this.xx*t.xx+this.yy*t.yy+this.zz*t.zz+
       	 2*(this.xy*t.xy+this.yz*t.yz+this.zx*t.zx);
 };
 
-// Jacobie–@‚Å‘ÎÌƒeƒ“ƒ\ƒ‹‚ÌŒÅ—L’l‚ğ‹‚ß‚é
-// Numeric.js‚Å‚Í‘ÎŠp—v‘f‚ª0i—á‚¦‚Î‚¹‚ñ’f‚Ì‚İ‚ÌğŒj‚¾‚Æ‹‚ß‚ç‚ê‚È‚¢
-// st - ‘ÎÌƒeƒ“ƒ\ƒ‹
-// iterMax - ”½•œ‰ñ”‚ÌÅ‘å’l
+// Jacobieæ³•ã§å¯¾ç§°ãƒ†ãƒ³ã‚½ãƒ«ã®å›ºæœ‰å€¤ã‚’æ±‚ã‚ã‚‹
+// Numeric.jsã§ã¯å¯¾è§’è¦ç´ ãŒ0ï¼ˆä¾‹ãˆã°ã›ã‚“æ–­ã®ã¿ã®æ¡ä»¶ï¼‰ã ã¨æ±‚ã‚ã‚‰ã‚Œãªã„
+// st - å¯¾ç§°ãƒ†ãƒ³ã‚½ãƒ«
+// iterMax - åå¾©å›æ•°ã®æœ€å¤§å€¤
 function eigenvalue(st,iterMax){
   var m=[[st.xx,st.xy,st.zx],[st.xy,st.yy,st.yz],
       	 [st.zx,st.yz,st.zz]];
   return eigenByJacob(m,iterMax);
 }
 
-// Jacobie–@‚Å‘ÎÌƒeƒ“ƒ\ƒ‹‚ÌŒÅ—L’l‚ğ‹‚ß‚é
-// m - ‘ÎÌs—ñ
-// iterMax - ”½•œ‰ñ”‚ÌÅ‘å’l
+// Jacobieæ³•ã§å¯¾ç§°ãƒ†ãƒ³ã‚½ãƒ«ã®å›ºæœ‰å€¤ã‚’æ±‚ã‚ã‚‹
+// m - å¯¾ç§°è¡Œåˆ—
+// iterMax - åå¾©å›æ•°ã®æœ€å¤§å€¤
 function eigenByJacob(m,iterMax){
   var size=m.length,abs=Math.abs,i,j,iter,dataMax=0;
   var ev=numeric.identity(size);
@@ -551,7 +551,7 @@ function eigenByJacob(m,iterMax){
     }
   }
   var tolerance=EIG_EPS*dataMax;
-// ’l‚ª0‚Ìê‡
+// å€¤ãŒ0ã®å ´åˆ
   if(dataMax===0) return {lambda:numeric.getDiag(m),ev:ev};
   for(iter=0;iter<iterMax;iter++){
     var im=0,jm=0,ndMax=0;
@@ -592,7 +592,7 @@ function eigenByJacob(m,iterMax){
     mjm[jm]=ajj;
   }
   m=numeric.getDiag(m);
-// ŒÅ—L’l‚ğ‘å‚«‚¢‡‚É“ü‚ê‘Ö‚¦‚é
+// å›ºæœ‰å€¤ã‚’å¤§ãã„é †ã«å…¥ã‚Œæ›¿ãˆã‚‹
   var eig=[];
   ev=numeric.transpose(ev);
   for(i=0;i<size;i++) eig.push([m[i],ev[i]]);
@@ -605,8 +605,8 @@ function eigenByJacob(m,iterMax){
 }
 
 //--------------------------------------------------------------------//
-// ˜c
-// s - ¬•ª
+// æ­ª
+// s - æˆåˆ†
 var Strain=function(s){
   SymmetricTensor3.call(this,s);
   this.xy=0.5*s[3];
@@ -614,19 +614,19 @@ var Strain=function(s){
   this.zx=0.5*s[5];
 };
 
-// ƒeƒ“ƒ\ƒ‹‚ğƒxƒNƒgƒ‹‚Æ‚µ‚Ä•Ô‚·
+// ãƒ†ãƒ³ã‚½ãƒ«ã‚’ãƒ™ã‚¯ãƒˆãƒ«ã¨ã—ã¦è¿”ã™
 Strain.prototype.vector=function(){
   return [this.xx,this.yy,this.zz,2*this.xy,2*this.yz,2*this.zx];
 };
 
 //--------------------------------------------------------------------//
-// ‰—Í
-// s - ¬•ª
+// å¿œåŠ›
+// s - æˆåˆ†
 var Stress=function(s){
   SymmetricTensor3.call(this,s);
 };
 
-// ƒ~[ƒ[ƒX‰—Í‚ğ•Ô‚·
+// ãƒŸãƒ¼ã‚¼ã‚¹å¿œåŠ›ã‚’è¿”ã™
 Stress.prototype.mises=function(){
   var dxy=this.xx-this.yy,dyz=this.yy-this.zz,dzx=this.zz-this.xx;
   var ss=dxy*dxy+dyz*dyz+dzx*dzx;
@@ -635,60 +635,60 @@ Stress.prototype.mises=function(){
 };
 
 //--------------------------------------------------------------------//
-// Œ‹‰Ê•\¦İ’è
+// çµæœè¡¨ç¤ºè¨­å®š
 var ResultView=function(){
-  this.dispCoef=document.getElementById('dispcoef');	// •ÏŒ`•\¦”{—¦
-  this.eigen=document.getElementById('eigenvalue');	// ŒÅ—L’lƒf[ƒ^
-  this.contour=document.getElementById('contour');	// ƒRƒ“ƒ^[}•\¦ƒf[ƒ^
-  this.component=document.getElementById('component');	// ƒRƒ“ƒ^[}•\¦¬•ª
+  this.dispCoef=document.getElementById('dispcoef');	// å¤‰å½¢è¡¨ç¤ºå€ç‡
+  this.eigen=document.getElementById('eigenvalue');	// å›ºæœ‰å€¤ãƒ‡ãƒ¼ã‚¿
+  this.contour=document.getElementById('contour');	// ã‚³ãƒ³ã‚¿ãƒ¼å›³è¡¨ç¤ºãƒ‡ãƒ¼ã‚¿
+  this.component=document.getElementById('component');	// ã‚³ãƒ³ã‚¿ãƒ¼å›³è¡¨ç¤ºæˆåˆ†
 };
 
-// Ã‰ğÍ‚Ìİ’è‚ğ‰Šú‰»‚·‚é
+// é™è§£æã®è¨­å®šã‚’åˆæœŸåŒ–ã™ã‚‹
 ResultView.prototype.setInitStatic=function(){
   removeOptions(this.eigen);
   this.setContourSelect();
   this.setConfig();
 };
 
-// ŒÅ—L’l‰ğÍ‚Ìİ’è‚ğ‰Šú‰»‚·‚é
+// å›ºæœ‰å€¤è§£æã®è¨­å®šã‚’åˆæœŸåŒ–ã™ã‚‹
 ResultView.prototype.setInitEigen=function(){
   removeOptions(this.eigen);
   var eigenValue=model.result.eigenValue;
   for(var i=0;i<eigenValue.length;i++){
-    this.eigen.appendChild(createOption('ŒÅ—L’l'+(i+1),i));
+    this.eigen.appendChild(createOption('å›ºæœ‰å€¤'+(i+1),i));
   }
   removeOptions(this.contour);
-  this.contour.appendChild(createOption('ƒRƒ“ƒ^[–³‚µ',NONE));
-  this.contour.appendChild(createOption('•ÏˆÊ',DISPLACEMENT));
-  this.contour.appendChild(createOption('˜cƒGƒlƒ‹ƒM[–§“x',S_ENERGY));
+  this.contour.appendChild(createOption('ã‚³ãƒ³ã‚¿ãƒ¼ç„¡ã—',NONE));
+  this.contour.appendChild(createOption('å¤‰ä½',DISPLACEMENT));
+  this.contour.appendChild(createOption('æ­ªã‚¨ãƒãƒ«ã‚®ãƒ¼å¯†åº¦',S_ENERGY));
   this.setResComp();
   this.setConfig();
 };
 
-// •\¦‚·‚éƒRƒ“ƒ^[}ƒf[ƒ^‚ğİ’è‚·‚é
+// è¡¨ç¤ºã™ã‚‹ã‚³ãƒ³ã‚¿ãƒ¼å›³ãƒ‡ãƒ¼ã‚¿ã‚’è¨­å®šã™ã‚‹
 ResultView.prototype.setContourSelect=function(){
   removeOptions(this.eigen);
   removeOptions(this.contour);
-  this.contour.appendChild(createOption('ƒRƒ“ƒ^[–³‚µ',NONE));
+  this.contour.appendChild(createOption('ã‚³ãƒ³ã‚¿ãƒ¼ç„¡ã—',NONE));
   if(model.result.displacement.length>0){
-    this.contour.appendChild(createOption('•ÏˆÊ',DISPLACEMENT));
+    this.contour.appendChild(createOption('å¤‰ä½',DISPLACEMENT));
   }
   if(model.result.strain1.length>0){
-    this.contour.appendChild(createOption('˜c',STRAIN));
+    this.contour.appendChild(createOption('æ­ª',STRAIN));
   }
   if(model.result.stress1.length>0){
-    this.contour.appendChild(createOption('‰—Í',STRESS));
+    this.contour.appendChild(createOption('å¿œåŠ›',STRESS));
   }
   if(model.result.sEnergy1.length>0){
-    this.contour.appendChild(createOption('˜cƒGƒlƒ‹ƒM[–§“x',S_ENERGY));
+    this.contour.appendChild(createOption('æ­ªã‚¨ãƒãƒ«ã‚®ãƒ¼å¯†åº¦',S_ENERGY));
   }
   if(model.result.temperature.length>0){
-    this.contour.appendChild(createOption('‰·“x',TEMPERATURE));
+    this.contour.appendChild(createOption('æ¸©åº¦',TEMPERATURE));
   }
   removeOptions(this.component);
 };
 
-// •\¦¬•ª‚ğİ’è‚·‚é
+// è¡¨ç¤ºæˆåˆ†ã‚’è¨­å®šã™ã‚‹
 ResultView.prototype.setResComp=function(){
   if(!model.result.calculated) return;
   removeOptions(this.component);
@@ -731,7 +731,7 @@ ResultView.prototype.setResComp=function(){
   }
 };
 
-// İ’è‚ğ•\¦‚É”½‰f‚³‚¹‚é
+// è¨­å®šã‚’è¡¨ç¤ºã«åæ˜ ã•ã›ã‚‹
 ResultView.prototype.setConfig=function(){
   var eigen=parseInt(this.eigen.value);
   var dcoef=parseFloat(this.dispCoef.value);
@@ -793,7 +793,7 @@ ResultView.prototype.setConfig=function(){
   }
 };
 
-// İ’è‚ğƒoƒbƒNƒAƒbƒv‚·‚é
+// è¨­å®šã‚’ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã™ã‚‹
 ResultView.prototype.stock=function(){
   this.coef0=this.dispCoef.value;
   this.contour0=[];
@@ -809,7 +809,7 @@ ResultView.prototype.stock=function(){
   this.compIndex=this.component.selectedIndex;
 };
 
-// İ’è‚ğŒ³‚É–ß‚·
+// è¨­å®šã‚’å…ƒã«æˆ»ã™
 ResultView.prototype.reset=function(){
   this.dispCoef.value=this.coef0;
   removeOptions(this.contour);
@@ -825,10 +825,10 @@ ResultView.prototype.reset=function(){
   this.component.selectedIndex=this.compIndex;
 };
 
-// ŒvZŒ‹‰Ê‚Ì¬•ª‚ğ•\¦‚·‚é
-// sel - ƒRƒ“ƒ{ƒ{ƒbƒNƒX
-// component - ¬•ª
-// data - ƒf[ƒ^”Ô†i1:•\–Ê,2:— –Ê,-1:”Ô†‚È‚µj
+// è¨ˆç®—çµæœã®æˆåˆ†ã‚’è¡¨ç¤ºã™ã‚‹
+// sel - ã‚³ãƒ³ãƒœãƒœãƒƒã‚¯ã‚¹
+// component - æˆåˆ†
+// data - ãƒ‡ãƒ¼ã‚¿ç•ªå·ï¼ˆ1:è¡¨é¢,2:è£é¢,-1:ç•ªå·ãªã—ï¼‰
 function setOptions(sel,component,data){
   for(var i=0;i<component.length;i++){
     var c=component[i];
@@ -837,9 +837,9 @@ function setOptions(sel,component,data){
   }
 }
 
-// ƒIƒvƒVƒ‡ƒ“—v‘f‚ğì¬‚·‚é
-// text - ƒIƒvƒVƒ‡ƒ“‚ÌƒeƒLƒXƒg
-// value - ƒIƒvƒVƒ‡ƒ“‚Ì’l
+// ã‚ªãƒ—ã‚·ãƒ§ãƒ³è¦ç´ ã‚’ä½œæˆã™ã‚‹
+// text - ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã®ãƒ†ã‚­ã‚¹ãƒˆ
+// value - ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã®å€¤
 function createOption(text,value){
   var opt=document.createElement('option');
   opt.value=value;
@@ -847,8 +847,8 @@ function createOption(text,value){
   return opt;
 }
 
-// ƒRƒ“ƒ{ƒ{ƒbƒNƒX‚ÌƒIƒvƒVƒ‡ƒ“‚ğíœ‚·‚é
-// sel - ƒRƒ“ƒ{ƒ{ƒbƒNƒX
+// ã‚³ãƒ³ãƒœãƒœãƒƒã‚¯ã‚¹ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’å‰Šé™¤ã™ã‚‹
+// sel - ã‚³ãƒ³ãƒœãƒœãƒƒã‚¯ã‚¹
 function removeOptions(sel){
   if(sel.hasChildNodes()){
     while(sel.childNodes.length>0){
@@ -857,13 +857,13 @@ function removeOptions(sel){
   }
 }
 
-// Œ‹‰Ê•\¦İ’èƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
+// çµæœè¡¨ç¤ºè¨­å®šã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
 function showResultWindow(){
   showModalWindow(RESULT_WINDOW);
   resultView.stock();
 }
 
-// ŒvZŒ‹‰Ê‚ğÁ‹‚·‚é
+// è¨ˆç®—çµæœã‚’æ¶ˆå»ã™ã‚‹
 function removeRes(){
   model.result.clear();
   viewObj.removeResult();
@@ -873,13 +873,13 @@ function removeRes(){
   hideModalWindow(RESULT_WINDOW);
 }
 
-// Œ‹‰Ê•\¦İ’è‚ğXV‚·‚é
+// çµæœè¡¨ç¤ºè¨­å®šã‚’æ›´æ–°ã™ã‚‹
 function setResultConfig(){
   hideModalWindow(RESULT_WINDOW);
   resultView.setConfig();
 }
 
-// Œ‹‰Ê•\¦İ’è‚ğæ‚èÁ‚·
+// çµæœè¡¨ç¤ºè¨­å®šã‚’å–ã‚Šæ¶ˆã™
 function cancelResultConfig(){
   hideModalWindow(RESULT_WINDOW);
   resultView.reset();

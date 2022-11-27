@@ -1,23 +1,23 @@
-//--------------------------------------------------------------------//
-// 3ŸŒ³—LŒÀ—v‘f–@(FEM)
+ï»¿//--------------------------------------------------------------------//
+// 3æ¬¡å…ƒæœ‰é™è¦ç´ æ³•(FEM)
 
-var model;		// FEMƒf[ƒ^ƒ‚ƒfƒ‹
-var viewModel;		// •\¦ƒ‚ƒfƒ‹
-var viewObj;		// •\¦ƒIƒuƒWƒFƒNƒg
-var bounds;		// ƒ‚ƒfƒ‹‹«ŠE
-var info;		// ƒ‚ƒfƒ‹î•ñ•\¦•”
-var colorBar;		// ƒJƒ‰[ƒo[
-var resultView;		// Œ‹‰Ê•\¦İ’è
-var viewConfig;		// ƒ‚ƒfƒ‹•\¦İ’è
-var modalWindow;	// ƒ‚[ƒ_ƒ‹ƒEƒBƒ“ƒhƒE
+var model;		// FEMãƒ‡ãƒ¼ã‚¿ãƒ¢ãƒ‡ãƒ«
+var viewModel;		// è¡¨ç¤ºãƒ¢ãƒ‡ãƒ«
+var viewObj;		// è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
+var bounds;		// ãƒ¢ãƒ‡ãƒ«å¢ƒç•Œ
+var info;		// ãƒ¢ãƒ‡ãƒ«æƒ…å ±è¡¨ç¤ºéƒ¨
+var colorBar;		// ã‚«ãƒ©ãƒ¼ãƒãƒ¼
+var resultView;		// çµæœè¡¨ç¤ºè¨­å®š
+var viewConfig;		// ãƒ¢ãƒ‡ãƒ«è¡¨ç¤ºè¨­å®š
+var modalWindow;	// ãƒ¢ãƒ¼ãƒ€ãƒ«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
 
-var FILE_WINDOW=0;	// ƒtƒ@ƒCƒ‹‘€ìƒEƒBƒ“ƒhƒE
-var CALC_WINDOW=1;	// ŒvZİ’èƒEƒBƒ“ƒhƒE
-var RESULT_WINDOW=2;	// Œ‹‰Ê•\¦İ’èƒEƒBƒ“ƒhƒE
-var CONFIG_WINDOW=3;	// ƒRƒ“ƒtƒBƒOƒEƒBƒ“ƒhƒE
+var FILE_WINDOW=0;	// ãƒ•ã‚¡ã‚¤ãƒ«æ“ä½œã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+var CALC_WINDOW=1;	// è¨ˆç®—è¨­å®šã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+var RESULT_WINDOW=2;	// çµæœè¡¨ç¤ºè¨­å®šã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+var CONFIG_WINDOW=3;	// ã‚³ãƒ³ãƒ•ã‚£ã‚°ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
 
-// ƒf[ƒ^‚ğ‰Šú‰»‚·‚é
-// fileName - ƒf[ƒ^ƒtƒ@ƒCƒ‹–¼
+// ãƒ‡ãƒ¼ã‚¿ã‚’åˆæœŸåŒ–ã™ã‚‹
+// fileName - ãƒ‡ãƒ¼ã‚¿ãƒ•ã‚¡ã‚¤ãƒ«å
 function initModel(fileName){
   model=new FemDataModel();
   initThree();
@@ -33,7 +33,7 @@ function initModel(fileName){
   loop();
 }
 
-// three.js ‚Ì‰Šú‰»‚ğ‚·‚é
+// three.js ã®åˆæœŸåŒ–ã‚’ã™ã‚‹
 function initThree(){
   document.addEventListener('keydown',keyPressed,false);
   bounds=new Bounds();
@@ -43,7 +43,7 @@ function initThree(){
   colorBar=new ColorBar('colorbar');
 }
 
-// ƒL[‚ğ‰Ÿ‚µ‚½‚Ìˆ—‚ğs‚¤
+// ã‚­ãƒ¼ã‚’æŠ¼ã—ãŸæ™‚ã®å‡¦ç†ã‚’è¡Œã†
 function keyPressed(e){
   switch(e.keyCode){
     case 88:		// X
@@ -58,7 +58,7 @@ function keyPressed(e){
   }
 }
 
-// •\¦ƒIƒuƒWƒFƒNƒg‚ğ‰Šú‰»‚·‚é
+// è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’åˆæœŸåŒ–ã™ã‚‹
 function initObject(){
   viewObj.remove();
   viewObj.create();
@@ -68,44 +68,44 @@ function initObject(){
   showInfo();
 }
 
-// ƒ‹[ƒvŠÖ”
+// ãƒ«ãƒ¼ãƒ—é–¢æ•°
 function loop(){
   viewModel.update();
   requestAnimationFrame(loop);
   viewModel.setAxis();
 }
 
-// ƒ‚ƒfƒ‹î•ñ‚ğ•\¦‚·‚é
+// ãƒ¢ãƒ‡ãƒ«æƒ…å ±ã‚’è¡¨ç¤ºã™ã‚‹
 function showInfo(){
   if(model.result.calculated){
     if((model.result.dispMax===0) && (model.result.tempMax!==0)){
-      info.textContent='‰·“x Max.:'+numString(model.result.tempMax);
+      info.textContent='æ¸©åº¦ Max.:'+numString(model.result.tempMax);
     }
     else{
-      info.textContent='•ÏˆÊ Max.:'+numString(model.result.dispMax);
+      info.textContent='å¤‰ä½ Max.:'+numString(model.result.dispMax);
     }
   }
   else{
-    info.innerHTML='ß“_:'+model.mesh.nodes.length+
-      	      	   '<br />—v‘f:'+model.mesh.elements.length;
+    info.innerHTML='ç¯€ç‚¹:'+model.mesh.nodes.length+
+      	      	   '<br />è¦ç´ :'+model.mesh.elements.length;
   }
 }
 
-// ŒÅ—L’l‚ğ•\¦‚·‚é
-// index - ŒÅ—L’l‚ÌƒCƒ“ƒfƒbƒNƒX
-// type - ‰ğÍí—Ş
-// value - ŒÅ—L’l
+// å›ºæœ‰å€¤ã‚’è¡¨ç¤ºã™ã‚‹
+// index - å›ºæœ‰å€¤ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// type - è§£æç¨®é¡
+// value - å›ºæœ‰å€¤
 function showEigenValue(index,type,value){
   if(type===BUCKLING){
-    info.textContent='ŒÅ—L’l'+(index+1)+': '+numString(value);
+    info.textContent='å›ºæœ‰å€¤'+(index+1)+': '+numString(value);
   }
   else{
-    info.textContent='ŒÅ—LU“®”'+(index+1)+': '+numString(value);
+    info.textContent='å›ºæœ‰æŒ¯å‹•æ•°'+(index+1)+': '+numString(value);
   }
 }
 
-// ”’l‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-// value - ”’l
+// æ•°å€¤ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
+// value - æ•°å€¤
 function numString(value){
   var vabs=Math.abs(value);
   if(vabs>=1.0E5){
@@ -122,23 +122,23 @@ function numString(value){
   }
 }
 
-// ƒ‚[ƒ_ƒ‹ƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
-// win - ƒ‚[ƒ_ƒ‹ƒEƒBƒ“ƒhƒE‚ÌƒCƒ“ƒfƒbƒNƒX
+// ãƒ¢ãƒ¼ãƒ€ãƒ«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
+// win - ãƒ¢ãƒ¼ãƒ€ãƒ«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 function showModalWindow(win){
   modalWindow[win].style.zIndex=4;
   modalWindow[win].style.opacity=1;
 }
 
-// ƒ‚[ƒ_ƒ‹ƒEƒBƒ“ƒhƒE‚ğ”ñ•\¦‚É‚·‚é
-// win - ƒ‚[ƒ_ƒ‹ƒEƒBƒ“ƒhƒE‚ÌƒCƒ“ƒfƒbƒNƒX
+// ãƒ¢ãƒ¼ãƒ€ãƒ«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’éè¡¨ç¤ºã«ã™ã‚‹
+// win - ãƒ¢ãƒ¼ãƒ€ãƒ«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 function hideModalWindow(win){
   modalWindow[win].style.zIndex=1;
   modalWindow[win].style.opacity=0;
 }
 
-// Œp³ŠÖŒW‚ğİ’è‚·‚é
-// ctor - VƒNƒ‰ƒX
-// superCtor - Œp³Œ³ƒNƒ‰ƒX
+// ç¶™æ‰¿é–¢ä¿‚ã‚’è¨­å®šã™ã‚‹
+// ctor - æ–°ã‚¯ãƒ©ã‚¹
+// superCtor - ç¶™æ‰¿å…ƒã‚¯ãƒ©ã‚¹
 function inherits(ctor,superCtor){
   if((ctor===undefined) || (ctor===null))
     throw new TypeError('The constructor to `inherits` must not be '+

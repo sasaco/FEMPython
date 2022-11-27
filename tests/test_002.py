@@ -3,8 +3,9 @@ import pytest
 
 def test_sampleBeamHexa1():
     from src.FemMain import initModel
-
-    model = initModel('tests/example_files/beam/sampleBeamHexa1.fem')
+    
+    model = initModel('tests/examples/others/sample3.fem')
+    #model = initModel('tests/examples/beam/sampleBeamHexa1.fem')
     model.calculate()
     assert True
 

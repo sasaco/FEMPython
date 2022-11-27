@@ -1,38 +1,38 @@
-var CIRCLE_DIV=16;			// ‰~Œ`’f–Ê•\¦ƒIƒuƒWƒFƒNƒg‚Ì•ªŠ„”
-var CIRCLE_DTH=2*Math.PI/CIRCLE_DIV;	// ‰~Œ`’f–Ê‚Ì‚P•ªŠ„‚ÌŠp“x
-var COEF_K1=64/Math.pow(Math.PI,5);	// ‹éŒ`’f–Ê‚Ì€‚èŒW”
+ï»¿var CIRCLE_DIV=16;			// å††å½¢æ–­é¢è¡¨ç¤ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®åˆ†å‰²æ•°
+var CIRCLE_DTH=2*Math.PI/CIRCLE_DIV;	// å††å½¢æ–­é¢ã®ï¼‘åˆ†å‰²ã®è§’åº¦
+var COEF_K1=64/Math.pow(Math.PI,5);	// çŸ©å½¢æ–­é¢ã®æ©ã‚Šä¿‚æ•°
 var COEF_K=8/(Math.PI*Math.PI);
 
 //--------------------------------------------------------------------//
-// ‰~Œ`’f–Ê
-// ss - ƒf[ƒ^•¶š—ñ
+// å††å½¢æ–­é¢
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—
 var CircleSection=function(ss){
-  this.d1=parseFloat(ss[0]);	// ŠOŒa
-  this.d2=parseFloat(ss[1]);	// “àŒa
-// ’f–ÊÏ
+  this.d1=parseFloat(ss[0]);	// å¤–å¾„
+  this.d2=parseFloat(ss[1]);	// å†…å¾„
+// æ–­é¢ç©
   this.area=0.25*Math.PI*(this.d1*this.d1-this.d2*this.d2);
-// ’f–Ê‚QŸƒ‚[ƒƒ“ƒg
+// æ–­é¢ï¼’æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
   this.iy=0.0625*this.area*(this.d1*this.d1+this.d2*this.d2);
   this.iz=this.iy;
-  this.ip=this.iy+this.iz;	// ’f–Ê‚QŸ‹Éƒ‚[ƒƒ“ƒg
+  this.ip=this.iy+this.iz;	// æ–­é¢ï¼’æ¬¡æ¥µãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
 };
 
-// ’f–Ê‚Ì’¸“_”‚ğ•Ô‚·
+// æ–­é¢ã®é ‚ç‚¹æ•°ã‚’è¿”ã™
 CircleSection.prototype.vertexCount=function(){
   return CIRCLE_DIV;
 };
 
-// ‚¹‚ñ’f•â³ŒW”‚ğ•Ô‚·
+// ã›ã‚“æ–­è£œæ­£ä¿‚æ•°ã‚’è¿”ã™
 CircleSection.prototype.shearCoef=function(){
   return KS_CIRCLE;
 };
 
-// ˜cE‰—ÍƒxƒNƒgƒ‹‚ğ•Ô‚·
-// material - Ş—¿
-// ex - ˆø’£ˆ³k˜c
-// thd - ”ä€‚èŠp
-// kpy,kpz - ‹È‚°‚É‚æ‚é‹È—¦
-// sy,sz - ’f–Ê‚¹‚ñ’f˜c
+// æ­ªãƒ»å¿œåŠ›ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+// material - ææ–™
+// ex - å¼•å¼µåœ§ç¸®æ­ª
+// thd - æ¯”æ©ã‚Šè§’
+// kpy,kpz - æ›²ã’ã«ã‚ˆã‚‹æ›²ç‡
+// sy,sz - æ–­é¢ã›ã‚“æ–­æ­ª
 CircleSection.prototype.strainStress=function(material,ex,thd,kpy,kpz,
       	      	      	      	      	      sy,sz){
   var kp=Math.sqrt(kpy*kpy+kpz*kpz),kpr=0.5*kp*this.d1;
@@ -48,10 +48,10 @@ CircleSection.prototype.strainStress=function(material,ex,thd,kpy,kpz,
       	  [ee*(ex-kpr),0,0,gg*(-gy+sy),0,gg*(-gz+sz)]];
 };
 
-// ’f–Ê•\¦ƒ‚ƒfƒ‹‚ÌÀ•WŒn‚ğİ’è‚·‚é
-// pos1,pos2 - ŠOŒaC“àŒa‚ÌÀ•W
-// cx,cy,cz - ’†S“_À•W
-// v1,v2 - ²•ûŒüC’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// æ–­é¢è¡¨ç¤ºãƒ¢ãƒ‡ãƒ«ã®åº§æ¨™ç³»ã‚’è¨­å®šã™ã‚‹
+// pos1,pos2 - å¤–å¾„ï¼Œå†…å¾„ã®åº§æ¨™
+// cx,cy,cz - ä¸­å¿ƒç‚¹åº§æ¨™
+// v1,v2 - è»¸æ–¹å‘ï¼Œæ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 CircleSection.prototype.setCoords=function(pos1,pos2,cx,cy,cz,v1,v2){
   var r1=0.5*this.d1,r2=0.5*this.d2;
   for(var j=0;j<pos1.length;j+=3){
@@ -65,32 +65,32 @@ CircleSection.prototype.setCoords=function(pos1,pos2,cx,cy,cz,v1,v2){
   }
 };
 
-// ¿—ÊEdSü‚è‚ÌŠµ«ƒ‚[ƒƒ“ƒg‚ğ•Ô‚·
-// dens - –§“x
-// l - —v‘f’·‚³
+// è³ªé‡ãƒ»é‡å¿ƒå‘¨ã‚Šã®æ…£æ€§ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã‚’è¿”ã™
+// dens - å¯†åº¦
+// l - è¦ç´ é•·ã•
 CircleSection.prototype.massInertia=function(dens,l){
   var dl=dens*l,dly=dl*this.iy;
   return [dl*this.area,2*dly,dly,dly];
 };
 
-// ’f–Ê‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// æ–­é¢ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 CircleSection.prototype.toString=function(){
   return this.d1+'\t'+this.d2;
 };
 
 //--------------------------------------------------------------------//
-// ‹éŒ`’f–Ê
-// ss - ƒf[ƒ^•¶š—ñ
+// çŸ©å½¢æ–­é¢
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—
 var RectSection=function(ss){
   var b1=parseFloat(ss[0]),h1=parseFloat(ss[1]);
   var b2=parseFloat(ss[2]),h2=parseFloat(ss[3]);
-  this.b1=b1;	// ŠO‘¤•
-  this.h1=h1;	// ŠO‘¤‚‚³
-  this.b2=b2;	// “à‘¤•
-  this.h2=h2;	// “à‘¤‚‚³
-// ’f–ÊÏ
+  this.b1=b1;	// å¤–å´å¹…
+  this.h1=h1;	// å¤–å´é«˜ã•
+  this.b2=b2;	// å†…å´å¹…
+  this.h2=h2;	// å†…å´é«˜ã•
+// æ–­é¢ç©
   this.area=b1*h1-b2*h2;
-// ’f–Ê‚QŸƒ‚[ƒƒ“ƒg
+// æ–­é¢ï¼’æ¬¡ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
   var i11=b1*b1*b1*h1,i12=b1*h1*h1*h1,i21=b2*b2*b2*h2,i22=b2*h2*h2*h2;
   this.iy=(i11-i21)/12;
   this.iz=(i12-i22)/12;
@@ -118,25 +118,25 @@ var RectSection=function(ss){
     k2=rectCoef(h2/b2);
     ip2=k2[0]*i21;
   }
-  this.ip=ip1-ip2;		// ’f–Ê‚QŸ‹Éƒ‚[ƒƒ“ƒg
+  this.ip=ip1-ip2;		// æ–­é¢ï¼’æ¬¡æ¥µãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆ
 };
 
-// ’f–Ê‚Ì’¸“_”‚ğ•Ô‚·
+// æ–­é¢ã®é ‚ç‚¹æ•°ã‚’è¿”ã™
 RectSection.prototype.vertexCount=function(){
   return 4;
 };
 
-// ‚¹‚ñ’f•â³ŒW”‚ğ•Ô‚·
+// ã›ã‚“æ–­è£œæ­£ä¿‚æ•°ã‚’è¿”ã™
 RectSection.prototype.shearCoef=function(){
   return KS_RECT;
 };
 
-// ˜cE‰—ÍƒxƒNƒgƒ‹‚ğ•Ô‚·
-// material - Ş—¿
-// ex - ˆø’£ˆ³k˜c
-// thd - ”ä€‚èŠp
-// kpy,kpz - ‹È‚°‚É‚æ‚é‹È—¦
-// sy,sz - ’f–Ê‚¹‚ñ’f˜c
+// æ­ªãƒ»å¿œåŠ›ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¿”ã™
+// material - ææ–™
+// ex - å¼•å¼µåœ§ç¸®æ­ª
+// thd - æ¯”æ©ã‚Šè§’
+// kpy,kpz - æ›²ã’ã«ã‚ˆã‚‹æ›²ç‡
+// sy,sz - æ–­é¢ã›ã‚“æ–­æ­ª
 RectSection.prototype.strainStress=function(material,ex,thd,kpy,kpz,
       	      	      	      	      	    sy,sz){
   var sby=0.5*kpy*this.b1,sbz=0.5*kpz*this.h1;
@@ -161,10 +161,10 @@ RectSection.prototype.strainStress=function(material,ex,thd,kpy,kpz,
       	  [ee*eps2[0],0,0,gg*eps2[1],0,gg*eps2[2]]];
 };
 
-// ’f–Ê•\¦ƒ‚ƒfƒ‹‚ÌÀ•WŒn‚ğİ’è‚·‚é
-// pos1,pos2 - ŠOŒaC“àŒa‚ÌÀ•W
-// cx,cy,cz - ’†S“_À•W
-// v1,v2 - ²•ûŒüC’f–ÊŠî€•ûŒüƒxƒNƒgƒ‹
+// æ–­é¢è¡¨ç¤ºãƒ¢ãƒ‡ãƒ«ã®åº§æ¨™ç³»ã‚’è¨­å®šã™ã‚‹
+// pos1,pos2 - å¤–å¾„ï¼Œå†…å¾„ã®åº§æ¨™
+// cx,cy,cz - ä¸­å¿ƒç‚¹åº§æ¨™
+// v1,v2 - è»¸æ–¹å‘ï¼Œæ–­é¢åŸºæº–æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 RectSection.prototype.setCoords=function(pos1,pos2,cx,cy,cz,v1,v2){
   var v3=new THREE.Vector3().crossVectors(v1,v2);
   var c1=[0.5,-0.5,-0.5,0.5,0.5],c2=[0.5,0.5,-0.5,-0.5,0.5];
@@ -179,27 +179,27 @@ RectSection.prototype.setCoords=function(pos1,pos2,cx,cy,cz,v1,v2){
   }
 };
 
-// ¿—ÊEdSü‚è‚ÌŠµ«ƒ‚[ƒƒ“ƒg‚ğ•Ô‚·
-// dens - –§“x
-// l - —v‘f’·‚³
+// è³ªé‡ãƒ»é‡å¿ƒå‘¨ã‚Šã®æ…£æ€§ãƒ¢ãƒ¼ãƒ¡ãƒ³ãƒˆã‚’è¿”ã™
+// dens - å¯†åº¦
+// l - è¦ç´ é•·ã•
 RectSection.prototype.massInertia=function(dens,l){
   var dl=dens*l,dly=dl*this.iz,dlz=dl*this.iy;
   return [dl*this.area,dly+dlz,dly,dlz];
 };
 
-// ’f–Ê‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
+// æ–­é¢ã‚’è¡¨ã™æ–‡å­—åˆ—ã‚’è¿”ã™
 RectSection.prototype.toString=function(){
   return this.b1+'\t'+this.h1+'\t'+this.b2+'\t'+this.h2;
 };
 
-// ‹éŒ`’f–Ê‚Ì€‚èŒW”‚ğ‹‚ß‚é
-// ba - •Ó‚Ì’·‚³”äb/a
+// çŸ©å½¢æ–­é¢ã®æ©ã‚Šä¿‚æ•°ã‚’æ±‚ã‚ã‚‹
+// ba - è¾ºã®é•·ã•æ¯”b/a
 function rectCoef(ba){
   var dk1s=0,dks=0,dbs=0,pba=0.5*Math.PI*ba;
   var i=1,dk1,dk,db,ex,sg=1;
   do{
     ex=Math.exp(-2*pba*i);
-    dk1=(1-ex)/((i+ex)*Math.pow(i,5));	// IE‚Í‘o‹ÈüŠÖ”–¢À‘•
+    dk1=(1-ex)/((i+ex)*Math.pow(i,5));	// IEã¯åŒæ›²ç·šé–¢æ•°æœªå®Ÿè£…
     dk1s+=dk1;
     i+=2;
   }while(dk1/dk1s>1e-10);

@@ -174,14 +174,14 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
     msh[3][0] = 0;
     msh[3][1] = 0;
     msh[3][2] = 0;
-    msh[3][3] = RectSection::KS_RECT * gg;
+    msh[3][3] = RectSection::KS_RECT() * gg;
     msh[3][4] = 0;
 
     msh[4][0] = 0;
     msh[4][1] = 0;
     msh[4][2] = 0;
     msh[4][3] = 0;
-    msh[4][4] = RectSection::KS_RECT * gg;
+    msh[4][4] = RectSection::KS_RECT() * gg;
 }
 
 // 材料を表す文字列を返す

@@ -10,7 +10,8 @@
 // x,y,z - 強制変位のx,y,z成分
 // restrx,restry,restrz - x,y,z方向の回転拘束の有無
 // rx,ry,rz - 強制変位のx,y,z軸周り回転角
-Restraint::Restraint(int _node, Coordinates _coords,
+Restraint::Restraint(
+    int _node, Coordinates _coords,
     bool restx, bool resty, bool restz,
     double x, double y, double z,
     bool restrx, bool restry, bool restrz, 
@@ -43,10 +44,9 @@ string Restraint::toString(vector<FENode> nodes) {
             s += '\t0\t' + x[i];
         }
     }
-    if (coords) {
-        s += '\t' + coords.label;
-    }
-    return s;
 
+    s += '\t' + coords.label;
+
+    return s;
 
 };

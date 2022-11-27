@@ -1,8 +1,8 @@
-//--------------------------------------------------------------------//
-// ƒtƒ@ƒCƒ‹“Ç‚İ‚İE‘‚«‚İ
+ï»¿//--------------------------------------------------------------------//
+// ãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿ãƒ»æ›¸ãè¾¼ã¿
 
-// ƒT[ƒo[ã‚ÌFEMƒf[ƒ^ƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Ş
-// fileName - ƒf[ƒ^ƒtƒ@ƒCƒ‹–¼
+// ã‚µãƒ¼ãƒãƒ¼ä¸Šã®FEMãƒ‡ãƒ¼ã‚¿ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€
+// fileName - ãƒ‡ãƒ¼ã‚¿ãƒ•ã‚¡ã‚¤ãƒ«å
 function readServerFemFile(fileName){
   var xhr=new XMLHttpRequest();
   try{
@@ -25,11 +25,11 @@ function readServerFemFile(fileName){
   xhr.send(null);
 }
 
-// ƒ[ƒJƒ‹ƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Ş
+// ãƒ­ãƒ¼ã‚«ãƒ«ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€
 function readLocalFile() {
   var file=document.getElementById('localreadfile').files[0];
   if((file===null) || (file===undefined)){
-    alert('ƒtƒ@ƒCƒ‹‚ªw’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ');
+    alert('ãƒ•ã‚¡ã‚¤ãƒ«ãŒæŒ‡å®šã•ã‚Œã¦ã„ã¾ã›ã‚“');
     return;
   }
   var reader=new FileReader();
@@ -45,19 +45,19 @@ function readLocalFile() {
   hideModalWindow(FILE_WINDOW);
 }
 
-// ƒ[ƒJƒ‹ƒtƒ@ƒCƒ‹‚ğ‘‚«‚Ş
+// ãƒ­ãƒ¼ã‚«ãƒ«ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ›¸ãè¾¼ã‚€
 function writeLocalFile() {
   var file=document.getElementById('localwritefile').value.trim();
   if(file===''){
-    alert('ƒtƒ@ƒCƒ‹–¼‚ª‹ó”’‚Å‚·');
+    alert('ãƒ•ã‚¡ã‚¤ãƒ«åãŒç©ºç™½ã§ã™');
     return;
   }
   var s=model.toStrings().join('\n')+'\n';
   var blob=new Blob([s],{type:'text/plain'});
-  if(window.navigator.msSaveBlob){		// IEê—p
+  if(window.navigator.msSaveBlob){		// IEå°‚ç”¨
     window.navigator.msSaveBlob(blob,file);
   }
-  else{						// ‚»‚Ì‘¼‚Ìƒuƒ‰ƒEƒU
+  else{						// ãã®ä»–ã®ãƒ–ãƒ©ã‚¦ã‚¶
     var a=document.createElement('a');
     a.href=URL.createObjectURL(blob);
     a.target='_blank';
@@ -67,8 +67,8 @@ function writeLocalFile() {
   hideModalWindow(FILE_WINDOW);
 }
 
-// FEMƒf[ƒ^‚ğ“Ç‚İ‚Ş
-// s - ƒf[ƒ^•¶š—ñ‚ÌƒŠƒXƒg
+// FEMãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã‚€
+// s - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—ã®ãƒªã‚¹ãƒˆ
 function readFemModel(s){
   model.clear();
   var mesh=model.mesh,bc=model.bc,res=[];
@@ -76,34 +76,34 @@ function readFemModel(s){
     var ss=s[i].trim().replace(/\t/g,' ').split(/\s+/);
     if(ss.length>0){
       var keyWord=ss[0].toLowerCase();
-// Ş—¿ƒf[ƒ^
+// ææ–™ãƒ‡ãƒ¼ã‚¿
       if((keyWord=='material') && (ss.length>7)){
       	model.materials.push
       	  (new Material(parseInt(ss[1]),parseFloat(ss[2]),
       	      	      	parseFloat(ss[3]),parseFloat(ss[5]),
       	      	      	parseFloat(ss[6]),parseFloat(ss[7])));
       }
-// ƒVƒFƒ‹ƒpƒ‰ƒ[ƒ^
+// ã‚·ã‚§ãƒ«ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
       else if((keyWord=='shellparameter') && (ss.length>2)){
       	model.shellParams.push
       	  (new ShellParameter(parseInt(ss[1]),parseFloat(ss[2])));
       }
-// —Àƒpƒ‰ƒ[ƒ^
+// æ¢ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
       else if((keyWord=='barparameter') && (ss.length>4)){
       	model.barParams.push(new BarParameter
       	  (parseInt(ss[1]),ss[2],ss.slice(3,ss.length)));
       }
-// ‹ÇŠÀ•WŒn
+// å±€æ‰€åº§æ¨™ç³»
       else if((keyWord=='coordinates') && (ss.length>10)){
       	model.coordinates.push(readCoordinates(ss));
       }
-// ß“_
+// ç¯€ç‚¹
       else if((keyWord=='node') && (ss.length>4)){
       	mesh.nodes.push(new FENode(parseInt(ss[1]),parseFloat(ss[2]),
       	      	      	      	   parseFloat(ss[3]),
       	      	      	      	   parseFloat(ss[4])));
       }
-// —v‘f
+// è¦ç´ 
       else if((keyWord=='bebarelement') && (ss.length>5)){
       	if(ss.length<8){
       	  mesh.elements.push(new BEBarElement
@@ -172,7 +172,7 @@ function readFemModel(s){
       	mesh.elements.push(new HexaElement2
       	  (parseInt(ss[1]),parseInt(ss[2]),readVertex(ss,3,20)));
       }
-// ‹«ŠEğŒ
+// å¢ƒç•Œæ¡ä»¶
       else if((keyWord=='restraint') && (ss.length>7)){
       	var rest=readRestraint(ss);
       	if(rest!==null) bc.restraints.push(rest);
@@ -194,7 +194,7 @@ function readFemModel(s){
       	  (new HeatTransferBound(parseInt(ss[1]),ss[2].toUpperCase(),
       	      	      	      	 parseFloat(ss[3]),parseFloat(ss[4])));
       }
-// ŒvZŒ‹‰Ê
+// è¨ˆç®—çµæœ
       else if((keyWord=='resulttype') && (ss.length>1)){
       	if(ss[1].toLowerCase()=='element'){
       	  model.result.type=ELEMENT_DATA;
@@ -223,8 +223,8 @@ function readFemModel(s){
   }
 }
 
-// FEM‚ÌŒvZŒ‹‰Ê‚ğ“Ç‚İ‚Ş
-// s - ƒf[ƒ^•¶š—ñ‚ÌƒŠƒXƒg
+// FEMã®è¨ˆç®—çµæœã‚’èª­ã¿è¾¼ã‚€
+// s - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—ã®ãƒªã‚¹ãƒˆ
 function readFemResult(s){
   var map1=[],map2=[],ss=[],res=model.result,p,i;
   var nodes=model.mesh.nodes,elems=model.mesh.elements;
@@ -297,32 +297,32 @@ function readFemResult(s){
   }
 }
 
-// ƒf[ƒ^ƒ|ƒCƒ“ƒ^‚ğŠl“¾‚·‚é
-// ss - ƒf[ƒ^•¶š—ñ
-// map - ƒ‰ƒxƒ‹ƒ}ƒbƒv
+// ãƒ‡ãƒ¼ã‚¿ãƒã‚¤ãƒ³ã‚¿ã‚’ç²å¾—ã™ã‚‹
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—
+// map - ãƒ©ãƒ™ãƒ«ãƒãƒƒãƒ—
 function readDataPointer(ss,map){
   var p=parseInt(ss[1]);
   if(p in map){
     return map[p];
   }
   else{
-    throw new Error('ŒvZŒ‹‰Ê'+ss[0]+'‚Ì”Ô†'+p+
-      	      	    '‚Í‘¶İ‚µ‚Ü‚¹‚ñ');
+    throw new Error('è¨ˆç®—çµæœ'+ss[0]+'ã®ç•ªå·'+p+
+      	      	    'ã¯å­˜åœ¨ã—ã¾ã›ã‚“');
   }
 }
 
-// ß“_”Ô†‚ğ“Ç‚İæ‚é
-// ss - •¶š—ñ”z—ñ
-// is - ŠJnƒCƒ“ƒfƒbƒNƒX
-// count - ß“_”
+// ç¯€ç‚¹ç•ªå·ã‚’èª­ã¿å–ã‚‹
+// ss - æ–‡å­—åˆ—é…åˆ—
+// is - é–‹å§‹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+// count - ç¯€ç‚¹æ•°
 function readVertex(ss,is,count){
   var vertex=[];
   for(var j=0;j<count;j++) vertex[j]=parseInt(ss[is+j]);
   return vertex;
 }
 
-// ‹ÇŠÀ•WŒn‚ğ“Ç‚İ‚Ş
-// ss - ƒf[ƒ^•¶š—ñ”z—ñ
+// å±€æ‰€åº§æ¨™ç³»ã‚’èª­ã¿è¾¼ã‚€
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—é…åˆ—
 function readCoordinates(ss){
   var c=[[parseFloat(ss[2]),parseFloat(ss[3]),parseFloat(ss[4])],
       	 [parseFloat(ss[5]),parseFloat(ss[6]),parseFloat(ss[7])],
@@ -331,7 +331,7 @@ function readCoordinates(ss){
     var ci=c[i];
     var cf=ci[0]*ci[0]+ci[1]*ci[1]+ci[2]*ci[2];
     if(cf===0){
-      throw new Error('À•WŒn'+ss[2]+'‚Ì²•ûŒüƒxƒNƒgƒ‹‚ª0‚Å‚·');
+      throw new Error('åº§æ¨™ç³»'+ss[2]+'ã®è»¸æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ãŒ0ã§ã™');
     }
     cf=1/Math.sqrt(cf);
     ci[0]*=cf;
@@ -343,8 +343,8 @@ function readCoordinates(ss){
       	      	      	 c[0][2],c[1][2],c[2][2]);
 }
 
-// S‘©ğŒ‚ğ“Ç‚İ‚Ş
-// ss - ƒf[ƒ^•¶š—ñ”z—ñ
+// æ‹˜æŸæ¡ä»¶ã‚’èª­ã¿è¾¼ã‚€
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—é…åˆ—
 function readRestraint(ss){
   var rx=(parseInt(ss[2])!==0);
   var ry=(parseInt(ss[4])!==0);
@@ -368,8 +368,8 @@ function readRestraint(ss){
   }
 }
 
-// ‰×dğŒ‚ğ“Ç‚İ‚Ş
-// ss - ƒf[ƒ^•¶š—ñ”z—ñ
+// è·é‡æ¡ä»¶ã‚’èª­ã¿è¾¼ã‚€
+// ss - ãƒ‡ãƒ¼ã‚¿æ–‡å­—åˆ—é…åˆ—
 function readLoad(ss){
   var coords=null;
   if(ss.length<8){
@@ -386,15 +386,15 @@ function readLoad(ss){
   }
 }
 
-// ƒtƒ@ƒCƒ‹‘€ìƒEƒBƒ“ƒhƒE‚ğ•\¦‚·‚é
+// ãƒ•ã‚¡ã‚¤ãƒ«æ“ä½œã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨ç¤ºã™ã‚‹
 function showFileWindow(){
   showModalWindow(FILE_WINDOW);
 }
 
-// ƒtƒ@ƒCƒ‹‘€ì‚ğæ‚èÁ‚·
+// ãƒ•ã‚¡ã‚¤ãƒ«æ“ä½œã‚’å–ã‚Šæ¶ˆã™
 function cancelFile(){
   hideModalWindow(FILE_WINDOW);
-// ƒtƒ@ƒCƒ‹‘I‘ğ‚ğÁ‹‚·‚é
+// ãƒ•ã‚¡ã‚¤ãƒ«é¸æŠã‚’æ¶ˆå»ã™ã‚‹
   var localfile=document.getElementById('localreadfile');
   localfile.parentNode.innerHTML=localfile.parentNode.innerHTML;
 }

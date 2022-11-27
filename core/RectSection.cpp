@@ -57,7 +57,7 @@ RectSection::RectSection(double ss[4]) {
 
 // せん断補正係数を返す
 double RectSection::shearCoef() {
-    return KS_RECT;
+    return KS_RECT();
 };
 
 // 歪・応力ベクトルを返す

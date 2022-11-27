@@ -1,11 +1,11 @@
-//--------------------------------------------------------------------//
-// �����`���X�@�ɂ��ŗL�l�v�Z
+﻿//--------------------------------------------------------------------//
+// ランチョス法による固有値計算
 
-var EIG_SHIFT=-0.1;	// �V�t�g�ʃ̃f�t�H���g�l
+var EIG_SHIFT=-0.1;	// シフト量δのデフォルト値
 
-// �����`���X�@�ň�ʌŗL�l���Ax=��Bx�̂R�d�Ίp��������
-// a,b - �s��A,B
-// n - �R�d�Ίp���s��̑傫��
+// ランチョス法で一般固有値問題Ax=λBxの３重対角化をする
+// a,b - 行列A,B
+// n - ３重対角化行列の大きさ
 function eigByLanczos(a,b,n){
   var size=a.length,u=[],alp=[],bet=[],bau,al,bt,i;
   n=Math.min(n||size,size);
@@ -37,12 +37,12 @@ function eigByLanczos(a,b,n){
   return {lambda:eig[0],ut:numeric.dot(eig[1],u)};
 }
 
-// �����`���X�@�ň�ʌŗL�l���Ax=��Bx�̂R�d�Ίp��������
-// �������ŗL�l��D�悳���邽�� B(A+��B)^-1Bx=��Bx �ɕϊ�����
-// �t�s���LU����@
-// a,b - �s��A,B
-// n - �R�d�Ίp���s��̑傫��
-// delta - �V�t�g�ʃ�
+// ランチョス法で一般固有値問題Ax=λBxの３重対角化をする
+// 小さい固有値を優先させるため B(A+δB)^-1Bx=θBx に変換する
+// 逆行列はLU分解法
+// a,b - 行列A,B
+// n - ３重対角化行列の大きさ
+// delta - シフト量δ
 function eigByLanczosLUP(a,b,n,delta){
   var size=a.length,u=[],alp=[],bet=[],bu,abu,al,bt,i,j;
   n=Math.min(n||size,size);
@@ -77,12 +77,12 @@ function eigByLanczosLUP(a,b,n,delta){
   return {lambda:e2,ut:numeric.dot(eig[1],u)};
 }
 
-// �����`���X�@�ň�ʌŗL�l���Ax=��Bx�̂R�d�Ίp��������
-// �������ŗL�l��D�悳���邽�� B(A+��B)^-1Bx=��Bx �ɕϊ�����
-// �t�s���ILUCG�@
-// a,b - �s��A,B
-// n - �R�d�Ίp���s��̑傫��
-// delta - �V�t�g�ʃ�
+// ランチョス法で一般固有値問題Ax=λBxの３重対角化をする
+// 小さい固有値を優先させるため B(A+δB)^-1Bx=θBx に変換する
+// 逆行列はILUCG法
+// a,b - 行列A,B
+// n - ３重対角化行列の大きさ
+// delta - シフト量δ
 function eigByLanczosILUCG(a,b,n,delta){
   var size=a.length,u=[],alp=[],bet=[],bu,abu,al,bt,i,j;
   n=Math.min(n||size,size);
@@ -118,12 +118,12 @@ function eigByLanczosILUCG(a,b,n,delta){
   return {lambda:e2,ut:numeric.dot(eig[1],u)};
 }
 
-// �A�[�m���f�B�@�ň�ʌŗL�l���Ax=��Bx�̂R�d�Ίp��������
-// �������ŗL�l��D�悳���邽�� (A+��B)^-1Bx=��x �ɕϊ�����
-// �t�s���LU����@
-// a,b - �s��A,B
-// n - �R�d�Ίp���s��̑傫��
-// delta - �V�t�g�ʃ�
+// アーノルディ法で一般固有値問題Ax=λBxの３重対角化をする
+// 小さい固有値を優先させるため (A+δB)^-1Bx=θx に変換する
+// 逆行列はLU分解法
+// a,b - 行列A,B
+// n - ３重対角化行列の大きさ
+// delta - シフト量δ
 function eigByArnoldiLUP(a,b,n,delta){
   var size=a.length,u=[],bu,abu,h1,i,j;
   n=Math.min(n||size,size);
@@ -160,12 +160,12 @@ function eigByArnoldiLUP(a,b,n,delta){
   return {lambda:e2,ut:numeric.dot(eig[1],u)};
 }
 
-// �A�[�m���f�B�@�ň�ʌŗL�l���Ax=��Bx�̂R�d�Ίp��������
-// �������ŗL�l��D�悳���邽�� (A+��B)^-1Bx=��x �ɕϊ�����
-// �t�s���ILUCG�@
-// a,b - �s��A,B
-// n - �R�d�Ίp���s��̑傫��
-// delta - �V�t�g�ʃ�
+// アーノルディ法で一般固有値問題Ax=λBxの３重対角化をする
+// 小さい固有値を優先させるため (A+δB)^-1Bx=θx に変換する
+// 逆行列はILUCG法
+// a,b - 行列A,B
+// n - ３重対角化行列の大きさ
+// delta - シフト量δ
 function eigByArnoldiILUCG(a,b,n,delta){
   var size=a.length,u=[],bu,abu,h1,i,j;
   n=Math.min(n||size,size);
@@ -204,8 +204,8 @@ function eigByArnoldiILUCG(a,b,n,delta){
   return {lambda:e2,ut:numeric.dot(eig[1],u)};
 }
 
-// �R�d�Ίp���s��̌ŗL�l�E�ŗL�x�N�g�������߂�
-// alp,bet - �R�d�Ίp���s��̑Ίp����,���ׂ̗̐���
+// ３重対角化行列の固有値・固有ベクトルを求める
+// alp,bet - ３重対角化行列の対角成分,その隣の成分
 function tdmEig(alp,bet){
   var size=alp.length,t=numeric.diag(alp);
   for(var i=0;i<size-1;i++){
@@ -215,8 +215,8 @@ function tdmEig(alp,bet){
   return eigen(t);
 }
 
-// �s��̌ŗL�l�E�ŗL�x�N�g�������߂�
-// m - �s��
+// 行列の固有値・固有ベクトルを求める
+// m - 行列
 function eigen(m){
   var e=[],ev=[],size=m.length,i;
   var eig=numeric.eig(m),q=numeric.transpose(eig.E.x);
@@ -229,9 +229,9 @@ function eigen(m){
   return [e,q];
 }
 
-// �V�t�g�s��A-��B��Ԃ�
-// a,b - �s��A,B
-// delta - �V�t�g�ʃ�
+// シフト行列A-δBを返す
+// a,b - 行列A,B
+// delta - シフト量δ
 function shiftMatrix(a,b,delta){
   var size=a.length,adb=[],j;
   for(var i=0;i<size;i++){
@@ -260,9 +260,9 @@ function shiftMatrix(a,b,delta){
   return adb;
 }
 
-// �s��ƃx�N�g���̐ς��v�Z����
-// matrix - �a�s��
-// x - �x�N�g��
+// 行列とベクトルの積を計算する
+// matrix - 疎行列
+// x - ベクトル
 function sparseDotVMV(matrix,x){
   var row=matrix[0],col=matrix[1],val=matrix[2],m=row.length-1,s=0;
   for(var i=0;i<m;i++){
