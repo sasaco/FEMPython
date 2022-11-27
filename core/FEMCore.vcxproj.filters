@@ -56,6 +56,30 @@
     <ClCompile Include="FENode.cpp">
       <Filter>ソース ファイル\FemDataModel</Filter>
     </ClCompile>
+    <ClCompile Include="BoundaryCondition.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementBorderBound.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="Load.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="Restraint.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="HeatTransferBound.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="Pressure.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="Temperature.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementManager.cpp">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
@@ -69,6 +93,33 @@
     </ClInclude>
     <ClInclude Include="FENode.h">
       <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshModel.h">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundaryCondition.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Load.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Restraint.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="HeatTransferBound.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Pressure.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Temperature.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementBorderBound.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementManager.h">
+      <Filter>ソース ファイル\Element</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

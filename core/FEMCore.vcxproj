@@ -19,11 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BoundaryCondition.cpp" />
+    <ClCompile Include="ElementBorderBound.cpp" />
+    <ClCompile Include="ElementManager.cpp" />
     <ClCompile Include="FENode.cpp" />
     <ClCompile Include="FileIO.cpp" />
+    <ClCompile Include="HeatTransferBound.cpp" />
+    <ClCompile Include="Load.cpp" />
     <ClCompile Include="MeshModel.cpp" />
     <ClCompile Include="module.cpp" />
     <ClCompile Include="FemDataModel.cpp" />
+    <ClCompile Include="Pressure.cpp" />
+    <ClCompile Include="Restraint.cpp" />
+    <ClCompile Include="Temperature.cpp" />
     <!--
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="HeatTransferBound.cpp" />
@@ -99,8 +107,17 @@
     <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BoundaryCondition.h" />
+    <ClInclude Include="ElementBorderBound.h" />
+    <ClInclude Include="ElementManager.h" />
     <ClInclude Include="FemDataModel.h" />
     <ClInclude Include="FENode.h" />
+    <ClInclude Include="HeatTransferBound.h" />
+    <ClInclude Include="Load.h" />
+    <ClInclude Include="MeshModel.h" />
+    <ClInclude Include="Pressure.h" />
+    <ClInclude Include="Restraint.h" />
+    <ClInclude Include="Temperature.h" />
     <ClInclude Include="vector3.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
