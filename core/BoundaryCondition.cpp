@@ -1,7 +1,4 @@
-﻿#include "Restraint.h";
-#include "Load.h";
-#include "Pressure.h";
-#include "BoundaryCondition.h";
+﻿#include "BoundaryCondition.h"
 
 BoundaryCondition::BoundaryCondition() {
     clear();
@@ -73,7 +70,7 @@ int BoundaryCondition::setPointerHeat(int count) {
     dof.clear();
     nodeIndex.clear();
     bcList.clear();
-    int temps = temperature.size();
+    int temps = (int)temperature.size();
     for (int i = 0; i < count; i++) {
         bcList[i] = -1;
     }
@@ -87,7 +84,7 @@ int BoundaryCondition::setPointerHeat(int count) {
 // 強制変位を返す
 // bc - 変位自由度ポインタ
 double BoundaryCondition::getRestDisp(int bc) {
-    int i = round(bc / 6);
+    int i = (int)round(bc / 6);
     Restraint r = restraints[i];
     int j = bc % 6;
     double result = r.x[j];

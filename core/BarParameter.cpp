@@ -1,9 +1,4 @@
-﻿#include "BarParameter.h";
-
-#include <algorithm>
-#include <iostream>
-#include <string>
-#include <format>
+﻿#include "BarParameter.h"
 
 //--------------------------------------------------------------------//
 // 梁パラメータ（円形断面）

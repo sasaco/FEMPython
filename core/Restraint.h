@@ -1,11 +1,15 @@
 ﻿#pragma once
-#include "Vector3R.h";
-#include "Coordinates.h";
-#include "FENode.h";
 
+#include "Vector3R.h"
+#include "Coordinates.h"
+#include "FENode.h"
+
+#include <format>
 #include <string>
 #include <vector>
 using namespace std;         //  名前空間指定
+using std::string;
+using std::vector;
 
 class Restraint : public Vector3R {
 

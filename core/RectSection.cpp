@@ -1,5 +1,4 @@
-﻿#include "RectSection.h";
-#include <format>
+﻿#include "RectSection.h"
 
 //--------------------------------------------------------------------//
 // 矩形断面
@@ -57,7 +56,7 @@ RectSection::RectSection(double ss[4]) {
 
 // せん断補正係数を返す
 double RectSection::shearCoef() {
-    return KS_RECT();
+    return KS_RECT;
 };
 
 // 歪・応力ベクトルを返す
@@ -89,7 +88,7 @@ void RectSection::strainStress(Material material, double ex, double thd, double 
     };
 
     int imax = 0;
-    int enmax = 0;
+    double enmax = 0;
 
     for (int i = 0; i < 8; i++) {
         double en = ee * eps[i][0] * eps[i][0] + gg * (eps[i][1] * eps[i][1] + eps[i][2] * eps[i][2]);

@@ -3,5 +3,12 @@
 class Stress :
     public SymmetricTensor3
 {
+
+private:
+
+public:
+    Stress(double* s);
+    double mises();
+
 };
 

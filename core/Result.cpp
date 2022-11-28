@@ -2,7 +2,8 @@
 
 //--------------------------------------------------------------------//
 // 計算結果
-var Result = function() {
+Result::Result() {
+    /*
     this.displacement = [];		// 変位
     this.dispMax = 0;		// 変位の大きさの最大値
     this.angleMax = 0;		// 回転角の大きさの最大値
@@ -20,10 +21,12 @@ var Result = function() {
     this.value = [];		// コンター図データ
     this.minValue = 0;		// コンター図データ最小値
     this.maxValue = 0;		// コンター図データ最大値
+    */
 };
 
 // 計算結果を消去する
-Result.prototype.clear = function() {
+void Result::clear() {
+    /*
     this.displacement.length = 0;
     this.strain1.length = 0;
     this.strain2.length = 0;
@@ -40,8 +43,10 @@ Result.prototype.clear = function() {
     this.value.length = 0;
     this.minValue = 0;
     this.maxValue = 0;
+    */
 };
 
+/*
 // 節点変位を設定する
 // bc - 境界条件
 // disp - 節点変位を表すベクトル
@@ -290,3 +295,4 @@ Result.prototype.toStrings = function(nodes, elems) {
     }
     return s;
 };
+*/

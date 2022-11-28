@@ -4,15 +4,19 @@
 // 固有値
 // value - 固有値・固有振動数
 // type - 解析種類
-var EigenValue = function(value, type) {
-    this.value = value;
-    this.type = type;
+EigenValue::EigenValue(double _value, int _type) {
+    value = _value;
+    type = _type;
+    /*
     this.displacement = [];		// 変位
     this.sEnergy1 = [];		// 節点歪エネルギー密度
     this.sEnergy2 = [];
     this.dispMax = 0;
     this.angleMax = 0;
+    */
 };
+
+/*
 
 // 変位を設定する
 // bc - 境界条件
@@ -183,3 +187,5 @@ function eigenByJacob(m, iterMax) {
     }
     return { lambda:m,ev : numeric.transpose(ev) };
 }
+
+*/

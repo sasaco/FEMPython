@@ -1,10 +1,15 @@
-﻿#include "ElementBorderBound.h";
+﻿#pragma once
+
+#include "ElementBorderBound.h"
 #include "ElementManager.hpp"
 
 #include <string>
 #include <vector>
 using namespace std;         //  名前空間指定
 using std::vector;
+
+#include <format>
+
 
 class HeatTransferBound : public ElementBorderBound {
 

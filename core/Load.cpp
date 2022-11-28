@@ -1,6 +1,4 @@
-﻿#include "Load.h";
-
-#include <format>;
+﻿#include "Load.h"
 
 //--------------------------------------------------------------------//
 // 荷重条件
@@ -12,7 +10,7 @@ Load::Load(int _node, Coordinates _coords,
             double x, double y, double z, double rx, double ry, double rz) :
     Vector3R(x, y, z, rx, ry, rz) {
 
-    node = node;
+    node = _node;
     coords = _coords;
     globalX = x;
 

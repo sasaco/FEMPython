@@ -3,6 +3,7 @@ class Result
 {
 
 private:
+    /*
     // データ型
     var NONE = -1;		// 空データ
     var DISPLACEMENT = 0;	// 変位
@@ -61,10 +62,10 @@ private:
     var ELEMENT_DATA = 1;		// 要素データ
     var VIBRATION = 'Vibration';	// 振動解析
     var BUCKLING = 'Buckling';	// 座屈解析
-
+    */
 
 public:
-
-
+    Result();
+    void clear();
 };
 

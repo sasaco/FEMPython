@@ -1,10 +1,4 @@
 ﻿#include "Material.h"
-#include "RectSection.h";
-#include "CircleSection.h";
-
-#include <format>
-
-
 
 
 //--------------------------------------------------------------------//
@@ -15,7 +9,6 @@
 // dens - 密度
 // hCon - 熱伝導率
 // sHeat - 比熱
-Material::Material() {};
 Material::Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat) {
     label = _label;
     ee = _ee;
@@ -174,14 +167,14 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
     msh[3][0] = 0;
     msh[3][1] = 0;
     msh[3][2] = 0;
-    msh[3][3] = RectSection::KS_RECT() * gg;
+    msh[3][3] = KS_RECT * gg;
     msh[3][4] = 0;
 
     msh[4][0] = 0;
     msh[4][1] = 0;
     msh[4][2] = 0;
     msh[4][3] = 0;
-    msh[4][4] = RectSection::KS_RECT() * gg;
+    msh[4][4] = KS_RECT * gg;
 }
 
 // 材料を表す文字列を返す

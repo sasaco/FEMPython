@@ -134,14 +134,14 @@
     <ClCompile Include="EigenValue.cpp">
       <Filter>ソース ファイル\Solver</Filter>
     </ClCompile>
-    <ClCompile Include="SymmetricTensor3.cpp">
-      <Filter>ソース ファイル\Solver</Filter>
-    </ClCompile>
     <ClCompile Include="Strain.cpp">
       <Filter>ソース ファイル\Solver</Filter>
     </ClCompile>
     <ClCompile Include="Stress.cpp">
       <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="SymmetricTensor3.cpp">
+      <Filter>ソース ファイル\numeric</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -233,14 +233,14 @@
     <ClInclude Include="EigenValue.h">
       <Filter>ソース ファイル\Solver</Filter>
     </ClInclude>
-    <ClInclude Include="SymmetricTensor3.h">
-      <Filter>ソース ファイル\Solver</Filter>
-    </ClInclude>
     <ClInclude Include="Strain.h">
       <Filter>ソース ファイル\Solver</Filter>
     </ClInclude>
     <ClInclude Include="Stress.h">
       <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="SymmetricTensor3.h">
+      <Filter>ソース ファイル\numeric</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

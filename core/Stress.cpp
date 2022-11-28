@@ -3,14 +3,17 @@
 //--------------------------------------------------------------------//
 // âûóÕ
 // s - ê¨ï™
-var Stress = function(s) {
-    SymmetricTensor3.call(this, s);
+Stress::Stress(double* s) 
+    : SymmetricTensor3(s){
 };
 
 // É~Å[É[ÉXâûóÕÇï‘Ç∑
-Stress.prototype.mises = function() {
-    var dxy = this.xx - this.yy, dyz = this.yy - this.zz, dzx = this.zz - this.xx;
-    var ss = dxy * dxy + dyz * dyz + dzx * dzx;
-    var tt = this.xy * this.xy + this.yz * this.yz + this.zx * this.zx;
-    return Math.sqrt(0.5 * ss + 3 * tt);
+double Stress::mises() {
+
+    double dxy = xx - yy;
+    double dyz = yy - zz;
+    double dzx = zz - xx;
+    double ss = dxy * dxy + dyz * dyz + dzx * dzx;
+    double tt = xy * xy + yz * yz + zx * zx;
+    return sqrt(0.5 * ss + 3 * tt);
 };

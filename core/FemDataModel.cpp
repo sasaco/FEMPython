@@ -6,9 +6,7 @@ FemDataModel::FemDataModel() {
     mesh = MeshModel();		    // メッシュモデル
     bc = BoundaryCondition();	// 境界条件
     solver = Solver();		    // 連立方程式求解オブジェクト
-    /*
     result = Result();          // 計算結果
-    */
     hasShellBar = false;		// シェル要素または梁要素を含まない
 }
 

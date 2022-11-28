@@ -1,6 +1,4 @@
-﻿#include "HeatTransferBound.h";
-
-#include <format>
+﻿#include "HeatTransferBound.h"
 
 //--------------------------------------------------------------------//
 // 熱伝達境界条件

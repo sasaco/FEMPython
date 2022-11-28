@@ -1,6 +1,5 @@
-﻿#include "Restraint.h";
+﻿#include "Restraint.h"
 
-#include <format>
 
 //--------------------------------------------------------------------//
 // 拘束条件
@@ -38,14 +37,17 @@ string Restraint::toString(vector<FENode> nodes) {
 
     for (int i = 0; i < 6; i++) {
         if (rest[i]) {
-            s += '\t1\t' + x[i];
+            s += '\t1\t';
+            s += to_string(x[i]);
         }
         else {
-            s += '\t0\t' + x[i];
+            s += '\t0\t';
+            s += to_string(x[i]);
         }
     }
 
-    s += '\t' + coords.label;
+    s += '\t';
+    s += to_string(coords.label);
 
     return s;
 

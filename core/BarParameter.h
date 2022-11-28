@@ -1,9 +1,12 @@
 ﻿#pragma once
-#include "RectSection.h";
-#include "CircleSection.h";
+#include "RectSection.h"
+#include "CircleSection.h"
 
-
-
+#include <algorithm>
+#include <string>
+#include <format>
+using namespace std;
+using std::string;
 
 //--------------------------------------------------------------------//
 // 梁パラメータ（円形断面）

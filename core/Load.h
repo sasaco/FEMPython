@@ -1,10 +1,12 @@
 ﻿#pragma once
-#include "Vector3R.h";
-#include "Coordinates.h";
-#include "FENode.h";
 
-#include <string>;
-#include <vector>;
+#include "Vector3R.h"
+#include "Coordinates.h"
+#include "FENode.h"
+
+#include <string>
+#include <vector>
+#include <format>
 using namespace std;
 
 

@@ -1,5 +1,5 @@
-﻿#include "CircleSection.h";
-#include <format>
+﻿#include "CircleSection.h"
+
 
 //--------------------------------------------------------------------//
 // 円形断面
