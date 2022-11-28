@@ -12,7 +12,7 @@ FemDataModel::FemDataModel() {
 
 // データを消去する
 void FemDataModel::clear(){
-    /*
+    
     materials.clear();
     shellParams.clear();
     barParams.clear();
@@ -21,7 +21,7 @@ void FemDataModel::clear(){
     bc.clear();
     result.clear();
     result.type=NODE_DATA;
-    */
+    
 };
 
 /*

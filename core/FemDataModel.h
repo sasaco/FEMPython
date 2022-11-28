@@ -19,7 +19,7 @@ using std::vector;
 class FemDataModel {
 
 private:
-    double COEF_F_W = 0.5 / numbers::pi;    // f/ƒÖ”ä 1/2ƒÎ
+    const double COEF_F_W = 0.5 / numbers::pi;    // f/ƒÖ”ä 1/2ƒÎ
 
     MeshModel mesh;		                    // ƒƒbƒVƒ…ƒ‚ƒfƒ‹
     BoundaryCondition bc;	                // ‹«ŠEğŒ
