@@ -42,6 +42,9 @@
     <Filter Include="ソース ファイル\Border">
       <UniqueIdentifier>{512bab33-2422-4a9b-9b2d-c241527de2e8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\Solver">
+      <UniqueIdentifier>{25115d43-c7fd-4b0a-b3a9-b1dac865ce4a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="module.cpp">
@@ -123,7 +126,22 @@
       <Filter>ソース ファイル\Section</Filter>
     </ClCompile>
     <ClCompile Include="Solver.cpp">
-      <Filter>ソース ファイル\FemDataModel</Filter>
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Result.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="EigenValue.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="SymmetricTensor3.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Strain.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Stress.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -205,6 +223,24 @@
     </ClInclude>
     <ClInclude Include="RectSection.h">
       <Filter>ソース ファイル\Section</Filter>
+    </ClInclude>
+    <ClInclude Include="Solver.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Result.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="EigenValue.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="SymmetricTensor3.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Strain.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Stress.h">
+      <Filter>ソース ファイル\Solver</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

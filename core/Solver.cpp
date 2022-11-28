@@ -1,41 +1,21 @@
-﻿#pragma once
-
-#include <vector>
-using namespace std;
-using std::vector;
-
-class Solver {
-
-
-private:
-    const double PRECISION = 1e-10;	// マトリックス精度
-    const double  LU_METHOD = 0;	// LU分解法
-    const double  ILUCG_METHOD = 1; // 不完全LU分解共役勾配法
-
-
-    int method;
-
-public:
-    Solver();
-
-};
+﻿#include "Solver.h"
 
 //--------------------------------------------------------------------//
 // 連立方程式求解オブジェクト
 Solver::Solver() {
-    this.matrix = [];		// 行列
-    this.matrix2 = [];		// 第２行列
-    this.vector = [];		// ベクトル
-    this.dof = 0;			// モデル自由度
-    this.method = LU_METHOD;	// 方程式解法
+    //matrix = [];		// 行列
+    //matrix2 = [];		// 第２行列
+    //vector = [];		// ベクトル
+    dof = 0;			// モデル自由度
+    method = LU_METHOD;	// 方程式解法
 };
 
 // データを消去する
-Solver.prototype.clear = function() {
-    this.matrix.length = 0;
-    this.matrix2.length = 0;
-    this.vector.length = 0;
-    this.dof = 0;
+void Solver::clear() {
+    //this.matrix.length = 0;
+    //this.matrix2.length = 0;
+    //this.vector.length = 0;
+    dof = 0;
 };
 
 /*

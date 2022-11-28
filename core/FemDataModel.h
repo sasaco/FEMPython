@@ -4,6 +4,7 @@
 #include "ShellParameter.h"
 #include "BarParameter.h"
 #include "BoundaryCondition.h"
+#include "Solver.h"
 
 
 //--------------------------------------------------------------------//
@@ -27,10 +28,10 @@ private:
     vector<BarParameter> barParams;         // 梁パラメータ
     vector<Coordinates> coordinates;	    // 局所座標系
     bool hasShellBar;                       // シェル要素または梁要素を含まない
-
-/*
     Solver solver;		                    // 連立方程式求解オブジェクト
-    Result result;		                    // 計算結果
+
+    /*
+        Result result;		                    // 計算結果
 
     // Method
     void init();
