@@ -41,6 +41,7 @@
     <ClCompile Include="RectSection.cpp" />
     <ClCompile Include="Restraint.cpp" />
     <ClCompile Include="ShellParameter.cpp" />
+    <ClCompile Include="Solver.cpp" />
     <ClCompile Include="Temperature.cpp" />
     <ClCompile Include="TriangleBorder1.cpp" />
     <ClCompile Include="TriangleBorder2.cpp" />
@@ -117,6 +118,7 @@
   -->
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
@@ -279,5 +281,13 @@
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Eigen3.3.3.9\build\native\Eigen3.targets" Condition="Exists('..\packages\Eigen3.3.3.9\build\native\Eigen3.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Eigen3.3.3.9\build\native\Eigen3.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Eigen3.3.3.9\build\native\Eigen3.targets'))" />
+  </Target>
 </Project>

@@ -122,9 +122,13 @@
     <ClCompile Include="RectSection.cpp">
       <Filter>ソース ファイル\Section</Filter>
     </ClCompile>
+    <ClCompile Include="Solver.cpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FemDataModel.h">
