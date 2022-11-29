@@ -112,62 +112,87 @@ MatrixXd FElement::dirMatrix(vector<Vector3> p, VectorXd axis) {
 // axis - 断面基準方向ベクトル
 vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
 
+    vector<Vector3> result(3);
+
     if (p.size() == 2) {		// 梁要素
-        Vector3 v0 = p[0];
-        Vector3 v1 = p[1].clone().sub(v0).normalize();
+        auto v0 = p[0];
+        auto v1 = p[1].clone().sub(v0).normalize();
         
         auto dt = v1.dot(axis);
 
-        Vector3 v2(axis.x - dt * v1.x, axis.y - dt * v1.y, axis.z - dt * v1.z);
+        auto v2 = Vector3(axis.x - dt * v1.x, axis.y - dt * v1.y, axis.z - dt * v1.z);
         if (v2.lengthSq() > 0) {
             v2.normalize();
         }
 
         if (v2.lengthSq() == 0) {
-            if (Math.abs(v1.x) < Math.abs(v1.y)) {
+            if (abs(v1.x) < abs(v1.y)) {
                 v2.set(1 - v1.x * v1.x, -v1.x * v1.y, -v1.x * v1.z).normalize();
             }
             else {
                 v2.set(-v1.y * v1.x, 1 - v1.y * v1.y, -v1.y * v1.z).normalize();
             }
         }
-        v3.crossVectors(v1, v2);
-        return[v1, v2, v3];
+        auto v3 = Vector3().crossVectors(v1, v2);
+
+        result[0] = v1;
+        result[1] = v2;
+        result[2] = v3;
+
+        return result;
     }
-    else if (p.length > 2) {		// シェル要素
-        v3 = normalVector(p);
-        v2 = p[1].clone().sub(p[0]);
+    else if (p.size() > 2) {		// シェル要素
+        auto v3 = normalVector(p);
+        auto v2 = p[1].clone().sub(p[0]);
         v2 = v3.clone().cross(v2).normalize();
-        v1 = v2.clone().cross(v3);
-        return[v1, v2, v3];
+        auto v1 = v2.clone().cross(v3);
+
+        result[0] = v1;
+        result[1] = v2;
+        result[2] = v3;
+
+        return result;
+
     }
-    return null;
+
+    throw exception("error on FElement::dirVectors");
 }
 
 
-void FElement::normalVector(vector<double> p, double out[3]) {
+Vector3 FElement::normalVector(vector<Vector3> p) {
+
     if (p.size() < 3) {
-        return null;
+        throw exception("error on FElement::normalVector");
     }
     else if ((p.size() == 3) || (p.size() == 6)) {
-        return new THREE.Vector3().subVectors(p[1], p[0]).cross
-        (new THREE.Vector3().subVectors(p[2], p[0])).normalize();
+        auto v1 = Vector3().subVectors(p[1], p[0]);
+        auto v2 = Vector3().subVectors(p[2], p[0]);
+        auto v3 = v1.cross(v2).normalize();
+        return v3;
     }
     else if ((p.size() == 4) || (p.size() == 8)) {
-        return new THREE.Vector3().subVectors(p[2], p[0]).cross
-        (new THREE.Vector3().subVectors(p[3], p[1])).normalize();
+        auto v1 = Vector3().subVectors(p[2], p[0]);
+        auto v2 = Vector3().subVectors(p[3], p[1]);
+        auto v3 = v1.cross(v2).normalize();
+        return v3;
     }
     else {
-        var vx = 0, vy = 0, vz = 0;
-        for (var i = 0; i < p.size(); i++) {
-            var p1 = p[(i + 1) % p.size()], p2 = p[(i + 2) % p.size()];
-            var norm = new THREE.Vector3().subVectors(p1, p[i]).cross
-            (new THREE.Vector3().subVectors(p2, p[i]));
+        double vx = 0, vy = 0, vz = 0;
+        for (int i = 0; i < p.size(); i++) {
+
+            Vector3 p1 = p[(i + 1) % p.size()];
+            Vector3 p2 = p[(i + 2) % p.size()];
+
+            auto v1 = Vector3().subVectors(p1, p[i]);
+            auto v2 = Vector3().subVectors(p2, p[i]);
+            auto norm = v1.cross(v2);
+
             vx += norm.x;
             vy += norm.y;
             vz += norm.z;
         }
-        return new THREE.Vector3(vx, vy, vz).normalize();
+        auto v3 = Vector3(vx, vy, vz).normalize();
+        return v3;
     }
 }
 

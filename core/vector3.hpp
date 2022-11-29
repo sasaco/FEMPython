@@ -17,6 +17,13 @@ public:
   double& operator[]( const int i ) { return xyz[i]; }
   const double operator[]( const int i ) const { return xyz[i]; }
 
+  /// <summary>
+  /// FElementで使用
+  /// </summary>
+  /// <param name="xIn"></param>
+  /// <param name="yIn"></param>
+  /// <param name="zIn"></param>
+  /// <returns></returns>
   Vector3& set( double xIn, double yIn, double zIn ) {
     x = xIn;
     y = yIn;
@@ -38,6 +45,11 @@ public:
     return *this;
   }
 
+  /// <summary>
+  /// FElementで使用
+  /// </summary>
+  /// <param name="v"></param>
+  /// <returns></returns>
   Vector3& sub( const Vector3& v ) {
     x -= v.x;
     y -= v.y;
@@ -67,6 +79,11 @@ public:
     return multiplyScalar( -1.f );
   }
 
+  /// <summary>
+  /// FElementで使用
+  /// </summary>
+  /// <param name="v"></param>
+  /// <returns></returns>
   double dot( const Vector3& v ) const {
     return x * v.x + y * v.y + z * v.z;
   }
@@ -83,9 +100,29 @@ public:
     return abs( x ) + abs( y ) + abs( z );
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
+  /// <returns></returns>
   Vector3& normalize() {
     return divideScalar( length() );
   }
+
+
+  Vector3& crossVectors(const Vector3& a, const Vector3& b) {
+
+      auto ax = a.x, ay = a.y, az = a.z;
+      auto bx = b.x, by = b.y, bz = b.z;
+
+      this->x = ay * bz - az * by;
+      this->y = az * bx - ax * bz;
+      this->z = ax * by - ay * bx;
+
+      return *this;
+
+  }
+
+
 
   double distanceTo( const Vector3& v ) const {
     return sqrt( distanceToSquared( v ) );
@@ -106,16 +143,39 @@ public:
     return *this;
   }
 
-  Vector3& cross( const Vector3& a, const Vector3& b ) {
-    x = a.y * b.z - a.z * b.y;
-    y = a.z * b.x - a.x * b.z;
-    z = a.x * b.y - a.y * b.x;
-    return *this;
+  /// <summary>
+  /// 
+  /// </summary>
+  /// <param name="v"></param>
+  /// <returns></returns>
+  inline Vector3& cross(const Vector3& v) {
+
+      auto x = this->x, y = this->y, z = this->z;
+
+      this->x = y * v.z - z * v.y;
+      this->y = z * v.x - x * v.z;
+      this->z = x * v.y - y * v.x;
+
+      return *this;
+
   }
 
-  Vector3& crossSelf( const Vector3& v ) {
-    return cross( Vector3( *this ), v );
+  /// <summary>
+  /// 
+  /// </summary>
+  /// <param name="a"></param>
+  /// <param name="b"></param>
+  /// <returns></returns>
+  inline Vector3& subVectors(const Vector3& a, const Vector3& b) {
+
+      x = a.x - b.x;
+      y = a.y - b.y;
+      z = a.z - b.z;
+
+      return *this;
+
   }
+
 
   bool equals( const Vector3& v ) {
     return ( ( v.x == x ) && ( v.y == y ) && ( v.z == z ) );

@@ -58,10 +58,8 @@ public:
 
     MatrixXd dirMatrix(vector<Vector3> p, VectorXd axis);
 
-    vector<Vector3> dirVectors(vector<Vector3> p, VectorXd axis);
+    vector<Vector3> dirVectors(vector<Vector3> p, Vector3 axis);
 
-    void normalVector(vector<double> p, vector<double> out);
-
-
+    Vector3 normalVector(vector<Vector3> p);
 
 };
