@@ -143,6 +143,54 @@
     <ClCompile Include="SymmetricTensor3.cpp">
       <Filter>ソース ファイル\numeric</Filter>
     </ClCompile>
+    <ClCompile Include="BarElement.cpp">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClCompile>
+    <ClCompile Include="BEBarElement.cpp">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClCompile>
+    <ClCompile Include="TBarElement.cpp">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClCompile>
+    <ClCompile Include="HexaElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="HexaElement1WT.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="HexaElement2.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="QuadElement1.cpp">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClCompile>
+    <ClCompile Include="ShellElement.cpp">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClCompile>
+    <ClCompile Include="SolidElement.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="TetraElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="TetraElement2.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="FElement.cpp">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClCompile>
+    <ClCompile Include="TriElement1.cpp">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClCompile>
+    <ClCompile Include="WedgeElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="WedgeElement2.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="Nodes.cpp">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
@@ -241,6 +289,51 @@
     </ClInclude>
     <ClInclude Include="SymmetricTensor3.h">
       <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="BarElement.h">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClInclude>
+    <ClInclude Include="BEBarElement.h">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClInclude>
+    <ClInclude Include="TBarElement.h">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClInclude>
+    <ClInclude Include="FElement.h">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClInclude>
+    <ClInclude Include="HexaElement1.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="HexaElement2.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="QuadElement1.h">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClInclude>
+    <ClInclude Include="ShellElement.h">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClInclude>
+    <ClInclude Include="TriElement1.h">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClInclude>
+    <ClInclude Include="SolidElement.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="TetraElement1.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="TetraElement2.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="WedgeElement1.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="WedgeElement2.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="Nodes.h">
+      <Filter>ソース ファイル\Element</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BarElement.cpp" />
     <ClCompile Include="BarParameter.cpp" />
+    <ClCompile Include="BEBarElement.cpp" />
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="CircleSection.cpp" />
     <ClCompile Include="Coordinates.cpp" />
@@ -28,29 +30,43 @@
     <ClCompile Include="ElementBorder.cpp" />
     <ClCompile Include="ElementBorderBound.cpp" />
     <ClCompile Include="ElementManager.hpp" />
+    <ClCompile Include="FElement.cpp" />
     <ClCompile Include="FENode.cpp" />
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="HeatTransferBound.cpp" />
+    <ClCompile Include="HexaElement1.cpp" />
+    <ClCompile Include="HexaElement1WT.cpp" />
+    <ClCompile Include="HexaElement2.cpp" />
     <ClCompile Include="Load.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MeshModel.cpp" />
     <ClCompile Include="module.cpp" />
     <ClCompile Include="FemDataModel.cpp" />
+    <ClCompile Include="Nodes.cpp" />
     <ClCompile Include="Pressure.cpp" />
     <ClCompile Include="QuadangleBorder1.cpp" />
     <ClCompile Include="QuadangleBorder2.cpp" />
+    <ClCompile Include="QuadElement1.cpp" />
     <ClCompile Include="RectSection.cpp" />
     <ClCompile Include="Restraint.cpp" />
     <ClCompile Include="Result.cpp" />
+    <ClCompile Include="ShellElement.cpp" />
     <ClCompile Include="ShellParameter.cpp" />
+    <ClCompile Include="SolidElement.cpp" />
     <ClCompile Include="Solver.cpp" />
     <ClCompile Include="Strain.cpp" />
     <ClCompile Include="Stress.cpp" />
     <ClCompile Include="SymmetricTensor3.cpp" />
+    <ClCompile Include="TBarElement.cpp" />
     <ClCompile Include="Temperature.cpp" />
+    <ClCompile Include="TetraElement1.cpp" />
+    <ClCompile Include="TetraElement2.cpp" />
     <ClCompile Include="TriangleBorder1.cpp" />
     <ClCompile Include="TriangleBorder2.cpp" />
+    <ClCompile Include="TriElement1.cpp" />
     <ClCompile Include="Vector3R.cpp" />
+    <ClCompile Include="WedgeElement1.cpp" />
+    <ClCompile Include="WedgeElement2.cpp" />
     <!--
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="HeatTransferBound.cpp" />
@@ -127,7 +143,9 @@
     <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BarElement.h" />
     <ClInclude Include="BarParameter.h" />
+    <ClInclude Include="BEBarElement.h" />
     <ClInclude Include="BorderManager.hpp" />
     <ClInclude Include="BoundaryCondition.h" />
     <ClInclude Include="CircleSection.h" />
@@ -136,28 +154,41 @@
     <ClInclude Include="EigenValue.h" />
     <ClInclude Include="ElementBorder.h" />
     <ClInclude Include="ElementBorderBound.h" />
+    <ClInclude Include="FElement.h" />
     <ClInclude Include="FemDataModel.h" />
     <ClInclude Include="FENode.h" />
     <ClInclude Include="HeatTransferBound.h" />
+    <ClInclude Include="HexaElement1.h" />
+    <ClInclude Include="HexaElement2.h" />
     <ClInclude Include="Load.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MeshModel.h" />
+    <ClInclude Include="Nodes.h" />
     <ClInclude Include="Pressure.h" />
     <ClInclude Include="QuadangleBorder1.h" />
     <ClInclude Include="QuadangleBorder2.h" />
+    <ClInclude Include="QuadElement1.h" />
     <ClInclude Include="RectSection.h" />
     <ClInclude Include="Restraint.h" />
     <ClInclude Include="Result.h" />
+    <ClInclude Include="ShellElement.h" />
     <ClInclude Include="ShellParameter.h" />
+    <ClInclude Include="SolidElement.h" />
     <ClInclude Include="Solver.h" />
     <ClInclude Include="Strain.h" />
     <ClInclude Include="Stress.h" />
     <ClInclude Include="SymmetricTensor3.h" />
+    <ClInclude Include="TBarElement.h" />
     <ClInclude Include="Temperature.h" />
+    <ClInclude Include="TetraElement1.h" />
+    <ClInclude Include="TetraElement2.h" />
     <ClInclude Include="TriangleBorder1.h" />
     <ClInclude Include="TriangleBorder2.h" />
+    <ClInclude Include="TriElement1.h" />
     <ClInclude Include="vector3.hpp" />
     <ClInclude Include="Vector3R.h" />
+    <ClInclude Include="WedgeElement1.h" />
+    <ClInclude Include="WedgeElement2.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
