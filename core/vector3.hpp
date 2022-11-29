@@ -31,28 +31,14 @@ public:
     return *this;
   }
 
-  Vector3& add( const Vector3& a, const Vector3& b ) {
-    x = a.x + b.x;
-    y = a.y + b.y;
-    z = a.z + b.z;
-    return *this;
-  }
-
-  Vector3& addSelf( const Vector3& v ) {
+  Vector3& add( const Vector3& v ) {
     x += v.x;
     y += v.y;
     z += v.z;
     return *this;
   }
 
-  Vector3& sub( const Vector3& a, const Vector3& b ) {
-    x = a.x - b.x;
-    y = a.y - b.y;
-    z = a.z - b.z;
-    return *this;
-  }
-
-  Vector3& subSelf( const Vector3& v ) {
+  Vector3& sub( const Vector3& v ) {
     x -= v.x;
     y -= v.y;
     z -= v.z;

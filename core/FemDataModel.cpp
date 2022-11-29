@@ -1,7 +1,6 @@
 ﻿#include "FemDataModel.h"
 
 
-
 FemDataModel::FemDataModel() {
     mesh = MeshModel();		    // メッシュモデル
     bc = BoundaryCondition();	// 境界条件

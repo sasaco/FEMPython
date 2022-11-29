@@ -2,6 +2,7 @@
 #include "FENode.h"
 #include "ElementManager.hpp"
 
+#include <algorithm>
 #include <vector>
 using namespace std;
 using std::vector;

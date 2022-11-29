@@ -1,13 +1,9 @@
 ﻿#include "FENode.h";
 
-#include <format>
-
-
 //--------------------------------------------------------------------//
 // 節点
 // label - 節点ラベル
 // x,y,z - x,y,z座標
-FENode::FENode() {};
 FENode::FENode(int _label, double _x, double _y, double _z) {
 
     label = _label;

@@ -1,10 +1,16 @@
 ﻿#pragma once
-#include "Nodes.h";
-#include "BoundaryCondition.h";
 
+#include "Nodes.h"
+#include "Vector3R.h"
+#include "Vector3.hpp"
+
+#include <numeric>
 #include <vector>
+using namespace std;
 using std::vector;
 
+#include <Eigen/Core>
+using namespace Eigen;
 
 //--------------------------------------------------------------------//
 // 要素
@@ -40,19 +46,22 @@ public:
     FElement(int _label, int _material, vector<int> _nodes);
 
     // 積分点の剛性マトリックスを返す
-    void stiffPart(vector<vector<double>> d, vector<vector<double>> b, double coef, vector<vector<double>> out);
+    MatrixXd stiffPart(MatrixXd d, MatrixXd b, double coef);
 
     // 節点変位を1次元配列に変換する
-    void toArray(vector<BoundaryCondition> u, int dof, vector<double> out);
+    VectorXd toArray(vector<Vector3R> u, int dof);
 
     // 節点変位を局所座標系・1次元配列に 変換する
-    void toLocalArray(vector<BoundaryCondition> u, vector<vector<double>>d, vector<double> v);
+    VectorXd toLocalArray(vector<Vector3R> u, vector<vector<double>> d);
+
+    double determinant(VectorXd ja);
+
+    MatrixXd dirMatrix(vector<Vector3> p, VectorXd axis);
+
+    vector<Vector3> dirVectors(vector<Vector3> p, VectorXd axis);
 
     void normalVector(vector<double> p, vector<double> out);
 
-    double determinant(double ja[9]);
 
-
-    void dirVectors(vector<double> p, double axis[3], vector<double> out[3])
 
 };

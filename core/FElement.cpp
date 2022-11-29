@@ -1,8 +1,5 @@
 ﻿#include "FElement.h";
 
-#include <numeric>
-
-
 //--------------------------------------------------------------------//
 // 要素
 // label - 要素ラベル
@@ -11,128 +8,122 @@
 FElement::FElement(int _label, int _material, vector<int> _nodes)
     : Nodes(_nodes) {
 
-    label = label;
+    label = _label;
     material = _material;
     isShell = false;        // シェル要素ではない
     isBar = false;		    // 梁要素ではない
 };
 
+
 // 積分点の剛性マトリックスを返す
 // d - 応力-歪マトリックス
 // b - 歪-変位マトリックスの転置行列
 // coef - 係数
-void FElement::stiffPart(vector<vector<double>> d, vector<vector<double>> b, double coef, vector<vector<double>> out) {
+MatrixXd FElement::stiffPart(MatrixXd d, MatrixXd b, double coef) {
 
-    int size1 = b.size();
-    int size2 = d.size();
-    
-    vector<double> a;
+    int size1 = b.rows();
+    int size2 = d.rows();
+
+    MatrixXd k(size1, size2);
 
     for (int i = 0; i < size1; i++) {
 
-        vector<double> bi = b[i];
+        VectorXd a(size2);
 
+        VectorXd bi = b.row(i);
         for (int j = 0; j < size2; j++) {
-            a.push_back(
-                coef * inner_product(bi.begin(), bi.end(), d[j].begin(), 0)
-            );
+            a(j) = coef * bi.dot(d.row(j));
         }
-
-        vector<double> ki;
 
         for (int j = 0; j < size1; j++) {
-            ki.push_back(
-                inner_product(a.begin(), a.end(), b[j].begin(), 0)
-            );
+            k(i, j) = a.dot(b.row(j));
         }
-        out.push_back(ki);
     }
+    return k;
+
 }
+
 
 // 節点変位を1次元配列に変換する
 // u - 節点変位
 // dof - 節点自由度
-void FElement::toArray(vector<BoundaryCondition> u, int dof, vector<double> out) {
+VectorXd FElement::toArray(vector<Vector3R> u, int dof) {
 
     int count = nodeCount();
-    out.clear();
+
+    VectorXd out(count + dof);
 
     for (int i = 0; i < count; i++) {
-        vector<double> ux = u[i].x;
+
+        double* ux = u[i].x;
+
         for (int j = 0; j < dof; j++) {
-            out.push_back(ux[j]);
+            int index = i + j;
+            out(index) = ux[j];
         }
+
     }
 };
+
 
 // 節点変位を局所座標系・1次元配列に変換する
 // u - 節点変位
 // d - 方向余弦マトリックス
-void FElement::toLocalArray(vector<BoundaryCondition> u, vector<vector<double>> d, vector<double> v) {
+VectorXd FElement::toLocalArray(vector<Vector3R> u, vector<vector<double>> d) {
 
-    v.clear();
+    VectorXd v(12);
 
+    int index = 0;
     for (int i = 0; i < 2; i++) {
-        vector<double> ux = u[i].x;
+        double* ux = u[i].x;
         for (int j = 0; j < 3; j++) {
-            v.push_back(d[0][j] * ux[0] + d[1][j] * ux[1] + d[2][j] * ux[2]);
+            v(index) = d[0][j] * ux[0] + d[1][j] * ux[1] + d[2][j] * ux[2];
         }
         for (int j = 0; j < 3; j++) {
-            v.push_back(d[0][j] * ux[3] + d[1][j] * ux[4] + d[2][j] * ux[5]);
+            v(index) = d[0][j] * ux[3] + d[1][j] * ux[4] + d[2][j] * ux[5];
         }
     }
 }
 
 // 3x3の行列式を返す
-double FElement::determinant(double ja[9]) {
-
-    double det = 0;
-    // 3x3の行列を入力
-    double a[3][3];
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            a[i][j] = ja[i + j];
-        }
-    }
-    // 行列式の計算
-    for (int i = 0; i < 3; ++i) {
-        det = det + a[0][i] * (a[1][(i + 1) % 3] * a[2][(i + 2) % 3] - a[1][(i + 2) % 3] * a[2][(i + 1) % 3]);
-    }
-
-    return det;
+double FElement::determinant(VectorXd ja) {
+    return ja.determinant();
 }
 
 
 // 方向余弦マトリックスを返す
 // p - 頂点座標
 // axis - 断面基準方向ベクトル
-void FElement::dirMatrix(vector<double> p, double axis[3], vector<vector<double>> out) {
+MatrixXd FElement::dirMatrix(vector<Vector3> p, VectorXd axis) {
 
-    vector<double> v;
-    dirVectors(p, axis, v);
+    vector<Vector3> v = dirVectors(p, axis);
 
-    return [[v[0].x, v[1].x, v[2].x], [v[0].y, v[1].y, v[2].y],
-        [v[0].z, v[1].z, v[2].z]];
+    MatrixXd result(3, 3);
+    result << v[0].x, v[1].x, v[2].x,
+              v[0].y, v[1].y, v[2].y,
+              v[0].z, v[1].z, v[2].z;
+
+    return result;
 }
 
 
 // 方向余弦マトリックスを返す
 // p - 頂点座標
 // axis - 断面基準方向ベクトル
-void FElement::dirVectors(vector<double> p, double axis[3], vector<double> out[3]) {
+vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
 
-    var v1, v2, v3;
+    if (p.size() == 2) {		// 梁要素
+        Vector3 v0 = p[0];
+        Vector3 v1 = p[1].clone().sub(v0).normalize();
+        
+        auto dt = v1.dot(axis);
 
-    if (p.length == 2) {		// 梁要素
-        v1 = p[1].clone().sub(p[0]).normalize();
-        v2 = new THREE.Vector3();
-        v3 = new THREE.Vector3();
-        if ((axis != = null) && (axis != = undefined)) {
-            var dt = v1.dot(axis);
-            v2.set(axis.x - dt * v1.x, axis.y - dt * v1.y, axis.z - dt * v1.z);
-            if (v2.lengthSq() > 0) v2.normalize();
+        Vector3 v2(axis.x - dt * v1.x, axis.y - dt * v1.y, axis.z - dt * v1.z);
+        if (v2.lengthSq() > 0) {
+            v2.normalize();
         }
-        if (v2.lengthSq() == = 0) {
+
+        if (v2.lengthSq() == 0) {
             if (Math.abs(v1.x) < Math.abs(v1.y)) {
                 v2.set(1 - v1.x * v1.x, -v1.x * v1.y, -v1.x * v1.z).normalize();
             }
