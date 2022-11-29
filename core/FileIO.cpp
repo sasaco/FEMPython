@@ -73,144 +73,150 @@ FemDataModel readFemModel(string s)
             string keyWord = columns[0];
             std::transform(keyWord.begin(), keyWord.end(), keyWord.begin(), ::tolower);
 
-            /*
             // 材料データ
-            if ((keyWord == 'material') && (ss.length > 7)) {
-                model.materials.push
-                (new Material(parseInt(ss[1]), parseFloat(ss[2]),
-                    parseFloat(ss[3]), parseFloat(ss[5]),
-                    parseFloat(ss[6]), parseFloat(ss[7])));
+            if ((keyWord == "material") && (columns.size() > 7)) {
+                auto mat = Material(stoi(columns[1]), stod(columns[2]),
+                    stod(columns[3]), stod(columns[5]),
+                    stod(columns[6]), stod(columns[7]));
+                model.materials.push_back(mat);
             }
+            /*
             // シェルパラメータ
-            else if ((keyWord == 'shellparameter') && (ss.length > 2)) {
+            else if ((keyWord == "shellparameter") && (columns.size() > 2)) {
                 model.shellParams.push
-                (new ShellParameter(parseInt(ss[1]), parseFloat(ss[2])));
+                (new ShellParameter(stoi(columns[1]), stod(columns[2])));
             }
             // 梁パラメータ
-            else if ((keyWord == 'barparameter') && (ss.length > 4)) {
-                model.barParams.push(new BarParameter
-                (parseInt(ss[1]), ss[2], ss.slice(3, ss.length)));
+            else if ((keyWord == "barparameter") && (columns.size() > 4)) {
+                model.barParams.push_back(new BarParameter
+                (stoi(columns[1]), columns[2], ss.slice(3, columns.size())));
             }
             // 局所座標系
-            else if ((keyWord == 'coordinates') && (ss.length > 10)) {
-                model.coordinates.push(readCoordinates(ss));
+            else if ((keyWord == "coordinates") && (columns.size() > 10)) {
+                model.coordinates.push_back(readCoordinates(ss));
             }
+            */
             // 節点
-            else if ((keyWord == 'node') && (ss.length > 4)) {
-                mesh.nodes.push(new FENode(parseInt(ss[1]), parseFloat(ss[2]),
-                    parseFloat(ss[3]),
-                    parseFloat(ss[4])));
+            else if ((keyWord == "node") && (columns.size() > 4)) {
+                auto node = FENode(stoi(columns[1]), stod(columns[2]),
+                    stod(columns[3]),
+                    stod(columns[4]));
+                mesh.nodes.push_back(node);
             }
             // 要素
-            else if ((keyWord == 'bebarelement') && (ss.length > 5)) {
-                if (ss.length < 8) {
-                    mesh.elements.push(new BEBarElement
-                    (parseInt(ss[1]), parseInt(ss[2]), parseInt(ss[3]),
+            /*
+            else if ((keyWord == "bebarelement") && (columns.size() > 5)) {
+                if (columns.size() < 8) {
+                    mesh.elements.push_back(new BEBarElement
+                    (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                         readVertex(ss, 4, 2)));
                 }
                 else {
-                    mesh.elements.push(new BEBarElement
-                    (parseInt(ss[1]), parseInt(ss[2]), parseInt(ss[3]),
+                    mesh.elements.push_back(new BEBarElement
+                    (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                         readVertex(ss, 4, 2),
-                        new THREE.Vector3().set(parseFloat(ss[6]),
-                            parseFloat(ss[7]),
-                            parseFloat(ss[8]))));
+                        new THREE.Vector3().set(stod(columns[6]),
+                            stod(columns[7]),
+                            stod(columns[8]))));
                 }
             }
-            else if ((keyWord == 'tbarelement') && (ss.length > 5)) {
-                if (ss.length < 8) {
-                    mesh.elements.push(new TBarElement
-                    (parseInt(ss[1]), parseInt(ss[2]), parseInt(ss[3]),
+            else if ((keyWord == "tbarelement") && (columns.size() > 5)) {
+                if (columns.size() < 8) {
+                    mesh.elements.push_back(new TBarElement
+                    (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                         readVertex(ss, 4, 2)));
                 }
                 else {
-                    mesh.elements.push(new TBarElement
-                    (parseInt(ss[1]), parseInt(ss[2]), parseInt(ss[3]),
+                    mesh.elements.push_back(new TBarElement
+                    (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                         readVertex(ss, 4, 2),
-                        new THREE.Vector3().set(parseFloat(ss[6]),
-                            parseFloat(ss[7]),
-                            parseFloat(ss[8]))));
+                        new THREE.Vector3().set(stod(columns[6]),
+                            stod(columns[7]),
+                            stod(columns[8]))));
                 }
             }
-            else if ((keyWord == 'trielement1') && (ss.length > 6)) {
-                mesh.elements.push(new TriElement1
-                (parseInt(ss[1]), parseInt(ss[2]), parseInt(ss[3]),
+            else if ((keyWord == "trielement1") && (columns.size() > 6)) {
+                mesh.elements.push_back(new TriElement1
+                (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                     readVertex(ss, 4, 3)));
             }
-            else if ((keyWord == 'quadelement1') && (ss.length > 7)) {
-                mesh.elements.push(new QuadElement1
-                (parseInt(ss[1]), parseInt(ss[2]), parseInt(ss[3]),
+            else if ((keyWord == "quadelement1") && (columns.size() > 7)) {
+                mesh.elements.push_back(new QuadElement1
+                (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                     readVertex(ss, 4, 4)));
             }
-            else if ((keyWord == 'tetraelement1') && (ss.length > 6)) {
-                mesh.elements.push(new TetraElement1
-                (parseInt(ss[1]), parseInt(ss[2]), readVertex(ss, 3, 4)));
+            else if ((keyWord == "tetraelement1") && (columns.size() > 6)) {
+                mesh.elements.push_back(new TetraElement1
+                (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 4)));
             }
-            else if ((keyWord == 'wedgeelement1') && (ss.length > 8)) {
-                mesh.elements.push(new WedgeElement1
-                (parseInt(ss[1]), parseInt(ss[2]), readVertex(ss, 3, 6)));
+            else if ((keyWord == "wedgeelement1") && (columns.size() > 8)) {
+                mesh.elements.push_back(new WedgeElement1
+                (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 6)));
             }
-            else if ((keyWord == 'hexaelement1') && (ss.length > 10)) {
-                mesh.elements.push(new HexaElement1
-                (parseInt(ss[1]), parseInt(ss[2]), readVertex(ss, 3, 8)));
+
+            else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
+
+                mesh.elements.push_back(HexaElement1
+                (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 8)));
             }
-            else if ((keyWord == 'hexaelement1wt') && (ss.length > 10)) {
-                mesh.elements.push(new HexaElement1WT
-                (parseInt(ss[1]), parseInt(ss[2]), readVertex(ss, 3, 8)));
+            /*
+            else if ((keyWord == "hexaelement1wt") && (columns.size() > 10)) {
+                mesh.elements.push_back(new HexaElement1WT
+                (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 8)));
             }
-            else if ((keyWord == 'tetraelement2') && (ss.length > 12)) {
-                mesh.elements.push(new TetraElement2
-                (parseInt(ss[1]), parseInt(ss[2]), readVertex(ss, 3, 10)));
+            else if ((keyWord == "tetraelement2") && (columns.size() > 12)) {
+                mesh.elements.push_back(new TetraElement2
+                (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 10)));
             }
-            else if ((keyWord == 'wedgeelement2') && (ss.length > 17)) {
-                mesh.elements.push(new WedgeElement2
-                (parseInt(ss[1]), parseInt(ss[2]), readVertex(ss, 3, 15)));
+            else if ((keyWord == "wedgeelement2") && (columns.size() > 17)) {
+                mesh.elements.push_back(new WedgeElement2
+                (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 15)));
             }
-            else if ((keyWord == 'hexaelement2') && (ss.length > 22)) {
-                mesh.elements.push(new HexaElement2
-                (parseInt(ss[1]), parseInt(ss[2]), readVertex(ss, 3, 20)));
+            else if ((keyWord == "hexaelement2") && (columns.size() > 22)) {
+                mesh.elements.push_back(new HexaElement2
+                (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 20)));
             }
             // 境界条件
-            else if ((keyWord == 'restraint') && (ss.length > 7)) {
+            else if ((keyWord == "restraint") && (columns.size() > 7)) {
                 var rest = readRestraint(ss);
-                if (rest != = null) bc.restraints.push(rest);
+                if (rest != = null) bc.restraints.push_back(rest);
             }
-            else if ((keyWord == 'load') && (ss.length > 4)) {
-                bc.loads.push(readLoad(ss));
+            else if ((keyWord == "load") && (columns.size() > 4)) {
+                bc.loads.push_back(readLoad(ss));
             }
-            else if ((keyWord == 'pressure') && (ss.length > 3)) {
+            else if ((keyWord == "pressure") && (columns.size() > 3)) {
                 bc.pressures.push
-                (new Pressure(parseInt(ss[1]), ss[2].toUpperCase(),
-                    parseFloat(ss[3])));
+                (new Pressure(stoi(columns[1]), columns[2].toUpperCase(),
+                    stod(columns[3])));
             }
-            else if ((keyWord == 'temperature') && (ss.length > 2)) {
+            else if ((keyWord == "temperature") && (columns.size() > 2)) {
                 bc.temperature.push
-                (new Temperature(parseInt(ss[1]), parseFloat(ss[2])));
+                (new Temperature(stoi(columns[1]), stod(columns[2])));
             }
-            else if ((keyWord == 'htc') && (ss.length > 4)) {
+            else if ((keyWord == "htc") && (columns.size() > 4)) {
                 bc.htcs.push
-                (new HeatTransferBound(parseInt(ss[1]), ss[2].toUpperCase(),
-                    parseFloat(ss[3]), parseFloat(ss[4])));
+                (new HeatTransferBound(stoi(columns[1]), columns[2].toUpperCase(),
+                    stod(columns[3]), stod(columns[4])));
             }
             // 計算結果
-            else if ((keyWord == 'resulttype') && (ss.length > 1)) {
-                if (ss[1].toLowerCase() == 'element') {
+            else if ((keyWord == "resulttype") && (columns.size() > 1)) {
+                if (columns[1].toLowerCase() == "element") {
                     model.result.type = ELEMENT_DATA;
                 }
                 else {
                     model.result.type = NODE_DATA;
                 }
             }
-            else if (((keyWord == 'eigenvalue') && (ss.length > 2)) ||
-                ((keyWord == 'displacement') && (ss.length > 7)) ||
-                ((keyWord == 'strain1') && (ss.length > 7)) ||
-                ((keyWord == 'stress1') && (ss.length > 7)) ||
-                ((keyWord == 'strenergy1') && (ss.length > 2)) ||
-                ((keyWord == 'strain2') && (ss.length > 7)) ||
-                ((keyWord == 'stress2') && (ss.length > 7)) ||
-                ((keyWord == 'strenergy2') && (ss.length > 2)) ||
-                ((keyWord == 'temp') && (ss.length > 2))) {
-                res.push(ss);
+            else if (((keyWord == "eigenvalue") && (columns.size() > 2)) ||
+                ((keyWord == "displacement") && (columns.size() > 7)) ||
+                ((keyWord == "strain1") && (columns.size() > 7)) ||
+                ((keyWord == "stress1") && (columns.size() > 7)) ||
+                ((keyWord == "strenergy1") && (columns.size() > 2)) ||
+                ((keyWord == "strain2") && (columns.size() > 7)) ||
+                ((keyWord == "stress2") && (columns.size() > 7)) ||
+                ((keyWord == "strenergy2") && (columns.size() > 2)) ||
+                ((keyWord == "temp") && (columns.size() > 2))) {
+                res.push_back(ss);
             }
             */
         }

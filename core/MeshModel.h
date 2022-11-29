@@ -10,10 +10,12 @@ using std::vector;
 class MeshModel {
 
 private:
+
+public:
     vector<FENode> nodes;   // êﬂì_
     vector<ElementManager> elements;   // óvëf
 
-public:
+
     MeshModel();
 
     template <typename T>
