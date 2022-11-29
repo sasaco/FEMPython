@@ -3,47 +3,29 @@
 //--------------------------------------------------------------------//
 // 計算結果
 Result::Result() {
-    /*
-    this.displacement = [];		// 変位
-    this.dispMax = 0;		// 変位の大きさの最大値
-    this.angleMax = 0;		// 回転角の大きさの最大値
-    this.strain1 = [];		// 節点歪
-    this.stress1 = [];		// 節点応力
-    this.sEnergy1 = [];		// 節点歪エネルギー密度
-    this.strain2 = [];
-    this.stress2 = [];
-    this.sEnergy2 = [];
-    this.temperature = [];		// 節点温度
-    this.tempMax = 0;		// 温度の最大値
-    this.eigenValue = [];		// 固有値データ
-    this.calculated = false;	// 計算前＝計算結果無し
-    this.type = NODE_DATA;		// データ保持形態：節点データ
-    this.value = [];		// コンター図データ
-    this.minValue = 0;		// コンター図データ最小値
-    this.maxValue = 0;		// コンター図データ最大値
-    */
+    clear();
+    type = NODE_DATA;
 };
 
 // 計算結果を消去する
 void Result::clear() {
-    /*
-    this.displacement.length = 0;
-    this.strain1.length = 0;
-    this.strain2.length = 0;
-    this.stress1.length = 0;
-    this.stress2.length = 0;
-    this.sEnergy1.length = 0;
-    this.sEnergy2.length = 0;
-    this.temperature.length = 0;
-    this.dispMax = 0;
-    this.angleMax = 0;
-    this.tempMax = 0;
-    this.eigenValue.length = 0;
-    this.calculated = false;
-    this.value.length = 0;
-    this.minValue = 0;
-    this.maxValue = 0;
-    */
+
+    displacement.clear();
+    dispMax = 0;
+    angleMax = 0;
+    strain1.clear();
+    stress1.clear();
+    sEnergy1.clear();
+    strain2.clear();
+    stress2.clear();
+    sEnergy2.clear();
+    temperature.clear();
+    tempMax = 0;
+    eigenValue.clear();
+    calculated = false;
+    value.clear();
+    minValue = 0;
+    maxValue = 0;
 };
 
 /*

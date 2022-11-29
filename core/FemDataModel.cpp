@@ -20,18 +20,27 @@ void FemDataModel::clear(){
     mesh.clear();
     bc.clear();
     result.clear();
-    result.type=NODE_DATA;
+    result.type= result.NODE_DATA;
     
 };
 
-/*
 // モデルを初期化する
 void FemDataModel::init(){
-  solver.method=ILUCG_METHOD;   // デフォルトは反復解法
+
+  solver.method= solver.ILUCG_METHOD;   // デフォルトは反復解法
   auto mats= materials;
-  mats.sort(compareLabel);
+
+  // mats.sort(compareLabel);
+  sort(mats.begin(), mats.end(),
+      [](Material o1, Material o2) -> int {
+          if (o1.label < o2.label)        return -1;
+          else if (o1.label > o2.label)   return 1;
+          else                            return 0;
+      });
   mesh.init();
   bc.init();
+
+  /*
   reNumbering();
   resetMaterialLabel();
   resetParameterLabel();
@@ -46,7 +55,10 @@ void FemDataModel::init(){
         m3d:m3d
     };
   }
+  */
 };
+
+/*
 
 // 節点・要素ポインタを設定する
 void FemDataModel::reNumbering(){

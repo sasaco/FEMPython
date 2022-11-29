@@ -9,21 +9,71 @@ using std::vector;
 
 
 
+const string WHITESPACE = " \n\r\t\f\v";
+
+string ltrim(const string& s)
+{
+    size_t start = s.find_first_not_of(WHITESPACE);
+    return (start == string::npos) ? "" : s.substr(start);
+}
+
+string rtrim(const string& s)
+{
+    size_t end = s.find_last_not_of(WHITESPACE);
+    return (end == string::npos) ? "" : s.substr(0, end + 1);
+}
+
+string trim(const string& s) {
+    return rtrim(ltrim(s));
+}
+
+
+vector<string> split(string str, char del) {
+
+    vector<string> result;
+    stringstream ss{ str };
+    string buf;
+    while (getline(ss, buf, del)) {
+        buf = trim(buf);
+        if (buf.size() > 0) {
+            result.push_back(buf);
+        }
+    }
+
+    return result;
+}
+
+
 /// <summary>
 /// // FEMデータを読み込む
 /// </summary>
 /// <param name="s">データ文字列のリスト</param>
 /// <returns></returns>
-string readFemModel(vector<string> s)
+FemDataModel readFemModel(string s)
 {
+    vector<string> lines = split(s, '\n');
+
     auto model = FemDataModel();
     model.clear();
-    /*
-    var mesh = model.mesh, bc = model.bc, res = [];
-    for (var i = 0; i < s.length; i++) {
-        var ss = s[i].trim().replace(/ \t / g, ' ').split(/ \s + / );
-        if (ss.length > 0) {
-            var keyWord = ss[0].toLowerCase();
+    
+    auto mesh = model.mesh;
+    auto bc = model.bc;
+
+    vector<string> res;
+
+    for (int i = 0; i < lines.size(); i++) {
+        
+        vector<string> columns = split(lines[i], ' ');
+
+        //char del = ' ';
+        //vector<string> ss = split(s[i], del);
+
+        if (columns.size() > 0) {
+
+            string keyWord = columns[0];
+            std::transform(keyWord.begin(), keyWord.end(), keyWord.begin(), ::tolower);
+
+            /*
             // 材料データ
             if ((keyWord == 'material') && (ss.length > 7)) {
                 model.materials.push
@@ -162,16 +212,19 @@ string readFemModel(vector<string> s)
                 ((keyWord == 'temp') && (ss.length > 2))) {
                 res.push(ss);
             }
+            */
         }
     }
     model.init();
+
+    /*
     initObject();
     if (res.length > 0) {
         readFemResult(res);
     }
     */
 
-    return "OK";
+    // model.calculate();
+    return model;
 }
-
 

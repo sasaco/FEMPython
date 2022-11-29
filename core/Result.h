@@ -5,7 +5,7 @@
 #include "Stress.h"
 #include "EigenValue.h"
 
-#include <map> 
+#include<map> 
 #include<string>
 #include<vector>
 using namespace std;
@@ -16,47 +16,48 @@ class Result {
 
 private:
 
+
     // データ型
-    const int NONE = -1;		    // 空データ
-    const int DISPLACEMENT = 0;	    // 変位
-    const int STRAIN = 1;		    // 歪
-    const int STRESS = 2;		    // 応力
-    const int S_ENERGY = 3;		    // 歪エネルギー密度
-    const int TEMPERATURE = 4;	    // 温度
+    int NONE = -1;		    // 空データ
+    int DISPLACEMENT = 0;	    // 変位
+    int STRAIN = 1;		    // 歪
+    int STRESS = 2;		    // 応力
+    int S_ENERGY = 3;		    // 歪エネルギー密度
+    int TEMPERATURE = 4;	    // 温度
 
     // 成分
-    const int X = 0;		        // x成分
-    const int Y = 1;		        // y成分
-    const int Z = 2;		        // z成分
-    const int RX = 3;		        // x軸回転成分
-    const int RY = 4;		        // y軸回転成分
-    const int RZ = 5;		        // z軸回転成分
-    const int XY = 3;		        // xyせん断成分
-    const int YZ = 4;		        // yzせん断成分
-    const int ZX = 5;		        // zxせん断成分
-    const int MAGNITUDE = 6;	    // 大きさ
-    const int MAX_PRINCIPAL = 7;	// 最大主成分
-    const int MIN_PRINCIPAL = 8;	// 最小主成分
-    const int MID_PRINCIPAL = 9;	// 中間主成分
-    const int MAX_SHARE = 10;	    // 最大せん断成分
-    const int VON_MISES = 11;	    // ミーゼス応力
-    const int SHIFT = 12;		    // 成分シフト量
+    int X = 0;		        // x成分
+    int Y = 1;		        // y成分
+    int Z = 2;		        // z成分
+    int RX = 3;		        // x軸回転成分
+    int RY = 4;		        // y軸回転成分
+    int RZ = 5;		        // z軸回転成分
+    int XY = 3;		        // xyせん断成分
+    int YZ = 4;		        // yzせん断成分
+    int ZX = 5;		        // zxせん断成分
+    int MAGNITUDE = 6;	    // 大きさ
+    int MAX_PRINCIPAL = 7;	// 最大主成分
+    int MIN_PRINCIPAL = 8;	// 最小主成分
+    int MID_PRINCIPAL = 9;	// 中間主成分
+    int MAX_SHARE = 10;	    // 最大せん断成分
+    int VON_MISES = 11;	    // ミーゼス応力
+    int SHIFT = 12;		    // 成分シフト量
 
     // 変位の成分
-    const string DISP_COMPONENT[4] = { "Mag.", "x", "y", "z" };
+    string DISP_COMPONENT[4] = { "Mag.", "x", "y", "z" };
 
-    const string DISP2_COMPONENT[7] = { "Mag.", "x", "y", "z", "rotx", "roty", "rotz" };
+    string DISP2_COMPONENT[7] = { "Mag.", "x", "y", "z", "rotx", "roty", "rotz" };
     // 歪の成分
-    const string STRAIN_COMPONENT[10] = { "Max.prin.", "Min.prin.", "Mid.prin.", "Max.share",
+    string STRAIN_COMPONENT[10] = { "Max.prin.", "Min.prin.", "Mid.prin.", "Max.share",
                                         "x", "y", "z", "xy", "yz", "zx" };
     // 応力の成分
-    const string STRESS_COMPONENT[11] = { "Max.prin.", "Min.prin.", "Mid.prin.",
+    string STRESS_COMPONENT[11] = { "Max.prin.", "Min.prin.", "Mid.prin.",
                                         "Max.share", "Von mises",
                                         "x", "y", "z", "xy", "yz", "zx" };
     // 歪エネルギー密度の成分
-    const string  ENERGY_COMPONENT[1] = {"Energy"};
+    string  ENERGY_COMPONENT[1] = {"Energy"};
 
-    map<string, int> COMP_MAP { 
+    map<string, int> COMP_MAP {
         {"Mag." , MAGNITUDE},
         {"x" , X},
         {"y" , Y},
@@ -99,11 +100,10 @@ private:
         {"Energy 2" , 1}
     };
 
-    const double EIG_EPS = 1e-10;           // 固有値計算の収束閾値
-    const int NODE_DATA = 0;		        // 節点データ
-    const int ELEMENT_DATA = 1;		        // 要素データ
-    const string VIBRATION = "Vibration";	// 振動解析
-    const string BUCKLING = "Buckling";	    // 座屈解析
+    double EIG_EPS = 1e-10;           // 固有値計算の収束閾値
+    int ELEMENT_DATA = 1;		        // 要素データ
+    string VIBRATION = "Vibration";	// 振動解析
+    string BUCKLING = "Buckling";	    // 座屈解析
 
     
     vector<Vector3R> displacement;  // 変位
@@ -119,12 +119,14 @@ private:
     double tempMax;		            // 温度の最大値
     vector<EigenValue> eigenValue;	// 固有値データ
     bool calculated;	            // 計算前＝計算結果無し
-    int type = NODE_DATA;		    // データ保持形態：節点データ
     vector<double> value;		    // コンター図データ
     double minValue;		        // コンター図データ最小値
     double maxValue;		        // コンター図データ最大値
 
 public:
+    int NODE_DATA = 0;		// 節点データ
+    int type;		                // データ保持形態：節点データ
+
     Result();
     void clear();
 };

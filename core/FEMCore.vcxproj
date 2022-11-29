@@ -247,13 +247,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\sasaco\anaconda3\lib\site-packages\pybind11\include;C:\Users\sasaco\anaconda3\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PYTHONPATH)\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\Users\sasaco\anaconda3\libs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PYTHONPATH)\libs</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

@@ -19,10 +19,8 @@ using std::vector;
 class FemDataModel {
 
 private:
-    const double COEF_F_W = 0.5 / numbers::pi;    // f/ω比 1/2π
+    double COEF_F_W = 0.5 / numbers::pi;    // f/ω比 1/2π
 
-    MeshModel mesh;		                    // メッシュモデル
-    BoundaryCondition bc;	                // 境界条件
 
     vector<Material> materials;             // 材料
     vector<ShellParameter> shellParams;     // シェルパラメータ
@@ -32,16 +30,19 @@ private:
     Solver solver;		                    // 連立方程式求解オブジェクト
     Result result;		                    // 計算結果
 
-    /*
 
     // Method
-    void init();
+    /*
     void reNumbering();
-*/
+    */
 
 public:
+    MeshModel mesh;		                    // メッシュモデル
+    BoundaryCondition bc;	                // 境界条件
 
     FemDataModel();
+
     void clear();
+    void init();
 
 };

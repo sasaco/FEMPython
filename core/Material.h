@@ -18,9 +18,8 @@ class Material {
 
 private:
     // 矩形断面のせん断補正係数
-    const double KS_RECT = 5 / 6;
+    double KS_RECT = 5 / 6;
 
-    int label;
     double nu;
     double dens;
     double hCon;
@@ -32,6 +31,8 @@ private:
     //void matrixTorsion(double out[2][2]);
 
 public:
+    int label;
+
     Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
 
     double ee;
