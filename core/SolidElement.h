@@ -14,6 +14,7 @@ using namespace std;
 using std::string;
 using std::vector;
 
+#include<Eigen/Core>
 
 class SolidElement : public FElement {
 

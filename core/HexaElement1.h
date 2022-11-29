@@ -6,7 +6,7 @@ class HexaElement1 : public SolidElement {
 private:
 
     // 六面体1次要素の節点のξ,η,ζ座標
-    vector<vector<double>> HEXA1_NODE = {
+    MatrixXd HEXA1_NODE = {
         {-1, -1, -1},
         {1, -1, -1},
         {1, 1, -1},
