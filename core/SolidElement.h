@@ -1,14 +1,17 @@
 ﻿#pragma once
-#include "FElement.h";
-#include "FENode.h";
-#include "Material.h";
-#include "numeric.h";
-
+#include "BoundaryCondition.h"
+#include "FElement.h"
+#include "FENode.h"
+#include "Material.h"
+#include "numeric.h"
+#include "Strain.h"
+#include "Stress.h"
 
 #include <string>
 #include <vector>
 using namespace std;
-
+using std::string;
+using std::vector;
 
 
 class SolidElement : public FElement {

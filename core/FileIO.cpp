@@ -153,11 +153,10 @@ FemDataModel readFemModel(string s)
                 mesh.elements.push_back(new WedgeElement1
                 (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 6)));
             }
-
+            */
             else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
-
-                mesh.elements.push_back(HexaElement1
-                (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 8)));
+                auto elem = ElementManager("HexaElement1", columns);
+                mesh.elements.push_back(elem);
             }
             /*
             else if ((keyWord == "hexaelement1wt") && (columns.size() > 10)) {

@@ -18,21 +18,21 @@ private:
     bool isBar;
 
 public:
-    const double C1_3 = 1 / 3;
-    const double C1_6 = 1 / 6;
-    const double C1_12 = 1 / 12;
-    const double C1_24 = 1 / 24;
+    double C1_3 = 1 / 3;
+    double C1_6 = 1 / 6;
+    double C1_12 = 1 / 12;
+    double C1_24 = 1 / 24;
     
     // 三角形2次要素のガウス積分の積分点座標
-    const double GTRI2[2] = { 1 / 6, 2 / 3 };
+    double GTRI2[2] = { 1 / 6, 2 / 3 };
     // 四面体2次要素のガウス積分の積分点座標
-    const double GTETRA2[2] = { 0.25 - 0.05 * sqrt(5), 0.25 + 0.15 * sqrt(5) };
+    double GTETRA2[2] = { 0.25 - 0.05 * sqrt(5), 0.25 + 0.15 * sqrt(5) };
     // 四角形1次要素のガウス積分の積分点座標
-    const double GX2[2] = { -1 / sqrt(3), 1 / sqrt(3) };
+    double GX2[2] = { -1 / sqrt(3), 1 / sqrt(3) };
     // 四角形2次要素のガウス積分の積分点座標
-    const double GX3[3] = { -sqrt(0.6), 0, sqrt(0.6) };
+    double GX3[3] = { -sqrt(0.6), 0, sqrt(0.6) };
     // ガウス積分の重み係数
-    const double GW3[3] = { 5 / 9, 8 / 9, 5 / 9 };
+    double GW3[3] = { 5 / 9, 8 / 9, 5 / 9 };
 
     int label;
     int material;
