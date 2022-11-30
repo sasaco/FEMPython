@@ -1,4 +1,4 @@
-﻿#include "SolidElement.h";
+﻿#include "SolidElement.h"
 
 //--------------------------------------------------------------------//
 // ソリッド要素
@@ -153,7 +153,9 @@ MatrixXd SolidElement::massMatrix(vector<FENode> p, double dens) {
 
         for (int i1 = 0; i1 < count; i1++) {
             for (int j1 = 0; j1 < count; j1++) {
-                double value = coef * sf(i1, 0) * sf(j1, 0), i3 = 3 * i1, j3 = 3 * j1;
+                double value = coef * sf(i1, 0) * sf(j1, 0);
+                int i3 = 3 * i1;
+                int j3 = 3 * j1;
                 result(i3, j3) += value;
                 result(i3 + 1, j3 + 1) += value;
                 result(i3 + 2, j3 + 2) += value;
@@ -317,7 +319,8 @@ VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, Vector3d x) {
 tuple<Strain, Stress, double> SolidElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
 
     VectorXd v = FElement::toArray(u, 3);
-    double cf = 1 / intP.size();
+    int count = (int)intP.size();
+    auto cf = double(1 / intP.size());
 
     VectorXd strain = VectorXd::Zero(6);
     VectorXd stress = VectorXd::Zero(6);

@@ -13,8 +13,13 @@ SymmetricTensor3::SymmetricTensor3(VectorXd s) {
 
 // テンソルをベクトルとして返す
 VectorXd SymmetricTensor3::vector() {
-    VectorXd s;
-    s << xx, yy, zz, xy, yz, zx;
+    VectorXd s(6);
+    s(0) = xx;
+    s(1) = yy;
+    s(2) = zz;
+    s(3) = xy;
+    s(4) = yz;
+    s(5) = zx;
     return s;
 };
 
@@ -55,11 +60,20 @@ double SymmetricTensor3::innerProduct(SymmetricTensor3 t) {
 void SymmetricTensor3::rotate(Matrix3d d) {
 
     Matrix3d mat;
-    mat << xx, xy, zx,
-           xy, yy, yz,
-           zx, yz, zz;
+    mat(0, 0) = xx;
+    mat(0, 1) = xy;
+    mat(0, 2) = zx;
+    
+    mat(1, 0) = xy;
+    mat(1, 1) = yy;
+    mat(1, 2) = yz;
+
+    mat(2, 0) = zx;
+    mat(2, 1) = yz;
+    mat(2, 2) = zz;
 
     VectorXd s = VectorXd::Zero(6);
+
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             double mij = mat(i, j);
@@ -75,7 +89,7 @@ void SymmetricTensor3::rotate(Matrix3d d) {
     xy = s(3);
     yz = s(4);
     zx = s(5);
-};
+}
 
 
 /*

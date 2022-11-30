@@ -1,4 +1,4 @@
-﻿#include "Coordinates.h";
+﻿#include "Coordinates.h"
 
 #include <format>
 

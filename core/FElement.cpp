@@ -1,4 +1,4 @@
-﻿#include "FElement.h";
+﻿#include "FElement.h"
 
 //--------------------------------------------------------------------//
 // 要素
@@ -21,8 +21,8 @@ FElement::FElement(int _label, int _material, vector<int> _nodes)
 // coef - 係数
 MatrixXd FElement::stiffPart(MatrixXd d, MatrixXd b, double coef) {
 
-    int size1 = b.rows();
-    int size2 = d.rows();
+    int size1 = (int)b.rows();
+    int size2 = (int)d.rows();
 
     MatrixXd k(size1, size2);
 
@@ -101,9 +101,17 @@ Matrix3d FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
     vector<Vector3> v = dirVectors(vec, axis);
 
     Matrix3d result(3, 3);
-    result << v[0].x, v[1].x, v[2].x,
-              v[0].y, v[1].y, v[2].y,
-              v[0].z, v[1].z, v[2].z;
+    result(0, 0) = v[0].x;
+    result(0, 1) = v[1].x;
+    result(0, 2) = v[2].x;
+    
+    result(1, 0) = v[0].y;
+    result(1, 1) = v[1].y;
+    result(1, 2) = v[2].y;
+    
+    result(2, 0) = v[0].z;
+    result(2, 1) = v[1].z;
+    result(2, 2) = v[2].z;
 
     return result;
 }

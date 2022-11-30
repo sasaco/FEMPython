@@ -37,16 +37,16 @@ string Restraint::toString(vector<FENode> nodes) {
 
     for (int i = 0; i < 6; i++) {
         if (rest[i]) {
-            s += '\t1\t';
+            s += "\t1\t";
             s += to_string(x[i]);
         }
         else {
-            s += '\t0\t';
+            s += "\t0\t";
             s += to_string(x[i]);
         }
     }
 
-    s += '\t';
+    s += "\t";
     s += to_string(coords.label);
 
     return s;

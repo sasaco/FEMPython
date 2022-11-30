@@ -143,9 +143,6 @@
     <ClCompile Include="SymmetricTensor3.cpp">
       <Filter>ソース ファイル\numeric</Filter>
     </ClCompile>
-    <ClCompile Include="HexaElement1.cpp">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClCompile>
     <ClCompile Include="SolidElement.cpp">
       <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClCompile>
@@ -154,12 +151,6 @@
     </ClCompile>
     <ClCompile Include="Nodes.cpp">
       <Filter>ソース ファイル\Element</Filter>
-    </ClCompile>
-    <ClCompile Include="BarElement.cpp">
-      <Filter>ソース ファイル\Element\BarElement</Filter>
-    </ClCompile>
-    <ClCompile Include="ShellElement.cpp">
-      <Filter>ソース ファイル\Element\ShellElement</Filter>
     </ClCompile>
     <ClCompile Include="Section.cpp">
       <Filter>ソース ファイル\Section</Filter>
@@ -266,9 +257,6 @@
     <ClInclude Include="FElement.h">
       <Filter>ソース ファイル\Element</Filter>
     </ClInclude>
-    <ClInclude Include="HexaElement1.h">
-      <Filter>ソース ファイル\Element\SolidElement</Filter>
-    </ClInclude>
     <ClInclude Include="SolidElement.h">
       <Filter>ソース ファイル\Element\SolidElement</Filter>
     </ClInclude>
@@ -277,12 +265,6 @@
     </ClInclude>
     <ClInclude Include="vector3.hpp">
       <Filter>ソース ファイル\numeric</Filter>
-    </ClInclude>
-    <ClInclude Include="BarElement.h">
-      <Filter>ソース ファイル\Element\BarElement</Filter>
-    </ClInclude>
-    <ClInclude Include="ShellElement.h">
-      <Filter>ソース ファイル\Element\ShellElement</Filter>
     </ClInclude>
     <ClInclude Include="Section.h">
       <Filter>ソース ファイル\Section</Filter>

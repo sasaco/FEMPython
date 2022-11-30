@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BarElement.cpp" />
     <ClCompile Include="BarParameter.cpp" />
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="CircleSection.cpp" />
@@ -34,7 +33,6 @@
     <ClCompile Include="FENode.cpp" />
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="HeatTransferBound.cpp" />
-    <ClCompile Include="HexaElement1.cpp" />
     <ClCompile Include="Load.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MeshModel.cpp" />
@@ -48,7 +46,6 @@
     <ClCompile Include="Restraint.cpp" />
     <ClCompile Include="Result.cpp" />
     <ClCompile Include="Section.cpp" />
-    <ClCompile Include="ShellElement.cpp" />
     <ClCompile Include="ShellParameter.cpp" />
     <ClCompile Include="SolidElement.cpp" />
     <ClCompile Include="Solver.cpp" />
@@ -135,7 +132,6 @@
     <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BarElement.h" />
     <ClInclude Include="BarParameter.h" />
     <ClInclude Include="BorderManager.hpp" />
     <ClInclude Include="BoundaryCondition.h" />
@@ -149,7 +145,6 @@
     <ClInclude Include="FemDataModel.h" />
     <ClInclude Include="FENode.h" />
     <ClInclude Include="HeatTransferBound.h" />
-    <ClInclude Include="HexaElement1.h" />
     <ClInclude Include="Load.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MeshModel.h" />
@@ -161,7 +156,6 @@
     <ClInclude Include="Restraint.h" />
     <ClInclude Include="Result.h" />
     <ClInclude Include="Section.h" />
-    <ClInclude Include="ShellElement.h" />
     <ClInclude Include="ShellParameter.h" />
     <ClInclude Include="SolidElement.h" />
     <ClInclude Include="Solver.h" />

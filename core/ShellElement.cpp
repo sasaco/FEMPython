@@ -1,4 +1,4 @@
-﻿#include "ShellElement.h";
+﻿#include "ShellElement.h"
 
 //--------------------------------------------------------------------//
 // シェル要素
@@ -54,18 +54,16 @@ Matrix3d ShellElement::jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3 n, 
 // d - 方向余弦マトリックス
 Vector3d ShellElement::jacobInv(Matrix3d ja, MatrixXd d) {
 
-    VectorXd jd;
-    jd << ja(0, 0) * d(0, 0) + ja(1, 0) * d(1, 0) + ja(2, 0) * d(2, 0),
-        ja(0, 0)* d(0, 1) + ja(1, 0) * d(1, 1) + ja(2, 0) * d(2, 1),
-        ja(0, 0)* d(0, 2) + ja(1, 0) * d(1, 2) + ja(2, 0) * d(2, 2),
-        ja(0, 1)* d(0, 0) + ja(1, 1) * d(1, 0) + ja(2, 1) * d(2, 0),
-        ja(0, 1)* d(0, 1) + ja(1, 1) * d(1, 1) + ja(2, 1) * d(2, 1),
-        ja(0, 1)* d(0, 2) + ja(1, 1) * d(1, 2) + ja(2, 1) * d(2, 2),
-        0,
-        0,
-        ja(0, 2)* d(0, 2) + ja(1, 2) * d(1, 2) + ja(2, 2) * d(2, 2);
-
-    jd.resize(3, 3);
+    Matrix3d jd(3, 3);
+    jd(0, 0) = ja(0, 0) * d(0, 0) + ja(1, 0) * d(1, 0) + ja(2, 0) * d(2, 0);
+    jd(0, 1) = ja(0, 0) * d(0, 1) + ja(1, 0) * d(1, 1) + ja(2, 0) * d(2, 1);
+    jd(0, 2) = ja(0, 0) * d(0, 2) + ja(1, 0) * d(1, 2) + ja(2, 0) * d(2, 2);
+    jd(1, 0) = ja(0, 1) * d(0, 0) + ja(1, 1) * d(1, 0) + ja(2, 1) * d(2, 0);
+    jd(1, 1) = ja(0, 1) * d(0, 1) + ja(1, 1) * d(1, 1) + ja(2, 1) * d(2, 1);
+    jd(1, 2) = ja(0, 1) * d(0, 2) + ja(1, 1) * d(1, 2) + ja(2, 1) * d(2, 2);
+    jd(2, 0) = 0;
+    jd(2, 1) = 0;
+    jd(2, 2) = ja(0, 2)* d(0, 2) + ja(1, 2) * d(1, 2) + ja(2, 2) * d(2, 2);
 
     Matrix3d result = jd.inverse();
 
@@ -392,7 +390,8 @@ tuple<Strain, Stress, double, Strain, Stress, double>
     Vector3 n = normalVector(p);
     VectorXd v = toArray(u, 6);
     double t = sp.thickness;
-    double cf = 1 / intP.size();
+    int count = (int)intP.size();
+    auto cf = double(1 / count);
 
     VectorXd strain1 = VectorXd::Zero(6);
     VectorXd stress1 = VectorXd::Zero(6);
@@ -441,7 +440,12 @@ tuple<Strain, Stress, double, Strain, Stress, double>
 // s - 歪ベクトル
 Strain ShellElement::toStrain(VectorXd s) {
     VectorXd ss(6);
-    ss << s[0], s[1], 0, s[2], s[3], s[4];
+    ss(0) = s(0);
+    ss(1) = s(1);
+    ss(2) = 0;
+    ss(3) = s(2);
+    ss(4) = s(3);
+    ss(5) = s(4);
     return Strain(ss);
 };
 
@@ -449,7 +453,12 @@ Strain ShellElement::toStrain(VectorXd s) {
 // s - 歪ベクトル
 Stress ShellElement::toStress(VectorXd s) {
     VectorXd ss(6);
-    ss << s[0], s[1], 0, s[2], s[3], s[4];
+    ss(0) = s(0);
+    ss(1) = s(1);
+    ss(2) = 0;
+    ss(3) = s(2);
+    ss(4) = s(3);
+    ss(5) = s(4);
     return Stress(ss);
 };
 

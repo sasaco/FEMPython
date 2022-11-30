@@ -64,9 +64,12 @@ MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, Section sect) {
 
     double c = coef * sect.area / p[0].distanceTo(p[1]);
 
-    MatrixXd result;
-    result << c, -c, 
-             -c, c;
+    MatrixXd result(2, 2);
+    result(0, 0) = c; 
+    result(0, 1) = -c;
+
+    result(1, 0) = -c;
+    result(1, 1) = c;
 
     return result;
 }

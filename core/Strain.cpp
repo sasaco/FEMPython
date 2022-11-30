@@ -13,8 +13,13 @@ Strain::Strain(VectorXd s)
 // テンソルをベクトルとして返す
 VectorXd Strain::vector() {
 
-    VectorXd s;
-    s << xx, yy, zz, 2 * xy, 2 * yz, 2 * zx ;
+    VectorXd s(6);
+    s(0) = xx;
+    s(1) = yy;
+    s(2) = zz;
+    s(3) = 2 * xy;
+    s(4) = 2 * yz;
+    s(5) = 2 * zx;
 
     return s;
 };
