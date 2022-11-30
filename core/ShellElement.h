@@ -11,33 +11,39 @@
 #include <vector>
 using std::vector;
 
+#include<Eigen/Core>
+
+
 class ShellElement : public FElement {
 
 private:
     int label;
     int param;
     bool isShell;
-    vector<vector<double>> nodeP;
-    vector<vector<double>> intP;
+
+    MatrixXd nodeP;
+    MatrixXd intP;
 
 public:
-    ShellElement(int label, int material, int param, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP);
+    ShellElement(int label, int material, int param, vector<int> nodes, MatrixXd _nodeP, MatrixXd _intP);
 
     virtual string getName() = 0;
 
-    void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double n[3], double t, double out[9]);
+    Matrix3d jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3 n, double t);
 
-    void jacobInv(double ja[9], vector<vector<double>> d, vector<double> out);
+    Vector3d jacobInv(Matrix3d ja, MatrixXd d);
 
-    void grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> d, double t, vector<vector<double>> out);
+    MatrixXd grad(vector<FENode> p, Vector3d ja, MatrixXd sf, Matrix3d d, double t);
 
-    void strainMatrix1(double ja[9], vector<vector<double>> sf, vector<vector<double>> d, vector<vector<double>> out);
+    MatrixXd strainMatrix1(Vector3d ja, MatrixXd sf, Matrix3d d);
 
-    void strainMatrix(double ja[9], vector<vector<double>> sf, vector<vector<double>> d, double zeta, double t, vector<vector<double>> out);
+    MatrixXd strainMatrix(Vector3d ja, MatrixXd sf, Matrix3d d, double zeta, double t);
 
-    void shapePart(vector<FENode> p, vector<double> x, double w, double t, vector<vector<double>> out);
+    virtual MatrixXd shapeFunction(double xsi, double eta) = 0;
 
-    void gradPart(vector<FENode> p, double x[3], double w, double t, vector<vector<double>> out);
+    MatrixXd shapePart(vector<FENode> p, Vector3d x, double w, double t);
+
+    MatrixXd gradPart(vector<FENode> p, Vector3d x, double w, double t);
 
     void shapeFunctionMatrix(vector<FENode> p, double coef, ShellParameter sp, vector<vector<double>> out);
 

@@ -14,12 +14,13 @@ protected:
     double zx;
 
 public:
-    SymmetricTensor3(double* s);
+    SymmetricTensor3(VectorXd s);
 
-    double* vector();
+    VectorXd vector();
     void add(SymmetricTensor3 t);
     void mul(double a);
 
+    double innerProduct(SymmetricTensor3 t);
 
 };
 

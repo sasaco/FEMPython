@@ -20,45 +20,39 @@ class SolidElement : public FElement {
 
 private:
 
-    vector<vector<double>> nodeP;
-    vector<vector<double>> intP;
+    MatrixXd nodeP;
+    MatrixXd intP;
 
 public:
+    SolidElement(int label, int material, vector<int> nodes, MatrixXd _nodeP, MatrixXd _intP);
 
-    SolidElement(int label, int material, vector<int> nodes);
-    SolidElement(int label, int material, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP);
+    virtual Matrix3d jacobianMatrix(vector<FENode> p, MatrixXd sf);
 
-    virtual void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]);
+    virtual MatrixXd grad(vector<FENode> p, Vector3d ja, MatrixXd sf);
 
-    void grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> out);
+    MatrixXd strainMatrix(MatrixXd grad);
 
-    void strainMatrix(vector<vector<double>> grad, vector<vector<double>> out);
+    virtual MatrixXd shapeFunction(double xsi, double eta, double zeta) = 0;
 
-    virtual void shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) = 0;
+    MatrixXd shapePart(vector<FENode> p, Vector3d x, double w);
 
-    void shapePart(vector<FENode> p, double x[3], double w, vector<vector<double>> out);
+    MatrixXd gradPart(vector<FENode> p, Vector3d x, double w);
 
-    void gradPart(vector<FENode> p, double x[3], double w, vector<vector<double>> out);
+    virtual MatrixXd massMatrix(vector<FENode> p, double dens);
 
-    virtual void massMatrix(vector<FENode> p, double dens, vector<vector<double>> out);
+    virtual MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1);
 
-    void addMatrix(vector<vector<double>> a, vector<vector<double>> da);
+    virtual MatrixXd shapeFunctionMatrix(vector<FENode> p, double coef);
 
-    virtual void stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out);
+    virtual MatrixXd gradMatrix(vector<FENode> p, double coef);
 
-    virtual void shapeFunctionMatrix(vector<FENode> p, double coef, vector<vector<double>> out);
+    virtual MatrixXd geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
-    virtual void gradMatrix(vector<FENode> p, double coef, vector<vector<double>> out);
+    virtual tuple<vector<Strain>, vector<Stress>, vector<double>> strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
-    virtual void geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, vector<vector<double>> out);
+    VectorXd strainPart(vector<FENode> p, VectorXd v, Vector3d x);
 
-    virtual void strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
-        vector<Strain> strain, vector<Stress> stress, vector<double> energy);
-
-    void strainPart(vector<FENode> p, vector<double> v, double x[3], vector<double> out);
-
-    virtual void elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
-        Strain _Strain, Stress _Stress, double energy);
+    virtual tuple<Strain, Stress, double> elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
     virtual string getName() = 0;
 

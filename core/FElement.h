@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Nodes.h"
+#include "FENode.h"
 #include "Vector3R.h"
 #include "Vector3.hpp"
 
@@ -54,12 +55,12 @@ public:
     // 節点変位を局所座標系・1次元配列に 変換する
     VectorXd toLocalArray(vector<Vector3R> u, vector<vector<double>> d);
 
-    double determinant(VectorXd ja);
-
-    MatrixXd dirMatrix(vector<Vector3> p, VectorXd axis);
+    Matrix3d dirMatrix(vector<Vector3> p, Vector3 axis);
+    Matrix3d dirMatrix(vector<FENode> p, Vector3 axis);
 
     vector<Vector3> dirVectors(vector<Vector3> p, Vector3 axis);
 
     Vector3 normalVector(vector<Vector3> p);
+    Vector3 normalVector(vector<FENode> p);
 
 };

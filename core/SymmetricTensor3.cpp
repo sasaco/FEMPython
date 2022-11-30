@@ -2,7 +2,7 @@
 //--------------------------------------------------------------------//
 // ３次元対称テンソル
 // s - 成分
-SymmetricTensor3::SymmetricTensor3(double *s) {
+SymmetricTensor3::SymmetricTensor3(VectorXd s) {
     xx = s[0];
     yy = s[1];
     zz = s[2];
@@ -12,11 +12,9 @@ SymmetricTensor3::SymmetricTensor3(double *s) {
 };
 
 // テンソルをベクトルとして返す
-double* SymmetricTensor3::vector() {
-
-    double s[] = {
-        xx, yy, zz, xy, yz, zx
-    };
+VectorXd SymmetricTensor3::vector() {
+    VectorXd s;
+    s << xx, yy, zz, xy, yz, zx;
     return s;
 };
 
@@ -41,6 +39,15 @@ void SymmetricTensor3::mul(double a) {
     yz *= a;
     zx *= a;
 };
+
+// テンソルの内積を計算する
+// t - 相手のテンソル
+double SymmetricTensor3::innerProduct(SymmetricTensor3 t) {
+    double result = xx * t.xx + yy * t.yy + zz * t.zz +
+        2 * (xy * t.xy + yz * t.yz + zx * t.zx);
+
+    return result;
+}
 
 /*
 // 固有値を返す
@@ -71,12 +78,7 @@ SymmetricTensor3.prototype.rotate = function(d) {
     this.zx = s[5];
 };
 
-// テンソルの内積を計算する
-// t - 相手のテンソル
-SymmetricTensor3.prototype.innerProduct = function(t) {
-    return this.xx * t.xx + this.yy * t.yy + this.zz * t.zz +
-        2 * (this.xy * t.xy + this.yz * t.yz + this.zx * t.zx);
-};
+
 
 
 // Jacobie法で対称テンソルの固有値を求める

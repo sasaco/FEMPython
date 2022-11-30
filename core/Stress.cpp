@@ -3,7 +3,7 @@
 //--------------------------------------------------------------------//
 // ‰—Í
 // s - ¬•ª
-Stress::Stress(double* s) 
+Stress::Stress(VectorXd s)
     : SymmetricTensor3(s){
 };
 

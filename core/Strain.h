@@ -9,7 +9,7 @@ private:
 
 
 public:
-    Strain(double* s);
-    double* vector();
+    Strain(VectorXd s);
+    VectorXd vector();
 };
 

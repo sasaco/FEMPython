@@ -6,9 +6,10 @@ using std::vector;
 class Nodes : public Vector3 {
 
 private:
-    vector<int> nodes;
-    ;
+
 public:
+    vector<int> nodes;
+
     Nodes(vector<int> _nodes);
 
     virtual int nodeCount();

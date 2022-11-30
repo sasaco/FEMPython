@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BarElement.cpp" />
     <ClCompile Include="BarParameter.cpp" />
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="CircleSection.cpp" />
@@ -45,6 +46,8 @@
     <ClCompile Include="RectSection.cpp" />
     <ClCompile Include="Restraint.cpp" />
     <ClCompile Include="Result.cpp" />
+    <ClCompile Include="Section.cpp" />
+    <ClCompile Include="ShellElement.cpp" />
     <ClCompile Include="ShellParameter.cpp" />
     <ClCompile Include="SolidElement.cpp" />
     <ClCompile Include="Solver.cpp" />
@@ -131,6 +134,7 @@
     <None Include="setup.py" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BarElement.h" />
     <ClInclude Include="BarParameter.h" />
     <ClInclude Include="BorderManager.hpp" />
     <ClInclude Include="BoundaryCondition.h" />
@@ -155,6 +159,8 @@
     <ClInclude Include="RectSection.h" />
     <ClInclude Include="Restraint.h" />
     <ClInclude Include="Result.h" />
+    <ClInclude Include="Section.h" />
+    <ClInclude Include="ShellElement.h" />
     <ClInclude Include="ShellParameter.h" />
     <ClInclude Include="SolidElement.h" />
     <ClInclude Include="Solver.h" />

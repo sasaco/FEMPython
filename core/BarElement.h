@@ -1,7 +1,12 @@
 ﻿#pragma once
 #include "FElement.h"
-#include "Vector3.h"
+#include "FENode.h"
+#include "Material.h"
+#include "Section.h"
+#include "BarParameter.h"
+#include "Vector3.hpp"
 
+#include<Eigen/Core>
 
 class BarElement : public FElement {
 

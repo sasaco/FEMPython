@@ -7,7 +7,7 @@ class Stress :
 private:
 
 public:
-    Stress(double* s);
+    Stress(VectorXd s);
     double mises();
 
 };

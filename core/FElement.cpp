@@ -85,25 +85,27 @@ VectorXd FElement::toLocalArray(vector<Vector3R> u, vector<vector<double>> d) {
     }
 }
 
-// 3x3の行列式を返す
-double FElement::determinant(VectorXd ja) {
-    return ja.determinant();
-}
-
-
 // 方向余弦マトリックスを返す
 // p - 頂点座標
 // axis - 断面基準方向ベクトル
-MatrixXd FElement::dirMatrix(vector<Vector3> p, VectorXd axis) {
+Matrix3d FElement::dirMatrix(vector<Vector3> p, Vector3 axis) {
 
     vector<Vector3> v = dirVectors(p, axis);
 
-    MatrixXd result(3, 3);
+    Matrix3d result(3, 3);
     result << v[0].x, v[1].x, v[2].x,
               v[0].y, v[1].y, v[2].y,
               v[0].z, v[1].z, v[2].z;
 
     return result;
+}
+
+Matrix3d FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
+    vector<Vector3> v(p.size());
+    for (int i = 0; i < p.size(); i++) {
+        v[i] = Vector3(p[i].x, p[i].y, p[i].z);
+    }
+    return dirMatrix(v, axis);
 }
 
 
@@ -196,4 +198,11 @@ Vector3 FElement::normalVector(vector<Vector3> p) {
     }
 }
 
+Vector3 FElement::normalVector(vector<FENode> p) {
+    vector<Vector3> v(p.size());
+    for (int i = 0; i < p.size(); i++) {
+        v[i] = Vector3(p[i].x, p[i].y, p[i].z);
+    }
+    return normalVector(v);
+}
 
