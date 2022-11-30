@@ -8,8 +8,7 @@
 using namespace std;
 using std::vector;
 
-class ElementManager
-{
+class ElementManager {
 private:
     string key;
 
@@ -21,7 +20,7 @@ public:
     ElementManager(string key, vector<string> columns);
     
     int label();
-    vector<int> nodes();
+    vector<int> nodes;
 
 
     BorderManager border(int element, int index);
