@@ -404,7 +404,7 @@ tuple<Strain, Stress, double, Strain, Stress, double>
     for (int i = 0; i < intP.size(); i++) {
         
         VectorXd eps1 = strainPart(p, v, n, d, intP(i, 0), intP(i, 1), 1, t);
-        VectorXd eps2 = strainPart(p, v, n, d, intP(i, 0], intP(i, 1], -1, t);
+        VectorXd eps2 = strainPart(p, v, n, d, intP(i, 0), intP(i, 1), -1, t);
 
         strain1 += eps1;
         strain2 += eps2;
@@ -460,7 +460,7 @@ Stress ShellElement::toStress(VectorXd s) {
 string ShellElement::toString(vector<Material> materials, vector<ShellParameter> params, vector<FENode> p) {
 
     string s = format("{}\t{}\t{}\t{}\t{}",
-        getName(), label, materials[material].label, params[this.param].label);
+        getName(), label, materials[material].label, params[param].label);
 
     for (int i = 0; i < nodes.size(); i++) {
         s += '\t' + p[nodes[i]].label;

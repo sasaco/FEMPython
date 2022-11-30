@@ -51,7 +51,7 @@ VectorXd FElement::toArray(vector<Vector3R> u, int dof) {
 
     int count = nodeCount();
 
-    VectorXd out(count + dof);
+    VectorXd result(count + dof);
 
     for (int i = 0; i < count; i++) {
 
@@ -59,11 +59,12 @@ VectorXd FElement::toArray(vector<Vector3R> u, int dof) {
 
         for (int j = 0; j < dof; j++) {
             int index = i + j;
-            out(index) = ux[j];
+            result(index) = ux[j];
         }
 
     }
-};
+    return result;
+}
 
 
 // 節点変位を局所座標系・1次元配列に変換する
@@ -83,6 +84,8 @@ VectorXd FElement::toLocalArray(vector<Vector3R> u, Matrix3d d) {
             v(index) = d(0, j) * ux[3] + d(1, j) * ux[4] + d(2, j) * ux[5];
         }
     }
+
+    return v;
 }
 
 // 方向余弦マトリックスを返す
@@ -90,12 +93,12 @@ VectorXd FElement::toLocalArray(vector<Vector3R> u, Matrix3d d) {
 // axis - 断面基準方向ベクトル
 Matrix3d FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
 
-    vector<Vector3> v(p.size());
+    vector<Vector3> vec(p.size());
     for (int i = 0; i < p.size(); i++) {
-        v[i] = Vector3(p[i].x, p[i].y, p[i].z);
+        vec[i] = Vector3(p[i].x, p[i].y, p[i].z);
     }
 
-    vector<Vector3> v = dirVectors(v, axis);
+    vector<Vector3> v = dirVectors(vec, axis);
 
     Matrix3d result(3, 3);
     result << v[0].x, v[1].x, v[2].x,
@@ -120,10 +123,10 @@ vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
     vector<Vector3> result(3);
 
     if (p.size() == 2) {		// 梁要素
-        auto v0 = p[0];
-        auto v1 = p[1].clone().sub(v0).normalize();
+        Vector3 v0 = p[0];
+        Vector3 v1 = p[1].clone().sub(v0).normalize();
         
-        auto dt = v1.dot(axis);
+        double dt = v1.dot(axis);
 
         auto v2 = Vector3(axis.x - dt * v1.x, axis.y - dt * v1.y, axis.z - dt * v1.z);
         if (v2.lengthSq() > 0) {
@@ -147,10 +150,10 @@ vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
         return result;
     }
     else if (p.size() > 2) {		// シェル要素
-        auto v3 = normalVector(p);
-        auto v2 = p[1].clone().sub(p[0]);
+        Vector3 v3 = normalVector(p);
+        Vector3 v2 = p[1].clone().sub(p[0]);
         v2 = v3.clone().cross(v2).normalize();
-        auto v1 = v2.clone().cross(v3);
+        Vector3 v1 = v2.clone().cross(v3);
 
         result[0] = v1;
         result[1] = v2;
@@ -163,13 +166,17 @@ vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
     throw exception("error on FElement::dirVectors");
 }
 
-
 Vector3 FElement::normalVector(vector<FENode> p) {
 
     vector<Vector3> v(p.size());
     for (int i = 0; i < p.size(); i++) {
         v[i] = Vector3(p[i].x, p[i].y, p[i].z);
     }
+
+    return normalVector(v);
+}
+
+Vector3 FElement::normalVector(vector<Vector3> v) {
 
     if (v.size() < 3) {
         throw exception("error on FElement::normalVector");

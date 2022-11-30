@@ -1,5 +1,6 @@
 ﻿#pragma once
-#include "SolidElement.h";
+
+#include "SolidElement.h"
 
 class HexaElement1 : public SolidElement {
 

@@ -63,6 +63,7 @@ public:
     Matrix3d dirMatrix(vector<FENode> p);
 
     Vector3 normalVector(vector<FENode> p);
+    Vector3 normalVector(vector<Vector3> p);
 
     // 剛性マトリックスの方向を修正する
     void toDir3(Matrix3d d, MatrixXd k);

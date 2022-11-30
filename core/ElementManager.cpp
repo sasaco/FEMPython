@@ -1,5 +1,6 @@
 #include "ElementManager.h"
 
+/*
 ElementManager::ElementManager(string _key, vector<string> columns) {
     key = _key;
 
@@ -11,7 +12,7 @@ ElementManager::ElementManager(string _key, vector<string> columns) {
             int no = stoi(columns[i]);
             nodes.push_back(no);
         }
-        MyHexaElement1 = HexaElement1(label, material, nodes);
+        // MyHexaElement1 = HexaElement1(label, material, nodes);
     }
 
 
@@ -46,3 +47,4 @@ int ElementManager::label() {
     return 0;
 };
 
+*/

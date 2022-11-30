@@ -358,6 +358,6 @@ string SolidElement::toString(vector<Material> materials, vector<FENode> p) {
     }
 
     return format("{}\t{}\t{}\t{}",
-        getName(), label, mat.label, s)
+        getName(), label, mat.label, s);
 
 };

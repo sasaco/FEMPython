@@ -155,8 +155,8 @@ FemDataModel readFemModel(string s)
             }
             */
             else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
-                auto elem = ElementManager("HexaElement1", columns);
-                mesh.elements.push_back(elem);
+                // auto elem = ElementManager("HexaElement1", columns);
+                // mesh.elements.push_back(elem);
             }
             /*
             else if ((keyWord == "hexaelement1wt") && (columns.size() > 10)) {

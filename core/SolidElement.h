@@ -1,4 +1,5 @@
 ﻿#pragma once
+
 #include "BoundaryCondition.h"
 #include "FElement.h"
 #include "FENode.h"
@@ -14,7 +15,7 @@ using std::string;
 using std::vector;
 
 #include<Eigen/Core>
-using namespace Eigen;
+ using namespace Eigen;
 
 class SolidElement : public FElement {
 

@@ -21,7 +21,8 @@ BorderManager ElementBorderBound::getBorder(ElementManager elem) {
             int i = stoi(s);
             int j = i - 1;
 
-            return elem.border(element, j);
+            return BorderManager();
+            // return elem.border(element, j);
         }
         else if (face.substr(0, 1) ==  "E") {
 
@@ -29,9 +30,11 @@ BorderManager ElementBorderBound::getBorder(ElementManager elem) {
             int i = stoi(s);
             int j = i - 1;
 
-            return elem.borderEdge(element, j);
+            return BorderManager();
+            // return elem.borderEdge(element, j);
         }
     }
+
     return BorderManager();
 };
 

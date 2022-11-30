@@ -10,9 +10,9 @@ using namespace std;         //  名前空間指定
 class ShellParameter {
 
 private:
-    int label;
 
 public:
+    int label;
     double thickness;
 
     ShellParameter(int _label, double _thickness);
