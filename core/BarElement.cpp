@@ -71,6 +71,7 @@ MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, Section sect) {
     return result;
 }
 
+
 // 幾何剛性マトリックスを返す
 // p - 要素節点
 // u - 節点変位
@@ -80,22 +81,19 @@ MatrixXd BarElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, M
     
     double l2 = p[0].distanceToSquared(p[1]);
     Matrix3d d = dirMatrix(p, axis);
-
-    vector<vector<double>> v = toLocalArray(u, d);
-    
-    vector<vector<double>> kk = numeric::rep(12, 12);
-
+    VectorXd v = toLocalArray(u, d);
+    MatrixXd kk = MatrixXd::Zero(12, 12);
     double sx = material.ee * sect.area * (v[6] - v[0]) / l2;
-
     for (int i = 0; i < 3; i++) {
-        kk[i][i] = sx;
-        kk[i + 6][i] = -sx;
-        kk[i][i + 6] = -sx;
-        kk[i + 6][i + 6] = sx;
+        kk(i, i) = sx;
+        kk(i + 6, i) = -sx;
+        kk(i, i + 6) = -sx;
+        kk(i + 6, i + 6) = sx;
     }
     toDir3(d, kk);
     return kk;
-};
+}
+
 
 // 節点歪・応力を返す
 // p - 要素節点
