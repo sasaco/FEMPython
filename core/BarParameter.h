@@ -16,12 +16,13 @@ using std::string;
 class BarParameter {
 
 private:
-    int label;
     string type;
     RectSection* rectSection;
     CircleSection* circleSection;
 
 public:
+    int label;
+
     BarParameter(int label, string type, double* ss);
     ~BarParameter();
 

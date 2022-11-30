@@ -1,6 +1,6 @@
 #pragma once
-#include <Eigen/Core> 
 
+#include <Eigen/Core> 
 using namespace Eigen;
 
 class SymmetricTensor3 {

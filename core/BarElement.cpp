@@ -9,80 +9,77 @@
 // axis - 断面基準方向ベクトル
 BarElement::BarElement(int label, int material, int _param, vector<int> nodes, Vector3 _axis) :
     FElement(label, material, nodes) {
-
     param = _param;
     isBar = true;
-
     axis = _axis;
-    if (axis != nullptr)
-        axis.normalize();
+    axis.normalize();
 };
 
 // 剛性マトリックスを返す
 // p - 要素節点
 // material - 材料
 // sect - 梁断面パラメータ
-vector<vector<double>> BarElement::stiffnessMatrix(vector<FENode> p, Material material, Section sect) {
+MatrixXd BarElement::stiffnessMatrix(vector<FENode> p, Material material, Section sect) {
     
-    vector<vector<double>> kk = numeric::rep(12, 12);
-    
+    MatrixXd kk = MatrixXd::Zero(12, 12);
     double l = p[0].distanceTo(p[1]);
-
-    vector<double> d = dirMatrix(p, axis);
+    Matrix3d d = dirMatrix(p, axis);
 
     double kx = material.ee * sect.area / l;
     double kt = material.gg * sect.ip / l;
 
-    kk[0][0] = kx;
-    kk[0][6] = -kx;
-    kk[6][0] = -kx;
-    kk[6][6] = kx;
-    kk[3][3] = kt;
-    kk[3][9] = -kt;
-    kk[9][3] = -kt;
-    kk[9][9] = kt;
+    kk(0, 0) = kx;
+    kk(0, 6) = -kx;
+    kk(6, 0) = -kx;
+    kk(6, 6) = kx;
+    kk(3, 3) = kt;
+    kk(3, 9) = -kt;
+    kk(9, 3) = -kt;
+    kk(9, 9) = kt;
 
-    vector<vector<double>> km = stiffBend(l, material, sect);
+    MatrixXd km = stiffBend(l, material, sect);
 
     for (int i = 0; i < 4; i++) {
-        vector<double> kk1 = kk[I_YMZ[i]];
-        vector<double> kk2 = kk[I_ZMY[i]];
-        vector<double> kmi1 = km[i];
-        vector<double> kmi2 = km[i + 4];
+        VectorXd kk1 = kk.row(I_YMZ[i]);
+        VectorXd kk2 = kk.row(I_ZMY[i]);
+        VectorXd kmi1 = km.row(i);
+        VectorXd kmi2 = km.row(i + 4);
 
         for (int j = 0; j < 4; j++) {
-            kk1[I_YMZ[j]] = kmi1[j];
-            kk2[I_ZMY[j]] = kmi2[j];
+            kk1(I_YMZ[j]) = kmi1(j);
+            kk2(I_ZMY[j]) = kmi2(j);
         }
     }
 
     toDir3(d, kk);
     return kk;
-};
+}
+
 
 // 拡散マトリックス [ ∫∇Ni・∇NjdV ] を返す
 // p - 要素節点
 // coef - 係数
 // sect - 梁断面パラメータ
-vector<vector<double>> BarElement::gradMatrix(vector<FENode> p, double coef, Section sect) {
+MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, Section sect) {
+
     double c = coef * sect.area / p[0].distanceTo(p[1]);
-    vector<vector<double>> resulr = {
-        {c, -c}, {-c, c}
-    };
+
+    MatrixXd result;
+    result << c, -c, 
+             -c, c;
 
     return result;
-};
+}
 
 // 幾何剛性マトリックスを返す
 // p - 要素節点
 // u - 節点変位
 // material - 材料
 // sect - 梁断面パラメータ
-vector<vector<double>> BarElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, Material material, Section sect) {
+MatrixXd BarElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
     
     double l2 = p[0].distanceToSquared(p[1]);
-    
-    vector<vector<double>> d = dirMatrix(p, axis);
+    Matrix3d d = dirMatrix(p, axis);
 
     vector<vector<double>> v = toLocalArray(u, d);
     
@@ -105,49 +102,56 @@ vector<vector<double>> BarElement::geomStiffnessMatrix(vector<FENode> p, vector<
 // u - 節点変位
 // material - 材料
 // sect - 梁断面パラメータ
-vector<vector<double>> BarElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, Material material, Section sect) {
+tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
+    BarElement::strainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
 
     double l = p[0].distanceTo(p[1]);
-    
-    vector<vector<double>> d = dirMatrix(p, axis);
+    Matrix3d d = dirMatrix(p, axis);
+    VectorXd v = toLocalArray(u, d);
 
-    vector<vector<double>> v = toLocalArray(u, d);
-
-    vector<double> strain1;
-    vector<double> stress1;
+    vector<Strain> strain1;
+    vector<Stress> stress1;
     vector<double> energy1;
-    vector<double> strain2;
-    vector<double> stress2;
+    vector<Strain> strain2;
+    vector<Stress> stress2;
     vector<double> energy2;
 
     double ex = (v[6] - v[0]) / l;
     double thd = (v[9] - v[3]) / l;
 
-    vector<double> ks = this.bendCurveShare(v, l, material, sect);
+    MatrixXd ks = bendCurveShare(v, l, material, sect);
 
-    vector<double> kpy = ks[0];
-    vector<double> kpz = ks[1];
-    vector<double> sy = ks[2];
-    vector<double> sz = ks[3];
+    VectorXd kpy = ks.row(0);
+    VectorXd kpz = ks.row(1);
+    VectorXd sy = ks.row(2);
+    VectorXd sz = ks.row(3);
 
     for (int i = 0; i < 2; i++) {
 
-        vector<double> str = sect.strainStress(material, ex, thd, kpy[i], kpz[i], sy, sz);
-        strain1[i] = Strain(str[0]);
-        stress1[i] = Stress(str[1]);
-        strain2[i] = Strain(str[2]);
-        stress2[i] = Stress(str[3]);
-        strain1[i].rotate(d);
-        stress1[i].rotate(d);
-        strain2[i].rotate(d);
-        stress2[i].rotate(d);
-        energy1[i] = 0.5 * strain1[i].innerProduct(stress1[i]);
-        energy2[i] = 0.5 * strain2[i].innerProduct(stress2[i]);
+        MatrixXd str = sect.strainStress(material, ex, thd, kpy[i], kpz[i], sy, sz);
+
+        Strain trai1 = Strain(str.row(0));
+        Stress sres1 = Stress(str.row(1));
+        Strain trai2 = Strain(str.row(2));
+        Stress sres2 = Stress(str.row(3));
+        trai1.rotate(d);
+        sres1.rotate(d);
+        trai2.rotate(d);
+        sres2.rotate(d);
+        double ergy1 = 0.5 * trai1.innerProduct(sres1);
+        double ergy2 = 0.5 * trai2.innerProduct(sres2);
+
+        strain1.push_back(trai1);
+        stress1.push_back(sres1);
+        strain2.push_back(trai2);
+        stress2.push_back(sres2);
+        energy1.push_back(ergy1);
+        energy2.push_back(ergy2);
     }
 
-    vector<vector<double>> result = {
-        strain1, stress1, energy1, strain2, stress2, energy2
-    };
+    tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
+        result = make_tuple(strain1, stress1, energy1, strain2, stress2, energy2);
+
     return result;
 };
 
@@ -157,34 +161,35 @@ vector<vector<double>> BarElement::strainStress(vector<FENode> p, vector<Boundar
 // u - 節点変位
 // material - 材料
 // sect - 梁断面パラメータ
-vector<vector<double>> BarElement::elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, Material material, Section sect) {
+tuple<Strain, Stress, double, Strain, Stress, double>
+    BarElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
 
     double l = p[0].distanceTo(p[1]);
-    
-    vector<vector<double>> d = dirMatrix(p, axis);
-
-    vector<double> v = toLocalArray(u, d);
-
-    vector<vector<double>> str;
-
+    Matrix3d d = dirMatrix(p, axis);
+    VectorXd v = toLocalArray(u, d);
     double ex = (v[6] - v[0]) / l;
     double thd = (v[9] - v[3]) / l;
 
-    vector<vector<double>> ks = bendCurveShare(v, l, material, sect);
+    MatrixXd ks = bendCurveShare(v, l, material, sect);
 
-    vector<double> kpy = ks[0];
-    vector<double> kpz = ks[1];
-    vector<double> sy = ks[2];
-    vector<double> sz = ks[3];
+    VectorXd kpy = ks.row(0);
+    VectorXd kpz = ks.row(1);
+    VectorXd sy = ks.row(2);
+    VectorXd sz = ks.row(3);
 
+    vector<MatrixXd> str;
     for (int i = 0; i < 2; i++) {
-        str[i] = sect.strainStress(material, ex, thd, kpy[i], kpz[i], sy, sz);
+        str.push_back(sect.strainStress(material, ex, thd, kpy[i], kpz[i], sy, sz));
     }
 
-    Strain strain1 = Strain(numeric::mul(0.5, numeric::add(str[0][0], str[1][0])));
-    Stress stress1 = Stress(numeric::mul(0.5, numeric::add(str[0][1], str[1][1])));
-    Strain strain2 = Strain(numeric::mul(0.5, numeric::add(str[0][2], str[1][2])));
-    Stress stress2 = Stress(numeric::mul(0.5, numeric::add(str[0][3], str[1][3])));
+    VectorXd st0 = str[0].row(0) + str[1].row(0);
+    VectorXd st1 = str[0].row(1) + str[1].row(1);
+    VectorXd st2 = str[0].row(2) + str[1].row(2);
+    VectorXd st3 = str[0].row(3) + str[1].row(3);
+    Strain strain1 = Strain(0.5 * st0);
+    Stress stress1 = Stress(0.5 * st1);
+    Strain strain2 = Strain(0.5 * st2);
+    Stress stress2 = Stress(0.5 * st3);
     strain1.rotate(d);
     stress1.rotate(d);
     strain2.rotate(d);
@@ -192,9 +197,8 @@ vector<vector<double>> BarElement::elementStrainStress(vector<FENode> p, vector<
     double energy1 = 0.5 * strain1.innerProduct(stress1);
     double energy2 = 0.5 * strain2.innerProduct(stress2);
 
-    vector<vector<double>> result = {
-        strain1, stress1, energy1, strain2, stress2, energy2
-    };
+    tuple<Strain, Stress, double, Strain, Stress, double>
+        result = make_tuple(strain1, stress1, energy1, strain2, stress2, energy2);
 
     return result;
 };
@@ -218,4 +222,4 @@ string BarElement::toString(vector<Material> materials, vector<BarParameter> par
     }
 
     return s;
-};
+}

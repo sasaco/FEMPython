@@ -266,7 +266,8 @@ MatrixXd SolidElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u,
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
-tuple<vector<Strain>, vector<Stress>, vector<double>> SolidElement::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
+tuple<vector<Strain>, vector<Stress>, vector<double>> 
+    SolidElement::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
 
     int count = nodeCount();
     VectorXd v = FElement::toArray(u, 3);

@@ -13,7 +13,7 @@
 using std::vector;
 
 #include<Eigen/Core>
-
+using namespace Eigen;
 
 class ShellElement : public FElement {
 

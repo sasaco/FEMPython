@@ -56,7 +56,7 @@ public:
     VectorXd toArray(vector<Vector3R> u, int dof);
 
     // 節点変位を局所座標系・1次元配列に 変換する
-    VectorXd toLocalArray(vector<Vector3R> u, vector<vector<double>> d);
+    VectorXd toLocalArray(vector<Vector3R> u, Matrix3d d);
 
     // 方向余弦マトリックスを返す
     Matrix3d dirMatrix(vector<FENode> p, Vector3 axis);
