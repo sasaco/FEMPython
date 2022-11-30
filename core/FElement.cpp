@@ -88,9 +88,14 @@ VectorXd FElement::toLocalArray(vector<Vector3R> u, vector<vector<double>> d) {
 // 方向余弦マトリックスを返す
 // p - 頂点座標
 // axis - 断面基準方向ベクトル
-Matrix3d FElement::dirMatrix(vector<Vector3> p, Vector3 axis) {
+Matrix3d FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
 
-    vector<Vector3> v = dirVectors(p, axis);
+    vector<Vector3> v(p.size());
+    for (int i = 0; i < p.size(); i++) {
+        v[i] = Vector3(p[i].x, p[i].y, p[i].z);
+    }
+
+    vector<Vector3> v = dirVectors(v, axis);
 
     Matrix3d result(3, 3);
     result << v[0].x, v[1].x, v[2].x,
@@ -100,12 +105,10 @@ Matrix3d FElement::dirMatrix(vector<Vector3> p, Vector3 axis) {
     return result;
 }
 
-Matrix3d FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
-    vector<Vector3> v(p.size());
-    for (int i = 0; i < p.size(); i++) {
-        v[i] = Vector3(p[i].x, p[i].y, p[i].z);
-    }
-    return dirMatrix(v, axis);
+Matrix3d FElement::dirMatrix(vector<FENode> p) {
+    // この関数を呼ばれる時は axis を使わないはずだからダミーの axis を用意する
+    Vector3 axis;
+    return dirMatrix(p, axis);
 }
 
 
@@ -161,32 +164,37 @@ vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
 }
 
 
-Vector3 FElement::normalVector(vector<Vector3> p) {
+Vector3 FElement::normalVector(vector<FENode> p) {
 
-    if (p.size() < 3) {
+    vector<Vector3> v(p.size());
+    for (int i = 0; i < p.size(); i++) {
+        v[i] = Vector3(p[i].x, p[i].y, p[i].z);
+    }
+
+    if (v.size() < 3) {
         throw exception("error on FElement::normalVector");
     }
-    else if ((p.size() == 3) || (p.size() == 6)) {
-        auto v1 = Vector3().subVectors(p[1], p[0]);
-        auto v2 = Vector3().subVectors(p[2], p[0]);
+    else if ((v.size() == 3) || (v.size() == 6)) {
+        auto v1 = Vector3().subVectors(v[1], v[0]);
+        auto v2 = Vector3().subVectors(v[2], v[0]);
         auto v3 = v1.cross(v2).normalize();
         return v3;
     }
-    else if ((p.size() == 4) || (p.size() == 8)) {
-        auto v1 = Vector3().subVectors(p[2], p[0]);
-        auto v2 = Vector3().subVectors(p[3], p[1]);
+    else if ((v.size() == 4) || (v.size() == 8)) {
+        auto v1 = Vector3().subVectors(v[2], v[0]);
+        auto v2 = Vector3().subVectors(v[3], v[1]);
         auto v3 = v1.cross(v2).normalize();
         return v3;
     }
     else {
         double vx = 0, vy = 0, vz = 0;
-        for (int i = 0; i < p.size(); i++) {
+        for (int i = 0; i < v.size(); i++) {
 
-            Vector3 p1 = p[(i + 1) % p.size()];
-            Vector3 p2 = p[(i + 2) % p.size()];
+            Vector3 p1 = v[(i + 1) % v.size()];
+            Vector3 p2 = v[(i + 2) % v.size()];
 
-            auto v1 = Vector3().subVectors(p1, p[i]);
-            auto v2 = Vector3().subVectors(p2, p[i]);
+            auto v1 = Vector3().subVectors(p1, v[i]);
+            auto v2 = Vector3().subVectors(p2, v[i]);
             auto norm = v1.cross(v2);
 
             vx += norm.x;
@@ -198,11 +206,34 @@ Vector3 FElement::normalVector(vector<Vector3> p) {
     }
 }
 
-Vector3 FElement::normalVector(vector<FENode> p) {
-    vector<Vector3> v(p.size());
-    for (int i = 0; i < p.size(); i++) {
-        v[i] = Vector3(p[i].x, p[i].y, p[i].z);
+// 剛性マトリックスの方向を修正する
+// d - 方向余弦マトリックス
+// k - 剛性マトリックス
+void FElement::toDir3(Matrix3d d, MatrixXd k) {
+
+    Matrix3d a = Matrix3d ::Zero(3, 3);
+
+    for (int i = 0; i < k.size(); i += 3) {
+        for (int j = 0; j < k.row(i).size(); j += 3) {
+            for (int i1 = 0; i1 < 3; i1++) {
+                Vector3d ai = a.row(i1);
+                Vector3d di = d.row(i1);
+                for (int j1 = 0; j1 < 3; j1++) {
+                    double s = 0;
+                    for (int ii = 0; ii < 3; ii++) {
+                        s += d(i, ii) * k(i + ii, j + j1);
+                    }
+                    a(i, j1) = s;
+                }
+            }
+            for (int i1 = 0; i1 < 3; i1++) {
+                Vector3d ai = a.row(i1);
+                Vector3d ki = k.row(i + i1);
+                for (int j1 = 0; j1 < 3; j1++) {
+                    ki(j + j1) = ai.dot(d.row(j1));
+                }
+            }
+        }
     }
-    return normalVector(v);
 }
 

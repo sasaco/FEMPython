@@ -203,151 +203,112 @@ MatrixXd ShellElement::gradPart(vector<FENode> p, Vector3d x, double w, double t
     MatrixXd sf = shapeFunction(x[0], x[1]);
     Vector3 n = normalVector(p);
     Vector3d ja = jacobianMatrix(p, sf, n, t);
-    MatrixXd d = dirMatrix(p, Vector3(true));
-
-    vector<vector<double>> gr;
-    grad(p, ja, sf, d, t, gr);
-
+    MatrixXd d = dirMatrix(p);
+    MatrixXd gr = grad(p, ja, sf, d, t);
     int count = nodeCount();
-
-    double det = determinant(ja);
-
+    double det = ja.determinant();
     double coef = 2 * w * abs(det);
+
+    MatrixXd result(count, count);
 
     for (int i = 0; i < count; i++) {
         vector<double> matr;
-        vector<double> gri = gr[i];
-        double c1 = coef * gri[0];
-        double c2 = coef * gri[1];
-        double c3 = coef * gri[2];
+        double c1 = coef * gr(i, 0);
+        double c2 = coef * gr(i, 1);
+        double c3 = coef * gr(i, 2);
         for (int j = 0; j < count; j++) {
-            vector<double> grj = gr[j];
-            matr.push_back(c1 * grj[0] + c2 * grj[1] + c3 * grj[2]);
+            result(i, j) = c1 * gr(j, 0) + c2 * gr(j, 1) + c3 * gr(j, 2);
         }
-        out.push_back(matr);
     }
-};
+
+    return result;
+}
+
 
 // 形状関数マトリックス [ ∫NiNjdV ] を返す
 // p - 要素節点
 // coef - 係数
 // sp - シェルパラメータ
-void ShellElement::shapeFunctionMatrix(vector<FENode> p, double coef, ShellParameter sp, vector<vector<double>> out) {
-    
+MatrixXd ShellElement::shapeFunctionMatrix(vector<FENode> p, double coef, ShellParameter sp) {
+
     int count = nodeCount();
-    
-    for (int i = 0; i < count; i++) {
-        vector<double> s;
-        for (int j = 0; j < count; j++) {
-            s.push_back(0);
-        }
-        out.push_back(s);
-    }
-    
+    MatrixXd result = MatrixXd::Zero(count, count);
     double t = sp.thickness;
-
     for (int i = 0; i < intP.size(); i++) {
-
-        vector<vector<double>> spr;
-        shapePart(p, intP[i], coef * intP[i][2], t, spr);
-        addMatrix(out, spr);
+        MatrixXd spr = shapePart(p, intP.row(i), coef * intP(i, 2), t);
+        result += spr;
     }
-};
+
+    return result;
+}
 
 // 拡散マトリックス [ ∫∇Ni・∇NjdV ] を返す
 // p - 要素節点
 // coef - 係数
 // sp - シェルパラメータ
-void ShellElement::gradMatrix(vector<FENode> p, double coef, ShellParameter sp, vector<vector<double>> out) {
+MatrixXd ShellElement::gradMatrix(vector<FENode> p, double coef, ShellParameter sp) {
     
     int count = nodeCount();
-
-    numeric::rep(count, count, out);
-
+    MatrixXd result = MatrixXd::Zero(count, count);
     double t = sp.thickness;
-
     for (int  i = 0; i < intP.size(); i++) {
 
-        vector<vector<double>> gpr;
-        gradPart(p, intP[i], coef * intP[i][2], t, gpr);
-        addMatrix(out, gpr);
+        MatrixXd gpr = gradPart(p, intP.row(i), coef * intP(i, 2), t);
+        result += gpr;
     }
-};
+
+    return result;
+}
+
 
 // 幾何剛性マトリックスを返す
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
-void ShellElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp, vector<vector<double>> out) {
+MatrixXd ShellElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp) {
     
     int count = nodeCount();
-    
-    numeric::rep(6 * count, 6 * count, out);
-
-    vector<vector<double>> d;
-    dirMatrix(p, d);
-     
-    double[3] n;
-    normalVector(p, n);
-
-    vector<double> v;
-    toArray(u, 6, v);
-
+    MatrixXd result = MatrixXd::Zero(6 * count, 6 * count);
+    Matrix3d d = dirMatrix(p);
+    Vector3 n = normalVector(p);
+    VectorXd v = toArray(u, 6);
     double t = sp.thickness;
 
     for (int i = 0; i < intP.size(); i++) {
         
-        int ip = intP[i];
-        
-        vector<vector<double>> sf;
-        shapeFunction(ip[0], ip[1], sf);
-
-        double ja[9];
-        jacobianMatrix(p, sf, n, t, ja);
-
-        vector<vector<double>> gr;
-        grad(p, ja, sf, d, t, gr);
-
-        vector<vector<double>> sm;
-        strainMatrix(ja, sf, d, 0, t, sm);
-
-        vector<double> vm;
-        numeric::dotVM(v, sm, vm);
-
-        vector<double> mv;
-        numeric::dotMV(d1, vm, mv);
-
-
-        Stress str;
-        toStress(mv, str);
-
-        double det = determinant(ja);
-
-        double w = 2 * ip[2] * abs(det);
+        VectorXd sf = shapeFunction(intP(i, 0), intP(i, 1));
+        Matrix3d ja = jacobianMatrix(p, sf, n, t);
+        MatrixXd gr = grad(p, ja, sf, d, t);
+        MatrixXd sm = strainMatrix(ja, sf, d, 0, t);
+        VectorXd vm = v * sm;
+        VectorXd mv = d1 * vm;
+        Stress str = toStress(mv);
+        double det = ja.determinant();
+        double w = 2 * intP(i, 2) * abs(det);
 
         for (int i1 = 0; i1 < count; i1++) {
 
             int i6 = 6 * i1;
-            vector<double> gri = gr[i1];
 
             for (int j1 = 0; j1 < count; j1++) {
                 
                 int j6 = 6 * j1;
-                vector<double> grj = gr[j1];
 
-                double s = w * (gri[0] * (str.xx * grj[0] + str.xy * grj[1] + str.zx * grj[2]) +
-                    gri[1] * (str.xy * grj[0] + str.yy * grj[1] + str.yz * grj[2]) +
-                    gri[2] * (str.zx * grj[0] + str.yz * grj[1] + str.zz * grj[2]));
+                double s = w * (gr(i1, 0) * (str.xx * gr(j1, 0) + str.xy * gr(j1, 1) + str.zx * gr(j1, 2)) +
+                    gr(i1, 1) * (str.xy * gr(j1, 0) + str.yy * gr(j1, 1) + str.yz * gr(j1, 2)) +
+                    gr(i1, 2) * (str.zx * gr(j1, 0) + str.yz * gr(j1, 1) + str.zz * gr(j1, 2)));
 
-                out[i6][j6] += s;
-                out[i6 + 1][j6 + 1] += s;
-                out[i6 + 2][j6 + 2] += s;
+                result(i6, j6) += s;
+                result(i6 + 1, j6 + 1) += s;
+                result(i6 + 2, j6 + 2) += s;
             }
         }
     }
-    toDir3(d, out);
-};
+    toDir3(d, result);
+
+    return result;
+}
 
 
 // 節点歪・応力を返す
@@ -355,44 +316,52 @@ void ShellElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryConditio
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
-void ShellElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp,
-                                vector<Strain> strain1, vector<Stress> stress1, vector<double> energy1, 
-                                vector<Strain> strain2, vector<Stress> stress2, vector<double> energy2) {
+tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>> 
+    ShellElement::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp) {
 
     int count = nodeCount();
-
-    vector<vector<double>> d;
-    dirMatrix(p, d);
-
-    double[3] n;
-    normalVector(p, n);
-
-
-    vector<double> v;
-    toArray(u, 6, v);
-
+    Matrix3d d = dirMatrix(p);
+    Vector3 n = normalVector(p);
+    VectorXd v = toArray(u, 6);
     double t = sp.thickness;
 
+    vector<Strain> strain1;
+    vector<Stress> stress1;
+    vector<double> energy1;
+    vector<Strain> strain2;
+    vector<Stress> stress2;
+    vector<double> energy2;
+
     for (int i = 0; i < count; i++) {
-        vector<double> np = nodeP[i];
 
-        vector<double> eps1;
-        strainPart(p, v, n, d, np[0], np[1], 1, t, eps1);
-        vector<double> eps2;
-        strainPart(p, v, n, d, np[0], np[1], -1, t, eps2);
+        VectorXd eps1 = strainPart(p, v, n, d, nodeP(i, 0), nodeP(i, 1), 1, t);
+        VectorXd eps2 = strainPart(p, v, n, d, nodeP(i, 0), nodeP(i, 1), -1, t);
 
-        strain1[i] = toStrain(eps1);
-        stress1[i] = toStress(numeric::dotMV(d1, eps1));
-        strain2[i] = toStrain(eps2);
-        stress2[i] = toStress(numeric::dotMV(d1, eps2));
-        strain1[i].rotate(d);
-        stress1[i].rotate(d);
-        strain2[i].rotate(d);
-        stress2[i].rotate(d);
-        energy1[i] = 0.5 * strain1[i].innerProduct(stress1[i]);
-        energy2[i] = 0.5 * strain2[i].innerProduct(stress2[i]);
+        Strain trai1 = toStrain(eps1);
+        Stress sres1 = toStress(d1 * eps1);
+        Strain trai2 = toStrain(eps2);
+        Stress sres2 = toStress(d1 * eps2);
+        trai1.rotate(d);
+        sres1.rotate(d);
+        trai2.rotate(d);
+        sres2.rotate(d);
+        double ergy1 = 0.5 * trai1.innerProduct(sres1);
+        double ergy2 = 0.5 * trai2.innerProduct(sres2);
+
+        strain1.push_back(trai1);
+        stress1.push_back(sres1);
+        strain2.push_back(trai2);
+        stress2.push_back(sres2);
+        energy1.push_back(ergy1);
+        energy2.push_back(ergy2);
     }
-};
+
+    tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
+        result = make_tuple(strain1, stress1, energy1, strain2, stress2, energy2);
+
+    return result;
+}
+
 
 // 要素内の歪ベクトルを返す
 // p - 要素節点
@@ -401,94 +370,87 @@ void ShellElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, v
 // d - 方向余弦マトリックス
 // xsi,eta,zeta - ξ,η,ζ座標
 // t - 要素厚さ
-void ShellElement::strainPart(vector<FENode> p, vector<double> v, double n[3], vector<vector<double>> d, double  xsi, double eta, double zeta, double t, vector<double> out) {
+VectorXd ShellElement::strainPart(vector<FENode> p, VectorXd v, Vector3 n, Matrix3d d, double  xsi, double eta, double zeta, double t) {
 
-    vector<vector<double>> sf;
-    shapeFunction(xsi, eta, sf);
-
-    double ja[9];
-    jacobianMatrix(p, sf, n, t, ja);
-
-    vector<vector<double>> sm;
-    strainMatrix(ja, sf, d, zeta, t, sm);
-
-    numeric::dotVM(v, sm, out);
+    MatrixXd sf = shapeFunction(xsi, eta);
+    Matrix3d ja = jacobianMatrix(p, sf, n, t);
+    MatrixXd sm = strainMatrix(ja, sf, d, zeta, t);
+    VectorXd result = v * sm;
+    return result;
 };
+
 
 // 要素歪・応力を返す
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
 // sp - シェルパラメータ
-void ShellElement::elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp, 
-                                        vector<Strain> _Strain1, vector<Stress> _Stress1, double energy1,
-                                        vector<Strain> _Strain2, vector<Stress> _Stress2, double energy2) {
+tuple<Strain, Stress, double, Strain, Stress, double>
+    ShellElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp) {
 
-    vector<vector<double>> d;
-    dirMatrix(p, d);
-
-    double n[3];
-    normalVector(p, n);
-
-    vector<double> v;
-    toArray(u, 6, v);
-
+    Matrix3d d = dirMatrix(p);
+    Vector3 n = normalVector(p);
+    VectorXd v = toArray(u, 6);
     double t = sp.thickness;
-    
     double cf = 1 / intP.size();
 
-    vector<double> strain1;
-    vector<double> strain2;
-    vector<double> stress1;
-    vector<double> stress2;
+    VectorXd strain1 = VectorXd::Zero(6);
+    VectorXd stress1 = VectorXd::Zero(6);
+    double energy1 = 0;
+    VectorXd strain2 = VectorXd::Zero(6);
+    VectorXd stress2 = VectorXd::Zero(6);
+    double energy2 = 0;
+
     for (int i = 0; i < intP.size(); i++) {
         
-        vector<double> ip = intP[i];
-        
-        vector<double> eps1;
-        strainPart(p, v, n, d, ip[0], ip[1], 1, t, eps1);
+        VectorXd eps1 = strainPart(p, v, n, d, intP(i, 0), intP(i, 1), 1, t);
+        VectorXd eps2 = strainPart(p, v, n, d, intP(i, 0], intP(i, 1], -1, t);
 
-        vector<double> eps2;
-        strainPart(p, v, n, d, ip[0], ip[1], -1, t, eps2);
+        strain1 += eps1;
+        strain2 += eps2;
 
-        numeric::add(strain1, eps1);
-        numeric::add(strain2, eps2);
+        VectorXd str1 = d1 * eps1;
+        VectorXd str2 = d1 * eps2;
 
-        vector<double> str1;
-        numeric::dotMV(d1, eps1, str1);
+        stress1 += str1;
+        stress2 += str2;
 
-        vector<double> str2;
-        numeric::dotMV(d1, eps2, str2);
-
-        numeric::add(stress1, str1);
-        numeric::add(stress2, str2);
-
-        energy1 += numeric::dotVV(eps1, str1);
-        energy2 += numeric::dotVV(eps2, str2);
+        energy1 += eps1.dot(str1);
+        energy2 += eps2.dot(str2);
     }
-    numeric::mul(strain1, cf);
-    numeric::mul(stress1, cf);
+    strain1 *= cf;
+    stress1 *= cf;
     energy1 *= 0.5 * cf;
-    numeric::mul(strain1, cf);
-    numeric::mul(stress1, cf);
+    strain1 *= cf;
+    stress1 *= cf;
     energy2 *= 0.5 * cf;
 
-    toStrain(strain1, _Strain1);
-    toStress(stress1, _Stress1);
-    toStrain(strain2, _Strain1);
-    toStress(stress2, _Stress1);
+    Strain trai1 = toStrain(strain1);
+    Stress sres1 = toStress(stress1);
+    Strain trai2 = toStrain(strain2);
+    Stress sres2 = toStress(stress2);
+
+    tuple<Strain, Stress, double, Strain, Stress, double>
+        result = make_tuple(trai1, sres1, energy1, trai2, sres2, energy2);
+
+    return result;
+};
+
+
+// ベクトルを歪に変換する
+// s - 歪ベクトル
+Strain ShellElement::toStrain(VectorXd s) {
+    VectorXd ss(6);
+    ss << s[0], s[1], 0, s[2], s[3], s[4];
+    return Strain(ss);
 };
 
 // ベクトルを歪に変換する
 // s - 歪ベクトル
-void ShellElement::toStrain(vector<double> s, Strain out) {
-    out =  Strain([s[0], s[1], 0, s[2], s[3], s[4]]);
-};
-
-// ベクトルを歪に変換する
-// s - 歪ベクトル
-void ShellElement::toStress(vector<double> s, Stress out) {
-    out = Stress([s[0], s[1], 0, s[2], s[3], s[4]]);
+Stress ShellElement::toStress(VectorXd s) {
+    VectorXd ss(6);
+    ss << s[0], s[1], 0, s[2], s[3], s[4];
+    return Stress(ss);
 };
 
 // 要素を表す文字列を返す
@@ -504,23 +466,4 @@ string ShellElement::toString(vector<Material> materials, vector<ShellParameter>
         s += '\t' + p[nodes[i]].label;
     }
     return s;
-};
-
-
-// 節点座標を局所座標系に変換する
-// d - 方向余弦マトリックス
-// p - 要素節点
-vector<double> ShellElement::toLocal(d, vector<FENode> p) {
-
-    vector<vector<double>> x;
-
-    for (int i = 0; i < p.size(); i++) {
-        vector<double> y = {
-            d[0][0] * p[i].x + d[1][0] * p[i].y + d[2][0] * p[i].z,
-            d[0][1] * p[i].x + d[1][1] * p[i].y + d[2][1] * p[i].z,
-            d[0][2] * p[i].x + d[1][2] * p[i].y + d[2][2] * p[i].z
-        };
-        x.push_back(y);
-    }
-    return x;
 }

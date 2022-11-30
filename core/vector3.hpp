@@ -3,7 +3,7 @@
 
 class Vector3 {
 public:
-    bool isNull = false;
+
     union {
         struct { 
             double x, y, z; 
@@ -11,11 +11,10 @@ public:
         double xyz[3];
     };
 
-    Vector3() : x(0), y(0), z(0), isNull(false) { }
-    Vector3(bool nullable) : x(0), y(0), z(0), isNull(nullable) { }
-    Vector3(double xIn, double yIn, double zIn) : x(xIn), y(yIn), z(zIn), isNull(false) { }
-    explicit Vector3(double value) : x(value), y(value), z(value), isNull(false) { }
-    explicit Vector3(double* values) : x(values[0]), y(values[1]), z(values[2]), isNull(false) { }
+    Vector3() : x(0), y(0), z(0) { }
+    Vector3(double xIn, double yIn, double zIn) : x(xIn), y(yIn), z(zIn){ }
+    explicit Vector3(double value) : x(value), y(value), z(value) { }
+    explicit Vector3(double* values) : x(values[0]), y(values[1]), z(values[2]) { }
 
     double& operator[](const int i) { return xyz[i]; }
     const double operator[](const int i) const { return xyz[i]; }

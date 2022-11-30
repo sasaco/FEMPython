@@ -7,6 +7,7 @@
 #include "Stress.h";
 #include "Strain.h";
 
+#include <format>
 #include <string>
 #include <vector>
 using std::vector;
@@ -45,27 +46,26 @@ public:
 
     MatrixXd gradPart(vector<FENode> p, Vector3d x, double w, double t);
 
-    void shapeFunctionMatrix(vector<FENode> p, double coef, ShellParameter sp, vector<vector<double>> out);
+    MatrixXd shapeFunctionMatrix(vector<FENode> p, double coef, ShellParameter sp);
 
-    void geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp, vector<vector<double>> out);
+    MatrixXd gradMatrix(vector<FENode> p, double coef, ShellParameter sp);
 
-    void strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp,
-        vector<Strain> strain1, vector<Stress> stress1, vector<double> energy1,
-        vector<Strain> strain2, vector<Stress> stress2, vector<double> energy2);
+    MatrixXd geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
 
-    void strainPart(vector<FENode> p, vector<double> v, double n[3], vector<vector<double>> d, double  xsi, double eta, double zeta, double t, vector<double> out);
+    tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
+        strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
 
-    void elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, ShellParameter sp,
-        vector<Strain> _Strain1, vector<Stress> _Stress1, double energy1,
-        vector<Strain> _Strain2, vector<Stress> _Stress2, double energy2);
+    VectorXd strainPart(vector<FENode> p, VectorXd v, Vector3 n, Matrix3d d, double  xsi, double eta, double zeta, double t);
 
-    void toStrain(vector<double> s, Strain out);
+    tuple<Strain, Stress, double, Strain, Stress, double>
+        elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
 
-    void toStress(vector<double> s, Stress out);
+    Strain toStrain(VectorXd s);
+
+    Stress toStress(VectorXd s);
 
     string toString(vector<Material> materials, vector<ShellParameter> params, vector<FENode> p);
 
-    vector<double> toLocal(d, vector<FENode> p);
 };
 
 

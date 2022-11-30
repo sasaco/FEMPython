@@ -49,35 +49,40 @@ double SymmetricTensor3::innerProduct(SymmetricTensor3 t) {
     return result;
 }
 
+
+// テンソルを回転させる
+// d - 方向余弦マトリックス
+void SymmetricTensor3::rotate(Matrix3d d) {
+
+    Matrix3d mat;
+    mat << xx, xy, zx,
+           xy, yy, yz,
+           zx, yz, zz;
+
+    VectorXd s = VectorXd::Zero(6);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            double mij = mat(i, j);
+            for (int k = 0; k < 3; k++) {
+                s(k) += d(k, i) * d(k, j) * mij;
+                s(k + 3) += d(k, i) * d((k + 1) % 3, j) * mij;
+            }
+        }
+    }
+    xx = s(0);
+    yy = s(1);
+    zz = s(2);
+    xy = s(3);
+    yz = s(4);
+    zx = s(5);
+};
+
+
 /*
 // 固有値を返す
 SymmetricTensor3.prototype.principal = function() {
     return eigenvalue(this, 100).lambda;
 };
-
-// テンソルを回転させる
-// d - 方向余弦マトリックス
-SymmetricTensor3.prototype.rotate = function(d) {
-    var mat = [[this.xx, this.xy, this.zx], [this.xy, this.yy, this.yz],
-        [this.zx, this.yz, this.zz]];
-    var s = [0, 0, 0, 0, 0, 0];
-    for (var i = 0; i < 3; i++) {
-        for (var j = 0; j < 3; j++) {
-            var mij = mat[i][j];
-            for (var k = 0; k < 3; k++) {
-                s[k] += d[k][i] * d[k][j] * mij;
-                s[k + 3] += d[k][i] * d[(k + 1) % 3][j] * mij;
-            }
-        }
-    }
-    this.xx = s[0];
-    this.yy = s[1];
-    this.zz = s[2];
-    this.xy = s[3];
-    this.yz = s[4];
-    this.zx = s[5];
-};
-
 
 
 

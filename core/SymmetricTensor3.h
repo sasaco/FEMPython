@@ -5,7 +5,7 @@ using namespace Eigen;
 
 class SymmetricTensor3 {
 
-protected:
+public:
     double xx;
     double yy;
     double zz;
@@ -13,14 +13,13 @@ protected:
     double yz;
     double zx;
 
-public:
     SymmetricTensor3(VectorXd s);
 
     VectorXd vector();
     void add(SymmetricTensor3 t);
     void mul(double a);
-
     double innerProduct(SymmetricTensor3 t);
+    void rotate(Matrix3d d);
 
 };
 

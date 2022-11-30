@@ -24,6 +24,9 @@ private:
     bool isShell;
     bool isBar;
 
+    // 方向余弦マトリックスを返す
+    vector<Vector3> dirVectors(vector<Vector3> p, Vector3 axis);
+
 public:
     double C1_3 = 1 / 3;
     double C1_6 = 1 / 6;
@@ -55,12 +58,12 @@ public:
     // 節点変位を局所座標系・1次元配列に 変換する
     VectorXd toLocalArray(vector<Vector3R> u, vector<vector<double>> d);
 
-    Matrix3d dirMatrix(vector<Vector3> p, Vector3 axis);
+    // 方向余弦マトリックスを返す
     Matrix3d dirMatrix(vector<FENode> p, Vector3 axis);
+    Matrix3d dirMatrix(vector<FENode> p);
 
-    vector<Vector3> dirVectors(vector<Vector3> p, Vector3 axis);
-
-    Vector3 normalVector(vector<Vector3> p);
     Vector3 normalVector(vector<FENode> p);
 
+    // 剛性マトリックスの方向を修正する
+    void toDir3(Matrix3d d, MatrixXd k);
 };
