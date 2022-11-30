@@ -47,6 +47,13 @@ public:
         return *this;
     }
 
+    Vector3& add(const Vector3& a, const Vector3& b) {
+        x = a.x + b.x;
+        y = a.y + b.y;
+        z = a.z + b.z;
+        return *this;
+    }
+
     /// <summary>
     /// FElementで使用
     /// </summary>
@@ -135,6 +142,13 @@ public:
         return Vector3().sub(*this, v).lengthSq();
     }
 
+    Vector3& sub(const Vector3& a, const Vector3& b) {
+        x = a.x - b.x;
+        y = a.y - b.y;
+        z = a.z - b.z;
+        return *this;
+    }
+
     Vector3& setLength(double l) {
         return normalize().multiplyScalar(l);
     }
@@ -207,6 +221,3 @@ inline double dot(const Vector3& a, const Vector3& b) {
     return a.dot(b);
 }
 
-inline Vector3 cross(const Vector3& a, const Vector3& b) {
-    return Vector3().cross(a, b);
-}

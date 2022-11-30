@@ -3,7 +3,6 @@
 #include "FElement.h"
 #include "FENode.h"
 #include "Material.h"
-#include "numeric.h"
 #include "Strain.h"
 #include "Stress.h"
 
@@ -40,7 +39,7 @@ public:
     MatrixXd gradPart(vector<FENode> p, Vector3d x, double w);
 
     virtual MatrixXd massMatrix(vector<FENode> p, double dens);
-
+    
     virtual MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1);
 
     virtual MatrixXd shapeFunctionMatrix(vector<FENode> p, double coef);

@@ -80,7 +80,7 @@
     <ClCompile Include="Temperature.cpp">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
     </ClCompile>
-    <ClCompile Include="ElementManager.hpp">
+    <ClCompile Include="ElementManager.h">
       <Filter>ソース ファイル\Element</Filter>
     </ClCompile>
     <ClCompile Include="ElementBorder.cpp">
@@ -163,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="Section.cpp">
       <Filter>ソース ファイル\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementManager.cpp">
+      <Filter>ソース ファイル\Element</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

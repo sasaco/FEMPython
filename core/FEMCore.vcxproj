@@ -28,7 +28,8 @@
     <ClCompile Include="EigenValue.cpp" />
     <ClCompile Include="ElementBorder.cpp" />
     <ClCompile Include="ElementBorderBound.cpp" />
-    <ClCompile Include="ElementManager.hpp" />
+    <ClCompile Include="ElementManager.cpp" />
+    <ClCompile Include="ElementManager.h" />
     <ClCompile Include="FElement.cpp" />
     <ClCompile Include="FENode.cpp" />
     <ClCompile Include="FileIO.cpp" />

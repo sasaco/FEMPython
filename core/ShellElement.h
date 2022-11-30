@@ -2,7 +2,6 @@
 #include "FElement.h";
 #include "FENode.h";
 #include "Material.h";
-#include "numeric.h";
 #include "ShellParameter.h";
 #include "Stress.h";
 #include "Strain.h";
