@@ -366,6 +366,9 @@ class Solver():
 
         # 剛性マトリックス・荷重ベクトルの作成
         matrix1 = stiffnessMatrix(self.dof, self.model)
+
+
+
         vector1 = loadVector(self.dof, self.model)
 
         # 拘束自由度を除去する
