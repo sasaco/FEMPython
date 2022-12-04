@@ -17,6 +17,6 @@ Pressure::Pressure(int _element, string _face, double _press) :
 
 // 面圧条件を表す文字列を返す
 // elems - 要素
-string Pressure::toString(vector<ElementManager> elems) {
-    return format("Pressure\t{}\t{}\t{}", elems[element].label(), face, press);
-};
+//string Pressure::toString(vector<ElementManager> elems) {
+//    return format("Pressure\t{}\t{}\t{}", elems[element].label(), face, press);
+//};

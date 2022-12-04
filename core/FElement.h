@@ -47,6 +47,7 @@ public:
     int label;
     int material;
 
+    FElement();
     FElement(int _label, int _material, vector<int> _nodes);
 
     // 積分点の剛性マトリックスを返す

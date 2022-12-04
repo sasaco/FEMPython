@@ -7,10 +7,9 @@
 // nodes - 節点番号
 // nodeP - 節点のξ,η,ζ座標
 // intP - 積分点のξ,η,ζ座標,重み係数
-SolidElement::SolidElement(int label, int material, vector<int> nodes, MatrixXd _nodeP, MatrixXd _intP) :
+SolidElement::SolidElement() : FElement() { }
+SolidElement::SolidElement(int label, int material, vector<int> nodes) :
     FElement(label, material, nodes) {
-    nodeP = _nodeP;
-    intP = _intP;
 };
 
 

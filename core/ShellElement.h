@@ -26,6 +26,7 @@ private:
     MatrixXd intP;
 
 public:
+    ShellElement();
     ShellElement(int label, int material, int param, vector<int> nodes, MatrixXd _nodeP, MatrixXd _intP);
 
     virtual string getName() = 0;

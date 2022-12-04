@@ -5,6 +5,12 @@
 // label - 要素ラベル
 // material - 材料のインデックス
 // nodes - 節点番号
+FElement::FElement() : Nodes() {
+    label = -1;
+    material = -1;
+    isShell = false;        // シェル要素ではない
+    isBar = false;
+}
 FElement::FElement(int _label, int _material, vector<int> _nodes)
     : Nodes(_nodes) {
 

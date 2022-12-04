@@ -175,14 +175,17 @@ FemDataModel readFemModel(string s)
                 mesh.elements.push_back(new HexaElement2
                 (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 20)));
             }
+            */
             // ‹«ŠEðŒ
             else if ((keyWord == "restraint") && (columns.size() > 7)) {
-                var rest = readRestraint(ss);
-                if (rest != = null) bc.restraints.push_back(rest);
+                Restraint rest = Restraint(columns);
+                bc.restraints.push_back(rest);
             }
             else if ((keyWord == "load") && (columns.size() > 4)) {
-                bc.loads.push_back(readLoad(ss));
+                Load load = Load(columns);
+                bc.loads.push_back(load);
             }
+            /*
             else if ((keyWord == "pressure") && (columns.size() > 3)) {
                 bc.pressures.push
                 (new Pressure(stoi(columns[1]), columns[2].toUpperCase(),

@@ -5,10 +5,11 @@
 // label - 要素ラベル
 // material - 材料のインデックス
 // nodes - 節点番号
+HexaElement1::HexaElement1() : SolidElement() {}
 HexaElement1::HexaElement1(int label, int material, vector<int> nodes) : 
-    SolidElement(label, material, nodes, HEXA1_NODE, HEXA1_INT) {
+    SolidElement(label, material, nodes) {
 
-    //MatrixXd h1n;// = MatrixXd::Zero(8, 3);
+    // 六面体1次要素の節点のξ,η,ζ座標
     HEXA1_NODE << -1, -1, -1,
                    1, -1, -1,
                    1,  1, -1,
@@ -17,10 +18,9 @@ HexaElement1::HexaElement1(int label, int material, vector<int> nodes) :
                    1, -1,  1,
                    1,  1,  1,
                   -1,  1,  1;
-    //HEXA1_NODE = h1n;
+    SolidElement::nodeP = HEXA1_NODE;
 
     // 六面体1次要素の積分点のξ,η,ζ座標,重み係数
-    // MatrixXd h1I;// = MatrixXd::Zero(8, 4);
     HEXA1_INT << FElement::GX2[0], FElement::GX2[0], FElement::GX2[0], 1,
                  FElement::GX2[1], FElement::GX2[0], FElement::GX2[0], 1,
                  FElement::GX2[0], FElement::GX2[1], FElement::GX2[0], 1,
@@ -29,11 +29,9 @@ HexaElement1::HexaElement1(int label, int material, vector<int> nodes) :
                  FElement::GX2[1], FElement::GX2[0], FElement::GX2[1], 1,
                  FElement::GX2[0], FElement::GX2[1], FElement::GX2[1], 1,
                  FElement::GX2[1], FElement::GX2[1], FElement::GX2[1], 1;
-
-    // HEXA1_INT = h1I;
+    SolidElement::intP = HEXA1_INT;
 
     // 六面体1次要素の質量マトリックス係数
-    //MatrixXd h1mb = MatrixXd::Zero(8, 8);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             double s = abs(HEXA1_NODE(i, 0) - HEXA1_NODE(j, 0)) +
@@ -42,7 +40,6 @@ HexaElement1::HexaElement1(int label, int material, vector<int> nodes) :
             HEXA1_MASS_BASE(i, j) = pow(0.5, 0.5 * s) / 27;
         }
     }
-    //HEXA1_MASS_BASE = h1mb;
 
 }
 

@@ -22,11 +22,14 @@ class SolidElement : public FElement {
 
 private:
 
+protected:
     MatrixXd nodeP;
     MatrixXd intP;
 
 public:
-    SolidElement(int label, int material, vector<int> nodes, MatrixXd _nodeP, MatrixXd _intP);
+
+    SolidElement();
+    SolidElement(int label, int material, vector<int> nodes);
 
     virtual Matrix3d jacobianMatrix(vector<FENode> p, MatrixXd sf);
 

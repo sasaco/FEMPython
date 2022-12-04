@@ -18,10 +18,12 @@ private:
 
 public:
     int node;
-    Coordinates coords;
+    int coords;
     bool rest[6];
 
-    Restraint(int _node, Coordinates _coords,
+    Restraint(vector<string> columns);
+    
+    Restraint(int _node, int _coords,
         bool restx, bool resty, bool restz,
         double x, double y, double z,
         bool restrx, bool restry, bool restrz,

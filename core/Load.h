@@ -8,6 +8,8 @@
 #include <vector>
 #include <format>
 using namespace std;
+using std::string;
+using std::vector;
 
 
 class Load : public Vector3R {
@@ -17,9 +19,10 @@ private:
 
 public:
     int node;
-    Coordinates coords;
+    int coords;
 
-    Load(int _node, Coordinates _coords, double x, double y, double z, double rx, double ry, double rz);
+    Load(vector<string> columns);
+    Load(int _node, int _coords, double x, double y, double z, double rx, double ry, double rz);
 
     string toString(vector<FENode> nodes);
 };

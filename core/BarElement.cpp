@@ -7,13 +7,16 @@
 // param - 梁パラメータのインデックス
 // nodes - 節点番号
 // axis - 断面基準方向ベクトル
+BarElement::BarElement() : FElement() {
+    isBar = true;
+}
 BarElement::BarElement(int label, int material, int _param, vector<int> nodes, Vector3 _axis) :
     FElement(label, material, nodes) {
     param = _param;
     isBar = true;
     axis = _axis;
     axis.normalize();
-};
+}
 
 // 剛性マトリックスを返す
 // p - 要素節点

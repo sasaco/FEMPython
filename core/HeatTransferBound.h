@@ -15,12 +15,11 @@ class HeatTransferBound : public ElementBorderBound {
 private:
 
 public:
-    int element;
     double htc;
     double outTemp;
 
     HeatTransferBound(int _element, string face, double _htc, double _outTemp);
 
-    string toString(vector<ElementManager> elems);
+    //string toString(vector<ElementManager> elems);
 
 };

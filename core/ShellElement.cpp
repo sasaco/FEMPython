@@ -8,6 +8,9 @@
 // nodes - 節点番号
 // nodeP - 節点のξ,η座標
 // intP - 積分点のξ,η座標,重み係数
+ShellElement::ShellElement() : FElement() {
+    isShell = true;
+}
 ShellElement::ShellElement(int _label, int material, int _param, vector<int> nodes, 
     MatrixXd _nodeP, MatrixXd _intP) :
     FElement(label, material, nodes) {
