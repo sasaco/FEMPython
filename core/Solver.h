@@ -13,9 +13,9 @@ class Solver {
 private:
     double PRECISION = 1e-10;	// マトリックス精度
 
-    Vector3d matrix;
-    Vector3d matrix2;
-    Vector3d vector;
+    VectorXd matrix;
+    VectorXd matrix2;
+    VectorXd vector;
     int dof;
 
 public:

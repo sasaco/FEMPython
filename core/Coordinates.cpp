@@ -1,6 +1,6 @@
 ﻿#include "Coordinates.h"
 
-#include <format>
+//#include <format>
 
 
 //--------------------------------------------------------------------//
@@ -32,18 +32,21 @@ Coordinates::Coordinates(int _label,
 
 // グローバル座標系に変換する
 // x - ベクトル成分
-void Coordinates::toGlobal(double x[6], double out[9]) {
+MatrixXd Coordinates::toGlobal(double x[6]) {
 
-    double e[9] = { c[0], c[3], c[6],
-                    c[1], c[4], c[7],
-                    c[2], c[5], c[8] };
+    MatrixXd result(2, 3);
 
-    for (int i = 0; i < 3; i++) {
-        out[i] = e[i] * x[0] + e[i + 3] * x[1] + e[i + 6] * x[2];
-        out[i + 3] = e[i] * x[3] + e[i + 3] * x[4] + e[i + 6] * x[5];
-    }
+    //MatrixXd e(3, 3);
+    //e << c[0], c[3], c[6],
+    //     c[1], c[4], c[7],
+    //     c[2], c[5], c[8] ;
 
-    return;
+    //for (int i = 0; i < 3; i++) {
+    //    result(0, i) = e(0, i) * x[0] + e(1, i) * x[1] + e(2, i) * x[2];
+    //    result(1, i) = e(0, i) * x[3] + e(1, i) * x[4] + e(2, i) * x[5];
+    //}
+
+    return result;
 };
 
 
@@ -133,9 +136,11 @@ void Coordinates::transVector(vector<double> vector, int dof, int idx0, int ndof
 // 局所座標系を表す文字列を返す
 string Coordinates::toString() {
 
-    return format("Coordinates\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", label, 
-        c[0], c[3], c[6],
-        c[1], c[4], c[7],
-        c[2], c[5], c[8]);
+    //return format("Coordinates\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", label, 
+    //    c[0], c[3], c[6],
+    //    c[1], c[4], c[7],
+    //    c[2], c[5], c[8]);
+
+    return "Coordinates";
 
 };

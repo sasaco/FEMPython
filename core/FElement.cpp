@@ -38,7 +38,7 @@ MatrixXd FElement::stiffPart(MatrixXd d, MatrixXd b, double coef) {
 
         VectorXd bi = b.row(i);
         for (int j = 0; j < size2; j++) {
-            a(j) = coef * bi.dot(d.row(j));
+            a[j] = coef * bi.dot(d.row(j));
         }
 
         for (int j = 0; j < size1; j++) {
@@ -67,9 +67,8 @@ VectorXd FElement::toArray(vector<Vector3R> u, int dof) {
 
         for (int j = 0; j < dof; j++) {
             int index = i + j;
-            result(index) = ux[j];
+            result[index] = ux[j];
         }
-
     }
 
     return result;
@@ -79,7 +78,7 @@ VectorXd FElement::toArray(vector<Vector3R> u, int dof) {
 // 節点変位を局所座標系・1次元配列に変換する
 // u - 節点変位
 // d - 方向余弦マトリックス
-VectorXd FElement::toLocalArray(vector<Vector3R> u, Matrix3d d) {
+VectorXd FElement::toLocalArray(vector<Vector3R> u, MatrixXd d) {
 
     VectorXd v(12);
 
@@ -87,10 +86,10 @@ VectorXd FElement::toLocalArray(vector<Vector3R> u, Matrix3d d) {
     for (int i = 0; i < 2; i++) {
         double* ux = u[i].x;
         for (int j = 0; j < 3; j++) {
-            v(index) = d(0, j) * ux[0] + d(1, j) * ux[1] + d(2, j) * ux[2];
+            v[index] = d(0, j) * ux[0] + d(1, j) * ux[1] + d(2, j) * ux[2];
         }
         for (int j = 0; j < 3; j++) {
-            v(index) = d(0, j) * ux[3] + d(1, j) * ux[4] + d(2, j) * ux[5];
+            v[index] = d(0, j) * ux[3] + d(1, j) * ux[4] + d(2, j) * ux[5];
         }
     }
 
@@ -100,7 +99,7 @@ VectorXd FElement::toLocalArray(vector<Vector3R> u, Matrix3d d) {
 // 方向余弦マトリックスを返す
 // p - 頂点座標
 // axis - 断面基準方向ベクトル
-Matrix3d FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
+MatrixXd FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
 
     vector<Vector3> vec(p.size());
     for (int i = 0; i < p.size(); i++) {
@@ -109,7 +108,7 @@ Matrix3d FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
 
     vector<Vector3> v = dirVectors(vec, axis);
 
-    Matrix3d result(3, 3);
+    MatrixXd result(3, 3);
     result(0, 0) = v[0].x;
     result(0, 1) = v[1].x;
     result(0, 2) = v[2].x;
@@ -125,7 +124,7 @@ Matrix3d FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
     return result;
 }
 
-Matrix3d FElement::dirMatrix(vector<FENode> p) {
+MatrixXd FElement::dirMatrix(vector<FENode> p) {
     // この関数を呼ばれる時は axis を使わないはずだからダミーの axis を用意する
     Vector3 axis;
     return dirMatrix(p, axis);
@@ -235,16 +234,14 @@ Vector3 FElement::normalVector(vector<Vector3> v) {
 // 剛性マトリックスの方向を修正する
 // d - 方向余弦マトリックス
 // k - 剛性マトリックス
-void FElement::toDir3(Matrix3d d, MatrixXd k) {
+void FElement::toDir3(MatrixXd d, MatrixXd k) {
 
-    Matrix3d a = Matrix3d ::Zero(3, 3);
+    MatrixXd a = MatrixXd::Zero(3, 3);
 
     for (int i = 0; i < k.size(); i += 3) {
         for (int j = 0; j < k.row(i).size(); j += 3) {
             for (int i1 = 0; i1 < 3; i1++) {
-                Vector3d ai = a.row(i1);
-                Vector3d di = d.row(i1);
-                for (int j1 = 0; j1 < 3; j1++) {
+                 for (int j1 = 0; j1 < 3; j1++) {
                     double s = 0;
                     for (int ii = 0; ii < 3; ii++) {
                         s += d(i, ii) * k(i + ii, j + j1);
@@ -253,10 +250,10 @@ void FElement::toDir3(Matrix3d d, MatrixXd k) {
                 }
             }
             for (int i1 = 0; i1 < 3; i1++) {
-                Vector3d ai = a.row(i1);
-                Vector3d ki = k.row(i + i1);
+                VectorXd ai = a.row(i1);
+                VectorXd ki = k.row(i + i1);
                 for (int j1 = 0; j1 < 3; j1++) {
-                    ki(j + j1) = ai.dot(d.row(j1));
+                    ki[j + j1] = ai.dot(d.row(j1));
                 }
             }
         }

@@ -57,15 +57,15 @@ public:
     VectorXd toArray(vector<Vector3R> u, int dof);
 
     // 節点変位を局所座標系・1次元配列に 変換する
-    VectorXd toLocalArray(vector<Vector3R> u, Matrix3d d);
+    VectorXd toLocalArray(vector<Vector3R> u, MatrixXd d);
 
     // 方向余弦マトリックスを返す
-    Matrix3d dirMatrix(vector<FENode> p, Vector3 axis);
-    Matrix3d dirMatrix(vector<FENode> p);
+    MatrixXd dirMatrix(vector<FENode> p, Vector3 axis);
+    MatrixXd dirMatrix(vector<FENode> p);
 
     Vector3 normalVector(vector<FENode> p);
     Vector3 normalVector(vector<Vector3> p);
 
     // 剛性マトリックスの方向を修正する
-    void toDir3(Matrix3d d, MatrixXd k);
+    void toDir3(MatrixXd d, MatrixXd k);
 };

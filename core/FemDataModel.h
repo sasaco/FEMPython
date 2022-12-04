@@ -10,6 +10,7 @@
 
 //--------------------------------------------------------------------//
 // FEM データモデル
+//#include <format>
 #include <numbers>
 #include <vector>
 using namespace std;
@@ -26,11 +27,20 @@ private:
     Solver solver;		                    // 連立方程式求解オブジェクト
     Result result;		                    // 計算結果
 
-
     // Method
-    /*
     void reNumbering();
-    */
+
+    void resetNodes(vector<int> map, ElementManager s);
+    int resetNodePointer(vector<int> map, int node);
+    int resetElementPointer(vector<int> map, int element);
+
+    void resetMaterialLabel();
+    void resetParameterLabel();
+    void resetCoordinates();
+
+    void resetCoordinatesPointer(vector<Coordinates> map, Restraint bc);
+    void resetCoordinatesPointer(vector<Coordinates> map, Load bc);
+
 
 public:
     MeshModel mesh;		                    // メッシュモデル

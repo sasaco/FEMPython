@@ -24,7 +24,9 @@ void FENode::clone(FENode out) {
 // 節点を表す文字列を返す
 string FENode::toString() {
 
-    return format("Node\t{}\t{}\t{}\t{}",
-        label, x, y, z);
+    //return format("Node\t{}\t{}\t{}\t{}",
+    //    label, x, y, z);
 
-};
+    return "Node";
+
+}

@@ -42,17 +42,15 @@ Load::Load(int _node, int _coords,
 
     node = _node;
     coords = _coords;
-    globalX = x;
-
 };
 
 // 荷重条件を表す文字列を返す
 // nodes - 節点
 string Load::toString(vector<FENode> nodes) {
 
-    string s = format("Load\t{}\t{}", nodes[node].label, globalX);
+    //string s = format("Load\t{}\t{}", nodes[node].label, globalX);
+    //s += '\t' + coords;
+    //return s;
 
-    s += '\t' + coords;
-
-    return s;
+    return "Load";
 };

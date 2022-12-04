@@ -6,20 +6,22 @@
 
 #include <string>
 #include <vector>
-#include <format>
+//#include <format>
 using namespace std;
 using std::string;
 using std::vector;
 
+#include<Eigen/Core>
+using namespace Eigen;
 
 class Load : public Vector3R {
 
 private:
-    double globalX;
 
 public:
     int node;
     int coords;
+    MatrixXd globalX;
 
     Load(vector<string> columns);
     Load(int _node, int _coords, double x, double y, double z, double rx, double ry, double rz);

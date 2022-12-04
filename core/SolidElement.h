@@ -7,7 +7,7 @@
 #include "Strain.h"
 #include "Stress.h"
 
-#include <format>
+//#include <format>
 #include <string>
 #include <vector>
 using namespace std;
@@ -31,17 +31,17 @@ public:
     SolidElement();
     SolidElement(int label, int material, vector<int> nodes);
 
-    virtual Matrix3d jacobianMatrix(vector<FENode> p, MatrixXd sf);
+    virtual MatrixXd jacobianMatrix(vector<FENode> p, MatrixXd sf);
 
-    virtual MatrixXd grad(vector<FENode> p, Matrix3d ja, MatrixXd sf);
+    virtual MatrixXd grad(vector<FENode> p, MatrixXd ja, MatrixXd sf);
 
     MatrixXd strainMatrix(MatrixXd grad);
 
     virtual MatrixXd shapeFunction(double xsi, double eta, double zeta) = 0;
 
-    MatrixXd shapePart(vector<FENode> p, Vector3d x, double w);
+    MatrixXd shapePart(vector<FENode> p, VectorXd x, double w);
 
-    MatrixXd gradPart(vector<FENode> p, Vector3d x, double w);
+    MatrixXd gradPart(vector<FENode> p, VectorXd x, double w);
 
     virtual MatrixXd massMatrix(vector<FENode> p, double dens);
     
@@ -55,7 +55,7 @@ public:
 
     virtual tuple<vector<Strain>, vector<Stress>, vector<double>> strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
-    VectorXd strainPart(vector<FENode> p, VectorXd v, Vector3d x);
+    VectorXd strainPart(vector<FENode> p, VectorXd v, VectorXd x);
 
     virtual tuple<Strain, Stress, double> elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 

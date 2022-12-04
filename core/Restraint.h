@@ -4,22 +4,25 @@
 #include "Coordinates.h"
 #include "FENode.h"
 
-#include <format>
+//#include <format>
 #include <string>
 #include <vector>
 using namespace std;         //  名前空間指定
 using std::string;
 using std::vector;
 
+#include<Eigen/Core>
+using namespace Eigen;
+
 class Restraint : public Vector3R {
 
 private:
-    double globalX;
 
 public:
     int node;
     int coords;
     bool rest[6];
+    MatrixXd globalX;
 
     Restraint(vector<string> columns);
     

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <numbers>
-#include <format>
+//#include <format>
 using namespace std;         //  名前空間指定
 using std::string;
 

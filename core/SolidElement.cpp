@@ -16,10 +16,10 @@ SolidElement::SolidElement(int label, int material, vector<int> nodes) :
 // ヤコビ行列を返す
 // p - 要素節点
 // sf - 形状関数行列
-Matrix3d SolidElement::jacobianMatrix(vector<FENode> p, MatrixXd sf) {
+MatrixXd SolidElement::jacobianMatrix(vector<FENode> p, MatrixXd sf) {
 
     int count = nodeCount();
-    Matrix3d result = Matrix3d::Zero(3, 3);
+    MatrixXd result = MatrixXd::Zero(3, 3);
 
     for (int i = 0; i < count; i++) {
         double pix = p[i].x;
@@ -41,12 +41,12 @@ Matrix3d SolidElement::jacobianMatrix(vector<FENode> p, MatrixXd sf) {
 // p - 要素節点
 // ja - ヤコビ行列
 // sf - 形状関数行列
-MatrixXd SolidElement::grad(vector<FENode> p, Matrix3d ja, MatrixXd sf) {
+MatrixXd SolidElement::grad(vector<FENode> p, MatrixXd ja, MatrixXd sf) {
 
     int count = nodeCount();
 
     // ◆ 3x3 行列の逆行列を求める
-    Matrix3d ji = ja.inverse();
+    MatrixXd ji = ja.inverse();
 
     MatrixXd result(count, 3);
 
@@ -89,9 +89,9 @@ MatrixXd SolidElement::strainMatrix(MatrixXd grad) {
 // p - 要素節点
 // x - ξ,η,ζ座標
 // w - 重み係数
-MatrixXd SolidElement::shapePart(vector<FENode> p, Vector3d x, double w) {
+MatrixXd SolidElement::shapePart(vector<FENode> p, VectorXd x, double w) {
 
-    MatrixXd sf= shapeFunction(x(0), x(1), x(2));
+    MatrixXd sf= shapeFunction(x[0], x[1], x[2]);
     MatrixXd ja = jacobianMatrix(p, sf);
     int count = nodeCount();
     double det = ja.determinant();
@@ -114,9 +114,9 @@ MatrixXd SolidElement::shapePart(vector<FENode> p, Vector3d x, double w) {
 // p - 要素節点
 // x - ξ,η,ζ座標
 // w - 重み係数
-MatrixXd SolidElement::gradPart(vector<FENode> p, Vector3d x, double w) {
+MatrixXd SolidElement::gradPart(vector<FENode> p, VectorXd x, double w) {
 
-    MatrixXd sf = shapeFunction(x(0), x(1), x(2));
+    MatrixXd sf = shapeFunction(x[0], x[1], x[2]);
     MatrixXd ja = jacobianMatrix(p, sf);
     MatrixXd gr = grad(p, ja, sf);
     int count = nodeCount();
@@ -302,7 +302,7 @@ tuple<vector<Strain>, vector<Stress>, vector<double>>
 // p - 要素節点
 // v - 節点変位ベクトル
 // x - ξ,η,ζ座標
-VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, Vector3d x) {
+VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, VectorXd x) {
 
     MatrixXd sf = shapeFunction(x[0], x[1], x[2]);
     MatrixXd ja = jacobianMatrix(p, sf);
@@ -354,16 +354,17 @@ tuple<Strain, Stress, double> SolidElement::elementStrainStress(vector<FENode> p
 // p - 節点
 string SolidElement::toString(vector<Material> materials, vector<FENode> p) {
 
-    Material mat = materials[material];
+    //Material mat = materials[material];
 
-    string s = "";
-    for (int i = 0; i < nodes.size(); i++) {
-        s += '\t';
-        FENode n = p[nodes[i]];
-        s += n.label;
-    }
+    //string s = "";
+    //for (int i = 0; i < nodes.size(); i++) {
+    //    s += '\t';
+    //    FENode n = p[nodes[i]];
+    //    s += n.label;
+    //}
 
-    return format("{}\t{}\t{}\t{}",
-        getName(), label, mat.label, s);
+    //return format("{}\t{}\t{}\t{}",
+    //    getName(), label, mat.label, s);
 
+    return "SolidElement";
 };

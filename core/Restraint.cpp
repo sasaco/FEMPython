@@ -21,6 +21,7 @@ Restraint::Restraint(vector<string> ss) : Vector3R() {
     Vector3R::x[5] = 0;
 
     coords = -1;
+
     if (ss.size() < 14) {
         if (ss.size() > 8) {
             coords = stoi(ss[8]);
@@ -62,29 +63,30 @@ Restraint::Restraint(
     rest[4] = restry;
     rest[5] = restrz;
 
-    globalX = x;
 };
 
 // 拘束条件を表す文字列を返す
 // nodes - 節点
 string Restraint::toString(vector<FENode> nodes) {
 
-    string s =  format("Restraint\t{}", nodes[node].label);
+    //string s =  format("Restraint\t{}", nodes[node].label);
 
-    for (int i = 0; i < 6; i++) {
-        if (rest[i]) {
-            s += "\t1\t";
-            s += to_string(x[i]);
-        }
-        else {
-            s += "\t0\t";
-            s += to_string(x[i]);
-        }
-    }
+    //for (int i = 0; i < 6; i++) {
+    //    if (rest[i]) {
+    //        s += "\t1\t";
+    //        s += to_string(x[i]);
+    //    }
+    //    else {
+    //        s += "\t0\t";
+    //        s += to_string(x[i]);
+    //    }
+    //}
 
-    s += "\t";
-    s += to_string(coords);
+    //s += "\t";
+    //s += to_string(coords);
 
-    return s;
+    //return s;
+
+    return "Restraint";
 
 };

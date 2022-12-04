@@ -94,7 +94,8 @@ void CircleSection::massInertia(double dens, double l, double out[4]) {
 // 断面を表す文字列を返す
 string CircleSection::toString() {
 
-    return format("{}\t{}",
-        d1, d2);
+    //return format("{}\t{}",
+    //    d1, d2);
 
-};
+    return "CircleSection";
+}

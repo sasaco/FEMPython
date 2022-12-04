@@ -57,9 +57,9 @@ double SymmetricTensor3::innerProduct(SymmetricTensor3 t) {
 
 // テンソルを回転させる
 // d - 方向余弦マトリックス
-void SymmetricTensor3::rotate(Matrix3d d) {
+void SymmetricTensor3::rotate(MatrixXd d) {
 
-    Matrix3d mat;
+    MatrixXd mat(3, 3);
     mat(0, 0) = xx;
     mat(0, 1) = xy;
     mat(0, 2) = zx;

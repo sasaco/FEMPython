@@ -1,10 +1,12 @@
 ﻿#pragma once
 
-#include <format>
+//#include <format>
 #include <string>
 using namespace std;         //  名前空間指定
 using std::string;
 
+#include<Eigen/Core>
+using namespace Eigen;
 
 //--------------------------------------------------------------------//
 // 材料
@@ -33,8 +35,6 @@ private:
 public:
     int label;
 
-    Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
-
     double ee;
     //double nu;
     //double dens;
@@ -43,15 +43,15 @@ public:
     //double cv;	// 体積比熱
     double gg;    // 横弾性係数
 
+    Eigen::Matrix<double, 3, 3> m2d;
+    Eigen::Matrix<double, 5, 5> msh;
+    Eigen::Matrix<double, 6, 6> m3d;
 
-    double m2d[3][3]; // set from matrix2Dstress
+    Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
+
     void matrix2Dstress();
-
-    double msh[5][5]; // set from matrixShell
     void matrixShell();
-
     void matrix3D();
-    double m3d[6][6]; // set from matrix3D
 
     string toString();
 

@@ -55,11 +55,18 @@ private:
 public:
     ElementManager(string key, vector<string> columns);
 
-
     int label();
+    vector<int> nodes();
 
+    int material();
+    void setMaterial(int mat);
+
+    int param();
+    void setParam(int param);
+
+    bool isShell();
+    bool isBar();
     /*
-    vector<int> nodes;
 
     BorderManager border(int element, int index);
     BorderManager borderEdge(int element, int index);

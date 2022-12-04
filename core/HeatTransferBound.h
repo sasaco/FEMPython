@@ -7,7 +7,7 @@
 using namespace std;         //  名前空間指定
 using std::vector;
 
-#include <format>
+//#include <format>
 
 
 class HeatTransferBound : public ElementBorderBound {
