@@ -41,10 +41,9 @@ BorderManager ElementManager::border(int element, int index) {
 BorderManager ElementManager::borderEdge(int element, int index) {
     return border(element, index);
 };
-
+*/
 
 int ElementManager::label() {
     return 0;
 };
 
-*/

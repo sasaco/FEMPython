@@ -39,6 +39,8 @@ MatrixXd FElement::stiffPart(MatrixXd d, MatrixXd b, double coef) {
             k(i, j) = a.dot(b.row(j));
         }
     }
+
+
     return k;
 
 }
@@ -63,6 +65,7 @@ VectorXd FElement::toArray(vector<Vector3R> u, int dof) {
         }
 
     }
+
     return result;
 }
 
@@ -219,6 +222,8 @@ Vector3 FElement::normalVector(vector<Vector3> v) {
         auto v3 = Vector3(vx, vy, vz).normalize();
         return v3;
     }
+
+    return Vector3();
 }
 
 // 剛性マトリックスの方向を修正する

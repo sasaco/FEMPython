@@ -23,9 +23,7 @@
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="CircleSection.cpp" />
     <ClCompile Include="Coordinates.cpp" />
-    <ClCompile Include="EdgeBorder1.cpp" />
     <ClCompile Include="EigenValue.cpp" />
-    <ClCompile Include="ElementBorder.cpp" />
     <ClCompile Include="ElementBorderBound.cpp" />
     <ClCompile Include="ElementManager.cpp" />
     <ClCompile Include="ElementManager.h" />
@@ -40,8 +38,6 @@
     <ClCompile Include="FemDataModel.cpp" />
     <ClCompile Include="Nodes.cpp" />
     <ClCompile Include="Pressure.cpp" />
-    <ClCompile Include="QuadangleBorder1.cpp" />
-    <ClCompile Include="QuadangleBorder2.cpp" />
     <ClCompile Include="RectSection.cpp" />
     <ClCompile Include="Restraint.cpp" />
     <ClCompile Include="Result.cpp" />
@@ -53,8 +49,6 @@
     <ClCompile Include="Stress.cpp" />
     <ClCompile Include="SymmetricTensor3.cpp" />
     <ClCompile Include="Temperature.cpp" />
-    <ClCompile Include="TriangleBorder1.cpp" />
-    <ClCompile Include="TriangleBorder2.cpp" />
     <ClCompile Include="Vector3R.cpp" />
     <!--
     <ClCompile Include="BoundaryCondition.cpp" />
@@ -133,13 +127,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BarParameter.h" />
-    <ClInclude Include="BorderManager.hpp" />
     <ClInclude Include="BoundaryCondition.h" />
     <ClInclude Include="CircleSection.h" />
     <ClInclude Include="Coordinates.h" />
-    <ClInclude Include="EdgeBorder1.h" />
     <ClInclude Include="EigenValue.h" />
-    <ClInclude Include="ElementBorder.h" />
     <ClInclude Include="ElementBorderBound.h" />
     <ClInclude Include="FElement.h" />
     <ClInclude Include="FemDataModel.h" />
@@ -150,8 +141,6 @@
     <ClInclude Include="MeshModel.h" />
     <ClInclude Include="Nodes.h" />
     <ClInclude Include="Pressure.h" />
-    <ClInclude Include="QuadangleBorder1.h" />
-    <ClInclude Include="QuadangleBorder2.h" />
     <ClInclude Include="RectSection.h" />
     <ClInclude Include="Restraint.h" />
     <ClInclude Include="Result.h" />
@@ -163,8 +152,6 @@
     <ClInclude Include="Stress.h" />
     <ClInclude Include="SymmetricTensor3.h" />
     <ClInclude Include="Temperature.h" />
-    <ClInclude Include="TriangleBorder1.h" />
-    <ClInclude Include="TriangleBorder2.h" />
     <ClInclude Include="vector3.hpp" />
     <ClInclude Include="Vector3R.h" />
   </ItemGroup>
@@ -256,13 +243,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(PYTHONPATH)\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(PYTHONPATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(PYTHONPATH)\libs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(PYTHONPATH)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

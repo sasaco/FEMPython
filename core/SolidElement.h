@@ -15,6 +15,7 @@ using std::string;
 using std::vector;
 
 #include<Eigen/Core>
+#include<Eigen/LU>
  using namespace Eigen;
 
 class SolidElement : public FElement {
@@ -29,7 +30,7 @@ public:
 
     virtual Matrix3d jacobianMatrix(vector<FENode> p, MatrixXd sf);
 
-    virtual MatrixXd grad(vector<FENode> p, Vector3d ja, MatrixXd sf);
+    virtual MatrixXd grad(vector<FENode> p, Matrix3d ja, MatrixXd sf);
 
     MatrixXd strainMatrix(MatrixXd grad);
 

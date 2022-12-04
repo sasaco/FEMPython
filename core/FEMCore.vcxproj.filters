@@ -83,24 +83,6 @@
     <ClCompile Include="ElementManager.h">
       <Filter>ソース ファイル\Element</Filter>
     </ClCompile>
-    <ClCompile Include="ElementBorder.cpp">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClCompile>
-    <ClCompile Include="EdgeBorder1.cpp">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClCompile>
-    <ClCompile Include="TriangleBorder1.cpp">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClCompile>
-    <ClCompile Include="TriangleBorder2.cpp">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClCompile>
-    <ClCompile Include="QuadangleBorder1.cpp">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClCompile>
-    <ClCompile Include="QuadangleBorder2.cpp">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClCompile>
     <ClCompile Include="FileIO.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -193,27 +175,6 @@
     </ClInclude>
     <ClInclude Include="ElementBorderBound.h">
       <Filter>ソース ファイル\BoundaryCondition</Filter>
-    </ClInclude>
-    <ClInclude Include="ElementBorder.h">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClInclude>
-    <ClInclude Include="EdgeBorder1.h">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClInclude>
-    <ClInclude Include="TriangleBorder1.h">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClInclude>
-    <ClInclude Include="TriangleBorder2.h">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClInclude>
-    <ClInclude Include="QuadangleBorder1.h">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClInclude>
-    <ClInclude Include="QuadangleBorder2.h">
-      <Filter>ソース ファイル\Border</Filter>
-    </ClInclude>
-    <ClInclude Include="BorderManager.hpp">
-      <Filter>ソース ファイル\Border</Filter>
     </ClInclude>
     <ClInclude Include="Coordinates.h">
       <Filter>ソース ファイル\Coordinates</Filter>
