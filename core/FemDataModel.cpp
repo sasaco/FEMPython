@@ -27,7 +27,7 @@ void FemDataModel::clear(){
 void FemDataModel::init(){
 
   solver.method= solver.ILUCG_METHOD;   // デフォルトは反復解法
-  auto mats= materials;
+  auto mats = materials;
 
   // mats.sort(compareLabel);
   sort(mats.begin(), mats.end(),

@@ -65,9 +65,6 @@ FemDataModel readFemModel(string s)
         
         vector<string> columns = split(lines[i], ' ');
 
-        //char del = ' ';
-        //vector<string> ss = split(s[i], del);
-
         if (columns.size() > 0) {
 
             string keyWord = columns[0];
@@ -229,10 +226,12 @@ FemDataModel readFemModel(string s)
     initObject();
     if (res.length > 0) {
         readFemResult(res);
-    }
+    } else {
     */
-
     // model.calculate();
+    // }
+    
+
     return model;
 }
 

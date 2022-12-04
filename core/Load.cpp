@@ -52,7 +52,7 @@ string Load::toString(vector<FENode> nodes) {
 
     string s = format("Load\t{}\t{}", nodes[node].label, globalX);
 
-    s += '\t' + coords.label;
+    s += '\t' + coords;
 
     return s;
 };
