@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "ElementBorderBound.h"
-#include "ElementManager.h"
 
 #include <string>
 #include <vector>

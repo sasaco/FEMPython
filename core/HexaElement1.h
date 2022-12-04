@@ -17,7 +17,6 @@ private:
 
 
 public:
-
     HexaElement1(int label, int material, vector<int> nodes);
 
     string getName() override;

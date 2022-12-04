@@ -12,6 +12,7 @@
 using std::vector;
 
 #include<Eigen/Core>
+#include<Eigen/LU>
 using namespace Eigen;
 
 class ShellElement : public FElement {
@@ -31,13 +32,13 @@ public:
 
     Matrix3d jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3 n, double t);
 
-    Vector3d jacobInv(Matrix3d ja, MatrixXd d);
+    Matrix3d jacobInv(Matrix3d ja, MatrixXd d);
 
-    MatrixXd grad(vector<FENode> p, Vector3d ja, MatrixXd sf, Matrix3d d, double t);
+    MatrixXd grad(vector<FENode> p, Matrix3d ja, MatrixXd sf, Matrix3d d, double t);
 
-    MatrixXd strainMatrix1(Vector3d ja, MatrixXd sf, Matrix3d d);
+    MatrixXd strainMatrix1(Matrix3d ja, MatrixXd sf, Matrix3d d);
 
-    MatrixXd strainMatrix(Vector3d ja, MatrixXd sf, Matrix3d d, double zeta, double t);
+    MatrixXd strainMatrix(Matrix3d ja, MatrixXd sf, Matrix3d d, double zeta, double t);
 
     virtual MatrixXd shapeFunction(double xsi, double eta) = 0;
 

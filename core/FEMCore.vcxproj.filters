@@ -140,6 +140,15 @@
     <ClCompile Include="ElementManager.cpp">
       <Filter>ソース ファイル\Element</Filter>
     </ClCompile>
+    <ClCompile Include="HexaElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="ShellElement.cpp">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClCompile>
+    <ClCompile Include="BarElement.cpp">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="setup.py" />
@@ -229,6 +238,18 @@
     </ClInclude>
     <ClInclude Include="Section.h">
       <Filter>ソース ファイル\Section</Filter>
+    </ClInclude>
+    <ClInclude Include="HexaElement1.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="BorderManager.hpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="ShellElement.h">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClInclude>
+    <ClInclude Include="BarElement.h">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

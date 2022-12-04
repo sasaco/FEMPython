@@ -8,42 +8,41 @@
 HexaElement1::HexaElement1(int label, int material, vector<int> nodes) : 
     SolidElement(label, material, nodes, HEXA1_NODE, HEXA1_INT) {
 
-    MatrixXd h1n = MatrixXd::Zero(8, 3);
-    h1n << -1, -1, -1,
-            1, -1, -1,
-            1,  1, -1,
-            -1,  1, -1,
-            -1, -1,  1,
-            1, -1,  1,
-            1,  1,  1,
-            -1,  1,  1;
-    HEXA1_NODE = h1n;
+    //MatrixXd h1n;// = MatrixXd::Zero(8, 3);
+    HEXA1_NODE << -1, -1, -1,
+                   1, -1, -1,
+                   1,  1, -1,
+                  -1,  1, -1,
+                  -1, -1,  1,
+                   1, -1,  1,
+                   1,  1,  1,
+                  -1,  1,  1;
+    //HEXA1_NODE = h1n;
 
     // 六面体1次要素の積分点のξ,η,ζ座標,重み係数
-    MatrixXd h1I = MatrixXd::Zero(8, 4);
+    // MatrixXd h1I;// = MatrixXd::Zero(8, 4);
+    HEXA1_INT << FElement::GX2[0], FElement::GX2[0], FElement::GX2[0], 1,
+                 FElement::GX2[1], FElement::GX2[0], FElement::GX2[0], 1,
+                 FElement::GX2[0], FElement::GX2[1], FElement::GX2[0], 1,
+                 FElement::GX2[1], FElement::GX2[1], FElement::GX2[0], 1,
+                 FElement::GX2[0], FElement::GX2[0], FElement::GX2[1], 1,
+                 FElement::GX2[1], FElement::GX2[0], FElement::GX2[1], 1,
+                 FElement::GX2[0], FElement::GX2[1], FElement::GX2[1], 1,
+                 FElement::GX2[1], FElement::GX2[1], FElement::GX2[1], 1;
 
-    h1I << FElement::GX2[0], FElement::GX2[0], FElement::GX2[0], 1,
-            FElement::GX2[1], FElement::GX2[0], FElement::GX2[0], 1,
-            FElement::GX2[0], FElement::GX2[1], FElement::GX2[0], 1,
-            FElement::GX2[1], FElement::GX2[1], FElement::GX2[0], 1,
-            FElement::GX2[0], FElement::GX2[0], FElement::GX2[1], 1,
-            FElement::GX2[1], FElement::GX2[0], FElement::GX2[1], 1,
-            FElement::GX2[0], FElement::GX2[1], FElement::GX2[1], 1,
-            FElement::GX2[1], FElement::GX2[1], FElement::GX2[1], 1;
-
-    HEXA1_INT = h1I;
+    // HEXA1_INT = h1I;
 
     // 六面体1次要素の質量マトリックス係数
-    MatrixXd h1mb = MatrixXd::Zero(8, 8);
+    //MatrixXd h1mb = MatrixXd::Zero(8, 8);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             double s = abs(HEXA1_NODE(i, 0) - HEXA1_NODE(j, 0)) +
                 abs(HEXA1_NODE(i, 1) - HEXA1_NODE(j, 1)) +
                 abs(HEXA1_NODE(i, 2) - HEXA1_NODE(j, 2));
-            h1mb(i, j) = pow(0.5, 0.5 * s) / 27;
+            HEXA1_MASS_BASE(i, j) = pow(0.5, 0.5 * s) / 27;
         }
     }
-    HEXA1_MASS_BASE = h1mb;
+    //HEXA1_MASS_BASE = h1mb;
 
 }
 

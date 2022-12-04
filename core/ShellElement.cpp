@@ -46,13 +46,15 @@ Matrix3d ShellElement::jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3 n, 
     result(0, 2) = 0.5 * t * n[0];
     result(1, 2) = 0.5 * t * n[1];
     result(2, 2) = 0.5 * t * n[2];
-};
+
+    return result;
+}
 
 
 // 逆ヤコビ行列を返す
 // ja - ヤコビ行列
 // d - 方向余弦マトリックス
-Vector3d ShellElement::jacobInv(Matrix3d ja, MatrixXd d) {
+Matrix3d ShellElement::jacobInv(Matrix3d ja, MatrixXd d) {
 
     Matrix3d jd(3, 3);
     jd(0, 0) = ja(0, 0) * d(0, 0) + ja(1, 0) * d(1, 0) + ja(2, 0) * d(2, 0);
@@ -77,18 +79,19 @@ Vector3d ShellElement::jacobInv(Matrix3d ja, MatrixXd d) {
 // sf - 形状関数行列
 // d - 方向余弦マトリックス
 // t - 要素厚さ
-MatrixXd ShellElement::grad(vector<FENode> p, Vector3d ja, MatrixXd sf, Matrix3d d, double t) {
+MatrixXd ShellElement::grad(vector<FENode> p, Matrix3d ja, MatrixXd sf, Matrix3d d, double t) {
     
     int count = nodeCount();
-    Vector3d ji = jacobInv(ja, d);
     MatrixXd result(count, 3);
+
+    Matrix3d ji = jacobInv(ja, d);
 
     for (int i = 0; i < count; i++) {
         double dndxsi = sf(i, 1);
         double dndeta = sf(i, 2);
-        result(i, 0) = ji[0] * dndxsi + ji[3] * dndeta;
-        result(i, 1) = ji[1] * dndxsi + ji[4] * dndeta;
-        result(i, 2) = ji[2] * dndxsi + ji[5] * dndeta;
+        result(i, 0) = ji(0, 0) * dndxsi + ji(1, 0) * dndeta;
+        result(i, 1) = ji(0, 1) * dndxsi + ji(1, 1) * dndeta;
+        result(i, 2) = ji(0, 2) * dndxsi + ji(1, 2) * dndeta;
     }
 
     return result;
@@ -99,16 +102,18 @@ MatrixXd ShellElement::grad(vector<FENode> p, Vector3d ja, MatrixXd sf, Matrix3d
 // ja - ヤコビ行列
 // sf - 形状関数行列
 // d - 方向余弦マトリックス
-MatrixXd ShellElement::strainMatrix1(Vector3d ja, MatrixXd sf, Matrix3d d) {
+MatrixXd ShellElement::strainMatrix1(Matrix3d ja, MatrixXd sf, Matrix3d d) {
 
     int count = nodeCount();
     MatrixXd result(count, 4);
-    Vector3d ji = jacobInv(ja, d);
+
+    Matrix3d ji = jacobInv(ja, d);
+
     for (int i = 0; i < count; i++) {
         for (int j = 0; j < 3; j++) {
-            result(i, j) = ji[j] * sf(i, 1) + ji[j + 3] * sf(i, 2);
+            result(i, j) = ji(0, j) * sf(i, 1) + ji(1, j) * sf(i, 2);
         }
-        result(i, 3) = ji[8] * sf(i, 0);
+        result(i, 3) = ji(1, 1) * sf(i, 0);
     }
 
     return result;
@@ -122,13 +127,14 @@ MatrixXd ShellElement::strainMatrix1(Vector3d ja, MatrixXd sf, Matrix3d d) {
 // d - 方向余弦マトリックス
 // zeta - 節点のζ座標
 // t - 要素厚さ
-MatrixXd ShellElement::strainMatrix(Vector3d ja, MatrixXd sf, Matrix3d d, double zeta, double t) {
+MatrixXd ShellElement::strainMatrix(Matrix3d ja, MatrixXd sf, Matrix3d d, double zeta, double t) {
     
+    int count = nodeCount();
+    MatrixXd result = MatrixXd::Zero(6 * count, 5);
+
     MatrixXd b = strainMatrix1(ja, sf, d);
     double z = 0.5 * t * zeta;
-    int count = nodeCount();
     MatrixXd m1 = MatrixXd::Zero(5, 6);
-    MatrixXd result = MatrixXd::Zero(6 * count, 5);
 
     for (int i = 0; i < count; i++) {
         m1(0, 0) = b(i, 0);
@@ -170,14 +176,14 @@ MatrixXd ShellElement::strainMatrix(Vector3d ja, MatrixXd sf, Matrix3d d, double
 // t - 要素厚さ
 MatrixXd ShellElement::shapePart(vector<FENode> p, Vector3d x, double w, double t) {
 
+    int count = nodeCount();
+    MatrixXd result(count, count);
+
     MatrixXd sf = shapeFunction(x[0], x[1]);
     Vector3 n = normalVector(p);
-    Vector3d ja = jacobianMatrix(p, sf, n, t);
-    int count = nodeCount();
+    Matrix3d ja = jacobianMatrix(p, sf, n, t);
     double det = ja.determinant();
     double coef = 2 * w * abs(det);
-
-    MatrixXd result(count, count);
 
     for (int i = 0; i < count; i++) {
         vector<double> matr;
@@ -198,16 +204,16 @@ MatrixXd ShellElement::shapePart(vector<FENode> p, Vector3d x, double w, double 
 // t - 要素厚さ
 MatrixXd ShellElement::gradPart(vector<FENode> p, Vector3d x, double w, double t) {
 
+    int count = nodeCount();
+    MatrixXd result(count, count);
+
     MatrixXd sf = shapeFunction(x[0], x[1]);
     Vector3 n = normalVector(p);
-    Vector3d ja = jacobianMatrix(p, sf, n, t);
+    Matrix3d ja = jacobianMatrix(p, sf, n, t);
     MatrixXd d = dirMatrix(p);
     MatrixXd gr = grad(p, ja, sf, d, t);
-    int count = nodeCount();
     double det = ja.determinant();
     double coef = 2 * w * abs(det);
-
-    MatrixXd result(count, count);
 
     for (int i = 0; i < count; i++) {
         vector<double> matr;
@@ -373,7 +379,7 @@ VectorXd ShellElement::strainPart(vector<FENode> p, VectorXd v, Vector3 n, Matri
     MatrixXd sf = shapeFunction(xsi, eta);
     Matrix3d ja = jacobianMatrix(p, sf, n, t);
     MatrixXd sm = strainMatrix(ja, sf, d, zeta, t);
-    VectorXd result = v * sm;
+    VectorXd result =  v * sm;
     return result;
 };
 
