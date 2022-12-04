@@ -91,7 +91,7 @@ MatrixXd SolidElement::strainMatrix(MatrixXd grad) {
 // w - 重み係数
 MatrixXd SolidElement::shapePart(vector<FENode> p, VectorXd x, double w) {
 
-    MatrixXd sf= shapeFunction(x[0], x[1], x[2]);
+    MatrixXd sf= shapeFunction(x(0), x(1), x(2));
     MatrixXd ja = jacobianMatrix(p, sf);
     int count = nodeCount();
     double det = ja.determinant();
@@ -116,7 +116,7 @@ MatrixXd SolidElement::shapePart(vector<FENode> p, VectorXd x, double w) {
 // w - 重み係数
 MatrixXd SolidElement::gradPart(vector<FENode> p, VectorXd x, double w) {
 
-    MatrixXd sf = shapeFunction(x[0], x[1], x[2]);
+    MatrixXd sf = shapeFunction(x(0), x(1), x(2));
     MatrixXd ja = jacobianMatrix(p, sf);
     MatrixXd gr = grad(p, ja, sf);
     int count = nodeCount();
@@ -304,7 +304,7 @@ tuple<vector<Strain>, vector<Stress>, vector<double>>
 // x - ξ,η,ζ座標
 VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, VectorXd x) {
 
-    MatrixXd sf = shapeFunction(x[0], x[1], x[2]);
+    MatrixXd sf = shapeFunction(x(0), x(1), x(2));
     MatrixXd ja = jacobianMatrix(p, sf);
     MatrixXd gr = grad(p, ja, sf);
     MatrixXd sm = strainMatrix(gr);

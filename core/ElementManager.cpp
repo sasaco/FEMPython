@@ -84,6 +84,8 @@ vector<int> ElementManager::nodes() {
     else if (key == "TriElement1") {
         //return _TriElement1.nodes;
     }
+    vector<int> empty;
+    return empty;
 }
 
 int ElementManager::label() {
@@ -120,6 +122,7 @@ int ElementManager::label() {
     else if (key == "TriElement1") {
         //return _TriElement1.label;
     }
+    return -1;
 }
 
 int ElementManager::material() {
@@ -156,6 +159,7 @@ int ElementManager::material() {
     else if (key == "TriElement1") {
         //return _TriElement1.material;
     }
+    return -1;
 }
 void ElementManager::setMaterial(int mat) {
     if (key == "BEBarElement") {

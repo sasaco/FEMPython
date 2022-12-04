@@ -182,7 +182,7 @@ MatrixXd ShellElement::shapePart(vector<FENode> p, VectorXd x, double w, double 
     int count = nodeCount();
     MatrixXd result(count, count);
 
-    MatrixXd sf = shapeFunction(x[0], x[1]);
+    MatrixXd sf = shapeFunction(x(0), x(1));
     Vector3 n = normalVector(p);
     MatrixXd ja = jacobianMatrix(p, sf, n, t);
     double det = ja.determinant();
@@ -210,7 +210,7 @@ MatrixXd ShellElement::gradPart(vector<FENode> p, VectorXd x, double w, double t
     int count = nodeCount();
     MatrixXd result(count, count);
 
-    MatrixXd sf = shapeFunction(x[0], x[1]);
+    MatrixXd sf = shapeFunction(x(0), x(1));
     Vector3 n = normalVector(p);
     MatrixXd ja = jacobianMatrix(p, sf, n, t);
     MatrixXd d = dirMatrix(p);
@@ -449,12 +449,12 @@ tuple<Strain, Stress, double, Strain, Stress, double>
 // s - 歪ベクトル
 Strain ShellElement::toStrain(VectorXd s) {
     VectorXd ss(6);
-    ss[0] = s[0];
-    ss[1] = s[1];
-    ss[2] = 0;
-    ss[3] = s[2];
-    ss[4] = s[3];
-    ss[5] = s[4];
+    ss(0) = s(0);
+    ss(1) = s(1);
+    ss(2) = 0;
+    ss(3) = s(2);
+    ss(4) = s(3);
+    ss(5) = s(4);
     return Strain(ss);
 };
 
@@ -462,12 +462,12 @@ Strain ShellElement::toStrain(VectorXd s) {
 // s - 歪ベクトル
 Stress ShellElement::toStress(VectorXd s) {
     VectorXd ss(6);
-    ss[0] = s[0];
-    ss[1] = s[1];
-    ss[2] = 0;
-    ss[3] = s[2];
-    ss[4] = s[3];
-    ss[5] = s[4];
+    ss(0) = s(0);
+    ss(1) = s(1);
+    ss(2) = 0;
+    ss(3) = s(2);
+    ss(4) = s(3);
+    ss(5) = s(4);
     return Stress(ss);
 };
 

@@ -21,7 +21,7 @@ private:
 public:
     int node;
     int coords;
-    MatrixXd globalX;
+    double globalX[6];
 
     Load(vector<string> columns);
     Load(int _node, int _coords, double x, double y, double z, double rx, double ry, double rz);

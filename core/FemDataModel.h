@@ -10,7 +10,7 @@
 
 //--------------------------------------------------------------------//
 // FEM データモデル
-//#include <format>
+#include <format>
 #include <numbers>
 #include <vector>
 using namespace std;

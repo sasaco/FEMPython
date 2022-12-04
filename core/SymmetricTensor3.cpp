@@ -3,12 +3,12 @@
 // ３次元対称テンソル
 // s - 成分
 SymmetricTensor3::SymmetricTensor3(VectorXd s) {
-    xx = s[0];
-    yy = s[1];
-    zz = s[2];
-    xy = s[3];
-    yz = s[4];
-    zx = s[5];
+    xx = s(0);
+    yy = s(1);
+    zz = s(2);
+    xy = s(3);
+    yz = s(4);
+    zx = s(5);
 };
 
 // テンソルをベクトルとして返す

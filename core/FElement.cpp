@@ -38,7 +38,7 @@ MatrixXd FElement::stiffPart(MatrixXd d, MatrixXd b, double coef) {
 
         VectorXd bi = b.row(i);
         for (int j = 0; j < size2; j++) {
-            a[j] = coef * bi.dot(d.row(j));
+            a(j) = coef * bi.dot(d.row(j));
         }
 
         for (int j = 0; j < size1; j++) {
@@ -67,7 +67,7 @@ VectorXd FElement::toArray(vector<Vector3R> u, int dof) {
 
         for (int j = 0; j < dof; j++) {
             int index = i + j;
-            result[index] = ux[j];
+            result(index) = ux[j];
         }
     }
 
@@ -86,10 +86,10 @@ VectorXd FElement::toLocalArray(vector<Vector3R> u, MatrixXd d) {
     for (int i = 0; i < 2; i++) {
         double* ux = u[i].x;
         for (int j = 0; j < 3; j++) {
-            v[index] = d(0, j) * ux[0] + d(1, j) * ux[1] + d(2, j) * ux[2];
+            v(index) = d(0, j) * ux[0] + d(1, j) * ux[1] + d(2, j) * ux[2];
         }
         for (int j = 0; j < 3; j++) {
-            v[index] = d(0, j) * ux[3] + d(1, j) * ux[4] + d(2, j) * ux[5];
+            v(index) = d(0, j) * ux[3] + d(1, j) * ux[4] + d(2, j) * ux[5];
         }
     }
 
@@ -253,7 +253,7 @@ void FElement::toDir3(MatrixXd d, MatrixXd k) {
                 VectorXd ai = a.row(i1);
                 VectorXd ki = k.row(i + i1);
                 for (int j1 = 0; j1 < 3; j1++) {
-                    ki[j + j1] = ai.dot(d.row(j1));
+                    ki(j + j1) = ai.dot(d.row(j1));
                 }
             }
         }

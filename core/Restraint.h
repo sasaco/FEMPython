@@ -22,7 +22,7 @@ public:
     int node;
     int coords;
     bool rest[6];
-    MatrixXd globalX;
+    double globalX[6];
 
     Restraint(vector<string> columns);
     

@@ -99,8 +99,7 @@ void FemDataModel::resetNodes(vector<int> map, ElementManager s) {
             nodes[i] = map[nodes[i]];
         }
         else {
-            //string message = format("節点番号{}は存在しません", nodes[i]);
-            //throw (message);
+            throw (format("節点番号{}は存在しません", nodes[i]));
         }
     }
 }
@@ -113,8 +112,7 @@ int FemDataModel::resetNodePointer(vector<int> map, int node) {
         return map[node];
     }
     else {
-        //string message = format("節点番号{}は存在しません", node);
-        //throw (message);
+        throw (format("節点番号{}は存在しません", node));
     }
 }
 
@@ -126,8 +124,7 @@ int FemDataModel::resetElementPointer(vector<int> map, int element) {
         return map[element];
     }
     else {
-        //string message = format("要素番号{}は存在しません", element);
-        //throw (message);
+        throw (format("要素番号{}は存在しません", element));
     }
 }
 
@@ -149,8 +146,7 @@ void FemDataModel::resetMaterialLabel(){
         elements[i].setMaterial(map[mat]);
     }
     else{
-        //string message = format("材料番号{}は存在しません", mat);
-        //throw (message);
+        throw (format("材料番号{}は存在しません", mat));
     }
   }
 }
@@ -184,8 +180,7 @@ void FemDataModel::resetParameterLabel(){
       	        shellbars++;
             }
             else{
-                //string message = format("パラメータ番号{}は存在しません", param);
-                //throw (message);
+                throw (format("パラメータ番号{}は存在しません", param));
             }
         }
         else if(elements[i].isBar()){
@@ -196,8 +191,7 @@ void FemDataModel::resetParameterLabel(){
             shellbars++;
             }
             else{
-                //string message = format("パラメータ番号{}は存在しません", param);
-                //throw (message);
+                throw (format("パラメータ番号{}は存在しません", param));
             }
         }
     }
@@ -248,11 +242,10 @@ void FemDataModel::resetCoordinatesPointer(vector<Coordinates> map, Restraint bc
 
     if (hasFind) {
         bc.coords = cod.label;
-        bc.globalX = cod.toGlobal(bc.x);
+        cod.toGlobal(bc.x, bc.globalX);
     }
     else {
-        //string message = format("局所座標系番号{}存在しません", bc.coords);
-        //throw (message);
+        throw (format("局所座標系番号{}存在しません", bc.coords));
     }
 }
 void FemDataModel::resetCoordinatesPointer(vector<Coordinates> map, Load bc) {
@@ -272,11 +265,10 @@ void FemDataModel::resetCoordinatesPointer(vector<Coordinates> map, Load bc) {
 
     if (hasFind) {
         bc.coords = cod.label;
-        bc.globalX = cod.toGlobal(bc.x);
+        cod.toGlobal(bc.x, bc.globalX);
     }
     else {
-        //string message = format("局所座標系番号{}存在しません", bc.coords);
-        //throw (message);
+        throw (format("局所座標系番号{}存在しません", bc.coords));
     }
 }
 
