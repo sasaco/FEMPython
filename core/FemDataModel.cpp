@@ -134,7 +134,7 @@ void FemDataModel::resetMaterialLabel(){
   if(materials.size()==0){
     materials.push_back(Material(1, 1, 0.3, 1, 1, 1));
   }
-  vector<int> map;
+  vector<int> map(materials.size());
   auto elements = mesh.elements;
 
   for(int i=0;i<materials.size();i++){
