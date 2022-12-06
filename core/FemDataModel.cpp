@@ -56,7 +56,8 @@ void FemDataModel::reNumbering(){
     auto nodes = mesh.nodes;
     auto elements = mesh.elements;
 
-    vector<int> map1(nodes.size());
+    //vector<int> map1(nodes.size());
+    map<int, int> map1;
 
     for(int i=0;i<nodes.size();i++){
         map1[nodes[i].label]=i;
@@ -92,10 +93,10 @@ void FemDataModel::reNumbering(){
 // 節点集合の節点ラベルを再設定する
 // map - ラベルマップ
 // s - 節点集合
-void FemDataModel::resetNodes(vector<int> map, ElementManager s) {
+void FemDataModel::resetNodes(map<int, int> map, ElementManager s) {
     vector<int> nodes = s.nodes();
     for (int i = 0; i < nodes.size(); i++) {
-        if (std::count(map.begin(), map.end(), nodes[i])) {
+        if (map.count(nodes[i])) {
             nodes[i] = map[nodes[i]];
         }
         else {

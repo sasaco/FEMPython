@@ -13,6 +13,7 @@
 #include <format>
 #include <numbers>
 #include <vector>
+#include <map>
 using namespace std;
 using std::vector;
 
@@ -30,7 +31,7 @@ private:
     // Method
     void reNumbering();
 
-    void resetNodes(vector<int> map, ElementManager s);
+    void resetNodes(map<int, int> map, ElementManager s);
     int resetNodePointer(vector<int> map, int node);
     int resetElementPointer(vector<int> map, int element);
 
