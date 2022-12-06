@@ -68,32 +68,32 @@ void FemDataModel::reNumbering(){
     }
 
     for(int i=0;i<bc.restraints.size();i++){
-        bc.restraints[i].node = resetNodePointer(map1, bc.restraints[i].node);
+        resetNodePointer(map1, bc.restraints[i].node);
     }
     for(int i=0;i<bc.loads.size();i++){
-        bc.loads[i].node = resetNodePointer(map1, bc.loads[i].node);
+        resetNodePointer(map1, bc.loads[i].node);
     }
     for(int i=0;i<bc.temperature.size();i++){
-        bc.temperature[i].node = resetNodePointer(map1, bc.temperature[i].node);
+        resetNodePointer(map1, bc.temperature[i].node);
     }
 
-    vector<int> map2(elements.size());
+    map<int, int> map2;
     for(int i=0;i<elements.size();i++){
         map2[elements[i].label()] = i;
     }
 
     for(int i=0;i<bc.pressures.size();i++){
-        bc.pressures[i].element = resetElementPointer(map2,bc.pressures[i].element);
+        resetElementPointer(map2, bc.pressures[i].element);
     }
     for(int i=0;i<bc.htcs.size();i++){
-        bc.htcs[i].element = resetElementPointer(map2,bc.htcs[i].element);
+        resetElementPointer(map2, bc.htcs[i].element);
     }
 }
 
 // 節点集合の節点ラベルを再設定する
 // map - ラベルマップ
 // s - 節点集合
-void FemDataModel::resetNodes(map<int, int> map, ElementManager s) {
+void FemDataModel::resetNodes(map<int, int> map, ElementManager &s) {
     vector<int> nodes = s.nodes();
     for (int i = 0; i < nodes.size(); i++) {
         if (map.count(nodes[i])) {
@@ -108,9 +108,9 @@ void FemDataModel::resetNodes(map<int, int> map, ElementManager s) {
 // 節点ポインタを再設定する
 // map - ラベルマップ
 // bc - 境界条件
-int FemDataModel::resetNodePointer(vector<int> map, int node) {
-    if (std::count(map.begin(), map.end(), node)) {
-        return map[node];
+void FemDataModel::resetNodePointer(map<int, int> map, int &node) {
+    if ( map.count(node) > 0) {
+        node = map[node];
     }
     else {
         throw (format("節点番号{}は存在しません", node));
@@ -120,9 +120,9 @@ int FemDataModel::resetNodePointer(vector<int> map, int node) {
 // 要素ポインタを再設定する
 // map - ラベルマップ
 // bc - 境界条件
-int FemDataModel::resetElementPointer(vector<int> map, int element) {
-    if (std::count(map.begin(), map.end(), element)) {
-        return map[element];
+void FemDataModel::resetElementPointer(map<int, int> map, int &element) {
+    if (map.count(element) > 0) {
+        element = map[element];
     }
     else {
         throw (format("要素番号{}は存在しません", element));
@@ -160,8 +160,8 @@ void FemDataModel::resetParameterLabel(){
         return;
     }
 
-    vector<int> map1(shellParams.size());
-    vector<int> map2(barParams.size());
+    map<int, int> map1;
+    map<int, int> map2;
     auto elements = mesh.elements;
     int shellbars = 0;
 
@@ -176,7 +176,7 @@ void FemDataModel::resetParameterLabel(){
 
         if(elements[i].isShell()){
             int param = elements[i].param();
-            if (std::count(map1.begin(), map1.end(), param)) {
+            if (map1.count(param) > 0) {
       	        elements[i].setParam(map1[param]);
       	        shellbars++;
             }
@@ -187,7 +187,7 @@ void FemDataModel::resetParameterLabel(){
         else if(elements[i].isBar()){
             int param = elements[i].param();
 
-            if (std::count(map2.begin(), map2.end(), param)) {
+            if (map2.count(param) > 0) {
             elements[i].setParam(map2[param]);
             shellbars++;
             }
@@ -210,7 +210,7 @@ void FemDataModel::resetCoordinates(){
     return;
   }
 
-  vector<Coordinates> map(coordinates.size());
+  map<int, Coordinates> map;
   for(int i=0;i<coordinates.size();i++){
     map[coordinates[i].label]=coordinates[i];
   }
@@ -226,7 +226,7 @@ void FemDataModel::resetCoordinates(){
 // 局所座標系を再設定する
 // map - ラベルマップ
 // bc - 境界条件
-void FemDataModel::resetCoordinatesPointer(vector<Coordinates> map, Restraint bc) {
+void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, Restraint &bc) {
     if (bc.coords < 0) {
         // 何もしない
         return;
@@ -249,7 +249,7 @@ void FemDataModel::resetCoordinatesPointer(vector<Coordinates> map, Restraint bc
         throw (format("局所座標系番号{}存在しません", bc.coords));
     }
 }
-void FemDataModel::resetCoordinatesPointer(vector<Coordinates> map, Load bc) {
+void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, Load &bc) {
     if (bc.coords < 0) {
         // 何もしない
         return;

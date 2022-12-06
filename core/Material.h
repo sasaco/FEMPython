@@ -48,6 +48,7 @@ public:
     Eigen::Matrix<double, 6, 6> m3d;
 
     Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
+    Material(const Material& mat);
 
     void matrix2Dstress();
     void matrixShell();

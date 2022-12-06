@@ -56,8 +56,8 @@ FemDataModel readFemModel(string s)
     auto model = FemDataModel();
     model.clear();
     
-    auto mesh = model.mesh;
-    auto bc = model.bc;
+    MeshModel mesh = model.mesh;
+    BoundaryCondition bc = model.bc;
 
     vector<string> res;
 

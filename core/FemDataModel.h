@@ -31,16 +31,16 @@ private:
     // Method
     void reNumbering();
 
-    void resetNodes(map<int, int> map, ElementManager s);
-    int resetNodePointer(vector<int> map, int node);
-    int resetElementPointer(vector<int> map, int element);
+    void resetNodes(map<int, int> map, ElementManager &s);
+    void resetNodePointer(map<int, int> map, int &node);
+    void resetElementPointer(map<int, int> map, int &element);
 
     void resetMaterialLabel();
     void resetParameterLabel();
     void resetCoordinates();
 
-    void resetCoordinatesPointer(vector<Coordinates> map, Restraint bc);
-    void resetCoordinatesPointer(vector<Coordinates> map, Load bc);
+    void resetCoordinatesPointer(map<int, Coordinates> map, Restraint &bc);
+    void resetCoordinatesPointer(map<int, Coordinates> map, Load &bc);
 
 
 public:
