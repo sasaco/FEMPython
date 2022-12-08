@@ -7,13 +7,17 @@
 // param - 梁パラメータのインデックス
 // nodes - 節点番号
 // axis - 断面基準方向ベクトル
+BarElement::BarElement() : FElement() {
+    isBar = true;
+    param = -1;
+}
 BarElement::BarElement(int label, int material, int _param, vector<int> nodes, Vector3 _axis) :
     FElement(label, material, nodes) {
     param = _param;
     isBar = true;
     axis = _axis;
     axis.normalize();
-};
+}
 
 // 剛性マトリックスを返す
 // p - 要素節点
@@ -23,7 +27,7 @@ MatrixXd BarElement::stiffnessMatrix(vector<FENode> p, Material material, Sectio
     
     MatrixXd kk = MatrixXd::Zero(12, 12);
     double l = p[0].distanceTo(p[1]);
-    Matrix3d d = dirMatrix(p, axis);
+    MatrixXd d = dirMatrix(p, axis);
 
     double kx = material.ee * sect.area / l;
     double kt = material.gg * sect.ip / l;
@@ -83,7 +87,7 @@ MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, Section sect) {
 MatrixXd BarElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
     
     double l2 = p[0].distanceToSquared(p[1]);
-    Matrix3d d = dirMatrix(p, axis);
+    MatrixXd d = dirMatrix(p, axis);
     VectorXd v = toLocalArray(u, d);
     MatrixXd kk = MatrixXd::Zero(12, 12);
     double sx = material.ee * sect.area * (v[6] - v[0]) / l2;
@@ -107,7 +111,7 @@ tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Str
     BarElement::strainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
 
     double l = p[0].distanceTo(p[1]);
-    Matrix3d d = dirMatrix(p, axis);
+    MatrixXd d = dirMatrix(p, axis);
     VectorXd v = toLocalArray(u, d);
 
     vector<Strain> strain1;
@@ -166,7 +170,7 @@ tuple<Strain, Stress, double, Strain, Stress, double>
     BarElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
 
     double l = p[0].distanceTo(p[1]);
-    Matrix3d d = dirMatrix(p, axis);
+    MatrixXd d = dirMatrix(p, axis);
     VectorXd v = toLocalArray(u, d);
     double ex = (v[6] - v[0]) / l;
     double thd = (v[9] - v[3]) / l;
@@ -211,16 +215,18 @@ tuple<Strain, Stress, double, Strain, Stress, double>
 // p - 節点
 string BarElement::toString(vector<Material> materials, vector<BarParameter> params, vector<FENode> p) {
 
-    Material mat = materials[material];
-    BarParameter par = params[param];
+    //Material mat = materials[material];
+    //BarParameter par = params[param];
 
-    string s = format("{}\t{}\t{}\t{}",
-        getName(), label, mat.label, par.label);
+    //string s = format("{}\t{}\t{}\t{}",
+    //    getName(), label, mat.label, par.label);
 
-    for (int i = 0; i < nodes.size(); i++) {
-        FENode n = p[nodes[i]];
-        s += '\t' + n.label;
-    }
+    //for (int i = 0; i < nodes.size(); i++) {
+    //    FENode n = p[nodes[i]];
+    //    s += '\t' + n.label;
+    //}
 
-    return s;
+    //return s;
+
+    return "BarElement";
 }

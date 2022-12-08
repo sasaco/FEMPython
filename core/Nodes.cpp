@@ -1,5 +1,6 @@
 ﻿#include "Nodes.h"
 
+Nodes::Nodes() {}
 Nodes::Nodes(vector<int>_nodes) {
     nodes = _nodes;
 }

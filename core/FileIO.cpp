@@ -56,17 +56,14 @@ FemDataModel readFemModel(string s)
     auto model = FemDataModel();
     model.clear();
     
-    auto mesh = model.mesh;
-    auto bc = model.bc;
+    MeshModel mesh = model.mesh;
+    BoundaryCondition bc = model.bc;
 
     vector<string> res;
 
     for (int i = 0; i < lines.size(); i++) {
         
         vector<string> columns = split(lines[i], ' ');
-
-        //char del = ' ';
-        //vector<string> ss = split(s[i], del);
 
         if (columns.size() > 0) {
 
@@ -155,8 +152,8 @@ FemDataModel readFemModel(string s)
             }
             */
             else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
-                // auto elem = ElementManager("HexaElement1", columns);
-                // mesh.elements.push_back(elem);
+                 auto elem = ElementManager("HexaElement1", columns);
+                 mesh.elements.push_back(elem);
             }
             /*
             else if ((keyWord == "hexaelement1wt") && (columns.size() > 10)) {
@@ -175,14 +172,17 @@ FemDataModel readFemModel(string s)
                 mesh.elements.push_back(new HexaElement2
                 (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 20)));
             }
+            */
             // ‹«ŠEðŒ
             else if ((keyWord == "restraint") && (columns.size() > 7)) {
-                var rest = readRestraint(ss);
-                if (rest != = null) bc.restraints.push_back(rest);
+                Restraint rest = Restraint(columns);
+                bc.restraints.push_back(rest);
             }
             else if ((keyWord == "load") && (columns.size() > 4)) {
-                bc.loads.push_back(readLoad(ss));
+                Load load = Load(columns);
+                bc.loads.push_back(load);
             }
+            /*
             else if ((keyWord == "pressure") && (columns.size() > 3)) {
                 bc.pressures.push
                 (new Pressure(stoi(columns[1]), columns[2].toUpperCase(),
@@ -226,10 +226,12 @@ FemDataModel readFemModel(string s)
     initObject();
     if (res.length > 0) {
         readFemResult(res);
-    }
+    } else {
     */
-
     // model.calculate();
+    // }
+    
+
     return model;
 }
 

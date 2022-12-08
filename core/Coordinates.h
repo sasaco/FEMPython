@@ -1,15 +1,18 @@
 ﻿#pragma once
+
 #include <string>
 #include <vector>
 using namespace std;
 using std::string;
 using std::vector;
 
+#include<Eigen/Core>
+using namespace Eigen;
 
 class Coordinates {
 
 private:
-    double c[9];
+    MatrixXd c;
 
 public:
     int label;
@@ -21,11 +24,11 @@ public:
         double n21, double n22, double n23,
         double n31, double n32, double n33);
 
-    void toGlobal(double x[6], double out[9]);
+    void toGlobal(double x[6], double out[6]);
 
-    void transMatrix(vector<vector<double>> matrix, int dof, int idx0, int ndof);
+    //void transMatrix(MatrixXd matrix, int dof, int idx0, int ndof);
 
-    void transVector(vector<double> vector, int dof, int idx0, int ndof);
+    //void transVector(VectorXd vector, int dof, int idx0, int ndof);
 
     string toString();
 };

@@ -3,7 +3,7 @@
 #include "ElementBorderBound.h"
 
 #include <string>
-#include <format>
+//#include <format>
 #include <vector>
 using namespace std;         //  名前空間指定
 using std::string;
@@ -21,5 +21,5 @@ public:
 
     Pressure(int _element, std::string _face, double _press);
 
-    string toString(vector<ElementManager> elems);
+    //string toString(vector<ElementManager> elems);
 };

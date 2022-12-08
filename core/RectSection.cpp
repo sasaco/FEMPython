@@ -151,8 +151,10 @@ void RectSection::massInertia(double dens, double l, double out[4]) {
 // 断面を表す文字列を返す
 string RectSection::toString() {
 
-    return format("{}\t{}\t{}\t{}",
-        b1, h1, b2, h2);
+    //return format("{}\t{}\t{}\t{}",
+    //    b1, h1, b2, h2);
+
+    return "RectSection";
 };
 
 // 矩形断面の捩り係数を求める

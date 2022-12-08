@@ -19,7 +19,7 @@ public:
     void add(SymmetricTensor3 t);
     void mul(double a);
     double innerProduct(SymmetricTensor3 t);
-    void rotate(Matrix3d d);
+    void rotate(MatrixXd d);
 
 };
 

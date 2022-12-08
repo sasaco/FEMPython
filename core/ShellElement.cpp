@@ -8,6 +8,9 @@
 // nodes - 節点番号
 // nodeP - 節点のξ,η座標
 // intP - 積分点のξ,η座標,重み係数
+ShellElement::ShellElement() : FElement() {
+    isShell = true;
+}
 ShellElement::ShellElement(int _label, int material, int _param, vector<int> nodes, 
     MatrixXd _nodeP, MatrixXd _intP) :
     FElement(label, material, nodes) {
@@ -24,10 +27,10 @@ ShellElement::ShellElement(int _label, int material, int _param, vector<int> nod
 // sf - 形状関数行列
 // n - 法線ベクトル
 // t - 要素厚さ
-Matrix3d ShellElement::jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3 n, double t) {
+MatrixXd ShellElement::jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3 n, double t) {
     
     int count = nodeCount();
-    Matrix3d result = Matrix3d::Zero(3, 3);
+    MatrixXd result = MatrixXd::Zero(3, 3);
 
     for (int i = 0; i < count; i++) {
         
@@ -46,15 +49,17 @@ Matrix3d ShellElement::jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3 n, 
     result(0, 2) = 0.5 * t * n[0];
     result(1, 2) = 0.5 * t * n[1];
     result(2, 2) = 0.5 * t * n[2];
-};
+
+    return result;
+}
 
 
 // 逆ヤコビ行列を返す
 // ja - ヤコビ行列
 // d - 方向余弦マトリックス
-Vector3d ShellElement::jacobInv(Matrix3d ja, MatrixXd d) {
+MatrixXd ShellElement::jacobInv(MatrixXd ja, MatrixXd d) {
 
-    Matrix3d jd(3, 3);
+    MatrixXd jd(3, 3);
     jd(0, 0) = ja(0, 0) * d(0, 0) + ja(1, 0) * d(1, 0) + ja(2, 0) * d(2, 0);
     jd(0, 1) = ja(0, 0) * d(0, 1) + ja(1, 0) * d(1, 1) + ja(2, 0) * d(2, 1);
     jd(0, 2) = ja(0, 0) * d(0, 2) + ja(1, 0) * d(1, 2) + ja(2, 0) * d(2, 2);
@@ -63,9 +68,9 @@ Vector3d ShellElement::jacobInv(Matrix3d ja, MatrixXd d) {
     jd(1, 2) = ja(0, 1) * d(0, 2) + ja(1, 1) * d(1, 2) + ja(2, 1) * d(2, 2);
     jd(2, 0) = 0;
     jd(2, 1) = 0;
-    jd(2, 2) = ja(0, 2)* d(0, 2) + ja(1, 2) * d(1, 2) + ja(2, 2) * d(2, 2);
+    jd(2, 2) = ja(0, 2) * d(0, 2) + ja(1, 2) * d(1, 2) + ja(2, 2) * d(2, 2);
 
-    Matrix3d result = jd.inverse();
+    MatrixXd result = jd.inverse();
 
     return result;
 };
@@ -77,18 +82,19 @@ Vector3d ShellElement::jacobInv(Matrix3d ja, MatrixXd d) {
 // sf - 形状関数行列
 // d - 方向余弦マトリックス
 // t - 要素厚さ
-MatrixXd ShellElement::grad(vector<FENode> p, Vector3d ja, MatrixXd sf, Matrix3d d, double t) {
+MatrixXd ShellElement::grad(vector<FENode> p, MatrixXd ja, MatrixXd sf, MatrixXd d, double t) {
     
     int count = nodeCount();
-    Vector3d ji = jacobInv(ja, d);
     MatrixXd result(count, 3);
+
+    MatrixXd ji = jacobInv(ja, d);
 
     for (int i = 0; i < count; i++) {
         double dndxsi = sf(i, 1);
         double dndeta = sf(i, 2);
-        result(i, 0) = ji[0] * dndxsi + ji[3] * dndeta;
-        result(i, 1) = ji[1] * dndxsi + ji[4] * dndeta;
-        result(i, 2) = ji[2] * dndxsi + ji[5] * dndeta;
+        result(i, 0) = ji(0, 0) * dndxsi + ji(1, 0) * dndeta;
+        result(i, 1) = ji(0, 1) * dndxsi + ji(1, 1) * dndeta;
+        result(i, 2) = ji(0, 2) * dndxsi + ji(1, 2) * dndeta;
     }
 
     return result;
@@ -99,16 +105,18 @@ MatrixXd ShellElement::grad(vector<FENode> p, Vector3d ja, MatrixXd sf, Matrix3d
 // ja - ヤコビ行列
 // sf - 形状関数行列
 // d - 方向余弦マトリックス
-MatrixXd ShellElement::strainMatrix1(Vector3d ja, MatrixXd sf, Matrix3d d) {
+MatrixXd ShellElement::strainMatrix1(MatrixXd ja, MatrixXd sf, MatrixXd d) {
 
     int count = nodeCount();
     MatrixXd result(count, 4);
-    Vector3d ji = jacobInv(ja, d);
+
+    MatrixXd ji = jacobInv(ja, d);
+
     for (int i = 0; i < count; i++) {
         for (int j = 0; j < 3; j++) {
-            result(i, j) = ji[j] * sf(i, 1) + ji[j + 3] * sf(i, 2);
+            result(i, j) = ji(0, j) * sf(i, 1) + ji(1, j) * sf(i, 2);
         }
-        result(i, 3) = ji[8] * sf(i, 0);
+        result(i, 3) = ji(1, 1) * sf(i, 0);
     }
 
     return result;
@@ -122,13 +130,14 @@ MatrixXd ShellElement::strainMatrix1(Vector3d ja, MatrixXd sf, Matrix3d d) {
 // d - 方向余弦マトリックス
 // zeta - 節点のζ座標
 // t - 要素厚さ
-MatrixXd ShellElement::strainMatrix(Vector3d ja, MatrixXd sf, Matrix3d d, double zeta, double t) {
+MatrixXd ShellElement::strainMatrix(MatrixXd ja, MatrixXd sf, MatrixXd d, double zeta, double t) {
     
+    int count = nodeCount();
+    MatrixXd result = MatrixXd::Zero(6 * count, 5);
+
     MatrixXd b = strainMatrix1(ja, sf, d);
     double z = 0.5 * t * zeta;
-    int count = nodeCount();
     MatrixXd m1 = MatrixXd::Zero(5, 6);
-    MatrixXd result = MatrixXd::Zero(6 * count, 5);
 
     for (int i = 0; i < count; i++) {
         m1(0, 0) = b(i, 0);
@@ -168,16 +177,16 @@ MatrixXd ShellElement::strainMatrix(Vector3d ja, MatrixXd sf, Matrix3d d, double
 // x - ξ,η,ζ座標
 // w - 重み係数
 // t - 要素厚さ
-MatrixXd ShellElement::shapePart(vector<FENode> p, Vector3d x, double w, double t) {
+MatrixXd ShellElement::shapePart(vector<FENode> p, VectorXd x, double w, double t) {
 
-    MatrixXd sf = shapeFunction(x[0], x[1]);
-    Vector3 n = normalVector(p);
-    Vector3d ja = jacobianMatrix(p, sf, n, t);
     int count = nodeCount();
+    MatrixXd result(count, count);
+
+    MatrixXd sf = shapeFunction(x(0), x(1));
+    Vector3 n = normalVector(p);
+    MatrixXd ja = jacobianMatrix(p, sf, n, t);
     double det = ja.determinant();
     double coef = 2 * w * abs(det);
-
-    MatrixXd result(count, count);
 
     for (int i = 0; i < count; i++) {
         vector<double> matr;
@@ -196,18 +205,18 @@ MatrixXd ShellElement::shapePart(vector<FENode> p, Vector3d x, double w, double 
 // x - ξ,η,ζ座標
 // w - 重み係数
 // t - 要素厚さ
-MatrixXd ShellElement::gradPart(vector<FENode> p, Vector3d x, double w, double t) {
+MatrixXd ShellElement::gradPart(vector<FENode> p, VectorXd x, double w, double t) {
 
-    MatrixXd sf = shapeFunction(x[0], x[1]);
+    int count = nodeCount();
+    MatrixXd result(count, count);
+
+    MatrixXd sf = shapeFunction(x(0), x(1));
     Vector3 n = normalVector(p);
-    Vector3d ja = jacobianMatrix(p, sf, n, t);
+    MatrixXd ja = jacobianMatrix(p, sf, n, t);
     MatrixXd d = dirMatrix(p);
     MatrixXd gr = grad(p, ja, sf, d, t);
-    int count = nodeCount();
     double det = ja.determinant();
     double coef = 2 * w * abs(det);
-
-    MatrixXd result(count, count);
 
     for (int i = 0; i < count; i++) {
         vector<double> matr;
@@ -268,7 +277,7 @@ MatrixXd ShellElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u,
     
     int count = nodeCount();
     MatrixXd result = MatrixXd::Zero(6 * count, 6 * count);
-    Matrix3d d = dirMatrix(p);
+    MatrixXd d = dirMatrix(p);
     Vector3 n = normalVector(p);
     VectorXd v = toArray(u, 6);
     double t = sp.thickness;
@@ -276,7 +285,7 @@ MatrixXd ShellElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u,
     for (int i = 0; i < intP.size(); i++) {
         
         VectorXd sf = shapeFunction(intP(i, 0), intP(i, 1));
-        Matrix3d ja = jacobianMatrix(p, sf, n, t);
+        MatrixXd ja = jacobianMatrix(p, sf, n, t);
         MatrixXd gr = grad(p, ja, sf, d, t);
         MatrixXd sm = strainMatrix(ja, sf, d, 0, t);
         VectorXd vm = v * sm;
@@ -318,7 +327,7 @@ tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Str
     ShellElement::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp) {
 
     int count = nodeCount();
-    Matrix3d d = dirMatrix(p);
+    MatrixXd d = dirMatrix(p);
     Vector3 n = normalVector(p);
     VectorXd v = toArray(u, 6);
     double t = sp.thickness;
@@ -368,12 +377,12 @@ tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Str
 // d - 方向余弦マトリックス
 // xsi,eta,zeta - ξ,η,ζ座標
 // t - 要素厚さ
-VectorXd ShellElement::strainPart(vector<FENode> p, VectorXd v, Vector3 n, Matrix3d d, double  xsi, double eta, double zeta, double t) {
+VectorXd ShellElement::strainPart(vector<FENode> p, VectorXd v, Vector3 n, MatrixXd d, double  xsi, double eta, double zeta, double t) {
 
     MatrixXd sf = shapeFunction(xsi, eta);
-    Matrix3d ja = jacobianMatrix(p, sf, n, t);
+    MatrixXd ja = jacobianMatrix(p, sf, n, t);
     MatrixXd sm = strainMatrix(ja, sf, d, zeta, t);
-    VectorXd result = v * sm;
+    VectorXd result =  v * sm;
     return result;
 };
 
@@ -386,7 +395,7 @@ VectorXd ShellElement::strainPart(vector<FENode> p, VectorXd v, Vector3 n, Matri
 tuple<Strain, Stress, double, Strain, Stress, double>
     ShellElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp) {
 
-    Matrix3d d = dirMatrix(p);
+    MatrixXd d = dirMatrix(p);
     Vector3 n = normalVector(p);
     VectorXd v = toArray(u, 6);
     double t = sp.thickness;
@@ -468,11 +477,13 @@ Stress ShellElement::toStress(VectorXd s) {
 // p - 節点
 string ShellElement::toString(vector<Material> materials, vector<ShellParameter> params, vector<FENode> p) {
 
-    string s = format("{}\t{}\t{}\t{}\t{}",
-        getName(), label, materials[material].label, params[param].label);
+    //string s = format("{}\t{}\t{}\t{}\t{}",
+    //    getName(), label, materials[material].label, params[param].label);
 
-    for (int i = 0; i < nodes.size(); i++) {
-        s += '\t' + p[nodes[i]].label;
-    }
-    return s;
+    //for (int i = 0; i < nodes.size(); i++) {
+    //    s += '\t' + p[nodes[i]].label;
+    //}
+    //return s;
+
+    return "ShellElement";
 }

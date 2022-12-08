@@ -27,9 +27,8 @@ void FemDataModel::clear(){
 void FemDataModel::init(){
 
   solver.method= solver.ILUCG_METHOD;   // デフォルトは反復解法
-  auto mats= materials;
+  auto mats = materials;
 
-  // mats.sort(compareLabel);
   sort(mats.begin(), mats.end(),
       [](Material o1, Material o2) -> int {
           if (o1.label < o2.label)        return -1;
@@ -39,136 +38,242 @@ void FemDataModel::init(){
   mesh.init();
   bc.init();
 
-  /*
   reNumbering();
   resetMaterialLabel();
   resetParameterLabel();
   resetCoordinates();
-  for(iont i=0;i<mats.size(); i++) {
-    auto m2d = mats[i].matrix2Dstress();
-    auto msh = mats[i].matrixShell();
-    auto m3d = mats[i].matrix3D();
-    mats[i].matrix = { 
-        m2d:m2d,
-        msh:msh,
-        m3d:m3d
-    };
+  for(int i=0;i<mats.size(); i++) {
+    mats[i].matrix2Dstress();
+    mats[i].matrixShell();
+    mats[i].matrix3D();
   }
-  */
-};
+}
 
-/*
 
 // 節点・要素ポインタを設定する
 void FemDataModel::reNumbering(){
 
-  var nodes = mesh.nodes,elements=this.mesh.elements;
-  var map=[],i;
-  for(i=0;i<nodes.length;i++){
-    map[nodes[i].label]=i;
-  }
-  for(i=0;i<elements.length;i++){
-    resetNodes(map,elements[i]);
-  }
-  for(i=0;i<this.bc.restraints.length;i++){
-    resetNodePointer(map,this.bc.restraints[i]);
-  }
-  for(i=0;i<this.bc.loads.length;i++){
-    resetNodePointer(map,this.bc.loads[i]);
-  }
-  for(i=0;i<this.bc.temperature.length;i++){
-    resetNodePointer(map,this.bc.temperature[i]);
-  }
-  map.length=0;
-  for(i=0;i<elements.length;i++){
-    map[elements[i].label]=i;
-  }
-  for(i=0;i<this.bc.pressures.length;i++){
-    resetElementPointer(map,this.bc.pressures[i]);
-  }
-  for(i=0;i<this.bc.htcs.length;i++){
-    resetElementPointer(map,this.bc.htcs[i]);
-  }
-};
+    auto nodes = mesh.nodes;
+    auto elements = mesh.elements;
+
+    //vector<int> map1(nodes.size());
+    map<int, int> map1;
+
+    for(int i=0;i<nodes.size();i++){
+        map1[nodes[i].label]=i;
+    }
+
+    for(int i=0;i<elements.size();i++){
+        resetNodes(map1, elements[i]);
+    }
+
+    for(int i=0;i<bc.restraints.size();i++){
+        resetNodePointer(map1, bc.restraints[i].node);
+    }
+    for(int i=0;i<bc.loads.size();i++){
+        resetNodePointer(map1, bc.loads[i].node);
+    }
+    for(int i=0;i<bc.temperature.size();i++){
+        resetNodePointer(map1, bc.temperature[i].node);
+    }
+
+    map<int, int> map2;
+    for(int i=0;i<elements.size();i++){
+        map2[elements[i].label()] = i;
+    }
+
+    for(int i=0;i<bc.pressures.size();i++){
+        resetElementPointer(map2, bc.pressures[i].element);
+    }
+    for(int i=0;i<bc.htcs.size();i++){
+        resetElementPointer(map2, bc.htcs[i].element);
+    }
+}
+
+// 節点集合の節点ラベルを再設定する
+// map - ラベルマップ
+// s - 節点集合
+void FemDataModel::resetNodes(map<int, int> map, ElementManager &s) {
+    vector<int> nodes = s.nodes();
+    for (int i = 0; i < nodes.size(); i++) {
+        if (map.count(nodes[i])) {
+            nodes[i] = map[nodes[i]];
+        }
+        else {
+            throw (format("節点番号{}は存在しません", nodes[i]));
+        }
+    }
+}
+
+// 節点ポインタを再設定する
+// map - ラベルマップ
+// bc - 境界条件
+void FemDataModel::resetNodePointer(map<int, int> map, int &node) {
+    if ( map.count(node) > 0) {
+        node = map[node];
+    }
+    else {
+        throw (format("節点番号{}は存在しません", node));
+    }
+}
+
+// 要素ポインタを再設定する
+// map - ラベルマップ
+// bc - 境界条件
+void FemDataModel::resetElementPointer(map<int, int> map, int &element) {
+    if (map.count(element) > 0) {
+        element = map[element];
+    }
+    else {
+        throw (format("要素番号{}は存在しません", element));
+    }
+}
 
 // 材料ポインタを設定する
-FemDataModel.prototype.resetMaterialLabel=function(){
-  if(this.materials.length===0){
-    this.materials.push(new Material(1,1,0.3,1,1,1,1));
+void FemDataModel::resetMaterialLabel(){
+
+  if(materials.size()==0){
+    materials.push_back(Material(1, 1, 0.3, 1, 1, 1));
   }
-  var map=[],i,elements=this.mesh.elements;
-  for(i=0;i<this.materials.length;i++){
-    map[this.materials[i].label]=i;
+  vector<int> map(materials.size());
+  auto elements = mesh.elements;
+
+  for(int i=0;i<materials.size();i++){
+    map[materials[i].label]=i;
   }
-  for(i=0;i<elements.length;i++){
-    if(elements[i].material in map){
-      elements[i].material=map[elements[i].material];
+  for(int i=0;i<elements.size();i++){
+    int mat = elements[i].material();
+    if (std::count(map.begin(), map.end(), mat)) {
+        elements[i].setMaterial(map[mat]);
     }
     else{
-      throw new Error('材料番号'+elements[i].material+
-      	      	      'は存在しません');
+        throw (format("材料番号{}は存在しません", mat));
     }
   }
-};
+}
 
 // シェルパラメータ・梁パラメータのポインタを設定する
-FemDataModel.prototype.resetParameterLabel=function(){
-  if((this.shellParams.length===0) && (this.barParams.length===0)){
-    this.hasShellBar=false;
-    return;
-  }
-  var map1=[],map2=[],i,elements=this.mesh.elements,shellbars=0;
-  for(i=0;i<this.shellParams.length;i++){
-    map1[this.shellParams[i].label]=i;
-  }
-  for(i=0;i<this.barParams.length;i++){
-    map2[this.barParams[i].label]=i;
-  }
-  for(i=0;i<elements.length;i++){
-    if(elements[i].isShell){
-      if(elements[i].param in map1){
-      	elements[i].param=map1[elements[i].param];
-      	shellbars++;
-      }
-      else{
-      	throw new Error('パラメータ番号'+elements[i].param+
-      	      	      	'は存在しません');
-      }
+void FemDataModel::resetParameterLabel(){
+
+    if((shellParams.size()==0) && (barParams.size()==0)){
+        hasShellBar=false;
+        return;
     }
-    else if(elements[i].isBar){
-      if(elements[i].param in map2){
-      	elements[i].param=map2[elements[i].param];
-      	shellbars++;
-      }
-      else{
-      	throw new Error('パラメータ番号'+elements[i].param+
-      	      	      	'は存在しません');
-      }
+
+    map<int, int> map1;
+    map<int, int> map2;
+    auto elements = mesh.elements;
+    int shellbars = 0;
+
+    for(int i=0;i<shellParams.size();i++){
+        map1[shellParams[i].label]=i;
     }
-  }
-  this.hasShellBar=(shellbars>0);
-  if(this.hasShellBar){		// シェル要素・梁要素を含む場合は直接解法
-    this.solver.method=LU_METHOD;
-  }
-};
+    for(int i=0;i<barParams.size();i++){
+        map2[barParams[i].label]=i;
+    }
+
+    for(int i=0;i<elements.size();i++){
+
+        if(elements[i].isShell()){
+            int param = elements[i].param();
+            if (map1.count(param) > 0) {
+      	        elements[i].setParam(map1[param]);
+      	        shellbars++;
+            }
+            else{
+                throw (format("パラメータ番号{}は存在しません", param));
+            }
+        }
+        else if(elements[i].isBar()){
+            int param = elements[i].param();
+
+            if (map2.count(param) > 0) {
+            elements[i].setParam(map2[param]);
+            shellbars++;
+            }
+            else{
+                throw (format("パラメータ番号{}は存在しません", param));
+            }
+        }
+    }
+    hasShellBar=(shellbars>0);
+
+    if(hasShellBar){		// シェル要素・梁要素を含む場合は直接解法
+        solver.method= solver.LU_METHOD;
+    }
+}
 
 // 局所座標系を設定する
-FemDataModel.prototype.resetCoordinates=function(){
-  if(this.coordinates.length===0){
+void FemDataModel::resetCoordinates(){
+
+  if(coordinates.size()==0){
     return;
   }
-  var map=[],i;
-  for(i=0;i<this.coordinates.length;i++){
-    map[this.coordinates[i].label]=this.coordinates[i];
-  }
-  for(i=0;i<this.bc.restraints.length;i++){
-    resetCoordinatesPointer(map,this.bc.restraints[i]);
-  }
-  for(i=0;i<this.bc.loads.length;i++){
-    resetCoordinatesPointer(map,this.bc.loads[i]);
-  }
-};
 
+  map<int, Coordinates> map;
+  for(int i=0;i<coordinates.size();i++){
+    map[coordinates[i].label]=coordinates[i];
+  }
+
+  for(int i=0;i<bc.restraints.size();i++){
+      resetCoordinatesPointer(map, bc.restraints[i]);
+  }
+  for(int i=0;i<bc.loads.size();i++){
+      resetCoordinatesPointer(map, bc.loads[i]);
+  }
+}
+
+// 局所座標系を再設定する
+// map - ラベルマップ
+// bc - 境界条件
+void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, Restraint &bc) {
+    if (bc.coords < 0) {
+        // 何もしない
+        return;
+    }
+    bool hasFind = false;
+    Coordinates cod;
+    for (int i = 0; i < map.size(); i++) {
+        if (i == map[i].label) {
+            cod = map[i];
+            hasFind = true;
+            break;
+        }
+    }
+
+    if (hasFind) {
+        bc.coords = cod.label;
+        cod.toGlobal(bc.x, bc.globalX);
+    }
+    else {
+        throw (format("局所座標系番号{}存在しません", bc.coords));
+    }
+}
+void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, Load &bc) {
+    if (bc.coords < 0) {
+        // 何もしない
+        return;
+    }
+    bool hasFind = false;
+    Coordinates cod;
+    for (int i = 0; i < map.size(); i++) {
+        if (i == map[i].label) {
+            cod = map[i];
+            hasFind = true;
+            break;
+        }
+    }
+
+    if (hasFind) {
+        bc.coords = cod.label;
+        cod.toGlobal(bc.x, bc.globalX);
+    }
+    else {
+        throw (format("局所座標系番号{}存在しません", bc.coords));
+    }
+}
+
+/*
 // 節点の自由度を設定する
 FemDataModel.prototype.setNodeDoF=function(){
   var i,dof=this.bc.dof;
@@ -558,61 +663,10 @@ FemDataModel.prototype.toStrings=function(){
 };
 
 
-// 節点集合の節点ラベルを再設定する
-// map - ラベルマップ
-// s - 節点集合
-function resetNodes(map,s){
-  for(var i=0;i<s.nodes.length;i++){
-    if(s.nodes[i] in map){
-      s.nodes[i]=map[s.nodes[i]];
-    }
-    else{
-      throw new Error('節点番号'+s.nodes[i]+'は存在しません');
-    }
-  }
-}
 
 
-// 節点ポインタを再設定する
-// map - ラベルマップ
-// bc - 境界条件
-function resetNodePointer(map,bc){
-  if(bc.node in map){
-    bc.node=map[bc.node];
-  }
-  else{
-    throw new Error('節点番号'+bc.node+'は存在しません');
-  }
-}
 
 
-// 要素ポインタを再設定する
-// map - ラベルマップ
-// bc - 境界条件
-function resetElementPointer(map,bc){
-  if(bc.element in map){
-    bc.element=map[bc.element];
-  }
-  else{
-    throw new Error('要素番号'+bc.element+'は存在しません');
-  }
-}
 
-
-// 局所座標系を再設定する
-// map - ラベルマップ
-// bc - 境界条件
-function resetCoordinatesPointer(map,bc){
-  var coords=bc.coords;
-  if((coords===null) || (coords===undefined)){
-  }
-  else if(coords in map){
-    bc.coords=map[coords];
-    bc.globalX=bc.coords.toGlobal(bc.x);
-  }
-  else{
-    throw new Error('局所座標系番号'+coords+'は存在しません');
-  }
-}
 
 */

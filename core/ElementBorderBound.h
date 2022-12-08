@@ -1,6 +1,6 @@
 #pragma once
 #include "BorderManager.hpp"
-#include "ElementManager.h"
+//#include "ElementManager.h"
 
 #include <string>
 #include <vector>
@@ -14,14 +14,14 @@ using std::vector;
 class ElementBorderBound {
 
 private:
-    int element;
 
 public:
+    int element;
     string face;
 
     ElementBorderBound(int _element, string _face);
 
-    BorderManager getBorder(ElementManager elem);
+    //BorderManager getBorder(ElementManager elem);
 
 };
 

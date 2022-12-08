@@ -28,17 +28,19 @@ BarParameter::~BarParameter() {
 // 梁パラメータを表す文字列を返す
 string BarParameter::toString() {
 
-    string result;
+    //string result;
 
-    if (type == "circle") {
-        result = format("BarParameter\t{}\t{}\t{}",
-            label, type, circleSection->toString());
-    }
-    else if (type == "rectangle") {
-        result = format("BarParameter\t{}\t{}\t{}",
-            label, type, rectSection->toString());
-    }
+    //if (type == "circle") {
+    //    result = format("BarParameter\t{}\t{}\t{}",
+    //        label, type, circleSection->toString());
+    //}
+    //else if (type == "rectangle") {
+    //    result = format("BarParameter\t{}\t{}\t{}",
+    //        label, type, rectSection->toString());
+    //}
 
-    return result;
+    //return result;
+
+    return "BarParamater";
 
 }

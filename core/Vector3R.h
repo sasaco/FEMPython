@@ -11,6 +11,7 @@ class Vector3R {
 private:
 
 public:
+    Vector3R();
     Vector3R(double _x, double _y, double _z, double _rx, double _ry, double _rz);
 
     double x[6];

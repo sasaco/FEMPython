@@ -94,27 +94,27 @@ double BoundaryCondition::getRestDisp(int bc) {
 // データ文字列を返す
 // nodes - 節点
 // elems - 要素
-vector<string> BoundaryCondition::toStrings(vector<FENode> nodes, vector<ElementManager> elems) {
-
-    vector<string> s;
-
-    for (int i = 0; i < restraints.size(); i++) {
-        s.push_back(restraints[i].toString(nodes));
-    }
-    for (int i = 0; i < loads.size(); i++) {
-        s.push_back(loads[i].toString(nodes));
-    }
-    for (int i = 0; i < pressures.size(); i++) {
-        s.push_back(pressures[i].toString(elems));
-    }
-    for (int i = 0; i < temperature.size(); i++) {
-        s.push_back(temperature[i].toString(nodes));
-    }
-    for (int i = 0; i < htcs.size(); i++) {
-        s.push_back(htcs[i].toString(elems));
-    }
-    return s;
-};
+//vector<string> BoundaryCondition::toStrings(vector<FENode> nodes, vector<ElementManager> elems) {
+//
+//    vector<string> s;
+//
+//    for (int i = 0; i < restraints.size(); i++) {
+//        s.push_back(restraints[i].toString(nodes));
+//    }
+//    for (int i = 0; i < loads.size(); i++) {
+//        s.push_back(loads[i].toString(nodes));
+//    }
+//    for (int i = 0; i < pressures.size(); i++) {
+//        s.push_back(pressures[i].toString(elems));
+//    }
+//    for (int i = 0; i < temperature.size(); i++) {
+//        s.push_back(temperature[i].toString(nodes));
+//    }
+//    for (int i = 0; i < htcs.size(); i++) {
+//        s.push_back(htcs[i].toString(elems));
+//    }
+//    return s;
+//};
 
 
 // 節点ラベルを比較する

@@ -4,24 +4,29 @@
 #include "Coordinates.h"
 #include "FENode.h"
 
-#include <format>
+//#include <format>
 #include <string>
 #include <vector>
 using namespace std;         //  名前空間指定
 using std::string;
 using std::vector;
 
+#include<Eigen/Core>
+using namespace Eigen;
+
 class Restraint : public Vector3R {
 
 private:
-    double globalX;
 
 public:
     int node;
-    Coordinates coords;
+    int coords;
     bool rest[6];
+    double globalX[6];
 
-    Restraint(int _node, Coordinates _coords,
+    Restraint(vector<string> columns);
+    
+    Restraint(int _node, int _coords,
         bool restx, bool resty, bool restz,
         double x, double y, double z,
         bool restrx, bool restry, bool restrz,
