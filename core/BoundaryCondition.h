@@ -22,7 +22,6 @@ private:
     double pressMax;		// 最大面圧
     vector<int> dof;		// 節点の自由度
     vector<int> nodeIndex;	// 荷重ベクトルの節点ポインタ
-    vector<int> bcList;		// 境界条件を設定した節点のリスト
 
     template <typename T>
     void compareNodeLabel(vector<T> target);
@@ -31,6 +30,7 @@ private:
     void compareElementLabel(vector<T> target);
 
 public:
+    vector<int> bcList;		// 境界条件を設定した節点のリスト
     vector<Restraint> restraints;	    // 拘束条件
     vector<Load> loads;                 // 荷重条件
     vector<Pressure> pressures;         // 面圧条件

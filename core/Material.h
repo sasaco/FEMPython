@@ -24,7 +24,6 @@ private:
 
     double nu;
     double dens;
-    double hCon;
     double sHeat;
     double cv;	
 
@@ -38,7 +37,7 @@ public:
     double ee;
     //double nu;
     //double dens;
-    //double hCon;
+    double hCon;
     //double sHeat;
     //double cv;	// 体積比熱
     double gg;    // 横弾性係数
@@ -47,8 +46,8 @@ public:
     Eigen::Matrix<double, 5, 5> msh;
     Eigen::Matrix<double, 6, 6> m3d;
 
+    Material();
     Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
-    Material(const Material& mat);
 
     void matrix2Dstress();
     void matrixShell();

@@ -55,5 +55,6 @@ public:
 
     void clear();
     void init();
+    void calculate();
 
 };

@@ -1,5 +1,7 @@
 #pragma once
 
+#include"FemDataModel.h"
+
 #include <vector>
 using namespace std;
 using std::vector;
@@ -16,14 +18,17 @@ private:
     VectorXd matrix;
     VectorXd matrix2;
     VectorXd vector;
-    int dof;
 
 public:
     int  LU_METHOD = 0;	        // LU分解法
     int  ILUCG_METHOD = 1;      // 不完全LU分解共役勾配法
 
+    int dof;
     int method;
 
     Solver();
     void clear();
+
+    MatrixXd heatMatrix(FemDataModel& model);
+    void createHeatMatrix(FemDataModel& model);
 };

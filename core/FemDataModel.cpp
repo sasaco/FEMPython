@@ -273,6 +273,39 @@ void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, Load &bc) 
     }
 }
 
+
+// 静解析をする
+void FemDataModel::calculate(){
+  bool calc=false;
+  if((bc.temperature.size()>0) || (bc.htcs.size()>0)) {
+    solver.dof=mesh.nodes.size();
+    bc.setPointerHeat(solver.dof);
+    solver.createHeatMatrix(*this);
+    var tmp=solver.solve();
+    result.setTemperature(bc,tmp,mesh.nodes.size());
+    calc=true;
+  }
+  if(bc.restraints.size()>0){
+    setNodeDoF();
+    solver.createStiffnessMatrix();
+    var d=solver.solve();
+    result.setDisplacement(bc,d,mesh.nodes.size());
+    if(result.type===ELEMENT_DATA){
+      calculateElementStress();
+    }
+    else{
+      calculateNodeStress();
+    }
+    calc=true;
+  }
+  if(!calc){
+    alert('拘束条件不足のため計算できません');
+  }
+  var t1=new Date().getTime();
+  console.log('Calculation time:'+(t1-t0)+'ms');
+};
+
+
 /*
 // 節点の自由度を設定する
 FemDataModel.prototype.setNodeDoF=function(){
@@ -288,45 +321,12 @@ FemDataModel.prototype.setNodeDoF=function(){
     if(elem.isShell || elem.isBar){	// シェル要素・梁要素
       var count=elem.nodeCount();
       for(var j=0;j<count;j++){
-      	dof[elem.nodes[j]]=6;
+        dof[elem.nodes[j]]=6;
       }
     }
   }
   this.solver.dof=this.bc.setPointerStructure(nodeCount);
 };
-
-// 静解析をする
-FemDataModel.prototype.calculate=function(){
-  var t0=new Date().getTime();
-  var calc=false;
-  if((this.bc.temperature.length>0) || (this.bc.htcs.length>0)){
-    this.solver.dof=this.mesh.nodes.length;
-    this.bc.setPointerHeat(this.solver.dof);
-    this.solver.createHeatMatrix();
-    var tmp=this.solver.solve();
-    this.result.setTemperature(this.bc,tmp,this.mesh.nodes.length);
-    calc=true;
-  }
-  if(this.bc.restraints.length>0){
-    this.setNodeDoF();
-    this.solver.createStiffnessMatrix();
-    var d=this.solver.solve();
-    this.result.setDisplacement(this.bc,d,this.mesh.nodes.length);
-    if(this.result.type===ELEMENT_DATA){
-      this.calculateElementStress();
-    }
-    else{
-      this.calculateNodeStress();
-    }
-    calc=true;
-  }
-  if(!calc){
-    alert('拘束条件不足のため計算できません');
-  }
-  var t1=new Date().getTime();
-  console.log('Calculation time:'+(t1-t0)+'ms');
-};
-
 // 固有振動数・固有ベクトルを求める
 // count - 求める固有振動の数
 FemDataModel.prototype.charVib=function(count){

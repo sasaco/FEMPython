@@ -248,6 +248,11 @@ bool ElementManager::isBar() {
     return false;
 }
 
+int ElementManager::nodeCount() {
+    auto node = nodes();
+    return node.size();
+}
+
 /*
 
 // —v‘f‹«ŠE‚ð•Ô‚·

@@ -1,6 +1,8 @@
 #pragma once
 
 //#include "BorderManager.hpp"
+#include "ShellParameter.h"
+#include "BarParameter.h"
 
 #include <iostream>
 #include <string>
@@ -66,8 +68,13 @@ public:
 
     bool isShell();
     bool isBar();
-    /*
 
+    int nodeCount();
+
+    MatrixXd gradMatrix(vector<FENode>nodes, double h, ShellParameter sp);
+    MatrixXd gradMatrix(vector<FENode>nodes, double h, BarParameter sp);
+    MatrixXd gradMatrix(vector<FENode>nodes, double h);
+    /*
     BorderManager border(int element, int index);
     BorderManager borderEdge(int element, int index);
     */

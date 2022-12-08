@@ -18,6 +18,80 @@ void Solver::clear() {
     dof = 0;
 };
 
+// 伝熱マトリックスを作成する
+MatrixXd Solver::heatMatrix(const FemDataModel& model) {
+
+    auto mesh = model.mesh;
+    int dof = mesh.nodes.size();
+    MatrixXd matrix(dof, *);
+
+
+    for (int i = 0; i < mesh.elements.size(); i++) {
+        auto elem = mesh.elements[i];
+        int count = elem.nodeCount();
+        auto mat = model.materials[elem.material()];
+        auto h = mat.hCon;
+        MatrixXd ls;
+        if (elem.isShell()) {
+            int param = elem.param();
+            auto sp = model.shellParams[param];
+            auto nodes = mesh.getNodes(elem);
+            ls = elem.gradMatrix(nodes, h, sp);
+        }
+        else if (elem.isBar()) {
+            int param = elem.param();
+            auto sect = model.barParams[param].section;
+            ls = elem.gradMatrix(mesh.getNodes(elem), h, sect);
+        }
+        else {
+            auto nodes = mesh.getNodes(elem);
+            ls = elem.gradMatrix(nodes, h);
+        }
+
+        for (var i1 = 0; i1 < count; i1++) {
+            var mrow = matrix[elem.nodes[i1]], lrow = ls[i1];
+            for (var j1 = 0; j1 < count; j1++) {
+                if (elem.nodes[j1] in mrow) {
+                    mrow[elem.nodes[j1]] += lrow[j1];
+                }
+                else {
+                    mrow[elem.nodes[j1]] = lrow[j1];
+                }
+            }
+        }
+    }
+    return matrix;
+}
+
+
+// 熱計算のマトリックス・ベクトルを計算する
+void Solver::createHeatMatrix(const FemDataModel& model) {
+    auto bcList = model.bc.bcList;
+    std::vector<int> reducedList;
+    for (int i = 0; i < bcList.size(); i++) {
+        if (bcList[i] < 0) {
+            reducedList.push_back(i);
+        }
+    }
+
+    // 伝熱マトリックス・熱境界条件ベクトルの作成
+    var matrix1 = heatMatrix(model), vector1 = tempVector(matrix1);
+
+    // 拘束自由度を除去する
+    for (i = 0; i < bcList.length; i++) {
+        if (bcList[i] >= 0) {
+            var t = model.bc.temperature[bcList[i]];
+            for (var j = 0; j < vector1.length; j++) {
+                if (i in matrix1[j]) {
+                    vector1[j] -= t.t * matrix1[j][i];
+                }
+            }
+        }
+    }
+    this.extruct(matrix1, vector1, reducedList);
+};
+
+
 /*
 // 剛性マトリックス・荷重ベクトルを作成する
 Solver.prototype.createStiffnessMatrix = function() {
@@ -79,31 +153,7 @@ Solver.prototype.createGeomStiffMatrix = function() {
     }
 };
 
-// 熱計算のマトリックス・ベクトルを計算する
-Solver.prototype.createHeatMatrix = function() {
-    var i, bcList = model.bc.bcList, reducedList = [];
-    for (i = 0; i < bcList.length; i++) {
-        if (bcList[i] < 0) {
-            reducedList.push(i);
-        }
-    }
 
-    // 伝熱マトリックス・熱境界条件ベクトルの作成
-    var matrix1 = heatMatrix(), vector1 = tempVector(matrix1);
-
-    // 拘束自由度を除去する
-    for (i = 0; i < bcList.length; i++) {
-        if (bcList[i] >= 0) {
-            var t = model.bc.temperature[bcList[i]];
-            for (var j = 0; j < vector1.length; j++) {
-                if (i in matrix1[j]) {
-                    vector1[j] -= t.t * matrix1[j][i];
-                }
-            }
-        }
-    }
-    this.extruct(matrix1, vector1, reducedList);
-};
 
 // 行列の一部を抽出する
 // matrix1,vector1 - 元のマトリックス,ベクトル
@@ -387,39 +437,7 @@ function loadVector(dof) {
     return vector;
 }
 
-// 伝熱マトリックスを作成する
-function heatMatrix() {
-    var elements = model.mesh.elements, mesh = model.mesh;
-    var dof = model.mesh.nodes.length, matrix = [], i;
-    for (i = 0; i < dof; i++) matrix[i] = [];
-    for (i = 0; i < elements.length; i++) {
-        var elem = elements[i], count = elem.nodeCount();
-        var h = model.materials[elem.material].hCon, ls;
-        if (elem.isShell) {
-            var sp = model.shellParams[elem.param];
-            ls = elem.gradMatrix(mesh.getNodes(elem), h, sp);
-        }
-        else if (elem.isBar) {
-            var sect = model.barParams[elem.param].section;
-            ls = elem.gradMatrix(mesh.getNodes(elem), h, sect);
-        }
-        else {
-            ls = elem.gradMatrix(mesh.getNodes(elem), h);
-        }
-        for (var i1 = 0; i1 < count; i1++) {
-            var mrow = matrix[elem.nodes[i1]], lrow = ls[i1];
-            for (var j1 = 0; j1 < count; j1++) {
-                if (elem.nodes[j1] in mrow) {
-                    mrow[elem.nodes[j1]] += lrow[j1];
-                }
-                else {
-                    mrow[elem.nodes[j1]] = lrow[j1];
-                }
-            }
-        }
-    }
-    return matrix;
-}
+
 
 // 熱境界条件ベクトルを作成する
 // matrix - 伝熱マトリックス

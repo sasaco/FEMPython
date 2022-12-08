@@ -8,6 +8,7 @@
 // dens - 密度
 // hCon - 熱伝導率
 // sHeat - 比熱
+Material::Material() {}
 Material::Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat) {
     label = _label;
     ee = _ee;
@@ -19,18 +20,6 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
     cv = dens * sHeat;		    // 体積比熱
 }
 
-//  コピーコンストラクタの定義
-Material::Material(const Material& mat)
-{
-    label = mat.label;
-    ee = mat.ee;
-    nu = mat.nu;
-    dens = mat.dens;
-    hCon = mat.hCon;
-    sHeat = mat.sHeat;
-    gg = mat.gg;	
-    cv = mat.cv;
-}
 
 // 平面応力問題の応力 - 歪マトリックスを作成する
 void Material::matrix2Dstress(){
