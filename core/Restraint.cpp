@@ -3,6 +3,10 @@
 
 //--------------------------------------------------------------------//
 // 拘束条件
+Restraint::Restraint() : Vector3R() {
+    node = -1;
+    coords = -1;
+}
 Restraint::Restraint(vector<string> ss) : Vector3R() {
 
     node = stoi(ss[1]);

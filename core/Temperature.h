@@ -18,6 +18,7 @@ private:
 public:
     int node;
 
+    Temperature();
     Temperature(int _node, double _t);
 
     string toString(vector<FENode> nodes);

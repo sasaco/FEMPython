@@ -1,6 +1,8 @@
 #include "ElementManager.h"
 
-
+ElementManager::ElementManager() {
+    key = "";
+}
 ElementManager::ElementManager(string _key, vector<string> columns) {
 
     if (_key == "BEBarElement") {

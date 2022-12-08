@@ -6,6 +6,10 @@
 // シェルパラメータ
 // label - パラメータ番号
 // thickness - 厚さ
+ShellParameter::ShellParameter() {
+    label = -1;
+    thickness = 0;
+};
 ShellParameter::ShellParameter(int _label, double _thickness) {
     label = _label;
     thickness = _thickness;

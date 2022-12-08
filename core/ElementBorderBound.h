@@ -19,6 +19,7 @@ public:
     int element;
     string face;
 
+    ElementBorderBound();
     ElementBorderBound(int _element, string _face);
 
     //BorderManager getBorder(ElementManager elem);

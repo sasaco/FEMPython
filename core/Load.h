@@ -23,6 +23,7 @@ public:
     int coords;
     double globalX[6];
 
+    Load();
     Load(vector<string> columns);
     Load(int _node, int _coords, double x, double y, double z, double rx, double ry, double rz);
 

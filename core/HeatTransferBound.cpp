@@ -6,6 +6,11 @@
 // face - 要素境界面
 // htc - 熱伝達率
 // outTemp - 外部温度
+HeatTransferBound::HeatTransferBound()
+    : ElementBorderBound() {
+    htc = 0;
+    outTemp = 0;
+}
 HeatTransferBound::HeatTransferBound(int element, string face, double _htc, double _outTemp)
     : ElementBorderBound(element, face){
     htc = _htc;

@@ -4,6 +4,10 @@
 // —v‘f‹«ŠEğŒ
 // element - —v‘fƒ‰ƒxƒ‹
 // face - —v‘f‹«ŠE–Ê
+ElementBorderBound::ElementBorderBound() {
+    element = -1;
+    face = "";
+};
 ElementBorderBound::ElementBorderBound(int _element, string _face) {
     element = _element;
     face = _face;

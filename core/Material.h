@@ -47,6 +47,7 @@ public:
     Eigen::Matrix<double, 5, 5> msh;
     Eigen::Matrix<double, 6, 6> m3d;
 
+    Material();
     Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
     Material(const Material& mat);
 

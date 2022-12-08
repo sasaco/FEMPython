@@ -24,8 +24,9 @@ public:
     bool rest[6];
     double globalX[6];
 
+    Restraint();
     Restraint(vector<string> columns);
-    
+
     Restraint(int _node, int _coords,
         bool restx, bool resty, bool restz,
         double x, double y, double z,

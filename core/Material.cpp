@@ -8,6 +8,16 @@
 // dens - 密度
 // hCon - 熱伝導率
 // sHeat - 比熱
+Material::Material() {
+    label = -1;
+    ee = 0;
+    nu = 0;
+    dens = 0;
+    hCon = 0;
+    sHeat = 0;
+    gg = 0;
+    cv = 0;
+}
 Material::Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat) {
     label = _label;
     ee = _ee;

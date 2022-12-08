@@ -5,6 +5,10 @@
 // label - パラメータ番号
 // type - 断面種類
 // ss - データ文字列
+BarParameter::BarParameter() {
+    label = -1;
+    type = "";
+}
 BarParameter::BarParameter(int _label, string _type, double *ss) {
     
     label = _label;

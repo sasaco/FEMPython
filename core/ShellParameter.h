@@ -15,6 +15,7 @@ public:
     int label;
     double thickness;
 
+    ShellParameter();
     ShellParameter(int _label, double _thickness);
 
     string toString();

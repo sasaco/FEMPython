@@ -53,6 +53,7 @@ private:
     //TriElement1 _TriElement1 = NULL;
     
 public:
+    ElementManager();
     ElementManager(string key, vector<string> columns);
 
     int label();

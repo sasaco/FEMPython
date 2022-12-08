@@ -23,6 +23,7 @@ private:
 public:
     int label;
 
+    BarParameter();
     BarParameter(int label, string type, double* ss);
     ~BarParameter();
 

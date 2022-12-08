@@ -6,6 +6,7 @@
 #include "BoundaryCondition.h"
 #include "Solver.h"
 #include "Result.h"
+#include "FENode.h"
 
 
 //--------------------------------------------------------------------//

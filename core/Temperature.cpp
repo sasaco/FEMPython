@@ -6,6 +6,10 @@
 // 温度固定条件
 // node - 節点ラベル
 // t - 温度
+Temperature::Temperature() {
+    node = -1;
+    t = 0;
+};
 Temperature::Temperature(int _node, double _t) {
     node = _node;
     t = _t;

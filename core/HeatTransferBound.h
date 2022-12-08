@@ -18,6 +18,7 @@ public:
     double htc;
     double outTemp;
 
+    HeatTransferBound();
     HeatTransferBound(int _element, string face, double _htc, double _outTemp);
 
     //string toString(vector<ElementManager> elems);
