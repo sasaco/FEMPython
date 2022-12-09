@@ -125,46 +125,23 @@ void Solver::createHeatMatrix(const FemDataModel& model) {
 }
 
 // 行列の一部を抽出する
-// matrix1,vector1 - 元のマトリックス,ベクトル
+// matrix1, vector1 - 元のマトリックス,ベクトル
 // list - 抽出部分のリスト
 void Solver::extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list) {
-    int count = list.size();
-    _matrix.resize(count);
-    _vector.resize(count);
-    for (int i = 0; i < count; i++) {
-        _vector[i] = vector1[list[i]];
-        _matrix.row(i) = extructRow(matrix1[list[i]], list);
-    }
+    // 
+    // https://eigen.tuxfamily.org/dox/group__TutorialSlicingIndexing.html
+    _vector = vector1;// (list);
+    _matrix = matrix1;// (list, list);
 }
 
-
-
-// 行列の行から一部を抽出する
-// mrow - 元のマトリックスの行データ
-// list - 抽出部分のリスト
-function extructRow(mrow, list) {
-    var exrow = [], col = [], i1 = 0, j1 = 0;
-    for (var j in mrow) {
-        if (mrow.hasOwnProperty(j)) {
-            col.push(parseInt(j));
-        }
-    }
-    col.sort(function(j1, j2) { return j1 - j2; });
-    while ((i1 < col.length) && (j1 < list.length)) {
-        if (col[i1] == list[j1]) {
-            exrow[j1] = mrow[col[i1]];
-            i1++;
-            j1++;
-        }
-        else if (col[i1] < list[j1]) {
-            i1++;
-        }
-        else {
-            j1++;
-        }
-    }
-    return exrow;
-}
+// 連立方程式を解く
+MatrixXd Solver::solve() {
+    return _matrix.fullPivLu().solve(_vector);
+    //switch (method) {
+    //    case LU_METHOD:
+    //    case ILUCG_METHOD:
+    //}
+};
 
 
 
@@ -233,17 +210,7 @@ Solver.prototype.createGeomStiffMatrix = function() {
 
 
 
-// 連立方程式を解く
-Solver.prototype.solve = function() {
-    switch (this.method) {
-    case LU_METHOD:
-        var a = numeric.ccsSparse(this.matrix);
-        return numeric.ccsLUPSolve(numeric.ccsLUP(a), this.vector);
-    case ILUCG_METHOD:
-        return solveILU(toSparse(this.matrix), getILU(this.matrix),
-            this.vector);
-    }
-};
+
 
 // ランチョス法で固有値・固有ベクトルを求める
 // n - ３重対角化行列の大きさ

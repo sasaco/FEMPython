@@ -4,6 +4,7 @@
 #include "Strain.h"
 #include "Stress.h"
 #include "EigenValue.h"
+#include "BoundaryCondition.h"
 
 #include<map> 
 #include<string>
@@ -11,6 +12,9 @@
 using namespace std;
 using std::string;
 using std::vector;
+
+#include <Eigen/Core>
+using namespace Eigen;
 
 class Result {
 
@@ -129,5 +133,7 @@ public:
 
     Result();
     void clear();
+
+    void setTemperature(BoundaryCondition bc, MatrixXd t, int nodeCount);
 };
 

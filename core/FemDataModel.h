@@ -42,6 +42,7 @@ private:
     void resetCoordinatesPointer(map<int, Coordinates> map, Restraint &bc);
     void resetCoordinatesPointer(map<int, Coordinates> map, Load &bc);
 
+    void setNodeDoF();
 
 public:
     MeshModel mesh;		                    // ƒƒbƒVƒ…ƒ‚ƒfƒ‹

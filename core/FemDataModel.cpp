@@ -281,8 +281,8 @@ void FemDataModel::calculate(){
     solver.dof=mesh.nodes.size();
     bc.setPointerHeat(solver.dof);
     solver.createHeatMatrix(*this);
-    var tmp=solver.solve();
-    result.setTemperature(bc,tmp,mesh.nodes.size());
+    auto tmp = solver.solve();
+    result.setTemperature(bc,tmp, mesh.nodes.size());
     calc=true;
   }
   if(bc.restraints.size()>0){
@@ -299,26 +299,25 @@ void FemDataModel::calculate(){
     calc=true;
   }
   if(!calc){
-    alert('拘束条件不足のため計算できません');
+    throw("拘束条件不足のため計算できません");
   }
-  var t1=new Date().getTime();
-  console.log('Calculation time:'+(t1-t0)+'ms');
+  //var t1=new Date().getTime();
+  //console.log('Calculation time:'+(t1-t0)+'ms');
 };
 
 
-/*
 // 節点の自由度を設定する
-FemDataModel.prototype.setNodeDoF=function(){
-  var i,dof=this.bc.dof;
-  var nodeCount=this.mesh.nodes.length;
-  var elemCount=this.mesh.elements.length;
-  dof.length=0;
-  for(i=0;i<nodeCount;i++){
-    dof[i]=3;
+void FemDataModel::setNodeDoF(){
+  auto dof = bc.dof;
+  int nodeCount = mesh.nodes.size();
+  int elemCount = mesh.elements.size();
+  dof.clear();
+  for(int i=0;i<nodeCount;i++){
+    dof.push_back(3);
   }
-  for(i=0;i<elemCount;i++){
-    var elem=this.mesh.elements[i];
-    if(elem.isShell || elem.isBar){	// シェル要素・梁要素
+  for(int i=0;i<elemCount;i++){
+    auto elem=mesh.elements[i];
+    if(elem.isShell() || elem.isBar()) {	// シェル要素・梁要素
       var count=elem.nodeCount();
       for(var j=0;j<count;j++){
         dof[elem.nodes[j]]=6;
@@ -327,6 +326,9 @@ FemDataModel.prototype.setNodeDoF=function(){
   }
   this.solver.dof=this.bc.setPointerStructure(nodeCount);
 };
+
+/*
+
 // 固有振動数・固有ベクトルを求める
 // count - 求める固有振動の数
 FemDataModel.prototype.charVib=function(count){

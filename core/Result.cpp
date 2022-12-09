@@ -28,6 +28,32 @@ void Result::clear() {
     maxValue = 0;
 };
 
+
+
+// 節点温度を設定する
+// bc - 境界条件
+// t - 節点温度を表すベクトル
+// nodeCount - 節点数
+void Result::setTemperature(BoundaryCondition bc, MatrixXd t, int nodeCount) {
+
+    temperature.clear();
+    auto temp = bc.temperature;
+    int ii = 0;
+    for (int i = 0; i < nodeCount; i++) {
+        double tt = 0;
+        if (bc.bcList[i] < 0) {
+            tt = t[ii];
+            ii++;
+        }
+        else {
+            tt = temp[bc.bcList[i]].t;
+        }
+        tempMax = max(tempMax, tt);
+        temperature.push_back(tt);
+    }
+    calculated = true;
+}
+
 /*
 // 節点変位を設定する
 // bc - 境界条件
@@ -61,27 +87,6 @@ Result.prototype.setDisplacement = function(bc, disp, nodeCount) {
     this.calculated = true;
 };
 
-// 節点温度を設定する
-// bc - 境界条件
-// t - 節点温度を表すベクトル
-// nodeCount - 節点数
-Result.prototype.setTemperature = function(bc, t, nodeCount) {
-    this.temperature.length = 0;
-    var temp = bc.temperature, ii = 0;
-    for (var i = 0; i < nodeCount; i++) {
-        var tt;
-        if (bc.bcList[i] < 0) {
-            tt = t[ii];
-            ii++;
-        }
-        else {
-            tt = temp[bc.bcList[i]].t;
-        }
-        this.tempMax = Math.max(this.tempMax, tt);
-        this.temperature.push(tt);
-    }
-    this.calculated = true;
-};
 
 // 節点の構造解析結果に値を加える
 // i - 節点のインデックス

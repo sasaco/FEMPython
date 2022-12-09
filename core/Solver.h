@@ -7,6 +7,7 @@ using namespace std;
 using std::vector;
 
 #include <Eigen/Core>
+#include <Eigen/LU>
 using namespace Eigen;
 
 
@@ -31,7 +32,8 @@ public:
 
     MatrixXd heatMatrix(const FemDataModel& model);
     MatrixXd tempVector(const FemDataModel& model, MatrixXd matrix);
+    void createHeatMatrix(const FemDataModel& model);
     void extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list);
 
-    void createHeatMatrix(FemDataModel& model);
+    MatrixXd solve();   
 };
