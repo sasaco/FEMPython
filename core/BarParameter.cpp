@@ -25,6 +25,10 @@ BarParameter::~BarParameter() {
     delete rectSection;
 }
 
+RectSection BarParameter::section() {
+    return *rectSection;
+}
+
 // 梁パラメータを表す文字列を返す
 string BarParameter::toString() {
 
@@ -44,3 +48,4 @@ string BarParameter::toString() {
     return "BarParamater";
 
 }
+

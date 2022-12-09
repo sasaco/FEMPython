@@ -72,7 +72,7 @@ public:
     int nodeCount();
 
     MatrixXd gradMatrix(vector<FENode>nodes, double h, ShellParameter sp);
-    MatrixXd gradMatrix(vector<FENode>nodes, double h, BarParameter sp);
+    MatrixXd gradMatrix(vector<FENode>nodes, double h, RectSection sp);
     MatrixXd gradMatrix(vector<FENode>nodes, double h);
     /*
     BorderManager border(int element, int index);

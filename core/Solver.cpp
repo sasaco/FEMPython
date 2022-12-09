@@ -23,8 +23,7 @@ MatrixXd Solver::heatMatrix(const FemDataModel& model) {
 
     auto mesh = model.mesh;
     int dof = mesh.nodes.size();
-    MatrixXd matrix(dof, *);
-
+    MatrixXd matrix(dof, dof);
 
     for (int i = 0; i < mesh.elements.size(); i++) {
         auto elem = mesh.elements[i];
@@ -40,23 +39,19 @@ MatrixXd Solver::heatMatrix(const FemDataModel& model) {
         }
         else if (elem.isBar()) {
             int param = elem.param();
-            auto sect = model.barParams[param].section;
-            ls = elem.gradMatrix(mesh.getNodes(elem), h, sect);
+            auto sect = model.barParams[param].section();
+            auto nodes = mesh.getNodes(elem);
+            ls = elem.gradMatrix(nodes, h, sect);
         }
         else {
             auto nodes = mesh.getNodes(elem);
             ls = elem.gradMatrix(nodes, h);
         }
 
-        for (var i1 = 0; i1 < count; i1++) {
-            var mrow = matrix[elem.nodes[i1]], lrow = ls[i1];
-            for (var j1 = 0; j1 < count; j1++) {
-                if (elem.nodes[j1] in mrow) {
-                    mrow[elem.nodes[j1]] += lrow[j1];
-                }
-                else {
-                    mrow[elem.nodes[j1]] = lrow[j1];
-                }
+        for (int i1 = 0; i1 < count; i1++) {
+            auto n = elem.nodes();
+            for (int j1 = 0; j1 < count; j1++) {
+                matrix(n[i1], n[j1]) += ls(i1, j1);
             }
         }
     }
@@ -64,10 +59,49 @@ MatrixXd Solver::heatMatrix(const FemDataModel& model) {
 }
 
 
+// 熱境界条件ベクトルを作成する
+// matrix - 伝熱マトリックス
+MatrixXd Solver::tempVector(const FemDataModel& model, MatrixXd matrix) {
+    auto htcs = model.bc.htcs;
+
+    VectorXd vector = VectorXd::Zero(model.mesh.nodes.size());
+    /*
+    for (int i = 0; i < htcs.size(); i++) {
+        auto elem = model.mesh.elements[htcs[i].element];
+        auto border = htcs[i].getBorder(elem);
+        var p = model.mesh.getNodes(border);
+        var h = htcs[i].htc;
+        if (border.isEdge) {
+            var sp = model.shellParams[elem.param];
+            h *= sp.thickness;
+        }
+        var hm = border.shapeFunctionMatrix(p, h);
+        var hv = border.shapeFunctionVector(p, h * htcs[i].outTemp);
+        var count = border.nodeCount();
+        for (var i1 = 0; i1 < count; i1++) {
+            var mrow = matrix[border.nodes[i1]], hrow = hm[i1];
+            for (var j1 = 0; j1 < count; j1++) {
+                if (border.nodes[j1] in mrow) {
+                    mrow[border.nodes[j1]] += hrow[j1];
+                }
+                else {
+                    mrow[border.nodes[j1]] = hrow[j1];
+                }
+            }
+            vector[border.nodes[i1]] += hv[i1];
+        }
+    }
+    */
+    return vector;
+}
+
+
+
 // 熱計算のマトリックス・ベクトルを計算する
 void Solver::createHeatMatrix(const FemDataModel& model) {
+
     auto bcList = model.bc.bcList;
-    std::vector<int> reducedList;
+    vector<int> reducedList;
     for (int i = 0; i < bcList.size(); i++) {
         if (bcList[i] < 0) {
             reducedList.push_back(i);
@@ -75,21 +109,63 @@ void Solver::createHeatMatrix(const FemDataModel& model) {
     }
 
     // 伝熱マトリックス・熱境界条件ベクトルの作成
-    var matrix1 = heatMatrix(model), vector1 = tempVector(matrix1);
+    auto matrix1 = heatMatrix(model);
+    auto vector1 = tempVector(model, matrix1);
 
     // 拘束自由度を除去する
-    for (i = 0; i < bcList.length; i++) {
+    for (int i = 0; i < bcList.size(); i++) {
         if (bcList[i] >= 0) {
-            var t = model.bc.temperature[bcList[i]];
-            for (var j = 0; j < vector1.length; j++) {
-                if (i in matrix1[j]) {
-                    vector1[j] -= t.t * matrix1[j][i];
-                }
+            auto t = model.bc.temperature[bcList[i]];
+            for (int j = 0; j < vector1.size(); j++) {
+                vector1[j] -= t.t * matrix1(j, i);
             }
         }
     }
-    this.extruct(matrix1, vector1, reducedList);
-};
+    extruct(matrix1, vector1, reducedList);
+}
+
+// 行列の一部を抽出する
+// matrix1,vector1 - 元のマトリックス,ベクトル
+// list - 抽出部分のリスト
+void Solver::extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list) {
+    int count = list.size();
+    _matrix.resize(count);
+    _vector.resize(count);
+    for (int i = 0; i < count; i++) {
+        _vector[i] = vector1[list[i]];
+        _matrix.row(i) = extructRow(matrix1[list[i]], list);
+    }
+}
+
+
+
+// 行列の行から一部を抽出する
+// mrow - 元のマトリックスの行データ
+// list - 抽出部分のリスト
+function extructRow(mrow, list) {
+    var exrow = [], col = [], i1 = 0, j1 = 0;
+    for (var j in mrow) {
+        if (mrow.hasOwnProperty(j)) {
+            col.push(parseInt(j));
+        }
+    }
+    col.sort(function(j1, j2) { return j1 - j2; });
+    while ((i1 < col.length) && (j1 < list.length)) {
+        if (col[i1] == list[j1]) {
+            exrow[j1] = mrow[col[i1]];
+            i1++;
+            j1++;
+        }
+        else if (col[i1] < list[j1]) {
+            i1++;
+        }
+        else {
+            j1++;
+        }
+    }
+    return exrow;
+}
+
 
 
 /*
@@ -155,17 +231,7 @@ Solver.prototype.createGeomStiffMatrix = function() {
 
 
 
-// 行列の一部を抽出する
-// matrix1,vector1 - 元のマトリックス,ベクトル
-// list - 抽出部分のリスト
-Solver.prototype.extruct = function(matrix1, vector1, list) {
-    this.matrix.length = 0;
-    this.vector.length = 0;
-    for (var i = 0; i < list.length; i++) {
-        this.vector[i] = vector1[list[i]];
-        this.matrix[i] = extructRow(matrix1[list[i]], list);
-    }
-};
+
 
 // 連立方程式を解く
 Solver.prototype.solve = function() {
@@ -439,65 +505,6 @@ function loadVector(dof) {
 
 
 
-// 熱境界条件ベクトルを作成する
-// matrix - 伝熱マトリックス
-function tempVector(matrix) {
-    var htcs = model.bc.htcs, i;
-    var vector = numeric.rep([model.mesh.nodes.length], 0);
-    for (i = 0; i < htcs.length; i++) {
-        var elem = model.mesh.elements[htcs[i].element];
-        var border = htcs[i].getBorder(elem);
-        var p = model.mesh.getNodes(border);
-        var h = htcs[i].htc;
-        if (border.isEdge) {
-            var sp = model.shellParams[elem.param];
-            h *= sp.thickness;
-        }
-        var hm = border.shapeFunctionMatrix(p, h);
-        var hv = border.shapeFunctionVector(p, h * htcs[i].outTemp);
-        var count = border.nodeCount();
-        for (var i1 = 0; i1 < count; i1++) {
-            var mrow = matrix[border.nodes[i1]], hrow = hm[i1];
-            for (var j1 = 0; j1 < count; j1++) {
-                if (border.nodes[j1] in mrow) {
-                    mrow[border.nodes[j1]] += hrow[j1];
-                }
-                else {
-                    mrow[border.nodes[j1]] = hrow[j1];
-                }
-            }
-            vector[border.nodes[i1]] += hv[i1];
-        }
-    }
-    return vector;
-}
-
-// 行列の行から一部を抽出する
-// mrow - 元のマトリックスの行データ
-// list - 抽出部分のリスト
-function extructRow(mrow, list) {
-    var exrow = [], col = [], i1 = 0, j1 = 0;
-    for (var j in mrow) {
-        if (mrow.hasOwnProperty(j)) {
-            col.push(parseInt(j));
-        }
-    }
-    col.sort(function(j1, j2) { return j1 - j2; });
-    while ((i1 < col.length) && (j1 < list.length)) {
-        if (col[i1] == list[j1]) {
-            exrow[j1] = mrow[col[i1]];
-            i1++;
-            j1++;
-        }
-        else if (col[i1] < list[j1]) {
-            i1++;
-        }
-        else {
-            j1++;
-        }
-    }
-    return exrow;
-}
 
 // 計算を開始する
 function calcStart() {

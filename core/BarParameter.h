@@ -26,5 +26,6 @@ public:
     BarParameter(int label, string type, double* ss);
     ~BarParameter();
 
+    RectSection section() const;
     string toString();
 };

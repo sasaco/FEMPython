@@ -253,6 +253,83 @@ int ElementManager::nodeCount() {
     return node.size();
 }
 
+/// <summary>
+/// Shell—p
+/// </summary>
+/// <param name="nodes"></param>
+/// <param name="h"></param>
+/// <param name="sp"></param>
+/// <returns></returns>
+MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, ShellParameter sp) {
+    if (key == "QuadElement1") {
+        // return _QuadElement1.gradMatrix(nodes, h, sp);
+    }
+    else if (key == "TriElement1") {
+        // return _TriElement1.gradMatrix(nodes, h, sp);
+    }
+    return MatrixXd(1, 1); // ‰¼
+}
+
+/// <summary>
+/// Bar—p
+/// </summary>
+/// <param name="nodes"></param>
+/// <param name="h"></param>
+/// <param name="sp"></param>
+/// <returns></returns>
+MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, RectSection sp) {
+    if (key == "BEBarElement") {
+        // return _BEBarElement.gradMatrix(nodes, h, sp);
+    }
+    else if (key == "TBarElement") {
+        // return _TBarElement.gradMatrix(nodes, h, sp);
+    }
+    return MatrixXd(1, 1); // ‰¼
+}
+
+/// <summary>
+/// Solid—p
+/// </summary>
+/// <param name="nodes"></param>
+/// <param name="h"></param>
+/// <returns></returns>
+MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h) {
+    if (key == "BEBarElement") {
+        // return _BEBarElement.gradMatrix(nodes, h);
+    }
+    else if (key == "TBarElement") {
+        // return _TBarElement.gradMatrix(nodes, h);
+    }
+    else if (key == "TetraElement1") {
+        // return _TetraElement1.gradMatrix(nodes, h);
+    }
+    else if (key == "TetraElement2") {
+        // return _TetraElement2.material =mat;
+    }
+    else if (key == "HexaElement1") {
+        return _HexaElement1.gradMatrix(nodes, h);
+    }
+    else if (key == "HexaElement2") {
+        // return _HexaElement2.gradMatrix(nodes, h);
+    }
+    else if (key == "HexaElement1WT") {
+        // return _HexaElement1WT.gradMatrix(nodes, h);
+    }
+    else if (key == "WedgeElement1") {
+        // return _WedgeElement1.gradMatrix(nodes, h);
+    }
+    else if (key == "WedgeElement2") {
+        // return _WedgeElement2.gradMatrix(nodes, h);
+    }
+    else if (key == "QuadElement1") {
+        // return _QuadElement1.gradMatrix(nodes, h);
+    }
+    else if (key == "TriElement1") {
+        // return _TriElement1.gradMatrix(nodes, h);
+    }
+}
+
+
 /*
 
 // —v‘f‹«ŠE‚ð•Ô‚·

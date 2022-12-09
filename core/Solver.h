@@ -15,9 +15,9 @@ class Solver {
 private:
     double PRECISION = 1e-10;	// マトリックス精度
 
-    VectorXd matrix;
-    VectorXd matrix2;
-    VectorXd vector;
+    MatrixXd _matrix;
+    MatrixXd _matrix2;
+    VectorXd _vector;
 
 public:
     int  LU_METHOD = 0;	        // LU分解法
@@ -29,6 +29,9 @@ public:
     Solver();
     void clear();
 
-    MatrixXd heatMatrix(FemDataModel& model);
+    MatrixXd heatMatrix(const FemDataModel& model);
+    MatrixXd tempVector(const FemDataModel& model, MatrixXd matrix);
+    void extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list);
+
     void createHeatMatrix(FemDataModel& model);
 };
