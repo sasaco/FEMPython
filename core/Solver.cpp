@@ -19,7 +19,7 @@ void Solver::clear() {
 };
 
 // 伝熱マトリックスを作成する
-MatrixXd Solver::heatMatrix(const FemDataModel& model) {
+MatrixXd Solver::heatMatrix() {
 
     auto mesh = model.mesh;
     int dof = mesh.nodes.size();
@@ -58,10 +58,9 @@ MatrixXd Solver::heatMatrix(const FemDataModel& model) {
     return matrix;
 }
 
-
 // 熱境界条件ベクトルを作成する
 // matrix - 伝熱マトリックス
-MatrixXd Solver::tempVector(const FemDataModel& model, MatrixXd matrix) {
+MatrixXd Solver::tempVector(MatrixXd matrix) {
     auto htcs = model.bc.htcs;
 
     VectorXd vector = VectorXd::Zero(model.mesh.nodes.size());
@@ -95,10 +94,10 @@ MatrixXd Solver::tempVector(const FemDataModel& model, MatrixXd matrix) {
     return vector;
 }
 
-
-
 // 熱計算のマトリックス・ベクトルを計算する
-void Solver::createHeatMatrix(const FemDataModel& model) {
+void Solver::createHeatMatrix(const FemDataModel& _model) {
+
+    model = _model;
 
     auto bcList = model.bc.bcList;
     vector<int> reducedList;
@@ -109,8 +108,8 @@ void Solver::createHeatMatrix(const FemDataModel& model) {
     }
 
     // 伝熱マトリックス・熱境界条件ベクトルの作成
-    auto matrix1 = heatMatrix(model);
-    auto vector1 = tempVector(model, matrix1);
+    auto matrix1 = heatMatrix();
+    auto vector1 = tempVector(matrix1);
 
     // 拘束自由度を除去する
     for (int i = 0; i < bcList.size(); i++) {
@@ -123,6 +122,179 @@ void Solver::createHeatMatrix(const FemDataModel& model) {
     }
     extruct(matrix1, vector1, reducedList);
 }
+
+
+
+
+// 剛性マトリックスを作成する
+// dof - モデル自由度
+MatrixXd Solver::stiffnessMatrix(int dof) {
+
+    auto mesh = model.mesh;
+    auto elements = mesh.elements;
+    
+    MatrixXd matrix(dof, *);
+    MatrixXd km;
+    double kmax = 0;
+
+    for (int i = 0; i < elements.size(); i++) {
+        auto elem = elements[i];
+        auto material = model.materials[elem.material()];
+        auto m2d = material.matrix2Dstress();
+        auto m3d = material.matrix3D();
+        auto msh = material.matrixShell();
+
+        if (elem.isShell()) {
+            auto sp = model.shellParams[elem.param()];
+            if (elem.getName() == "TriElement1") {
+                km = elem.stiffnessMatrix(mesh.getNodes(elem), m2d, sp);
+            }
+            else {
+                km = elem.stiffnessMatrix(mesh.getNodes(elem), msh, sp);
+            }
+            kmax = setElementMatrix(elem, 6, matrix, km, kmax);
+        }
+        else if (elem.isBar()) {
+            auto sect = model.barParams[elem.param()].section();
+            km = elem.stiffnessMatrix(mesh.getNodes(elem), material, sect);
+            kmax = setElementMatrix(elem, 6, matrix, km, kmax);
+        }
+        else {
+            km = elem.stiffnessMatrix(mesh.getNodes(elem), m3d);
+            kmax = setElementMatrix(elem, 3, matrix, km, kmax);
+        }
+    }
+    // 座標変換
+    var rests = model.bc.restraints;
+    var index = model.bc.nodeIndex, bcdof = model.bc.dof;
+    for (i = 0; i < rests.size(); i++) {
+        var ri = rests[i];
+        if (ri.coords) {
+            ri.coords.transMatrix(matrix, dof, index[ri.node], bcdof[i]);
+        }
+    }
+    // 絶対値が小さい成分を除去する
+    var eps = PRECISION * kmax;
+    for (i = 0; i < dof; i++) {
+        var mrow = matrix[i];
+        for (j in mrow) {
+            if (mrow.hasOwnProperty(j)) {
+                j = parseInt(j);
+                if (Math.abs(mrow[j]) < eps) {
+                    delete mrow[j];
+                }
+            }
+        }
+    }
+    return matrix;
+}
+
+
+
+// 荷重ベクトルを作成する
+// dof - モデル自由度
+function loadVector(dof) {
+    var loads = model.bc.loads, press = model.bc.pressures;
+    var vector = numeric.rep([dof], 0);
+    var i, j, index0, index = model.bc.nodeIndex, bcdof = model.bc.dof;
+    for (i = 0; i < loads.length; i++) {
+        var ld = loads[i], nd = ld.node, ldx = ld.globalX, ldof = bcdof[nd];
+        index0 = index[nd];
+        for (j = 0; j < ldof; j++) {
+            vector[index0 + j] = ldx[j];
+        }
+    }
+    for (i = 0; i < press.length; i++) {
+        var border = press[i].getBorder
+        (model.mesh.elements[press[i].element]);
+        var p = model.mesh.getNodes(border);
+        var ps = border.shapeFunctionVector(p, press[i].press);
+        var norm = normalVector(p);
+        var count = border.nodeCount();
+        for (j = 0; j < count; j++) {
+            index0 = index[border.nodes[j]];
+            vector[index0] -= ps[j] * norm.x;
+            vector[index0 + 1] -= ps[j] * norm.y;
+            vector[index0 + 2] -= ps[j] * norm.z;
+        }
+    }
+    var rests = model.bc.restraints;
+    for (i = 0; i < rests.length; i++) {
+        var ri = rests[i];
+        if (ri.coords) {
+            ri.coords.transVector(vector, dof, index[ri.node], bcdof[i]);
+        }
+    }
+    return vector;
+}
+
+
+
+// 剛性マトリックス・荷重ベクトルを作成する
+void Solver::createStiffnessMatrix(const FemDataModel& _model) {
+
+    model = _model;
+
+    auto bc = model.bc;
+    auto bcList = bc.bcList;
+
+    vector<int> reducedList;
+    for (int i = 0; i < bcList.size(); i++) {
+        if (bcList[i] < 0) {
+            reducedList.push_back(i);
+        }
+    }
+
+    // 剛性マトリックス・荷重ベクトルの作成
+    MatrixXd matrix1 = stiffnessMatrix(dof);
+    VectorXd vector1 = loadVector(dof);
+
+    // 拘束自由度を除去する
+    for (int i = 0; i < bcList.size(); i++) {
+        if (bcList[i] >= 0) {
+            auto rx = bc.getRestDisp(bcList[i]);
+            for (int j = 0; j < vector1.size(); j++) {
+                vector1(j) -= rx * matrix1(j, i);
+            }
+        }
+    }
+    extruct(matrix1, vector1, reducedList);
+}
+
+
+// 要素のマトリックスを設定する
+// element - 要素
+// dof - 自由度
+// matrix - 全体剛性マトリックス
+// km - 要素の剛性マトリックス
+// kmax - 成分の絶対値の最大値
+MatrixXd setElementMatrix(element, dof, matrix, km, kmax) {
+    var nodeCount = element.nodeCount();
+    var index = model.bc.nodeIndex, nodes = element.nodes;
+    for (var i = 0; i < nodeCount; i++) {
+        var row0 = index[nodes[i]], i0 = dof * i;
+        for (var j = 0; j < nodeCount; j++) {
+            var column0 = index[nodes[j]], j0 = dof * j;
+            for (var i1 = 0; i1 < dof; i1++) {
+                var mrow = matrix[row0 + i1], krow = km[i0 + i1];
+                for (var j1 = 0; j1 < dof; j1++) {
+                    var cj1 = column0 + j1;
+                    if (cj1 in mrow) {
+                        mrow[cj1] += krow[j0 + j1];
+                        kmax = Math.max(kmax, Math.abs(mrow[cj1]));
+                    }
+                    else {
+                        mrow[cj1] = krow[j0 + j1];
+                        kmax = Math.max(kmax, Math.abs(mrow[cj1]));
+                    }
+                }
+            }
+        }
+    }
+    return kmax;
+}
+
+
 
 // 行列の一部を抽出する
 // matrix1, vector1 - 元のマトリックス,ベクトル
@@ -144,34 +316,7 @@ MatrixXd Solver::solve() {
 };
 
 
-
 /*
-// 剛性マトリックス・荷重ベクトルを作成する
-Solver.prototype.createStiffnessMatrix = function() {
-    var i, bc = model.bc, bcList = bc.bcList, reducedList = [];
-    for (i = 0; i < bcList.length; i++) {
-        if (bcList[i] < 0) {
-            reducedList.push(i);
-        }
-    }
-
-    // 剛性マトリックス・荷重ベクトルの作成
-    var matrix1 = stiffnessMatrix(this.dof), vector1 = loadVector(this.dof);
-
-    // 拘束自由度を除去する
-    for (i = 0; i < bcList.length; i++) {
-        if (bcList[i] >= 0) {
-            var rx = bc.getRestDisp(bcList[i]);
-            for (var j = 0; j < vector1.length; j++) {
-                if (i in matrix1[j]) {
-                    vector1[j] -= rx * matrix1[j][i];
-                }
-            }
-        }
-    }
-    this.extruct(matrix1, vector1, reducedList);
-};
-
 // 剛性マトリックス・質量マトリックスを作成する
 Solver.prototype.createStiffMassMatrix = function() {
     var i, bc = model.bc, bcList = bc.bcList, reducedList = [];
@@ -284,58 +429,6 @@ function massMatrix(dof) {
     return matrix;
 }
 
-// 剛性マトリックスを作成する
-// dof - モデル自由度
-function stiffnessMatrix(dof) {
-    var mesh = model.mesh, elements = mesh.elements, matrix = [], i, j, km, kmax = 0;
-    for (i = 0; i < dof; i++) matrix[i] = [];
-    for (i = 0; i < elements.length; i++) {
-        var elem = elements[i];
-        var material = model.materials[elem.material], mat = material.matrix;
-        if (elem.isShell) {
-            var sp = model.shellParams[elem.param];
-            if (elem.getName() == = 'TriElement1') {
-                km = elem.stiffnessMatrix(mesh.getNodes(elem), mat.m2d, sp);
-            }
-            else {
-                km = elem.stiffnessMatrix(mesh.getNodes(elem), mat.msh, sp);
-            }
-            kmax = setElementMatrix(elem, 6, matrix, km, kmax);
-        }
-        else if (elem.isBar) {
-            var sect = model.barParams[elem.param].section;
-            km = elem.stiffnessMatrix(mesh.getNodes(elem), material, sect);
-            kmax = setElementMatrix(elem, 6, matrix, km, kmax);
-        }
-        else {
-            km = elem.stiffnessMatrix(mesh.getNodes(elem), mat.m3d);
-            kmax = setElementMatrix(elem, 3, matrix, km, kmax);
-        }
-    }
-    // 座標変換
-    var rests = model.bc.restraints;
-    var index = model.bc.nodeIndex, bcdof = model.bc.dof;
-    for (i = 0; i < rests.length; i++) {
-        var ri = rests[i];
-        if (ri.coords) {
-            ri.coords.transMatrix(matrix, dof, index[ri.node], bcdof[i]);
-        }
-    }
-    // 絶対値が小さい成分を除去する
-    var eps = PRECISION * kmax;
-    for (i = 0; i < dof; i++) {
-        var mrow = matrix[i];
-        for (j in mrow) {
-            if (mrow.hasOwnProperty(j)) {
-                j = parseInt(j);
-                if (Math.abs(mrow[j]) < eps) {
-                    delete mrow[j];
-                }
-            }
-        }
-    }
-    return matrix;
-}
 
 // 幾何剛性マトリックスを作成する
 // dof - モデル自由度
@@ -400,76 +493,6 @@ function geomStiffnessMatrix(dof) {
     }
     return matrix;
 }
-
-// 要素のマトリックスを設定する
-// element - 要素
-// dof - 自由度
-// matrix - 全体剛性マトリックス
-// km - 要素の剛性マトリックス
-// kmax - 成分の絶対値の最大値
-function setElementMatrix(element, dof, matrix, km, kmax) {
-    var nodeCount = element.nodeCount();
-    var index = model.bc.nodeIndex, nodes = element.nodes;
-    for (var i = 0; i < nodeCount; i++) {
-        var row0 = index[nodes[i]], i0 = dof * i;
-        for (var j = 0; j < nodeCount; j++) {
-            var column0 = index[nodes[j]], j0 = dof * j;
-            for (var i1 = 0; i1 < dof; i1++) {
-                var mrow = matrix[row0 + i1], krow = km[i0 + i1];
-                for (var j1 = 0; j1 < dof; j1++) {
-                    var cj1 = column0 + j1;
-                    if (cj1 in mrow) {
-                        mrow[cj1] += krow[j0 + j1];
-                        kmax = Math.max(kmax, Math.abs(mrow[cj1]));
-                    }
-                    else {
-                        mrow[cj1] = krow[j0 + j1];
-                        kmax = Math.max(kmax, Math.abs(mrow[cj1]));
-                    }
-                }
-            }
-        }
-    }
-    return kmax;
-}
-
-// 荷重ベクトルを作成する
-// dof - モデル自由度
-function loadVector(dof) {
-    var loads = model.bc.loads, press = model.bc.pressures;
-    var vector = numeric.rep([dof], 0);
-    var i, j, index0, index = model.bc.nodeIndex, bcdof = model.bc.dof;
-    for (i = 0; i < loads.length; i++) {
-        var ld = loads[i], nd = ld.node, ldx = ld.globalX, ldof = bcdof[nd];
-        index0 = index[nd];
-        for (j = 0; j < ldof; j++) {
-            vector[index0 + j] = ldx[j];
-        }
-    }
-    for (i = 0; i < press.length; i++) {
-        var border = press[i].getBorder
-        (model.mesh.elements[press[i].element]);
-        var p = model.mesh.getNodes(border);
-        var ps = border.shapeFunctionVector(p, press[i].press);
-        var norm = normalVector(p);
-        var count = border.nodeCount();
-        for (j = 0; j < count; j++) {
-            index0 = index[border.nodes[j]];
-            vector[index0] -= ps[j] * norm.x;
-            vector[index0 + 1] -= ps[j] * norm.y;
-            vector[index0 + 2] -= ps[j] * norm.z;
-        }
-    }
-    var rests = model.bc.restraints;
-    for (i = 0; i < rests.length; i++) {
-        var ri = rests[i];
-        if (ri.coords) {
-            ri.coords.transVector(vector, dof, index[ri.node], bcdof[i]);
-        }
-    }
-    return vector;
-}
-
 
 
 

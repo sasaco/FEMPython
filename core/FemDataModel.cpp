@@ -287,7 +287,7 @@ void FemDataModel::calculate(){
   }
   if(bc.restraints.size()>0){
     setNodeDoF();
-    solver.createStiffnessMatrix();
+    solver.createStiffnessMatrix(*this);
     var d=solver.solve();
     result.setDisplacement(bc,d,mesh.nodes.size());
     if(result.type===ELEMENT_DATA){

@@ -22,19 +22,23 @@ Material::Material(int _label, double _ee, double _nu, double _dens, double _hCo
 
 
 // 平面応力問題の応力 - 歪マトリックスを作成する
-void Material::matrix2Dstress(){
+MatrixXd Material::matrix2Dstress(){
+
+    Eigen::Matrix<double, 3, 3> m2d;
 
     double coef= ee / ( 1 - nu * nu );
 
-    //m2d(0, 0) = coef;
-    //m2d(0, 1) = coef * nu;
-    //m2d(0, 2) = 0;
-    //m2d(1, 0) = coef * nu;
-    //m2d(1, 1) = coef;
-    //m2d(1, 2) = 0;
-    //m2d(2, 0) = 0;
-    //m2d(2, 1) = 0;
-    //m2d(2, 2) = gg;
+    m2d(0, 0) = coef;
+    m2d(0, 1) = coef * nu;
+    m2d(0, 2) = 0;
+    m2d(1, 0) = coef * nu;
+    m2d(1, 1) = coef;
+    m2d(1, 2) = 0;
+    m2d(2, 0) = 0;
+    m2d(2, 1) = 0;
+    m2d(2, 2) = gg;
+
+    return m2d;
 
 }
 
@@ -92,92 +96,98 @@ void Material::matrix2Dstress(){
  */
 
 // 3次元問題の応力 - 歪マトリックスを作成する
-void Material::matrix3D() {
+MatrixXd Material::matrix3D() {
+
+    Eigen::Matrix<double, 6, 6> m3d;
 
     double coef = ee / ( ( 1 + nu ) * ( 1 - 2 * nu ) );
     double s1 = coef * (1 - nu);
     double s2 = coef * nu;
 
-    //m3d(0, 0) = s1;
-    //m3d(0, 1) = s2;
-    //m3d(0, 2) = s2;
-    //m3d(0, 3) = 0;
-    //m3d(0, 4) = 0;
-    //m3d(0, 5) = 0;
+    m3d(0, 0) = s1;
+    m3d(0, 1) = s2;
+    m3d(0, 2) = s2;
+    m3d(0, 3) = 0;
+    m3d(0, 4) = 0;
+    m3d(0, 5) = 0;
 
-    //m3d(1, 0) = s2;
-    //m3d(1, 1) = s1;
-    //m3d(1, 2) = s2;
-    //m3d(1, 3) = 0;
-    //m3d(1, 4) = 0;
-    //m3d(1, 5) = 0;
+    m3d(1, 0) = s2;
+    m3d(1, 1) = s1;
+    m3d(1, 2) = s2;
+    m3d(1, 3) = 0;
+    m3d(1, 4) = 0;
+    m3d(1, 5) = 0;
 
-    //m3d(2, 0) = s2;
-    //m3d(2, 1) = s2;
-    //m3d(2, 2) = s1;
-    //m3d(2, 3) = 0;
-    //m3d(2, 4) = 0;
-    //m3d(2, 5) = 0;
+    m3d(2, 0) = s2;
+    m3d(2, 1) = s2;
+    m3d(2, 2) = s1;
+    m3d(2, 3) = 0;
+    m3d(2, 4) = 0;
+    m3d(2, 5) = 0;
 
-    //m3d(3, 0) = 0;
-    //m3d(3, 1) = 0;
-    //m3d(3, 2) = 0;
-    //m3d(3, 3) = gg;
-    //m3d(3, 4) = 0;
-    //m3d(3, 5) = 0;
+    m3d(3, 0) = 0;
+    m3d(3, 1) = 0;
+    m3d(3, 2) = 0;
+    m3d(3, 3) = gg;
+    m3d(3, 4) = 0;
+    m3d(3, 5) = 0;
 
-    //m3d(4, 0) = 0;
-    //m3d(4, 1) = 0;
-    //m3d(4, 2) = 0;
-    //m3d(4, 3) = 0;
-    //m3d(4, 4) = gg;
-    //m3d(4, 5) = 0;
+    m3d(4, 0) = 0;
+    m3d(4, 1) = 0;
+    m3d(4, 2) = 0;
+    m3d(4, 3) = 0;
+    m3d(4, 4) = gg;
+    m3d(4, 5) = 0;
 
-    //m3d(5, 0) = 0;
-    //m3d(5, 1) = 0;
-    //m3d(5, 2) = 0;
-    //m3d(5, 3) = 0;
-    //m3d(5, 4) = 0;
-    //m3d(5, 5) = gg;
+    m3d(5, 0) = 0;
+    m3d(5, 1) = 0;
+    m3d(5, 2) = 0;
+    m3d(5, 3) = 0;
+    m3d(5, 4) = 0;
+    m3d(5, 5) = gg;
 
+    return m3d;
 }
 
 // シェル要素の応力 - 歪マトリックスを作成する
- void Material::matrixShell() {
+MatrixXd Material::matrixShell() {
+
+    Eigen::Matrix<double, 5, 5> msh;
 
     double coef = ee / ( 1 - nu * nu );
     double s2 = coef * nu;
 
-    //msh(0, 0) = coef;
-    //msh(0, 1) = s2;
-    //msh(0, 2) = 0;
-    //msh(0, 3) = 0;
-    //msh(0, 4) = 0;
+    msh(0, 0) = coef;
+    msh(0, 1) = s2;
+    msh(0, 2) = 0;
+    msh(0, 3) = 0;
+    msh(0, 4) = 0;
 
-    //msh(1, 0) = s2;
-    //msh(1, 1) = coef;
-    //msh(1, 2) = 0;
-    //msh(1, 3) = 0;
-    //msh(1, 4) = 0;
+    msh(1, 0) = s2;
+    msh(1, 1) = coef;
+    msh(1, 2) = 0;
+    msh(1, 3) = 0;
+    msh(1, 4) = 0;
 
-    //msh(2, 0) = 0;
-    //msh(2, 1) = 0;
-    //msh(2, 2) = gg;
-    //msh(2, 3) = 0;
-    //msh(2, 4) = 0;
+    msh(2, 0) = 0;
+    msh(2, 1) = 0;
+    msh(2, 2) = gg;
+    msh(2, 3) = 0;
+    msh(2, 4) = 0;
 
-    //msh(3, 0) = 0;
-    //msh(3, 1) = 0;
-    //msh(3, 2) = 0;
-    //msh(3, 3) = KS_RECT * gg;
-    //msh(3, 4) = 0;
+    msh(3, 0) = 0;
+    msh(3, 1) = 0;
+    msh(3, 2) = 0;
+    msh(3, 3) = KS_RECT * gg;
+    msh(3, 4) = 0;
 
-    //msh(4, 0) = 0;
-    //msh(4, 1) = 0;
-    //msh(4, 2) = 0;
-    //msh(4, 3) = 0;
-    //msh(4, 4) = KS_RECT * gg;
+    msh(4, 0) = 0;
+    msh(4, 1) = 0;
+    msh(4, 2) = 0;
+    msh(4, 3) = 0;
+    msh(4, 4) = KS_RECT * gg;
 
+    return msh;
 }
 
 // 材料を表す文字列を返す

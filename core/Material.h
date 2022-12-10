@@ -42,16 +42,12 @@ public:
     //double cv;	// 体積比熱
     double gg;    // 横弾性係数
 
-    Eigen::Matrix<double, 3, 3> m2d;
-    Eigen::Matrix<double, 5, 5> msh;
-    Eigen::Matrix<double, 6, 6> m3d;
-
     Material();
     Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
 
-    void matrix2Dstress();
-    void matrixShell();
-    void matrix3D();
+    MatrixXd matrix2Dstress();
+    MatrixXd matrixShell();
+    MatrixXd matrix3D();
 
     string toString();
 

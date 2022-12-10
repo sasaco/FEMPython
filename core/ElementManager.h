@@ -74,10 +74,18 @@ public:
     MatrixXd gradMatrix(vector<FENode>nodes, double h, ShellParameter sp);
     MatrixXd gradMatrix(vector<FENode>nodes, double h, RectSection sp);
     MatrixXd gradMatrix(vector<FENode>nodes, double h);
+
+    MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1, ShellParameter sp);
+    MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1, RectSection sp);
+    MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1);
+
+
     /*
     BorderManager border(int element, int index);
     BorderManager borderEdge(int element, int index);
     */
+
+    string getName();
 
 };
 

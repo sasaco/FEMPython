@@ -253,13 +253,7 @@ int ElementManager::nodeCount() {
     return node.size();
 }
 
-/// <summary>
-/// Shell用
-/// </summary>
-/// <param name="nodes"></param>
-/// <param name="h"></param>
-/// <param name="sp"></param>
-/// <returns></returns>
+/// <summary> Shell用 </summary>
 MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, ShellParameter sp) {
     if (key == "QuadElement1") {
         // return _QuadElement1.gradMatrix(nodes, h, sp);
@@ -270,13 +264,7 @@ MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, ShellParamete
     return MatrixXd(1, 1); // 仮
 }
 
-/// <summary>
-/// Bar用
-/// </summary>
-/// <param name="nodes"></param>
-/// <param name="h"></param>
-/// <param name="sp"></param>
-/// <returns></returns>
+/// <summary> Bar用 </summary>
 MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, RectSection sp) {
     if (key == "BEBarElement") {
         // return _BEBarElement.gradMatrix(nodes, h, sp);
@@ -287,12 +275,7 @@ MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, RectSection s
     return MatrixXd(1, 1); // 仮
 }
 
-/// <summary>
-/// Solid用
-/// </summary>
-/// <param name="nodes"></param>
-/// <param name="h"></param>
-/// <returns></returns>
+/// <summary> Solid用 </summary>
 MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h) {
     if (key == "BEBarElement") {
         // return _BEBarElement.gradMatrix(nodes, h);
@@ -329,6 +312,67 @@ MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h) {
     }
 }
 
+/// <summary> Shell用 </summary>
+MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, MatrixXd d1, ShellParameter sp) {
+    if (key == "QuadElement1") {
+        // return _QuadElement1.stiffnessMatrix(p, d1, sp);
+    }
+    else if (key == "TriElement1") {
+        // return _TriElement1.stiffnessMatrix(p, d1, sp);
+    }
+    return MatrixXd(1, 1); // 仮
+    
+
+}
+
+/// <summary> Bar用 </summary>
+MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, MatrixXd d1, RectSection sp) {
+    if (key == "BEBarElement") {
+        // return _BEBarElement.stiffnessMatrix(p, d1, sp);
+    }
+    else if (key == "TBarElement") {
+        // return _TBarElement.stiffnessMatrix(p, d1, sp);
+    }
+    return MatrixXd(1, 1); // 仮
+}
+
+/// <summary> Solid用 </summary>
+MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, MatrixXd d1) {
+    if (key == "BEBarElement") {
+        // return _BEBarElement.stiffnessMatrix(p, d1);
+    }
+    else if (key == "TBarElement") {
+        // return _TBarElement.stiffnessMatrix(p, d1);
+    }
+    else if (key == "TetraElement1") {
+        // return _TetraElement1.stiffnessMatrix(p, d1);
+    }
+    else if (key == "TetraElement2") {
+        // return _TetraElement2.stiffnessMatrix(p, d1);
+    }
+    else if (key == "HexaElement1") {
+        return _HexaElement1.stiffnessMatrix(p, d1);
+    }
+    else if (key == "HexaElement2") {
+        // return _HexaElement2.stiffnessMatrix(p, d1);
+    }
+    else if (key == "HexaElement1WT") {
+        // return _HexaElement1WT.stiffnessMatrix(p, d1);
+    }
+    else if (key == "WedgeElement1") {
+        // return _WedgeElement1.stiffnessMatrix(p, d1);
+    }
+    else if (key == "WedgeElement2") {
+        // return _WedgeElement2.stiffnessMatrix(p, d1);
+    }
+    else if (key == "QuadElement1") {
+        // return _QuadElement1.stiffnessMatrix(p, d1);
+    }
+    else if (key == "TriElement1") {
+        // return _TriElement1.stiffnessMatrix(p, d1);
+    }
+}
+
 
 /*
 
@@ -355,4 +399,8 @@ BorderManager ElementManager::borderEdge(int element, int index) {
 };
 */
 
+
+string ElementManager::getName() {
+    return key;
+}
 

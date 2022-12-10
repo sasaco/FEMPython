@@ -16,6 +16,8 @@ class Solver {
 private:
     double PRECISION = 1e-10;	// マトリックス精度
 
+    FemDataModel model;
+
     MatrixXd _matrix;
     MatrixXd _matrix2;
     VectorXd _vector;
@@ -30,9 +32,14 @@ public:
     Solver();
     void clear();
 
-    MatrixXd heatMatrix(const FemDataModel& model);
-    MatrixXd tempVector(const FemDataModel& model, MatrixXd matrix);
+    MatrixXd heatMatrix();
+    MatrixXd tempVector(MatrixXd matrix);
     void createHeatMatrix(const FemDataModel& model);
+
+    MatrixXd stiffnessMatrix(int dof);
+    void createStiffnessMatrix(const FemDataModel& model);
+
+
     void extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list);
 
     MatrixXd solve();   
