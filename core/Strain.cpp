@@ -3,6 +3,8 @@
 //--------------------------------------------------------------------//
 // òc
 // s - ê¨ï™
+Strain::Strain() : SymmetricTensor3() {
+};
 Strain::Strain(VectorXd s)
     : SymmetricTensor3(s){
     xy = 0.5 * s[3];

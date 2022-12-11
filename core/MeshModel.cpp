@@ -9,13 +9,13 @@ MeshModel::MeshModel(){
 
 // 節点を返す
 // s - 節点集合
-template <typename T>
-vector<FENode> MeshModel::getNodes(T s){
+vector<FENode> MeshModel::getNodes(ElementManager s){
 
-    vector<FENode> p(s.nodes.size());
+    auto inodes = s.nodes();
+    vector<FENode> p(inodes.size());
 
-  for(int i=0;i< s.nodes.size();i++){
-    p[i]= nodes[s.nodes[i]];
+  for(int i=0;i< inodes.size();i++){
+    p[i] = nodes[inodes[i]];
   }
   return p;
 };

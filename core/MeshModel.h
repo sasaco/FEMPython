@@ -19,8 +19,7 @@ public:
 
     MeshModel();
 
-    template <typename T>
-    vector<FENode> getNodes(T s);
+    vector<FENode> getNodes(ElementManager s);
 
     void clear();
 

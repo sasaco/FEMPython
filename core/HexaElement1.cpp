@@ -129,3 +129,14 @@ MatrixXd HexaElement1::massMatrix(vector<FENode> p, double dens) {
     return m;
 }
 
+// 要素節点の角度を返す
+// p - 要素節点
+VectorXd HexaElement1::angle(vector<FENode> p){
+  VectorXd th(8);
+  for(int i=0;i<4;i++){
+    th(i) = solidAngle(p[i], p[(i+1)%4], p[(i+3)%4], p[i+4]);
+    th(i+4) = solidAngle(p[i+4], p[(i+1)%4+4], p[(i+3)%4+4], p[i]);
+  }
+  return th;
+};
+

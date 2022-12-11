@@ -2,6 +2,8 @@
 //--------------------------------------------------------------------//
 // ３次元対称テンソル
 // s - 成分
+SymmetricTensor3::SymmetricTensor3() {
+}
 SymmetricTensor3::SymmetricTensor3(VectorXd s) {
     xx = s(0);
     yy = s(1);
@@ -9,7 +11,7 @@ SymmetricTensor3::SymmetricTensor3(VectorXd s) {
     xy = s(3);
     yz = s(4);
     zx = s(5);
-};
+}
 
 // テンソルをベクトルとして返す
 VectorXd SymmetricTensor3::vector() {
@@ -21,7 +23,7 @@ VectorXd SymmetricTensor3::vector() {
     s(4) = yz;
     s(5) = zx;
     return s;
-};
+}
 
 // テンソルを加える
 // t - 加えるテンソル
@@ -32,7 +34,7 @@ void SymmetricTensor3::add(SymmetricTensor3 t) {
     xy += t.xy;
     yz += t.yz;
     zx += t.zx;
-};
+}
 
 // 成分にスカラーを掛ける
 // a - 掛けるスカラー
@@ -43,7 +45,7 @@ void SymmetricTensor3::mul(double a) {
     xy *= a;
     yz *= a;
     zx *= a;
-};
+}
 
 // テンソルの内積を計算する
 // t - 相手のテンソル

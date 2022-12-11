@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------//
 // ファイル読み込み・書き込み
-#include "FemDataModel.h"
+#include "Solver.h"
 
 #include <string>
 #include <vector>
@@ -53,11 +53,11 @@ FemDataModel readFemModel(string s)
 {
     vector<string> lines = split(s, '\n');
 
-    auto model = FemDataModel();
+    auto model = Solver();
     model.clear();
     
-    MeshModel *mesh = &model.mesh;
-    BoundaryCondition *bc = &model.bc;
+    MeshModel mesh = model.mesh;
+    BoundaryCondition bc = model.bc;
 
     vector<string> res;
 
@@ -98,7 +98,7 @@ FemDataModel readFemModel(string s)
                 auto node = FENode(stoi(columns[1]), stod(columns[2]),
                     stod(columns[3]),
                     stod(columns[4]));
-                mesh->nodes.push_back(node);
+                mesh.nodes.push_back(node);
             }
             // 要素
             /*
@@ -153,7 +153,7 @@ FemDataModel readFemModel(string s)
             */
             else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
                  auto elem = ElementManager("HexaElement1", columns);
-                 mesh->elements.push_back(elem);
+                 mesh.elements.push_back(elem);
             }
             /*
             else if ((keyWord == "hexaelement1wt") && (columns.size() > 10)) {
@@ -176,11 +176,11 @@ FemDataModel readFemModel(string s)
             // 境界条件
             else if ((keyWord == "restraint") && (columns.size() > 7)) {
                 Restraint rest = Restraint(columns);
-                bc->restraints.push_back(rest);
+                bc.restraints.push_back(rest);
             }
             else if ((keyWord == "load") && (columns.size() > 4)) {
                 Load load = Load(columns);
-                bc->loads.push_back(load);
+                bc.loads.push_back(load);
             }
             /*
             else if ((keyWord == "pressure") && (columns.size() > 3)) {

@@ -25,8 +25,9 @@ BarParameter::~BarParameter() {
     delete rectSection;
 }
 
-RectSection BarParameter::section() {
-    return *rectSection;
+Section BarParameter::section() {
+    auto sect = Section();
+    return sect;
 }
 
 // 梁パラメータを表す文字列を返す

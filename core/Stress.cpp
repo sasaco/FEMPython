@@ -3,9 +3,12 @@
 //--------------------------------------------------------------------//
 // ‰—Í
 // s - ¬•ª
+Stress::Stress() : SymmetricTensor3() {
+}
+
 Stress::Stress(VectorXd s)
     : SymmetricTensor3(s){
-};
+}
 
 // ƒ~[ƒ[ƒX‰—Í‚ğ•Ô‚·
 double Stress::mises() {

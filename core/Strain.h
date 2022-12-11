@@ -9,6 +9,7 @@ private:
 
 
 public:
+    Strain();
     Strain(VectorXd s);
     VectorXd vector();
 };

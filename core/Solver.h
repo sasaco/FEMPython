@@ -1,6 +1,7 @@
 #pragma once
 
 #include"FemDataModel.h"
+#include"FENode.h"
 
 #include <vector>
 using namespace std;
@@ -11,12 +12,10 @@ using std::vector;
 using namespace Eigen;
 
 
-class Solver {
+class Solver : public FemDataModel {
 
 private:
     double PRECISION = 1e-10;	// マトリックス精度
-
-    FemDataModel model;
 
     MatrixXd _matrix;
     MatrixXd _matrix2;
@@ -32,15 +31,20 @@ public:
     Solver();
     void clear();
 
+    void calculate();
+
     MatrixXd heatMatrix();
-    MatrixXd tempVector(MatrixXd matrix);
-    void createHeatMatrix(const FemDataModel& model);
+    VectorXd tempVector(MatrixXd matrix);
+    void createHeatMatrix();
 
     MatrixXd stiffnessMatrix(int dof);
-    void createStiffnessMatrix(const FemDataModel& model);
+    void createStiffnessMatrix();
 
+    double setElementMatrix(ElementManager element, int dof, MatrixXd matrix, MatrixXd km, double kmax);
+    VectorXd loadVector(int dof);
 
     void extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list);
 
-    MatrixXd solve();   
+    VectorXd solve();
 };
+

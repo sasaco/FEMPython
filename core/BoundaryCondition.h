@@ -20,7 +20,6 @@ class BoundaryCondition {
 private:
     double loadMax;		    // 最大荷重
     double pressMax;		// 最大面圧
-    vector<int> nodeIndex;	// 荷重ベクトルの節点ポインタ
 
     template <typename T>
     void compareNodeLabel(vector<T> target);
@@ -30,6 +29,7 @@ private:
 
 public:
     vector<int> dof;		// 節点の自由度
+    vector<int> nodeIndex;	// 荷重ベクトルの節点ポインタ
 
     vector<int> bcList;		// 境界条件を設定した節点のリスト
     vector<Restraint> restraints;	    // 拘束条件

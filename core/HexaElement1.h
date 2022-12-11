@@ -28,4 +28,6 @@ public:
     MatrixXd shapeFunction(double xsi, double eta, double zeta) override;
 
     MatrixXd massMatrix(vector<FENode> p, double dens) override;
+
+    VectorXd angle(vector<FENode> p);
 };

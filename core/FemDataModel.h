@@ -4,12 +4,9 @@
 #include "ShellParameter.h"
 #include "BarParameter.h"
 #include "BoundaryCondition.h"
-#include "Solver.h"
 #include "Result.h"
 
 
-//--------------------------------------------------------------------//
-// FEM データモデル
 #include <format>
 #include <numbers>
 #include <vector>
@@ -18,6 +15,8 @@ using namespace std;
 using std::vector;
 
 
+//--------------------------------------------------------------------//
+// FEM データモデル
 class FemDataModel {
 
 private:
@@ -25,8 +24,7 @@ private:
 
 
     bool hasShellBar;                       // シェル要素または梁要素を含まない
-    Solver solver;		                    // 連立方程式求解オブジェクト
-    Result result;		                    // 計算結果
+    // Solver solver;		                    // 連立方程式求解オブジェクト
 
     // Method
     void reNumbering();
@@ -42,9 +40,9 @@ private:
     void resetCoordinatesPointer(map<int, Coordinates> map, Restraint &bc);
     void resetCoordinatesPointer(map<int, Coordinates> map, Load &bc);
 
-    void setNodeDoF();
 
 public:
+    Result result;		                    // 計算結果
     MeshModel mesh;		                    // メッシュモデル
     BoundaryCondition bc;	                // 境界条件
     vector<Material> materials;             // 材料
@@ -56,6 +54,9 @@ public:
 
     void clear();
     void init();
-    void calculate();
+    int setNodeDoF();
+    // void calculate();
+    void calculateElementStress();
+    void calculateNodeStress();
 
 };
