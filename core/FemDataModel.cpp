@@ -256,24 +256,24 @@ void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, T &bc) {
 
 // 節点の自由度を設定する
 int FemDataModel::setNodeDoF(){
-  auto dof = bc.dof;
-  int nodeCount = (int)mesh.nodes.size();
-  int elemCount = (int)mesh.elements.size();
-  dof.clear();
-  for(int i=0;i<nodeCount;i++){
-    dof.push_back(3);
-  }
-  for(int i=0;i<elemCount;i++){
-    auto elem = mesh.elements[i];
-    auto nodes = elem.nodes();
-    if(elem.isShell() || elem.isBar()) {	// シェル要素・梁要素
-      int count=elem.nodeCount();
-      for(int j=0;j<count;j++){
-        dof[nodes[j]] = 6;
-      }
+
+    int nodeCount = (int)mesh.nodes.size();
+    int elemCount = (int)mesh.elements.size();
+    bc.dof.clear();
+    for(int i=0;i<nodeCount;i++){
+        bc.dof.push_back(3);
     }
-  }
-  return bc.setPointerStructure(nodeCount);
+    for(int i=0;i<elemCount;i++){
+        auto elem = mesh.elements[i];
+        auto nodes = elem.nodes();
+        if(elem.isShell() || elem.isBar()) {	// シェル要素・梁要素
+            int count=elem.nodeCount();
+            for(int j=0;j<count;j++){
+                bc.dof[nodes[j]] = 6;
+            }
+        }
+    }
+    return bc.setPointerStructure(nodeCount);
 }
 
 

@@ -47,22 +47,24 @@ int BoundaryCondition::setPointerStructure(int count) {
     bcList.clear();
     int dofAll = 0;
     for (int i = 0; i < count; i++) {
-        nodeIndex[i] = dofAll;
+        nodeIndex.push_back(dofAll);
         dofAll += dof[i];
     }
     for (int i = 0; i < dofAll; i++) {
-        bcList[i] = -1;
+        bcList.push_back(-1);
     }
     for (int i = 0; i < restraints.size(); i++) {
         Restraint r = restraints[i];
         int index0 = nodeIndex[r.node];
         int rdof = dof[r.node];
         for (int j = 0; j < rdof; j++) {
-            if (r.rest[j]) bcList[index0 + j] = 6 * i + j;
+            if (r.rest[j]) {
+                bcList[index0 + j] = 6 * i + j;
+            }
         }
     }
     return dofAll;
-};
+}
 
 // 熱解析の節点ポインタを設定する
 // count - 節点数
