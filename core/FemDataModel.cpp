@@ -52,18 +52,14 @@ void FemDataModel::init(){
 // 節点・要素ポインタを設定する
 void FemDataModel::reNumbering(){
 
-    auto nodes = mesh.nodes;
-    auto elements = mesh.elements;
-
-    //vector<int> map1(nodes.size());
     map<int, int> map1;
 
-    for(int i=0;i<nodes.size();i++){
-        map1[nodes[i].label]=i;
+    for(int i=0;i< mesh.nodes.size();i++){
+        map1[mesh.nodes[i].label]=i;
     }
 
-    for(int i=0;i<elements.size();i++){
-        resetNodes(map1, elements[i]);
+    for(int i=0;i< mesh.elements.size();i++){
+        resetNodes(map1, mesh.elements[i]);
     }
 
     for(int i=0;i<bc.restraints.size();i++){
@@ -77,8 +73,8 @@ void FemDataModel::reNumbering(){
     }
 
     map<int, int> map2;
-    for(int i=0;i<elements.size();i++){
-        map2[elements[i].label()] = i;
+    for(int i=0;i< mesh.elements.size();i++){
+        map2[mesh.elements[i].label()] = i;
     }
 
     for(int i=0;i<bc.pressures.size();i++){
@@ -164,7 +160,6 @@ void FemDataModel::resetParameterLabel(){
 
     map<int, int> map1;
     map<int, int> map2;
-    auto elements = mesh.elements;
     int shellbars = 0;
 
     for(int i=0;i<shellParams.size();i++){
@@ -174,24 +169,24 @@ void FemDataModel::resetParameterLabel(){
         map2[barParams[i].label]=i;
     }
 
-    for(int i=0;i<elements.size();i++){
+    for(int i=0;i< mesh.elements.size();i++){
 
-        if(elements[i].isShell()){
-            int param = elements[i].param();
+        if(mesh.elements[i].isShell()){
+            int param = mesh.elements[i].param();
             if (map1.count(param) > 0) {
-      	        elements[i].setParam(map1[param]);
+                mesh.elements[i].setParam(map1[param]);
       	        shellbars++;
             }
             else{
                 throw (format("パラメータ番号{}は存在しません", param));
             }
         }
-        else if(elements[i].isBar()){
-            int param = elements[i].param();
+        else if(mesh.elements[i].isBar()){
+            int param = mesh.elements[i].param();
 
             if (map2.count(param) > 0) {
-            elements[i].setParam(map2[param]);
-            shellbars++;
+                mesh.elements[i].setParam(map2[param]);
+                shellbars++;
             }
             else{
                 throw (format("パラメータ番号{}は存在しません", param));

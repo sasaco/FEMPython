@@ -156,7 +156,7 @@ void Solver::createHeatMatrix() {
 // dof - モデル自由度
 MatrixXd Solver::stiffnessMatrix(int dof) {
 
-    auto elements = mesh.elements;
+    const auto elements = mesh.elements;
     
     MatrixXd matrix(dof, dof);
     MatrixXd km;
@@ -165,16 +165,15 @@ MatrixXd Solver::stiffnessMatrix(int dof) {
     for (int i = 0; i < elements.size(); i++) {
         auto elem = elements[i];
         auto material = materials[elem.material()];
-        auto m2d = material.matrix2Dstress();
-        auto m3d = material.matrix3D();
-        auto msh = material.matrixShell();
 
         if (elem.isShell()) {
             auto sp = shellParams[elem.param()];
             if (elem.getName() == "TriElement1") {
+                auto m2d = material.matrix2Dstress();
                 km = elem.stiffnessMatrix(mesh.getNodes(elem), m2d, sp);
             }
             else {
+                auto msh = material.matrixShell();
                 km = elem.stiffnessMatrix(mesh.getNodes(elem), msh, sp);
             }
             kmax = setElementMatrix(elem, 6, matrix, km, kmax);
@@ -185,6 +184,7 @@ MatrixXd Solver::stiffnessMatrix(int dof) {
             kmax = setElementMatrix(elem, 6, matrix, km, kmax);
         }
         else {
+            auto m3d = material.matrix3D();
             km = elem.stiffnessMatrix(mesh.getNodes(elem), m3d);
             kmax = setElementMatrix(elem, 3, matrix, km, kmax);
         }

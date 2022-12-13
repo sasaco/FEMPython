@@ -21,17 +21,11 @@ private:
     MatrixXd _matrix2;
     VectorXd _vector;
 
-public:
     int  LU_METHOD = 0;	        // LU分解法
     int  ILUCG_METHOD = 1;      // 不完全LU分解共役勾配法
 
     int dof;
     int method;
-
-    Solver();
-    void clear();
-
-    void calculate();
 
     MatrixXd heatMatrix();
     VectorXd tempVector(MatrixXd matrix);
@@ -46,5 +40,11 @@ public:
     void extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list);
 
     VectorXd solve();
+
+public:
+    Solver();
+    void clear();
+    void calculate();
+
 };
 
