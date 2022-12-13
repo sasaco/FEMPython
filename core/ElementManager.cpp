@@ -89,6 +89,45 @@ vector<int> ElementManager::nodes() {
     return empty;
 }
 
+void ElementManager::setNodes(vector<int> tmp) {
+
+    if (key == "BEBarElement") {
+        //_BEBarElement.nodes = tmp;
+    }
+    else if (key == "TBarElement") {
+        //_TBarElement.nodes = tmp;
+    }
+    else if (key == "TetraElement1") {
+        //_TetraElement1.nodes = tmp;
+    }
+    else if (key == "TetraElement2") {
+        //_TetraElement2.nodes = tmp;
+    }
+    else if (key == "HexaElement1") {
+        _HexaElement1.nodes = tmp;
+    }
+    else if (key == "HexaElement2") {
+        //_HexaElement2.nodes = tmp;
+    }
+    else if (key == "HexaElement1WT") {
+        //_HexaElement1WT.nodes = tmp;
+    }
+    else if (key == "WedgeElement1") {
+        //_WedgeElement1.nodes = tmp;
+    }
+    else if (key == "WedgeElement2") {
+        //_WedgeElement2.nodes = tmp;
+    }
+    else if (key == "QuadElement1") {
+        //_QuadElement1.nodes = tmp;
+    }
+    else if (key == "TriElement1") {
+        //_TriElement1.nodes = tmp;
+    }
+
+}
+
+
 int ElementManager::label() {
     if (key == "BEBarElement") {
         //return __BEBarElement.label;

@@ -28,13 +28,12 @@ void FemDataModel::init(){
 
   // solver.method= solver.ILUCG_METHOD;   // デフォルトは反復解法
   auto mats = materials;
-
   sort(mats.begin(), mats.end(),
-      [](Material o1, Material o2) -> int {
-          if (o1.label < o2.label)        return -1;
-          else if (o1.label > o2.label)   return 1;
-          else                            return 0;
+      [](const Material& o1, const Material& o2)
+      {
+          return o1.label < o2.label;
       });
+
   mesh.init();
   bc.init();
 
@@ -42,11 +41,11 @@ void FemDataModel::init(){
   resetMaterialLabel();
   resetParameterLabel();
   resetCoordinates();
-  for(int i=0;i<mats.size(); i++) {
-    mats[i].matrix2Dstress();
-    mats[i].matrixShell();
-    mats[i].matrix3D();
-  }
+
+  mesh.checkChirality();
+  mesh.getFreeFaces();
+  mesh.getFaceEdges();
+
 }
 
 
@@ -95,14 +94,17 @@ void FemDataModel::reNumbering(){
 // s - 節点集合
 void FemDataModel::resetNodes(map<int, int> map, ElementManager &s) {
     vector<int> nodes = s.nodes();
+    vector<int> tmp;
     for (int i = 0; i < nodes.size(); i++) {
         if (map.count(nodes[i])) {
-            nodes[i] = map[nodes[i]];
+            tmp.push_back(map[nodes[i]]);
+            //nodes[i] = map[nodes[i]];
         }
         else {
             throw (format("節点番号{}は存在しません", nodes[i]));
         }
     }
+    s.setNodes(tmp);
 }
 
 // 節点ポインタを再設定する
@@ -135,7 +137,7 @@ void FemDataModel::resetMaterialLabel(){
   if(materials.size()==0){
     materials.push_back(Material(1, 1, 0.3, 1, 1, 1));
   }
-  vector<int> map(materials.size());
+  map<int, int> map;
   auto elements = mesh.elements;
 
   for(int i=0;i<materials.size();i++){
@@ -143,7 +145,7 @@ void FemDataModel::resetMaterialLabel(){
   }
   for(int i=0;i<elements.size();i++){
     int mat = elements[i].material();
-    if (std::count(map.begin(), map.end(), mat)) {
+    if (map.count(mat) > 0) {
         elements[i].setMaterial(map[mat]);
     }
     else{
@@ -216,40 +218,18 @@ void FemDataModel::resetCoordinates(){
   }
 
   for(int i=0;i<bc.restraints.size();i++){
-      resetCoordinatesPointer(map, bc.restraints[i]);
+      resetCoordinatesPointer<Restraint>(map, bc.restraints[i]);
   }
   for(int i=0;i<bc.loads.size();i++){
-      resetCoordinatesPointer(map, bc.loads[i]);
+      resetCoordinatesPointer<Load>(map, bc.loads[i]);
   }
 }
 
 // 局所座標系を再設定する
 // map - ラベルマップ
 // bc - 境界条件
-void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, Restraint &bc) {
-    if (bc.coords < 0) {
-        // 何もしない
-        return;
-    }
-    bool hasFind = false;
-    Coordinates cod;
-    for (int i = 0; i < map.size(); i++) {
-        if (i == map[i].label) {
-            cod = map[i];
-            hasFind = true;
-            break;
-        }
-    }
-
-    if (hasFind) {
-        bc.coords = cod.label;
-        cod.toGlobal(bc.x, bc.globalX);
-    }
-    else {
-        throw (format("局所座標系番号{}存在しません", bc.coords));
-    }
-}
-void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, Load &bc) {
+template <typename T>
+void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, T &bc) {
     if (bc.coords < 0) {
         // 何もしない
         return;

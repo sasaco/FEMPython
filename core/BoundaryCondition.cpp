@@ -121,12 +121,11 @@ double BoundaryCondition::getRestDisp(int bc) {
 // bc1,bc2 - 比較する境界条件
 template <typename T> 
 void BoundaryCondition::compareNodeLabel(vector<T> target) {
-
+   
     sort(target.begin(), target.end(),
-        [](auto bc1, auto bc2) -> int {
-            if (bc1.node < bc2.node)        return -1;
-            else if (bc1.node > bc2.node)   return 1;
-            else                            return 0;
+        [](const auto& bc1, const auto& bc2)
+        {
+            return bc1.node < bc2.node;
         });
 
 }
@@ -137,9 +136,9 @@ template <typename T>
 void BoundaryCondition::compareElementLabel(vector<T> target) {
 
     sort(target.begin(), target.end(),
-        [](auto bc1, auto bc2) -> int {
-            if (bc1.element < bc2.element)      return -1;
-            else if (bc1.element > bc2.element) return 1;
-            else                                return 0;
+        [](const auto& bc1, const auto& bc2)
+        {
+            return bc1.element < bc2.element;
         });
+
 }

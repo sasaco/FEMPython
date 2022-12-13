@@ -37,8 +37,8 @@ private:
     void resetParameterLabel();
     void resetCoordinates();
 
-    void resetCoordinatesPointer(map<int, Coordinates> map, Restraint &bc);
-    void resetCoordinatesPointer(map<int, Coordinates> map, Load &bc);
+    template <typename T>
+    void resetCoordinatesPointer(map<int, Coordinates> map, T &bc);
 
 
 public:

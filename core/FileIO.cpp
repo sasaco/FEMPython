@@ -56,8 +56,8 @@ FemDataModel readFemModel(string s)
     auto model = Solver();
     model.clear();
     
-    MeshModel mesh = model.mesh;
-    BoundaryCondition bc = model.bc;
+    MeshModel *mesh = &model.mesh;
+    BoundaryCondition *bc = &model.bc;
 
     vector<string> res;
 
@@ -98,18 +98,18 @@ FemDataModel readFemModel(string s)
                 auto node = FENode(stoi(columns[1]), stod(columns[2]),
                     stod(columns[3]),
                     stod(columns[4]));
-                mesh.nodes.push_back(node);
+                mesh->nodes.push_back(node);
             }
             // —v‘f
             /*
             else if ((keyWord == "bebarelement") && (columns.size() > 5)) {
                 if (columns.size() < 8) {
-                    mesh.elements.push_back(new BEBarElement
+                    mesh->elements.push_back(new BEBarElement
                     (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                         readVertex(ss, 4, 2)));
                 }
                 else {
-                    mesh.elements.push_back(new BEBarElement
+                    mesh->elements.push_back(new BEBarElement
                     (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                         readVertex(ss, 4, 2),
                         new THREE.Vector3().set(stod(columns[6]),
@@ -119,12 +119,12 @@ FemDataModel readFemModel(string s)
             }
             else if ((keyWord == "tbarelement") && (columns.size() > 5)) {
                 if (columns.size() < 8) {
-                    mesh.elements.push_back(new TBarElement
+                    mesh->elements.push_back(new TBarElement
                     (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                         readVertex(ss, 4, 2)));
                 }
                 else {
-                    mesh.elements.push_back(new TBarElement
+                    mesh->elements.push_back(new TBarElement
                     (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                         readVertex(ss, 4, 2),
                         new THREE.Vector3().set(stod(columns[6]),
@@ -133,67 +133,67 @@ FemDataModel readFemModel(string s)
                 }
             }
             else if ((keyWord == "trielement1") && (columns.size() > 6)) {
-                mesh.elements.push_back(new TriElement1
+                mesh->elements.push_back(new TriElement1
                 (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                     readVertex(ss, 4, 3)));
             }
             else if ((keyWord == "quadelement1") && (columns.size() > 7)) {
-                mesh.elements.push_back(new QuadElement1
+                mesh->elements.push_back(new QuadElement1
                 (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
                     readVertex(ss, 4, 4)));
             }
             else if ((keyWord == "tetraelement1") && (columns.size() > 6)) {
-                mesh.elements.push_back(new TetraElement1
+                mesh->elements.push_back(new TetraElement1
                 (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 4)));
             }
             else if ((keyWord == "wedgeelement1") && (columns.size() > 8)) {
-                mesh.elements.push_back(new WedgeElement1
+                mesh->elements.push_back(new WedgeElement1
                 (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 6)));
             }
             */
             else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
                  auto elem = ElementManager("HexaElement1", columns);
-                 mesh.elements.push_back(elem);
+                 mesh->elements.push_back(elem);
             }
             /*
             else if ((keyWord == "hexaelement1wt") && (columns.size() > 10)) {
-                mesh.elements.push_back(new HexaElement1WT
+                mesh->elements.push_back(new HexaElement1WT
                 (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 8)));
             }
             else if ((keyWord == "tetraelement2") && (columns.size() > 12)) {
-                mesh.elements.push_back(new TetraElement2
+                mesh->elements.push_back(new TetraElement2
                 (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 10)));
             }
             else if ((keyWord == "wedgeelement2") && (columns.size() > 17)) {
-                mesh.elements.push_back(new WedgeElement2
+                mesh->elements.push_back(new WedgeElement2
                 (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 15)));
             }
             else if ((keyWord == "hexaelement2") && (columns.size() > 22)) {
-                mesh.elements.push_back(new HexaElement2
+                mesh->elements.push_back(new HexaElement2
                 (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 20)));
             }
             */
             // ‹«ŠEðŒ
             else if ((keyWord == "restraint") && (columns.size() > 7)) {
                 Restraint rest = Restraint(columns);
-                bc.restraints.push_back(rest);
+                bc->restraints.push_back(rest);
             }
             else if ((keyWord == "load") && (columns.size() > 4)) {
                 Load load = Load(columns);
-                bc.loads.push_back(load);
+                bc->loads.push_back(load);
             }
             /*
             else if ((keyWord == "pressure") && (columns.size() > 3)) {
-                bc.pressures.push
+                bc->pressures.push
                 (new Pressure(stoi(columns[1]), columns[2].toUpperCase(),
                     stod(columns[3])));
             }
             else if ((keyWord == "temperature") && (columns.size() > 2)) {
-                bc.temperature.push
+                bc->temperature.push
                 (new Temperature(stoi(columns[1]), stod(columns[2])));
             }
             else if ((keyWord == "htc") && (columns.size() > 4)) {
-                bc.htcs.push
+                bc->htcs.push
                 (new HeatTransferBound(stoi(columns[1]), columns[2].toUpperCase(),
                     stod(columns[3]), stod(columns[4])));
             }

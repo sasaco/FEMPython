@@ -60,6 +60,7 @@ public:
 
     int label();
     vector<int> nodes();
+    void setNodes(vector<int> tmp);
 
     int material();
     void setMaterial(int mat);
