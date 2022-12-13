@@ -1,10 +1,12 @@
-﻿#include "Nodes.h";
+﻿#include "Nodes.h"
 
+Nodes::Nodes() {}
 Nodes::Nodes(vector<int>_nodes) {
     nodes = _nodes;
 }
 
 int Nodes::nodeCount() {
 
-    return nodes.size();
+    int result = (int)nodes.size();
+    return result;
 }

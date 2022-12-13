@@ -1,7 +1,6 @@
 ﻿#include "ShellParameter.h"
 
-#include <format>
-
+//#include <format>
 
 //--------------------------------------------------------------------//
 // シェルパラメータ
@@ -15,8 +14,10 @@ ShellParameter::ShellParameter(int _label, double _thickness) {
 // シェルパラメータを表す文字列を返す
 string ShellParameter::toString() {
 
-    return format("ShellParameter\t{}\t{}",
-        label, thickness);
+    //return format("ShellParameter\t{}\t{}",
+    //    label, thickness);
+
+    return "ShellParamater";
 
 };
 

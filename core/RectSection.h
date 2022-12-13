@@ -1,10 +1,11 @@
 ﻿#pragma once
-#include "Material.h";
+#include "Material.h"
 
 #include <string>
 #include <numbers>
+//#include <format>
 using namespace std;         //  名前空間指定
-
+using std::string;
 
 //--------------------------------------------------------------------//
 // 矩形断面
@@ -38,7 +39,7 @@ private:
 
 public:
     // 矩形断面のせん断補正係数
-    static double KS_RECT() { return 5 / 6; };
+    const double KS_RECT = 5 / 6;
     // 矩形断面の捩り係数
     const double COEF_K1 = 64 / pow(numbers::pi, 5);
     const double COEF_K = 8 / pow(numbers::pi, 2);

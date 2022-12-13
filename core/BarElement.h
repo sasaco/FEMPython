@@ -1,31 +1,54 @@
 ﻿#pragma once
 #include "FElement.h"
-#include "Vector3.h"
+#include "FENode.h"
+#include "Material.h"
+#include "Section.h"
+#include "BarParameter.h"
+#include "Strain.h"
+#include "Stress.h"
+#include "Vector3.hpp"
 
+#include<string>
+#include<vector>
+//#include<format>
+using namespace std;
+using std::string;
+using std::vector;
+
+#include<Eigen/Core>
+using namespace Eigen;
 
 class BarElement : public FElement {
 
 private:
-    double I_YMZ[4] = { 1, 5, 7, 11 };	// y軸方向,z軸周り成分のインデックス
-    double I_ZMY[4] = { 2, 4, 8, 10 };	// z軸方向,y軸周り成分のインデックス
+    int I_YMZ[4] = { 1, 5, 7, 11 };	// y軸方向,z軸周り成分のインデックス
+    int I_ZMY[4] = { 2, 4, 8, 10 };	// z軸方向,y軸周り成分のインデックス
 
     int param;
     bool isBar;
     Vector3 axis;
 
 public:
+    BarElement();
     BarElement(int label, int material, int param, vector<int> nodes, Vector3 axis);
 
-    vector<vector<double>> stiffnessMatrix(vector<FENode> p, Material material, Section sect);
+    MatrixXd stiffnessMatrix(vector<FENode> p, Material material, Section sect);
 
-    vector<vector<double>> gradMatrix(vector<FENode> p, double coef, Section sect);
+    virtual MatrixXd stiffBend(double l, Material material, Section sect) = 0;
 
-    vector<vector<double>> geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, Material material, Section sect);
+    MatrixXd gradMatrix(vector<FENode> p, double coef, Section sect);
 
-    vector<vector<double>> strainStress(vector<FENode> p, vector<BoundaryCondition> u, Material material, Section sect);
+    MatrixXd geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, Material material, Section sect);
 
-    vector<vector<double>> elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, Material material, Section sect);
+    tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
+        strainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect);
 
-    string toString(vector< Material> materials, vector< BarParameter> params, vector<FENode> p);
+    virtual MatrixXd bendCurveShare(VectorXd v, double l, Material material, Section sect) = 0;
 
+    tuple<Strain, Stress, double, Strain, Stress, double>
+        elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect);
+
+    string toString(vector< Material> materials, vector<BarParameter> params, vector<FENode> p);
+
+    virtual string getName() = 0;
 };

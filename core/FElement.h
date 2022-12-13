@@ -1,10 +1,17 @@
 ﻿#pragma once
-#include "Nodes.h";
-#include "BoundaryCondition.h";
 
+#include "Nodes.h"
+#include "FENode.h"
+#include "Vector3R.h"
+#include "Vector3.hpp"
+
+#include <numeric>
 #include <vector>
+using namespace std;
 using std::vector;
 
+#include <Eigen/Core>
+using namespace Eigen;
 
 //--------------------------------------------------------------------//
 // 要素
@@ -17,42 +24,48 @@ private:
     bool isShell;
     bool isBar;
 
+    // 方向余弦マトリックスを返す
+    vector<Vector3> dirVectors(vector<Vector3> p, Vector3 axis);
+
 public:
-    const double C1_3 = 1 / 3;
-    const double C1_6 = 1 / 6;
-    const double C1_12 = 1 / 12;
-    const double C1_24 = 1 / 24;
+    double C1_3 = 1 / 3;
+    double C1_6 = 1 / 6;
+    double C1_12 = 1 / 12;
+    double C1_24 = 1 / 24;
     
     // 三角形2次要素のガウス積分の積分点座標
-    const double GTRI2[2] = { 1 / 6, 2 / 3 };
+    double GTRI2[2] = { 1 / 6, 2 / 3 };
     // 四面体2次要素のガウス積分の積分点座標
-    const double GTETRA2[2] = { 0.25 - 0.05 * sqrt(5), 0.25 + 0.15 * sqrt(5) };
+    double GTETRA2[2] = { 0.25 - 0.05 * sqrt(5), 0.25 + 0.15 * sqrt(5) };
     // 四角形1次要素のガウス積分の積分点座標
-    const double GX2[2] = { -1 / sqrt(3), 1 / sqrt(3) };
+    double GX2[2] = { -1 / sqrt(3), 1 / sqrt(3) };
     // 四角形2次要素のガウス積分の積分点座標
-    const double GX3[3] = { -sqrt(0.6), 0, sqrt(0.6) };
+    double GX3[3] = { -sqrt(0.6), 0, sqrt(0.6) };
     // ガウス積分の重み係数
-    const double GW3[3] = { 5 / 9, 8 / 9, 5 / 9 };
+    double GW3[3] = { 5 / 9, 8 / 9, 5 / 9 };
 
     int label;
     int material;
 
+    FElement();
     FElement(int _label, int _material, vector<int> _nodes);
 
     // 積分点の剛性マトリックスを返す
-    void stiffPart(vector<vector<double>> d, vector<vector<double>> b, double coef, vector<vector<double>> out);
+    MatrixXd stiffPart(MatrixXd d, MatrixXd b, double coef);
 
     // 節点変位を1次元配列に変換する
-    void toArray(vector<BoundaryCondition> u, int dof, vector<double> out);
+    VectorXd toArray(vector<Vector3R> u, int dof);
 
     // 節点変位を局所座標系・1次元配列に 変換する
-    void toLocalArray(vector<BoundaryCondition> u, vector<vector<double>>d, vector<double> v);
+    VectorXd toLocalArray(vector<Vector3R> u, MatrixXd d);
 
-    void normalVector(vector<double> p, vector<double> out);
+    // 方向余弦マトリックスを返す
+    MatrixXd dirMatrix(vector<FENode> p, Vector3 axis);
+    MatrixXd dirMatrix(vector<FENode> p);
 
-    double determinant(double ja[9]);
+    Vector3 normalVector(vector<FENode> p);
+    Vector3 normalVector(vector<Vector3> p);
 
-
-    void dirVectors(vector<double> p, double axis[3], vector<double> out[3])
-
+    // 剛性マトリックスの方向を修正する
+    void toDir3(MatrixXd d, MatrixXd k);
 };

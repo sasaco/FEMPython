@@ -1,6 +1,12 @@
 ﻿#pragma once
+
+//#include <format>
 #include <string>
 using namespace std;         //  名前空間指定
+using std::string;
+
+#include<Eigen/Core>
+using namespace Eigen;
 
 //--------------------------------------------------------------------//
 // 材料
@@ -13,11 +19,11 @@ using namespace std;         //  名前空間指定
 class Material {
 
 private:
+    // 矩形断面のせん断補正係数
+    double KS_RECT = 5 / 6;
 
-    int label;
     double nu;
     double dens;
-    double hCon;
     double sHeat;
     double cv;	
 
@@ -26,26 +32,22 @@ private:
     //void matrixTorsion(double out[2][2]);
 
 public:
-    Material();
-    Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
+    int label;
 
     double ee;
     //double nu;
     //double dens;
-    //double hCon;
+    double hCon;
     //double sHeat;
     //double cv;	// 体積比熱
     double gg;    // 横弾性係数
 
+    Material();
+    Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
 
-    double m2d[3][3]; // set from matrix2Dstress
-    void matrix2Dstress();
-
-    double msh[5][5]; // set from matrixShell
-    void matrixShell();
-
-    void matrix3D();
-    double m3d[6][6]; // set from matrix3D
+    MatrixXd matrix2Dstress();
+    MatrixXd matrixShell();
+    MatrixXd matrix3D();
 
     string toString();
 

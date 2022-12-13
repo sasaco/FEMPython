@@ -1,7 +1,8 @@
 #pragma once
 #include "FENode.h"
-#include "ElementManager.hpp"
+#include "ElementManager.h"
 
+#include <algorithm>
 #include <vector>
 using namespace std;
 using std::vector;
@@ -10,16 +11,16 @@ using std::vector;
 class MeshModel {
 
 private:
+
+public:
     vector<FENode> nodes;   // êﬂì_
     vector<ElementManager> elements;   // óvëf
 
-public:
     MeshModel();
-
-    template <typename T>
-    vector<FENode> getNodes(T s);
-
+    vector<FENode> getNodes(ElementManager s);
     void clear();
-
     void init();
+    void checkChirality();
+    void getFreeFaces();
+    void getFaceEdges();
 };

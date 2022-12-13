@@ -1,4 +1,7 @@
 ﻿#pragma once
+
+#include <numbers>
+
 //--------------------------------------------------------------------//
 // ３次元ベクトル（並進＋回転）
 // x,y,z - x,y,z成分
@@ -8,6 +11,7 @@ class Vector3R {
 private:
 
 public:
+    Vector3R();
     Vector3R(double _x, double _y, double _z, double _rx, double _ry, double _rz);
 
     double x[6];

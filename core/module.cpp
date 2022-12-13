@@ -4,12 +4,13 @@
 #include <vector>
 #include <sstream> // std::stringstream
 #include <istream> // std::getline
+#include "FemDataModel.h"
 
 using namespace std;
 using std::vector;
 
 // FileIO.cpp で定義した関数を使用します。
-extern string readFemModel(vector<string> lines);
+extern FemDataModel readFemModel(string s);
 
 
 PyObject* CreadFemModel(PyObject* self, PyObject* args) {
@@ -19,18 +20,14 @@ PyObject* CreadFemModel(PyObject* self, PyObject* args) {
 		return NULL;
 	}
 
-	vector<string> lines;
-
-	string s = string(str);
-	stringstream ss{ s };
-	string buf;
-	while (getline(ss, buf, '\n')) {
-		lines.push_back(buf);
+	if(str == NULL) {
+		return NULL;
 	}
 
-	string result;
-	result = readFemModel(lines);
+	FemDataModel model = readFemModel(string(str));
 
+
+	string result = "OK";
 	return Py_BuildValue("s", result);
 }
 

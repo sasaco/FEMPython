@@ -2,6 +2,7 @@
 
 #include "Vector3.hpp"
 
+//#include <format>
 #include <string>
 using namespace std;
 
@@ -11,9 +12,6 @@ private:
 
 public:
     int label;
-    double x;
-    double y;
-    double z;
 
     FENode();
     FENode(int _label, double _x, double _y, double _z);

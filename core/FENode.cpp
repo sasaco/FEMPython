@@ -1,13 +1,13 @@
-﻿#include "FENode.h";
-
-#include <format>
-
+﻿#include "FENode.h"
 
 //--------------------------------------------------------------------//
 // 節点
 // label - 節点ラベル
 // x,y,z - x,y,z座標
-FENode::FENode() {};
+FENode::FENode() {
+    label = -1;
+    x = 0, y = 0, z = 0;
+};
 FENode::FENode(int _label, double _x, double _y, double _z) {
 
     label = _label;
@@ -28,7 +28,9 @@ void FENode::clone(FENode out) {
 // 節点を表す文字列を返す
 string FENode::toString() {
 
-    return format("Node\t{}\t{}\t{}\t{}",
-        label, x, y, z);
+    //return format("Node\t{}\t{}\t{}\t{}",
+    //    label, x, y, z);
 
-};
+    return "Node";
+
+}

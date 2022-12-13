@@ -1,7 +1,4 @@
-﻿#include "Restraint.h";
-#include "Load.h";
-#include "Pressure.h";
-#include "BoundaryCondition.h";
+﻿#include "BoundaryCondition.h"
 
 BoundaryCondition::BoundaryCondition() {
     clear();
@@ -50,22 +47,24 @@ int BoundaryCondition::setPointerStructure(int count) {
     bcList.clear();
     int dofAll = 0;
     for (int i = 0; i < count; i++) {
-        nodeIndex[i] = dofAll;
+        nodeIndex.push_back(dofAll);
         dofAll += dof[i];
     }
     for (int i = 0; i < dofAll; i++) {
-        bcList[i] = -1;
+        bcList.push_back(-1);
     }
     for (int i = 0; i < restraints.size(); i++) {
         Restraint r = restraints[i];
         int index0 = nodeIndex[r.node];
         int rdof = dof[r.node];
         for (int j = 0; j < rdof; j++) {
-            if (r.rest[j]) bcList[index0 + j] = 6 * i + j;
+            if (r.rest[j]) {
+                bcList[index0 + j] = 6 * i + j;
+            }
         }
     }
     return dofAll;
-};
+}
 
 // 熱解析の節点ポインタを設定する
 // count - 節点数
@@ -73,7 +72,7 @@ int BoundaryCondition::setPointerHeat(int count) {
     dof.clear();
     nodeIndex.clear();
     bcList.clear();
-    int temps = temperature.size();
+    int temps = (int)temperature.size();
     for (int i = 0; i < count; i++) {
         bcList[i] = -1;
     }
@@ -87,7 +86,7 @@ int BoundaryCondition::setPointerHeat(int count) {
 // 強制変位を返す
 // bc - 変位自由度ポインタ
 double BoundaryCondition::getRestDisp(int bc) {
-    int i = round(bc / 6);
+    int i = (int)round(bc / 6);
     Restraint r = restraints[i];
     int j = bc % 6;
     double result = r.x[j];
@@ -97,39 +96,38 @@ double BoundaryCondition::getRestDisp(int bc) {
 // データ文字列を返す
 // nodes - 節点
 // elems - 要素
-vector<string> BoundaryCondition::toStrings(vector<FENode> nodes, vector<ElementManager> elems) {
-
-    vector<string> s;
-
-    for (int i = 0; i < restraints.size(); i++) {
-        s.push_back(restraints[i].toString(nodes));
-    }
-    for (int i = 0; i < loads.size(); i++) {
-        s.push_back(loads[i].toString(nodes));
-    }
-    for (int i = 0; i < pressures.size(); i++) {
-        s.push_back(pressures[i].toString(elems));
-    }
-    for (int i = 0; i < temperature.size(); i++) {
-        s.push_back(temperature[i].toString(nodes));
-    }
-    for (int i = 0; i < htcs.size(); i++) {
-        s.push_back(htcs[i].toString(elems));
-    }
-    return s;
-};
+//vector<string> BoundaryCondition::toStrings(vector<FENode> nodes, vector<ElementManager> elems) {
+//
+//    vector<string> s;
+//
+//    for (int i = 0; i < restraints.size(); i++) {
+//        s.push_back(restraints[i].toString(nodes));
+//    }
+//    for (int i = 0; i < loads.size(); i++) {
+//        s.push_back(loads[i].toString(nodes));
+//    }
+//    for (int i = 0; i < pressures.size(); i++) {
+//        s.push_back(pressures[i].toString(elems));
+//    }
+//    for (int i = 0; i < temperature.size(); i++) {
+//        s.push_back(temperature[i].toString(nodes));
+//    }
+//    for (int i = 0; i < htcs.size(); i++) {
+//        s.push_back(htcs[i].toString(elems));
+//    }
+//    return s;
+//};
 
 
 // 節点ラベルを比較する
 // bc1,bc2 - 比較する境界条件
 template <typename T> 
 void BoundaryCondition::compareNodeLabel(vector<T> target) {
-
+   
     sort(target.begin(), target.end(),
-        [](auto bc1, auto bc2) -> int {
-            if (bc1.node < bc2.node)        return -1;
-            else if (bc1.node > bc2.node)   return 1;
-            else                            return 0;
+        [](const auto& bc1, const auto& bc2)
+        {
+            return bc1.node < bc2.node;
         });
 
 }
@@ -140,9 +138,9 @@ template <typename T>
 void BoundaryCondition::compareElementLabel(vector<T> target) {
 
     sort(target.begin(), target.end(),
-        [](auto bc1, auto bc2) -> int {
-            if (bc1.element < bc2.element)      return -1;
-            else if (bc1.element > bc2.element) return 1;
-            else                                return 0;
+        [](const auto& bc1, const auto& bc2)
+        {
+            return bc1.element < bc2.element;
         });
+
 }

@@ -1,9 +1,4 @@
-﻿#include "BarParameter.h";
-
-#include <algorithm>
-#include <iostream>
-#include <string>
-#include <format>
+﻿#include "BarParameter.h"
 
 //--------------------------------------------------------------------//
 // 梁パラメータ（円形断面）
@@ -30,20 +25,28 @@ BarParameter::~BarParameter() {
     delete rectSection;
 }
 
+Section BarParameter::section() {
+    auto sect = Section();
+    return sect;
+}
+
 // 梁パラメータを表す文字列を返す
 string BarParameter::toString() {
 
-    string result;
+    //string result;
 
-    if (type == "circle") {
-        result = format("BarParameter\t{}\t{}\t{}",
-            label, type, circleSection->toString());
-    }
-    else if (type == "rectangle") {
-        result = format("BarParameter\t{}\t{}\t{}",
-            label, type, rectSection->toString());
-    }
+    //if (type == "circle") {
+    //    result = format("BarParameter\t{}\t{}\t{}",
+    //        label, type, circleSection->toString());
+    //}
+    //else if (type == "rectangle") {
+    //    result = format("BarParameter\t{}\t{}\t{}",
+    //        label, type, rectSection->toString());
+    //}
 
-    return result;
+    //return result;
+
+    return "BarParamater";
 
 }
+

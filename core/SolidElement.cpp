@@ -1,6 +1,4 @@
-﻿#include "SolidElement.h";
-
-#include <format>
+﻿#include "SolidElement.h"
 
 //--------------------------------------------------------------------//
 // ソリッド要素
@@ -9,40 +7,33 @@
 // nodes - 節点番号
 // nodeP - 節点のξ,η,ζ座標
 // intP - 積分点のξ,η,ζ座標,重み係数
+SolidElement::SolidElement() : FElement() { }
 SolidElement::SolidElement(int label, int material, vector<int> nodes) :
     FElement(label, material, nodes) {
-}
-
-SolidElement::SolidElement(int label, int material, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP) :
-    FElement(label, material, nodes) {
-    nodeP = _nodeP;
-    intP = _intP;
 };
 
 
 // ヤコビ行列を返す
 // p - 要素節点
 // sf - 形状関数行列
-void SolidElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]) {
+MatrixXd SolidElement::jacobianMatrix(vector<FENode> p, MatrixXd sf) {
 
     int count = nodeCount();
-
-    for (int i = 0; i < 9; i++) {
-        out[i] = 0;
-    }
+    MatrixXd result = MatrixXd::Zero(3, 3);
 
     for (int i = 0; i < count; i++) {
-        vector<double> sfi = sf[i];
         double pix = p[i].x;
         double piy = p[i].y;
         double piz = p[i].z;
         for (int j = 0; j < 3; j++) {
-            double sfij = sfi[j + 1];
-            out[j] += sfij * pix;
-            out[j + 3] += sfij * piy;
-            out[j + 6] += sfij * piz;
+            double sfij = sf(i, j + 1);
+            result(0, j) += sfij * pix;
+            result(1, j) += sfij * piy;
+            result(2, j) += sfij * piz;
         }
     }
+
+    return result;
 }
 
 
@@ -50,98 +41,72 @@ void SolidElement::jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, d
 // p - 要素節点
 // ja - ヤコビ行列
 // sf - 形状関数行列
-void SolidElement::grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> out) {
+MatrixXd SolidElement::grad(vector<FENode> p, MatrixXd ja, MatrixXd sf) {
 
     int count = nodeCount();
 
-    double ji[9];
-
     // ◆ 3x3 行列の逆行列を求める
-    // 3x3の行列を入力
-    vector<vector<double>> a;
-    for (int i = 0; i < 3; ++i) {
-        vector<double> b;
-        for (int j = 0; j < 3; ++j) {
-            b.push_back(ja[i + j]);
-        }
-        a.push_back(b);
-    }
+    MatrixXd ji = ja.inverse();
 
-    vector<vector<double>> inv_a;
-    numeric::getInverse(a, inv_a);
-
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            ji[i + j] = inv_a[i][j];
-        }
-    }
-    // ◆ 
-
+    MatrixXd result(count, 3);
 
     for (int i = 0; i < count; i++) {
-        out[i][0] = ji[0] * sf[i][1] + ji[3] * sf[i][2] + ji[6] * sf[i][3];
-        out[i][1] = ji[1] * sf[i][1] + ji[4] * sf[i][2] + ji[7] * sf[i][3];
-        out[i][2] = ji[2] * sf[i][1] + ji[5] * sf[i][2] + ji[8] * sf[i][3];
+        result(i, 0) = ji(0, 0) * sf(i, 1) + ji(0, 1) * sf(i, 2) + ji(0, 2) * sf(i, 3);
+        result(i, 1) = ji(1, 0) * sf(i, 1) + ji(1, 1) * sf(i, 2) + ji(1, 2) * sf(i, 3);
+        result(i, 2) = ji(2, 0) * sf(i, 1) + ji(2, 1) * sf(i, 2) + ji(2, 2) * sf(i, 3);
     }
+
+    return result;
 };
 
 
 // 歪 - 変位マトリックスの転置行列を返す
 // grad - 形状関数の勾配
-void SolidElement::strainMatrix(vector<vector<double>> grad, vector<vector<double>> out) {
+MatrixXd SolidElement::strainMatrix(MatrixXd grad) {
 
     int count = nodeCount();
-    for (int i = 0; i < 3 * count; ++i) {
-        vector<double> m;
-        for (int j = 0; j < 6; ++j) {
-            m.push_back(0);
-        }
-        out.push_back(m);
-    }
+
+    MatrixXd out = MatrixXd::Zero(3 * count, 6);
 
     for (int i = 0; i < count; i++) {
         int i3 = 3 * i;
-        vector<double> gr = grad[i];
-        out[i3][0] = gr[0];
-        out[i3 + 1][1] = gr[1];
-        out[i3 + 2][2] = gr[2];
-        out[i3][3] = gr[1];
-        out[i3 + 1][3] = gr[0];
-        out[i3 + 1][4] = gr[2];
-        out[i3 + 2][4] = gr[1];
-        out[i3][5] = gr[2];
-        out[i3 + 2][5] = gr[0];
+        out(i3, 0) = grad(i, 0);
+        out(i3 + 1, 1) = grad(i, 1);
+        out(i3 + 2, 2) = grad(i, 2);
+        out(i3, 3) = grad(i, 1);
+        out(i3 + 1, 3) = grad(i, 0);
+        out(i3 + 1, 4) = grad(i, 2);
+        out(i3 + 2, 4) = grad(i, 1);
+        out(i3, 5) = grad(i, 2);
+        out(i3 + 2, 5) = grad(i, 0);
     }
+
+    return out;
 }
-
-
-
 
 
 // 積分点の形状関数マトリックス [ NiNj ] を返す
 // p - 要素節点
 // x - ξ,η,ζ座標
 // w - 重み係数
-void SolidElement::shapePart(vector<FENode> p, double x[3], double w, vector<vector<double>> out) {
+MatrixXd SolidElement::shapePart(vector<FENode> p, VectorXd x, double w) {
 
-    vector<vector<double>> sf;
-    shapeFunction(x[0], x[1], x[2], sf);
-
-    double ja[9];
-    jacobianMatrix( p,  sf, ja);
+    MatrixXd sf= shapeFunction(x(0), x(1), x(2));
+    MatrixXd ja = jacobianMatrix(p, sf);
     int count = nodeCount();
-
-    double det = determinant(ja);
-
+    double det = ja.determinant();
     double coef = w * abs(det);
+
+    MatrixXd result(count, count);
+
     for (int i = 0; i < count; i++) {
-        vector<double> matr;
-        double cf2 = coef * sf[i][0];
+        double cf2 = coef * sf(i, 0);
         for (int j = 0; j < count; j++) {
-            matr.push_back(cf2 * sf[j][0]);
+            result(i, j) = cf2 * sf(j, 0);
         }
-        out.push_back(matr);
     }
+
+    return result;
 }
 
 
@@ -149,174 +114,113 @@ void SolidElement::shapePart(vector<FENode> p, double x[3], double w, vector<vec
 // p - 要素節点
 // x - ξ,η,ζ座標
 // w - 重み係数
-void SolidElement::gradPart(vector<FENode> p, double x[3], double w, vector<vector<double>> out) {
+MatrixXd SolidElement::gradPart(vector<FENode> p, VectorXd x, double w) {
 
-    vector<vector<double>> sf;
-    shapeFunction(x[0], x[1], x[2], sf);
-
-    double ja[9];
-    jacobianMatrix(p, sf, ja);
-
-    vector<vector<double>> gr;
-    grad(p, ja, sf, gr);
-
+    MatrixXd sf = shapeFunction(x(0), x(1), x(2));
+    MatrixXd ja = jacobianMatrix(p, sf);
+    MatrixXd gr = grad(p, ja, sf);
     int count = nodeCount();
-
-    double ja[9];
-    double det = determinant(ja);
+    double det = ja.determinant();
     double coef = w * abs(det);
 
+    MatrixXd result(count, count);
+
     for (int i = 0; i < count; i++) {
-        vector<double> matr; 
-        vector<double> gri = gr[i];
-        double c1 = coef * gri[0], c2 = coef * gri[1], c3 = coef * gri[2];
+        double c1 = coef * gr(i, 0);
+        double c2 = coef * gr(i, 1);
+        double c3 = coef * gr(i, 2);
         for (int j = 0; j < count; j++) {
-            vector<double> grj = gr[j];
-            matr.push_back(c1 * grj[0] + c2 * grj[1] + c3 * grj[2]);
+            result(i, j) = c1 * gr(j, 0) + c2 * gr(j, 1) + c3 * gr(j, 2);
         }
-        out.push_back(matr);
     }
+
+    return result;
 };
 
 
 // 質量マトリックスを返す
 // p - 要素節点
 // dens - 材料の密度
-void SolidElement::massMatrix(vector<FENode> p, double dens, vector<vector<double>> out) {
+MatrixXd SolidElement::massMatrix(vector<FENode> p, double dens) {
     
     int count = nodeCount();
-
-    for (int i = 0; i < 3 * count; ++i) {
-        vector<double> m;
-        for (int j = 0; j < 3 * count; ++j) {
-            m.push_back(0);
-        }
-        out.push_back(m);
-    }
-
+    MatrixXd result = MatrixXd::Zero(3 * count, 3 * count);
 
     for (int i = 0; i < intP.size(); i++) {
-
-        vector<vector<double>> sf;
-        shapeFunction(intP[i][0], intP[i][1], intP[i][2], sf);
-
-        double ja[9];
-        jacobianMatrix(p, sf, ja);
-
-        double det = determinant(ja);
-
-        double coef = intP[i][3] * dens * abs(det);
-
+        MatrixXd sf = shapeFunction(intP(i, 0), intP(i, 1), intP(i, 2));
+        MatrixXd ja = jacobianMatrix(p, sf);
+        double det = ja.determinant();
+        double coef = intP(i, 3) * dens * abs(det);
 
         for (int i1 = 0; i1 < count; i1++) {
             for (int j1 = 0; j1 < count; j1++) {
-                double value = coef * sf[i1][0] * sf[j1][0], i3 = 3 * i1, j3 = 3 * j1;
-                out[i3][j3] += value;
-                out[i3 + 1][j3 + 1] += value;
-                out[i3 + 2][j3 + 2] += value;
+                double value = coef * sf(i1, 0) * sf(j1, 0);
+                int i3 = 3 * i1;
+                int j3 = 3 * j1;
+                result(i3, j3) += value;
+                result(i3 + 1, j3 + 1) += value;
+                result(i3 + 2, j3 + 2) += value;
             }
         }
     }
-}
 
-
-// 行列の和を計算する
-// a - 基準行列
-// da - 加える行列
-void SolidElement::addMatrix(vector<vector<double>> a, vector<vector<double>> da) {
-    for (int i = 0; i < a.size(); i++) {
-        for (int j = 0; j < a[i].size(); j++) {
-            a[i][j] += da[i][j];
-        }
-    }
+    return result;
 }
 
 
 // 剛性マトリックスを返す
 // p - 要素節点
 // d1 - 応力 - 歪マトリックス
-void SolidElement::stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out) {
+MatrixXd SolidElement::stiffnessMatrix(vector<FENode> p, MatrixXd d1) {
     
     int count = 3 * nodeCount();
-
-    for (int i = 0; i < count; ++i) {
-        vector<double> kk;
-        for (int j = 0; j < count; ++j) {
-            kk.push_back(0);
-        }
-        out.push_back(kk);
-    }
+    MatrixXd result = MatrixXd::Zero(count, count);
 
     for (int i = 0; i < intP.size(); i++) {
-
-        double* ip = intP[i];
-        vector<vector<double>> sf;
-        shapeFunction(ip[0], ip[1], ip[2], sf);
-
-        double ja[9];
-        jacobianMatrix(p, sf, ja);
-
-        vector<vector<double>> gr;
-        grad(p, ja, sf, gr);
-
-        vector<vector<double>> sm;
-        strainMatrix(gr, sm);
-
-        double det = determinant(ja);
-        double coef = ip[3] * abs(det);
-
-        vector<vector<double>> ks;
-        stiffPart(d1, sm, coef, ks);
-
-        addMatrix(out, ks);
+        MatrixXd sf = shapeFunction(intP(i, 0), intP(i, 1), intP(i, 2));
+        MatrixXd ja = jacobianMatrix(p, sf);
+        MatrixXd gr = grad(p, ja, sf);
+        MatrixXd sm = strainMatrix(gr);
+        double det = ja.determinant();
+        double coef = intP(i, 3) * abs(det);
+        MatrixXd ks = stiffPart(d1, sm, coef);
+        result += ks;
     }
+
+    return result;
 }
 
 
 // 形状関数マトリックス [ ∫NiNjdV ] を返す
 // p - 要素節点
 // coef - 係数
-void SolidElement::shapeFunctionMatrix(vector<FENode> p, double coef, vector<vector<double>> out) {
+MatrixXd SolidElement::shapeFunctionMatrix(vector<FENode> p, double coef) {
 
     int count = nodeCount();
-    
-    for (int i = 0; i < count; ++i) {
-        vector<double> s;
-        for (int j = 0; j < count; ++j) {
-            s.push_back(0);
-        }
-        out.push_back(s);
-    }
+    MatrixXd result = MatrixXd::Zero(count, count);
 
     for (int i = 0; i < intP.size(); i++) {
-        vector<vector<double>> sp;
-        shapePart(p, intP[i], coef * intP[i][3], sp);
-
-        addMatrix(out, sp);
+        MatrixXd sp = shapePart(p, intP.row(i), coef * intP(i, 3));
+        result += sp;
     }
-};
+
+    return result;
+}
 
 // 拡散マトリックス [ ∫∇Ni・∇NjdV ] を返す
 // p - 要素節点
 // coef - 係数
-void SolidElement::gradMatrix(vector<FENode> p, double coef, vector<vector<double>> out) {
+MatrixXd SolidElement::gradMatrix(vector<FENode> p, double coef) {
 
     int count = nodeCount();
-    
-    for (int i = 0; i < count; ++i) {
-        vector<double> g;
-        for (int j = 0; j < count; ++j) {
-            g.push_back(0);
-        }
-        out.push_back(g);
-    }
+    MatrixXd result = MatrixXd::Zero(count, count);
 
     for (int i = 0; i < intP.size(); i++) {
-        vector<vector<double>> gp;
-        gradPart(p, intP[i], coef * intP[i][3], gp);
-
-        addMatrix(out, gp);
+        MatrixXd gp = gradPart(p, intP.row(i), coef * intP(i, 3));
+        result += gp;
     }
+
+    return result;
 };
 
 
@@ -324,111 +228,90 @@ void SolidElement::gradMatrix(vector<FENode> p, double coef, vector<vector<doubl
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
-void SolidElement::geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, vector<vector<double>> out) {
+MatrixXd SolidElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
 
     int count = nodeCount();
-
-    for (int i = 0; i < 3 * count; ++i) {
-        vector<double> kk;
-        for (int j = 0; j < 3 * count; ++j) {
-            kk.push_back(0);
-        }
-        out.push_back(kk);
-    }
-
-    vector<double> v;
-    toArray(u, 3, v);
+    MatrixXd result = MatrixXd::Zero(3 * count, 3 * count);
+    VectorXd v = FElement::toArray(u, 3);
 
     for (int i = 0; i < intP.size(); i++) {
 
-        double* ip = intP[i];
+        MatrixXd sf= shapeFunction(intP(i, 0), intP(i, 1), intP(i, 2));
+        MatrixXd ja = jacobianMatrix(p, sf);
+        MatrixXd gr = grad(p, ja, sf);
+        MatrixXd sm = strainMatrix(gr);
+        VectorXd vm = v * sm;
+        VectorXd str = d1 * vm;
 
-        vector<vector<double>> sf;
-        shapeFunction(ip[0], ip[1], ip[2], sf);
-
-        double ja[9];
-        jacobianMatrix(p, sf, ja);
-
-        vector<vector<double>> gr;
-        grad(p, ja, sf, gr);
-
-        vector<vector<double>> sm;
-        strainMatrix(gr, sm);
-
-        vector<double> vm;
-        numeric::dotVM(v, sm, vm);
-
-        vector<double> str;
-        numeric::dotMV(d1, vm, str);
-
-        double det = determinant(ja);
-        double w = ip[3] * abs(det);
+        double det = ja.determinant();
+        double w = intP(i, 3) * abs(det);
 
         for (int i1 = 0; i1 < count; i1++) {
             int i3 = 3 * i1;
-            vector<double> gri = gr[i1];
+
             for (int j1 = 0; j1 < count; j1++) {
                 int j3 = 3 * j1;
-                vector<double> grj = gr[j1];
-                double s = w * (gri[0] * (str[0] * grj[0] + str[3] * grj[1] + str[5] * grj[2]) +
-                    gri[1] * (str[3] * grj[0] + str[1] * grj[1] + str[4] * grj[2]) +
-                    gri[2] * (str[5] * grj[0] + str[4] * grj[1] + str[2] * grj[2]));
-                out[i3][j3] += s;
-                out[i3 + 1][j3 + 1] += s;
-                out[i3 + 2][j3 + 2] += s;
+
+                double s = w * (gr(i1, 0) * (str(0) * gr(j1, 0) + str(3) * gr(j1, 1) + str(5) * gr(j1, 2)) +
+                    gr(i1, 1) * (str(3) * gr(j1, 0) + str(1) * gr(j1, 1) + str(4) * gr(j1, 2)) +
+                    gr(i1, 2) * (str(5) * gr(j1, 0) + str(4) * gr(j1, 1) + str(2) * gr(j1, 2)));
+
+                result(i3, j3) += s;
+                result(i3 + 1, j3 + 1) += s;
+                result(i3 + 2, j3 + 2) += s;
             }
         }
     }
-};
+
+    return result;
+}
 
 
 // 節点歪・応力を返す
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
-void SolidElement::strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
-                                vector<Strain> strain, vector<Stress> stress, vector<double> energy) {
+tuple<vector<Strain>, vector<Stress>, vector<double>> 
+    SolidElement::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
 
     int count = nodeCount();
-    
-    vector<double> v;
-    toArray(u, 3, v);
+    VectorXd v = FElement::toArray(u, 3);
+
+    vector<Strain> strain;
+    vector<Stress> stress;
+    vector<double> energy;
 
     for (int i = 0; i < count; i++) {
-        vector<double> eps;
-        strainPart(p, v, nodeP[i], eps);
 
+        VectorXd eps = strainPart(p, v, nodeP.row(i));
         strain.push_back(Strain(eps));
 
-        vector<double> str;
-        numeric::dotMV(d1, eps, str);
-
+        VectorXd str = d1 * eps;
         stress.push_back(Stress(str));
 
-        energy.push_back(0.5 * strain[i].innerProduct(stress[i]));
+        double eng = 0.5 * strain[i].innerProduct(stress[i]);
+        energy.push_back(eng);
     }
 
+    tuple<vector<Strain>, vector<Stress>, vector<double>> result = make_tuple(strain, stress, energy);
+
+    return result;
 }
 
 // 要素内の歪ベクトルを返す
 // p - 要素節点
 // v - 節点変位ベクトル
 // x - ξ,η,ζ座標
-void SolidElement::strainPart(vector<FENode> p, vector<double> v, double x[3], vector<double> out) {
+VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, VectorXd x) {
 
-    vector<vector<double>> sf;
-    shapeFunction(x[0], x[1], x[2], sf);
+    MatrixXd sf = shapeFunction(x(0), x(1), x(2));
+    MatrixXd ja = jacobianMatrix(p, sf);
+    MatrixXd gr = grad(p, ja, sf);
+    MatrixXd sm = strainMatrix(gr);
 
-    double ja[9];
-    jacobianMatrix(p, sf, ja);
+    VectorXd result = v * sm;
 
-    vector<vector<double>> gr;
-    grad(p, ja, sf, gr);
-
-    vector<vector<double>> sm;
-    strainMatrix(gr, sm);
-
-    numeric::dotVM(v, sm, out);
+    return result;
 };
 
 
@@ -436,57 +319,78 @@ void SolidElement::strainPart(vector<FENode> p, vector<double> v, double x[3], v
 // p - 要素節点
 // u - 節点変位
 // d1 - 応力 - 歪マトリックス
-void SolidElement::elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
-                                        Strain _Strain, Stress _Stress, double energy) {
+tuple<Strain, Stress, double> SolidElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
 
-    vector<double> v;
-    toArray(u, 3, v);
+    VectorXd v = FElement::toArray(u, 3);
+    int count = (int)intP.size();
+    auto cf = double(1 / intP.size());
 
-    double cf = 1 / intP.size();
-
-    vector<double> strain = { 0, 0, 0, 0, 0, 0 };
-    vector<double> stress = { 0, 0, 0, 0, 0, 0 };
-    energy = 0;
+    VectorXd strain = VectorXd::Zero(6);
+    VectorXd stress = VectorXd::Zero(6);
+    double energy = 0;
 
     for (int i = 0; i < intP.size(); i++) {
-        vector<double> eps;
-        strainPart(p, v, intP[i], eps);
+        VectorXd eps = strainPart(p, v, intP.row(i));
+        strain += eps;
 
-        numeric::add(strain, eps);
+        VectorXd str = d1 * eps;
+        stress += str;
 
-        vector<double> str;
-        numeric::dotMV(d1, eps, str);
-
-        numeric::add(stress, str);
-
-        energy += numeric::dotVV(eps, str);
+        energy += eps.dot(str);
     }
 
-    numeric::mul(strain, cf);
-    numeric::mul(stress, cf);
-
+    strain *= cf;
+    stress *= cf;
     energy *= 0.5 * cf;
-    _Strain = Strain(strain);
-    _Stress = Stress(stress);
 
+    tuple<Strain, Stress, double> result = make_tuple(Strain(strain), Stress(stress), energy);
+
+    return result;
 }
+
 
 // 要素を表す文字列を返す
 // materials - 材料
 // p - 節点
 string SolidElement::toString(vector<Material> materials, vector<FENode> p) {
 
-    Material mat = materials[material];
+    //Material mat = materials[material];
 
-    string s = "";
-    for (int i = 0; i < nodes.size(); i++) {
+    //string s = "";
+    //for (int i = 0; i < nodes.size(); i++) {
+    //    s += '\t';
+    //    FENode n = p[nodes[i]];
+    //    s += n.label;
+    //}
 
-        s += '\t';
-        FENode n = p[nodes[i]];
-        s += n.label;
-    }
+    //return format("{}\t{}\t{}\t{}",
+    //    getName(), label, mat.label, s);
 
-    return format("{}\t{}\t{}\t{}",
-        getName(), label, mat.label, s)
-
+    return "SolidElement";
 };
+
+// 三角形の立体角を球面過剰から求める
+// p0 - 基点
+// p1,p2,p3 - 頂点
+double SolidElement::solidAngle(FENode p0, FENode p1, FENode p2, FENode p3) {
+    FENode v1, v2, v3;
+    p1.clone(v1);
+    v1.sub(p0);
+    p2.clone(v2);
+    v2.sub(p0);
+    p3.clone(v3);
+    v3.sub(p0);
+
+    FENode v12, v23, v31;
+    v1.clone(v12);
+    v12.cross(v2).normalize();
+    v2.clone(v23);
+    v23.cross(v3).normalize();
+    v3.clone(v31);
+    v31.cross(v1).normalize();
+    double a1 = max(min(-v12.dot(v31), 1.0), -1.0);
+    double a2 = max(min(-v23.dot(v12), 1.0), -1.0);
+    double a3 = max(min(-v31.dot(v23), 1.0), -1.0);
+    double result = acos(a1) + acos(a2) + acos(a3) - PI;
+    return result;
+}

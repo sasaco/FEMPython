@@ -1,6 +1,4 @@
-﻿#include "HeatTransferBound.h";
-
-#include <format>
+﻿#include "HeatTransferBound.h"
 
 //--------------------------------------------------------------------//
 // 熱伝達境界条件
@@ -17,9 +15,9 @@ HeatTransferBound::HeatTransferBound(int element, string face, double _htc, doub
 
 // 熱伝達境界条件を表す文字列を返す
 // elems - 要素
-string HeatTransferBound::toString(vector<ElementManager> elems) {
-
-    return format("HTC\t{}\t{}\t{}\t{}", 
-        elems[element].label(), face, htc, outTemp);
-
-};
+//string HeatTransferBound::toString(vector<ElementManager> elems) {
+//
+//    return format("HTC\t{}\t{}\t{}\t{}", 
+//        elems[element].label(), face, htc, outTemp);
+//
+//};

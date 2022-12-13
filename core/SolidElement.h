@@ -1,61 +1,70 @@
 ﻿#pragma once
-#include "FElement.h";
-#include "FENode.h";
-#include "Material.h";
-#include "numeric.h";
 
+#include "BoundaryCondition.h"
+#include "FElement.h"
+#include "FENode.h"
+#include "Material.h"
+#include "Strain.h"
+#include "Stress.h"
 
+//#include <format>
 #include <string>
 #include <vector>
 using namespace std;
+using std::string;
+using std::vector;
 
-
+#include<Eigen/Core>
+#include<Eigen/LU>
+ using namespace Eigen;
 
 class SolidElement : public FElement {
 
 private:
+    double PI = numbers::pi;
 
-    vector<vector<double>> nodeP;
-    vector<vector<double>> intP;
+protected:
+    MatrixXd nodeP;
+    MatrixXd intP;
 
 public:
 
+    SolidElement();
     SolidElement(int label, int material, vector<int> nodes);
-    SolidElement(int label, int material, vector<int> nodes, vector<vector<double>> _nodeP, vector<vector<double>> _intP);
 
-    virtual void jacobianMatrix(vector<FENode> p, vector<vector<double>> sf, double out[9]);
+    virtual MatrixXd jacobianMatrix(vector<FENode> p, MatrixXd sf);
 
-    void grad(vector<FENode> p, double ja[9], vector<vector<double>> sf, vector<vector<double>> out);
+    virtual MatrixXd grad(vector<FENode> p, MatrixXd ja, MatrixXd sf);
 
-    void strainMatrix(vector<vector<double>> grad, vector<vector<double>> out);
+    MatrixXd strainMatrix(MatrixXd grad);
 
-    virtual void shapeFunction(double xsi, double eta, double zeta, vector<vector<double>> out) = 0;
+    virtual MatrixXd shapeFunction(double xsi, double eta, double zeta) = 0;
 
-    void shapePart(vector<FENode> p, double x[3], double w, vector<vector<double>> out);
+    MatrixXd shapePart(vector<FENode> p, VectorXd x, double w);
 
-    void gradPart(vector<FENode> p, double x[3], double w, vector<vector<double>> out);
+    MatrixXd gradPart(vector<FENode> p, VectorXd x, double w);
 
-    virtual void massMatrix(vector<FENode> p, double dens, vector<vector<double>> out);
+    virtual MatrixXd massMatrix(vector<FENode> p, double dens);
+    
+    virtual MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1);
 
-    void addMatrix(vector<vector<double>> a, vector<vector<double>> da);
+    virtual MatrixXd shapeFunctionMatrix(vector<FENode> p, double coef);
 
-    virtual void stiffnessMatrix(vector<FENode> p, vector<vector<double>> d1, vector<vector<double>> out);
+    virtual MatrixXd gradMatrix(vector<FENode> p, double coef);
 
-    virtual void shapeFunctionMatrix(vector<FENode> p, double coef, vector<vector<double>> out);
+    virtual MatrixXd geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
-    virtual void gradMatrix(vector<FENode> p, double coef, vector<vector<double>> out);
+    virtual tuple<vector<Strain>, vector<Stress>, vector<double>> strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
-    virtual void geomStiffnessMatrix(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1, vector<vector<double>> out);
+    VectorXd strainPart(vector<FENode> p, VectorXd v, VectorXd x);
 
-    virtual void strainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
-        vector<Strain> strain, vector<Stress> stress, vector<double> energy);
-
-    void strainPart(vector<FENode> p, vector<double> v, double x[3], vector<double> out);
-
-    virtual void elementStrainStress(vector<FENode> p, vector<BoundaryCondition> u, vector<vector<double>> d1,
-        Strain _Strain, Stress _Stress, double energy);
+    virtual tuple<Strain, Stress, double> elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
     virtual string getName() = 0;
+    
+    virtual  VectorXd angle(vector<FENode> p) = 0;
+
+    double solidAngle(FENode p0, FENode p1, FENode p2, FENode p3);
 
     string toString(vector<Material> materials, vector<FENode> p);
 };

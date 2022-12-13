@@ -1,10 +1,12 @@
 ﻿#pragma once
-#include "Material.h";
 
+#include "Material.h"
+
+#include <string>
+//#include <format>
 #include <numbers>
 using namespace std;         //  名前空間指定
 using std::string;
-
 
 //--------------------------------------------------------------------//
 // 円形断面
