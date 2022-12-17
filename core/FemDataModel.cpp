@@ -134,15 +134,14 @@ void FemDataModel::resetMaterialLabel(){
     materials.push_back(Material(1, 1, 0.3, 1, 1, 1));
   }
   map<int, int> map;
-  auto elements = mesh.elements;
 
   for(int i=0;i<materials.size();i++){
     map[materials[i].label]=i;
   }
-  for(int i=0;i<elements.size();i++){
-    int mat = elements[i].material();
+  for(int i=0;i< mesh.elements.size();i++){
+    int mat = mesh.elements[i].material();
     if (map.count(mat) > 0) {
-        elements[i].setMaterial(map[mat]);
+        mesh.elements[i].setMaterial(map[mat]);
     }
     else{
         throw (format("材料番号{}は存在しません", mat));
