@@ -298,7 +298,7 @@ void Solver::createStiffnessMatrix() {
 // matrix - 全体剛性マトリックス
 // km - 要素の剛性マトリックス
 // kmax - 成分の絶対値の最大値
-double Solver::setElementMatrix(ElementManager element, int dof, MatrixXd matrix,MatrixXd km, double kmax) {
+double Solver::setElementMatrix(ElementManager element, int dof, MatrixXd &matrix,MatrixXd km, double kmax) {
    
     int nodeCount = element.nodeCount();
     auto index = bc.nodeIndex;

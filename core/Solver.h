@@ -34,7 +34,7 @@ private:
     MatrixXd stiffnessMatrix(int dof);
     void createStiffnessMatrix();
 
-    double setElementMatrix(ElementManager element, int dof, MatrixXd matrix, MatrixXd km, double kmax);
+    double setElementMatrix(ElementManager element, int dof, MatrixXd &matrix, MatrixXd km, double kmax);
     VectorXd loadVector(int dof);
 
     void extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list);

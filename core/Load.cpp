@@ -29,6 +29,9 @@ Load::Load(vector<string> ss) {
         Vector3R::x[4] = stod(ss[6]);
         Vector3R::x[5] = stod(ss[7]);
     }
+    for (int i = 0; i < 6; i++) {
+        globalX[i] = Vector3R::x[i];
+    }
 }
 
 
@@ -42,6 +45,9 @@ Load::Load(int _node, int _coords,
 
     node = _node;
     coords = _coords;
+    for (int i = 0; i < 6; i++) {
+        globalX[i] = Vector3R::x[i];
+    }
 };
 
 // 荷重条件を表す文字列を返す

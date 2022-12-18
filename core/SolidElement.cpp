@@ -27,9 +27,9 @@ MatrixXd SolidElement::jacobianMatrix(vector<FENode> p, MatrixXd sf) {
         double piz = p[i].z;
         for (int j = 0; j < 3; j++) {
             double sfij = sf(i, j + 1);
-            result(j, 0) += sfij * pix;
-            result(j, 1) += sfij * piy;
-            result(j, 2) += sfij * piz;
+            result(0, j) += sfij * pix;
+            result(1, j) += sfij * piy;
+            result(2, j) += sfij * piz;
         }
     }
 

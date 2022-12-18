@@ -30,7 +30,7 @@ MatrixXd FElement::stiffPart(MatrixXd d, MatrixXd b, double coef) {
     int size1 = (int)b.rows();
     int size2 = (int)d.rows();
 
-    MatrixXd k(size1, size2);
+    MatrixXd k(size1, size1);
 
     for (int i = 0; i < size1; i++) {
 
@@ -46,9 +46,7 @@ MatrixXd FElement::stiffPart(MatrixXd d, MatrixXd b, double coef) {
         }
     }
 
-
     return k;
-
 }
 
 
