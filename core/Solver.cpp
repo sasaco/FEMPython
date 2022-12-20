@@ -330,8 +330,17 @@ double Solver::setElementMatrix(ElementManager element, int dof, MatrixXd &matri
 void Solver::extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list) {
     // 
     // https://eigen.tuxfamily.org/dox/group__TutorialSlicingIndexing.html
-    _vector = vector1;// (list);
-    _matrix = matrix1;// (list, list);
+    int count = list.size();
+    _vector.resize(count);
+    _matrix.resize(count, count);
+    for (int i = 0; i < count; i++) {
+        int a = list[i];
+        _vector(i) = vector1(a);
+        for (int j = 0; j < count; j++) {
+            int b = list[j];
+            _matrix(i, j) = matrix1(a, b);
+        }
+    }
 }
 
 // 連立方程式を解く
