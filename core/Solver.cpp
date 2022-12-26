@@ -333,23 +333,56 @@ void Solver::extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list) {
     int count = list.size();
     _vector.resize(count);
     _matrix.resize(count, count);
+    
+    int cot = matrix1.rows();
+
+    std::vector<T> matrix_triplets;
+    std::vector<T> vector_triplets;
+
     for (int i = 0; i < count; i++) {
         int a = list[i];
-        _vector(i) = vector1(a);
+        double value = vector1(a);
+        _vector(i) = value;
+        vector_triplets.emplace_back(a, 0, value);
+
         for (int j = 0; j < count; j++) {
             int b = list[j];
-            _matrix(i, j) = matrix1(a, b);
+             value = matrix1(a, b);
+             _matrix(i, j) = value;
+            // std::vectorに要素を入れていく
+             matrix_triplets.emplace_back(a, b, value);
         }
     }
+    matrix_.resize(cot, cot);
+    matrix_.setFromTriplets(matrix_triplets.begin(), matrix_triplets.end());
+    vector_.resize(cot, 1);
+    vector_.setFromTriplets(vector_triplets.begin(), vector_triplets.end());
 }
 
 // 連立方程式を解く
 VectorXd Solver::solve() {
-    VectorXd result = _matrix.fullPivLu().solve(_vector);
+    
+    Eigen::BiCGSTAB<MatrixXd> bicg;
+    // Eigen::ConjugateGradient<MatrixXd> cg;
+    bicg.compute(_matrix);
+    VectorXd xx = bicg.solve(_vector);
+
+    Eigen::SparseQR< Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver;  // solverオブジェクトを構築する。
+    solver.compute(matrix_);
+
+    if (solver.info() != Eigen::Success) {
+        std::cerr << "decomposition failed" << std::endl;
+    }
+    VectorXd x = solver.solve(vector_);
+
+    VectorXd result = _matrix.partialPivLu().solve(_vector);
+    // VectorXd result = _matrix.fullPivLu().solve(_vector);
     return result;
     //switch (method) {
     //    case LU_METHOD:
     //    case ILUCG_METHOD:
     //}
+
+
 };
 

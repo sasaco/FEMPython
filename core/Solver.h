@@ -9,8 +9,16 @@ using std::vector;
 
 #include <Eigen/Core>
 #include <Eigen/LU>
-using namespace Eigen;
 
+// Sparseヘッダはコンパイルが恐ろしく遅くなる！！！
+#include <Eigen/Sparse>
+// 代わりにこうする
+//#include <Eigen/SparseCore>
+//#include <Eigen/SparseLU>
+//#include <Eigen/SparseQR>
+
+using namespace Eigen;
+typedef Eigen::Triplet<double> T;
 
 class Solver : public FemDataModel {
 
@@ -20,6 +28,10 @@ private:
     MatrixXd _matrix;
     MatrixXd _matrix2;
     VectorXd _vector;
+
+    SparseMatrix<double> matrix_;
+    SparseMatrix<double> vector_;
+
 
     int  LU_METHOD = 0;	        // LU分解法
     int  ILUCG_METHOD = 1;      // 不完全LU分解共役勾配法
