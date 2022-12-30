@@ -13,10 +13,10 @@ using namespace std;         //  名前空間指定
 class Temperature {
 
 private:
-    double t;
 
 public:
     int node;
+    double t;
 
     Temperature();
     Temperature(int _node, double _t);

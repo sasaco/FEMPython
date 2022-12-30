@@ -21,6 +21,5 @@ public:
 
     Pressure();
     Pressure(int _element, std::string _face, double _press);
-
     //string toString(vector<ElementManager> elems);
 };

@@ -1,6 +1,9 @@
 #pragma once
 
 //#include "BorderManager.hpp"
+#include "ShellParameter.h"
+#include "BarParameter.h"
+#include "Section.h"
 
 #include <iostream>
 #include <string>
@@ -58,6 +61,7 @@ public:
 
     int label();
     vector<int> nodes();
+    void setNodes(vector<int> tmp);
 
     int material();
     void setMaterial(int mat);
@@ -67,11 +71,41 @@ public:
 
     bool isShell();
     bool isBar();
-    /*
 
+    int nodeCount();
+
+    MatrixXd gradMatrix(vector<FENode>nodes, double h, ShellParameter sp);
+    MatrixXd gradMatrix(vector<FENode>nodes, double h, Section sp);
+    MatrixXd gradMatrix(vector<FENode>nodes, double h);
+
+    MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1, ShellParameter sp);
+    MatrixXd stiffnessMatrix(vector<FENode> p, Material d1, Section sp);
+    MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1);
+
+
+    tuple<Strain, Stress, double, Strain, Stress, double>
+        elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
+    tuple<Strain, Stress, double, Strain, Stress, double>
+        elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect);
+    tuple<Strain, Stress, double> 
+        elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
+
+
+    tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
+        strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
+    tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
+        strainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect);
+    tuple<vector<Strain>, vector<Stress>, vector<double>>
+        strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
+
+    VectorXd angle(vector<FENode> p);
+
+    /*
     BorderManager border(int element, int index);
     BorderManager borderEdge(int element, int index);
     */
+
+    string getName();
 
 };
 

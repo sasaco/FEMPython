@@ -5,13 +5,9 @@
 // label - 節点ラベル
 // x,y,z - x,y,z座標
 FENode::FENode() {
-
     label = -1;
-    x = 0;
-    y = 0;
-    z = 0;
+    x = 0, y = 0, z = 0;
 };
-
 FENode::FENode(int _label, double _x, double _y, double _z) {
 
     label = _label;

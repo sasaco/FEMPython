@@ -13,6 +13,7 @@ public:
     double yz;
     double zx;
 
+    SymmetricTensor3();
     SymmetricTensor3(VectorXd s);
 
     VectorXd vector();

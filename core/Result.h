@@ -4,6 +4,7 @@
 #include "Strain.h"
 #include "Stress.h"
 #include "EigenValue.h"
+#include "BoundaryCondition.h"
 
 #include<map> 
 #include<string>
@@ -11,6 +12,9 @@
 using namespace std;
 using std::string;
 using std::vector;
+
+#include <Eigen/Core>
+using namespace Eigen;
 
 class Result {
 
@@ -101,12 +105,10 @@ private:
     };
 
     double EIG_EPS = 1e-10;           // 固有値計算の収束閾値
-    int ELEMENT_DATA = 1;		        // 要素データ
-    string VIBRATION = "Vibration";	// 振動解析
+    string VIBRATION = "Vibration";	  // 振動解析
     string BUCKLING = "Buckling";	    // 座屈解析
 
     
-    vector<Vector3R> displacement;  // 変位
     double dispMax;		            // 変位の大きさの最大値
     double angleMax;		        // 回転角の大きさの最大値
     vector<Strain> strain1;		    // 節点歪
@@ -125,9 +127,21 @@ private:
 
 public:
     int NODE_DATA = 0;		// 節点データ
-    int type;		                // データ保持形態：節点データ
+    int ELEMENT_DATA = 1;   // 要素データ
+    int type;		        // データ保持形態：節点データ
+    vector<Vector3R> displacement;  // 変位
 
     Result();
     void clear();
+
+    void setTemperature(BoundaryCondition bc, VectorXd t, int nodeCount);
+    void setDisplacement(BoundaryCondition bc, VectorXd disp, int nodeCount);
+    void initStrainAndStress(int count);
+
+    void addStructureData(int i, Strain eps1, Stress str1, double se1,
+        Strain eps2, Stress str2, double se2);
+
+    void mulStructureData(int i, double coef);
+
 };
 

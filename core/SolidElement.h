@@ -21,6 +21,7 @@ using std::vector;
 class SolidElement : public FElement {
 
 private:
+    double PI = numbers::pi;
 
 protected:
     MatrixXd nodeP;
@@ -60,6 +61,10 @@ public:
     virtual tuple<Strain, Stress, double> elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
     virtual string getName() = 0;
+    
+    virtual  VectorXd angle(vector<FENode> p) = 0;
+
+    double solidAngle(FENode p0, FENode p1, FENode p2, FENode p3);
 
     string toString(vector<Material> materials, vector<FENode> p);
 };

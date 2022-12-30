@@ -16,13 +16,11 @@ public:
     vector<FENode> nodes;   // êﬂì_
     vector<ElementManager> elements;   // óvëf
 
-
     MeshModel();
-
-    template <typename T>
-    vector<FENode> getNodes(T s);
-
+    vector<FENode> getNodes(ElementManager s);
     void clear();
-
     void init();
+    void checkChirality();
+    void getFreeFaces();
+    void getFaceEdges();
 };

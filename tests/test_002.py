@@ -4,7 +4,8 @@ import pytest
 def test_sampleBeamHexa1():
     from src.FemMain import initModel
 
-    fileName = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/examples/beam/sampleBeamHexa1.fem')
+    fileName = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) 
+                               + '/examples/beam/sampleBeamHexa1.fem')
     # model = initModel('tests/examples/others/sample3.fem')
     model = initModel(fileName)
     model.calculate()
