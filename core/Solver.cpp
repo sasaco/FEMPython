@@ -343,14 +343,16 @@ void Solver::extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list) {
         int a = list[i];
         double value = vector1(a);
         _vector(i) = value;
-        vector_triplets.emplace_back(a, 0, value);
+        if(abs(value) > 0.000000000001)
+            vector_triplets.emplace_back(a, 0, value);
 
         for (int j = 0; j < count; j++) {
             int b = list[j];
              value = matrix1(a, b);
              _matrix(i, j) = value;
             // std::vectorに要素を入れていく
-             matrix_triplets.emplace_back(a, b, value);
+             if (abs(value) > 0.000000000001)
+                 matrix_triplets.emplace_back(a, b, value);
         }
     }
     matrix_.resize(cot, cot);
@@ -362,11 +364,6 @@ void Solver::extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list) {
 // 連立方程式を解く
 VectorXd Solver::solve() {
     
-    Eigen::BiCGSTAB<MatrixXd> bicg;
-    // Eigen::ConjugateGradient<MatrixXd> cg;
-    bicg.compute(_matrix);
-    VectorXd xx = bicg.solve(_vector);
-
     Eigen::SparseQR< Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver;  // solverオブジェクトを構築する。
     solver.compute(matrix_);
 
@@ -374,6 +371,13 @@ VectorXd Solver::solve() {
         std::cerr << "decomposition failed" << std::endl;
     }
     VectorXd x = solver.solve(vector_);
+
+
+    Eigen::BiCGSTAB<MatrixXd> bicg;
+    // Eigen::ConjugateGradient<MatrixXd> cg;
+    bicg.compute(_matrix);
+    VectorXd xx = bicg.solve(_vector);
+
 
     VectorXd result = _matrix.partialPivLu().solve(_vector);
     // VectorXd result = _matrix.fullPivLu().solve(_vector);
