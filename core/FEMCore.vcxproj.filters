@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ソース ファイル">
+      <UniqueIdentifier>{7db53271-c60b-4b21-99d3-9584f21d19cb}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="ソース ファイル\Section">
+      <UniqueIdentifier>{2e84eb5f-28a4-4177-95c7-6abe58d524b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Material">
+      <UniqueIdentifier>{680958d1-d7e4-4366-a5cd-2fecd58c29c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Element">
+      <UniqueIdentifier>{e1f71753-06b5-4d9f-8446-5f73eab5e756}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\FemDataModel">
+      <UniqueIdentifier>{1d3055a7-802e-461b-b12d-a2b4a1b618c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Coordinates">
+      <UniqueIdentifier>{e75491d4-39de-4359-bb3f-f87f0f98752e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\BoundaryCondition">
+      <UniqueIdentifier>{4e8cc869-6b88-42c6-95a9-ed29a6ed479c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Element\BarElement">
+      <UniqueIdentifier>{c4b6cd94-5c7b-4c9d-9dc8-0c8aeba3f131}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Element\SolidElement">
+      <UniqueIdentifier>{9177f5e1-2222-413d-ae92-d3388096415c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Element\ShellElement">
+      <UniqueIdentifier>{3edcb56a-e7b6-41cb-bba6-fd439564025b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\numeric">
+      <UniqueIdentifier>{8d482bbc-6648-4aa5-a0a2-82ea398984d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Border">
+      <UniqueIdentifier>{512bab33-2422-4a9b-9b2d-c241527de2e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\Solver">
+      <UniqueIdentifier>{25115d43-c7fd-4b0a-b3a9-b1dac865ce4a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="module.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="FemDataModel.cpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshModel.cpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClCompile>
+    <ClCompile Include="FENode.cpp">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundaryCondition.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementBorderBound.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="Load.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="Restraint.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="HeatTransferBound.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="Pressure.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="Temperature.cpp">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementManager.h">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClCompile>
+    <ClCompile Include="FileIO.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Coordinates.cpp">
+      <Filter>ソース ファイル\Coordinates</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="BarParameter.cpp">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="ShellParameter.cpp">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector3R.cpp">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClCompile>
+    <ClCompile Include="CircleSection.cpp">
+      <Filter>ソース ファイル\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="RectSection.cpp">
+      <Filter>ソース ファイル\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="Solver.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Result.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="EigenValue.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Strain.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="Stress.cpp">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="SymmetricTensor3.cpp">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClCompile>
+    <ClCompile Include="SolidElement.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="FElement.cpp">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Nodes.cpp">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClCompile>
+    <ClCompile Include="Section.cpp">
+      <Filter>ソース ファイル\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementManager.cpp">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClCompile>
+    <ClCompile Include="HexaElement1.cpp">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClCompile>
+    <ClCompile Include="ShellElement.cpp">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClCompile>
+    <ClCompile Include="BarElement.cpp">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="setup.py" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FemDataModel.h">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClInclude>
+    <ClInclude Include="FENode.h">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshModel.h">
+      <Filter>ソース ファイル\FemDataModel</Filter>
+    </ClInclude>
+    <ClInclude Include="BoundaryCondition.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Load.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Restraint.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="HeatTransferBound.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Pressure.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Temperature.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementBorderBound.h">
+      <Filter>ソース ファイル\BoundaryCondition</Filter>
+    </ClInclude>
+    <ClInclude Include="Coordinates.h">
+      <Filter>ソース ファイル\Coordinates</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="BarParameter.h">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="ShellParameter.h">
+      <Filter>ソース ファイル\Material</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector3R.h">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="CircleSection.h">
+      <Filter>ソース ファイル\Section</Filter>
+    </ClInclude>
+    <ClInclude Include="RectSection.h">
+      <Filter>ソース ファイル\Section</Filter>
+    </ClInclude>
+    <ClInclude Include="Solver.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Result.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="EigenValue.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Strain.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Stress.h">
+      <Filter>ソース ファイル\Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="SymmetricTensor3.h">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="FElement.h">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClInclude>
+    <ClInclude Include="SolidElement.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="Nodes.h">
+      <Filter>ソース ファイル\Element</Filter>
+    </ClInclude>
+    <ClInclude Include="vector3.hpp">
+      <Filter>ソース ファイル\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="Section.h">
+      <Filter>ソース ファイル\Section</Filter>
+    </ClInclude>
+    <ClInclude Include="HexaElement1.h">
+      <Filter>ソース ファイル\Element\SolidElement</Filter>
+    </ClInclude>
+    <ClInclude Include="BorderManager.hpp">
+      <Filter>ソース ファイル\Border</Filter>
+    </ClInclude>
+    <ClInclude Include="ShellElement.h">
+      <Filter>ソース ファイル\Element\ShellElement</Filter>
+    </ClInclude>
+    <ClInclude Include="BarElement.h">
+      <Filter>ソース ファイル\Element\BarElement</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

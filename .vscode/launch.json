@@ -5,12 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "pyTest",
+            "name": "Python: 現在のファイル",
             "type": "python",
             "request": "launch",
-            "stopOnEntry": false,
-            "module": "pytest",
-            "cwd": "${workspaceRoot}",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }

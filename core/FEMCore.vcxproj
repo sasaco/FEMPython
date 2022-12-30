@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BarElement.cpp" />
+    <ClCompile Include="BarParameter.cpp" />
+    <ClCompile Include="BoundaryCondition.cpp" />
+    <ClCompile Include="CircleSection.cpp" />
+    <ClCompile Include="Coordinates.cpp" />
+    <ClCompile Include="EigenValue.cpp" />
+    <ClCompile Include="ElementBorderBound.cpp" />
+    <ClCompile Include="ElementManager.cpp" />
+    <ClCompile Include="ElementManager.h" />
+    <ClCompile Include="FElement.cpp" />
+    <ClCompile Include="FENode.cpp" />
+    <ClCompile Include="FileIO.cpp" />
+    <ClCompile Include="HeatTransferBound.cpp" />
+    <ClCompile Include="HexaElement1.cpp" />
+    <ClCompile Include="Load.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="MeshModel.cpp" />
+    <ClCompile Include="module.cpp" />
+    <ClCompile Include="FemDataModel.cpp" />
+    <ClCompile Include="Nodes.cpp" />
+    <ClCompile Include="Pressure.cpp" />
+    <ClCompile Include="RectSection.cpp" />
+    <ClCompile Include="Restraint.cpp" />
+    <ClCompile Include="Result.cpp" />
+    <ClCompile Include="Section.cpp" />
+    <ClCompile Include="ShellElement.cpp" />
+    <ClCompile Include="ShellParameter.cpp" />
+    <ClCompile Include="SolidElement.cpp" />
+    <ClCompile Include="Solver.cpp" />
+    <ClCompile Include="Strain.cpp" />
+    <ClCompile Include="Stress.cpp" />
+    <ClCompile Include="SymmetricTensor3.cpp" />
+    <ClCompile Include="Temperature.cpp" />
+    <ClCompile Include="Vector3R.cpp" />
+    <!--
+    <ClCompile Include="BoundaryCondition.cpp" />
+    <ClCompile Include="HeatTransferBound.cpp" />
+    <ClCompile Include="Load.cpp" />
+    <ClCompile Include="Pressure.cpp" />
+    <ClCompile Include="Restraint.cpp" />
+    <ClCompile Include="Temperature.cpp" />
+    <ClCompile Include="Vector3R.cpp" />
+    <ClCompile Include="Coordinates.cpp" />
+    <ClCompile Include="BarElement.cpp" />
+    <ClCompile Include="BEBarElement.cpp" />
+    <ClCompile Include="TBarElement.cpp" />
+    <ClCompile Include="FElement.cpp" />
+    <ClCompile Include="QuadElement1.cpp" />
+    <ClCompile Include="ShellElement.cpp" />
+    <ClCompile Include="TriElement1.cpp" />
+    <ClCompile Include="HexaElement1.cpp" />
+    <ClCompile Include="HexaElement1WT.cpp" />
+    <ClCompile Include="HexaElement2.cpp" />
+    <ClCompile Include="SolidElement.cpp" />
+    <ClCompile Include="TetraElement1.cpp" />
+    <ClCompile Include="TetraElement2.cpp" />
+    <ClCompile Include="WedgeElement1.cpp" />
+    <ClCompile Include="WedgeElement2.cpp" />
+    <ClCompile Include="FENode.cpp" />
+    <ClCompile Include="Nodes.cpp" />
+    <ClCompile Include="BarParameter.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="ShellParameter.cpp" />
+    <ClCompile Include="matrix3.cpp" />
+    <ClCompile Include="numeric.cpp" />
+    <ClCompile Include="CircleSection.cpp" />
+    <ClCompile Include="RectSection.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BoundaryCondition.h" />
+    <ClInclude Include="HeatTransferBound.h" />
+    <ClInclude Include="Load.h" />
+    <ClInclude Include="Pressure.h" />
+    <ClInclude Include="Restraint.h" />
+    <ClInclude Include="Temperature.h" />
+    <ClInclude Include="Vector3R.h" />
+    <ClInclude Include="Coordinates.h" />
+    <ClInclude Include="BarElement.h" />
+    <ClInclude Include="BEBarElement.h" />
+    <ClInclude Include="TBarElement.h" />
+    <ClInclude Include="FElement.h" />
+    <ClInclude Include="ShellElement.h" />
+    <ClInclude Include="HexaElement1.h" />
+    <ClInclude Include="HexaElement2.h" />
+    <ClInclude Include="SolidElement.h" />
+    <ClInclude Include="TetraElement1.h" />
+    <ClInclude Include="TetraElement2.h" />
+    <ClInclude Include="WedgeElement1.h" />
+    <ClInclude Include="WedgeElement2.h" />
+    <ClInclude Include="FENode.h" />
+    <ClInclude Include="Nodes.h" />
+    <ClInclude Include="BarParameter.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="ShellParameter.h" />
+    <ClInclude Include="math.hpp" />
+    <ClInclude Include="matrix3.h" />
+    <ClInclude Include="matrix4.hpp" />
+    <ClInclude Include="numeric.h" />
+    <ClInclude Include="vector3.hpp" />
+    <ClInclude Include="QuadElement1.h" />
+    <ClInclude Include="CircleSection.h" />
+    <ClInclude Include="RectSection.h" />
+    <ClInclude Include="TriElement1.h" />
+  -->
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="setup.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BarElement.h" />
+    <ClInclude Include="BarParameter.h" />
+    <ClInclude Include="BorderManager.hpp" />
+    <ClInclude Include="BoundaryCondition.h" />
+    <ClInclude Include="CircleSection.h" />
+    <ClInclude Include="Coordinates.h" />
+    <ClInclude Include="EigenValue.h" />
+    <ClInclude Include="ElementBorderBound.h" />
+    <ClInclude Include="FElement.h" />
+    <ClInclude Include="FemDataModel.h" />
+    <ClInclude Include="FENode.h" />
+    <ClInclude Include="HeatTransferBound.h" />
+    <ClInclude Include="HexaElement1.h" />
+    <ClInclude Include="Load.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="MeshModel.h" />
+    <ClInclude Include="Nodes.h" />
+    <ClInclude Include="Pressure.h" />
+    <ClInclude Include="RectSection.h" />
+    <ClInclude Include="Restraint.h" />
+    <ClInclude Include="Result.h" />
+    <ClInclude Include="Section.h" />
+    <ClInclude Include="ShellElement.h" />
+    <ClInclude Include="ShellParameter.h" />
+    <ClInclude Include="SolidElement.h" />
+    <ClInclude Include="Solver.h" />
+    <ClInclude Include="Strain.h" />
+    <ClInclude Include="Stress.h" />
+    <ClInclude Include="SymmetricTensor3.h" />
+    <ClInclude Include="Temperature.h" />
+    <ClInclude Include="vector3.hpp" />
+    <ClInclude Include="Vector3R.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{28F6146F-9862-4C07-A931-F3DE0A093BB7}</ProjectGuid>
+    <RootNamespace>superfastcode</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>FEMCore</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetExt>.pyd</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetExt>.pyd</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetExt>.pyd</TargetExt>
+    <OutDir>$(ProjectDir)\bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)\obj\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetExt>.pyd</TargetExt>
+    <OutDir>$(ProjectDir)\bin\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)\obj\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Users\sasaco\anaconda3\lib\site-packages\pybind11\include;C:\Users\sasaco\anaconda3\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>Py_LIMITED_API;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>C:\Users\sasaco\anaconda3\libs</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(PYTHONPATH)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(PYTHONPATH)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>%PYTHONPATH%\include</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>Py_LIMITED_API;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>%PYTHONPATH%\libs</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(PYTHONPATH)\include</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(PYTHONPATH)\libs</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Eigen3.3.3.9\build\native\Eigen3.targets" Condition="Exists('..\packages\Eigen3.3.3.9\build\native\Eigen3.targets')" />
+    <Import Project="..\packages\OpenBLAS.0.2.14.1\build\native\openblas.targets" Condition="Exists('..\packages\OpenBLAS.0.2.14.1\build\native\openblas.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Eigen3.3.3.9\build\native\Eigen3.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Eigen3.3.3.9\build\native\Eigen3.targets'))" />
+    <Error Condition="!Exists('..\packages\OpenBLAS.0.2.14.1\build\native\openblas.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\OpenBLAS.0.2.14.1\build\native\openblas.targets'))" />
+  </Target>
+</Project>
