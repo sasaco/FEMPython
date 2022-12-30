@@ -9,8 +9,6 @@ using std::vector;
 
 #include<cblas.h>
 
-#define EIGEN_USE_BLAS
-#define EIGEN_USE_LAPACKE
 #include <Eigen/Core>
 #include <Eigen/LU>
 

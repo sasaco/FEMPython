@@ -5,7 +5,7 @@
     <ProjectGuid>2b5c8505-3d84-4e5d-9a30-42d81be799d5</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>tests\test_002.py</StartupFile>
+    <StartupFile>tests\test_001.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -20,6 +20,8 @@
     <UnitTestPattern>test*.py</UnitTestPattern>
     <UnitTestRootDirectory>.</UnitTestRootDirectory>
     <SuppressEnvironmentCreationPrompt>True</SuppressEnvironmentCreationPrompt>
+    <InterpreterId>Global|ContinuumAnalytics|Anaconda39-64</InterpreterId>
+    <SuppressPackageInstallationPrompt>True</SuppressPackageInstallationPrompt>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,44 +32,22 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\superfastcode2\superfastcode2.vcxproj">
-      <Name>superfastcode2</Name>
-      <Project>{98d5e983-ce8c-4ae5-9da2-0374c81bfb86}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\superfastcode\superfastcode.vcxproj">
-      <Name>superfastcode</Name>
-      <Project>{28f6146f-9862-4c07-a931-f3de0a093bb7}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="src\" />
     <Folder Include="tests\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="src\AdvancedElement.py" />
-    <Compile Include="src\BarElement.py" />
-    <Compile Include="src\BoundaryCondition.py" />
-    <Compile Include="src\Coordinates.py" />
-    <Compile Include="src\Element.py" />
-    <Compile Include="src\ElementBorder.py" />
-    <Compile Include="src\FemDataModel.py" />
-    <Compile Include="src\FemMain.py" />
-    <Compile Include="src\FENode.py" />
-    <Compile Include="src\FileIO.py" />
-    <Compile Include="src\IterMethod.py" />
-    <Compile Include="src\Lanczos.py" />
-    <Compile Include="src\Material.py" />
-    <Compile Include="src\Nodes.py" />
-    <Compile Include="src\Result.py" />
-    <Compile Include="src\Section.py" />
-    <Compile Include="src\ShellElement.py" />
-    <Compile Include="src\SolidElement.py" />
-    <Compile Include="src\Solver.py" />
     <Compile Include="tests\conftest.py" />
     <Compile Include="tests\test_001.py" />
-    <Compile Include="tests\test_002.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda39-64" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="core\FEMCore.vcxproj">
+      <Name>FEMCore</Name>
+      <Project>{28f6146f-9862-4c07-a931-f3de0a093bb7}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
