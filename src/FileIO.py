@@ -18,15 +18,6 @@ from FENode import FENode
 #--------------------------------------------------------------------#
 # ファイル読み込み・書き込み
 
-# サーバー上のFEMデータファイルを読み込む
-# fileName - データファイル名
-def readServerFemFile(fileName, model):
-	f = open(fileName, encoding="utf-8")
-	fstr = f.read()  # ファイル終端まで全て読んだデータを返す
-	f.close()
-	readFemModel(fstr.strip().split('\n'), model)
-
-
 # FEMデータを読み込む
 # s - データ文字列のリスト
 def readFemModel(s: List[str], model: FemDataModel):
