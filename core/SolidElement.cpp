@@ -176,7 +176,7 @@ MatrixXd SolidElement::stiffnessMatrix(vector<FENode> p, MatrixXd d1) {
     int count = 3 * nodeCount();
     MatrixXd result = MatrixXd::Zero(count, count);
 
-    for (int i = 0; i < intP.size(); i++) {
+    for (int i = 0; i < intP.rows(); i++) {
         MatrixXd sf = shapeFunction(intP(i, 0), intP(i, 1), intP(i, 2));
         MatrixXd ja = jacobianMatrix(p, sf);
         MatrixXd gr = grad(p, ja, sf);

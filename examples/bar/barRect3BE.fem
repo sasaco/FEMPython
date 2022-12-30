@@ -1,0 +1,36 @@
+Material  1  21000.0  0.29  8139.5349  7.8E-4  45.0  1.0
+BarParameter 1 Rectangle 2 1 1 0.5
+Coordinates 1 1 0 0 0 1 1 0 -1 1
+Node 1 0.0 0.0 0.0
+Node 2 1.0 0.0 0.0
+Node 3 2.0 0.0 0.0
+Node 4 3.0 0.0 0.0
+Node 5 4.0 0.0 0.0
+Node 6 5.0 0.0 0.0
+Node 7 6.0 0.0 0.0
+Node 8 7.0 0.0 0.0
+Node 9 8.0 0.0 0.0
+Node 10 9.0 0.0 0.0
+Node 11 10.0 0.0 0.0
+BEBarElement 1 1 1 1 2
+BEBarElement 2 1 1 2 3
+BEBarElement 3 1 1 3 4
+BEBarElement 4 1 1 4 5
+BEBarElement 5 1 1 5 6
+BEBarElement 6 1 1 6 7
+BEBarElement 7 1 1 7 8
+BEBarElement 8 1 1 8 9
+BEBarElement 9 1 1 9 10
+BEBarElement 10 1 1 10 11
+Restraint 1 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Restraint 2 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Restraint 3 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Restraint 4 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Restraint 5 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Restraint 6 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Restraint 7 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Restraint 8 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Restraint 9 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Restraint 10 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Restraint 11 0 0.0 1 0.0 0 0.0 0 0.0 0 0.0 0 0.0 1
+Load 11 0.0 0.0 -1.0 0.0 0.0 0.0 1
