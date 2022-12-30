@@ -1,0 +1,407 @@
+Material  1  21000.0  0.29  8139.5349  7.8E-4  45.0  1.0
+ShellParameter 1 15.0
+Node 1 0.0 0.0 0.0
+Node 2 5.0 0.0 0.0
+Node 3 10.0 0.0 0.0
+Node 4 15.0 0.0 0.0
+Node 5 20.0 0.0 0.0
+Node 6 25.0 0.0 0.0
+Node 7 30.0 0.0 0.0
+Node 8 35.0 0.0 0.0
+Node 9 40.0 0.0 0.0
+Node 10 45.0 0.0 0.0
+Node 11 50.0 0.0 0.0
+Node 12 55.0 0.0 0.0
+Node 13 60.0 0.0 0.0
+Node 14 65.0 0.0 0.0
+Node 15 70.0 0.0 0.0
+Node 16 75.0 0.0 0.0
+Node 17 80.0 0.0 0.0
+Node 18 85.0 0.0 0.0
+Node 19 90.0 0.0 0.0
+Node 20 95.0 0.0 0.0
+Node 21 100.0 0.0 0.0
+Node 22 0.0 5.0 0.0
+Node 23 5.0 5.0 0.0
+Node 24 10.0 5.0 0.0
+Node 25 15.0 5.0 0.0
+Node 26 20.0 5.0 0.0
+Node 27 25.0 5.0 0.0
+Node 28 30.0 5.0 0.0
+Node 29 35.0 5.0 0.0
+Node 30 40.0 5.0 0.0
+Node 31 45.0 5.0 0.0
+Node 32 50.0 5.0 0.0
+Node 33 55.0 5.0 0.0
+Node 34 60.0 5.0 0.0
+Node 35 65.0 5.0 0.0
+Node 36 70.0 5.0 0.0
+Node 37 75.0 5.0 0.0
+Node 38 80.0 5.0 0.0
+Node 39 85.0 5.0 0.0
+Node 40 90.0 5.0 0.0
+Node 41 95.0 5.0 0.0
+Node 42 100.0 5.0 0.0
+Node 43 0.0 10.0 0.0
+Node 44 5.0 10.0 0.0
+Node 45 10.0 10.0 0.0
+Node 46 15.0 10.0 0.0
+Node 47 20.0 10.0 0.0
+Node 48 25.0 10.0 0.0
+Node 49 30.0 10.0 0.0
+Node 50 35.0 10.0 0.0
+Node 51 40.0 10.0 0.0
+Node 52 45.0 10.0 0.0
+Node 53 50.0 10.0 0.0
+Node 54 55.0 10.0 0.0
+Node 55 60.0 10.0 0.0
+Node 56 65.0 10.0 0.0
+Node 57 70.0 10.0 0.0
+Node 58 75.0 10.0 0.0
+Node 59 80.0 10.0 0.0
+Node 60 85.0 10.0 0.0
+Node 61 90.0 10.0 0.0
+Node 62 95.0 10.0 0.0
+Node 63 100.0 10.0 0.0
+Node 64 0.0 15.0 0.0
+Node 65 5.0 15.0 0.0
+Node 66 10.0 15.0 0.0
+Node 67 15.0 15.0 0.0
+Node 68 20.0 15.0 0.0
+Node 69 25.0 15.0 0.0
+Node 70 30.0 15.0 0.0
+Node 71 35.0 15.0 0.0
+Node 72 40.0 15.0 0.0
+Node 73 45.0 15.0 0.0
+Node 74 50.0 15.0 0.0
+Node 75 55.0 15.0 0.0
+Node 76 60.0 15.0 0.0
+Node 77 65.0 15.0 0.0
+Node 78 70.0 15.0 0.0
+Node 79 75.0 15.0 0.0
+Node 80 80.0 15.0 0.0
+Node 81 85.0 15.0 0.0
+Node 82 90.0 15.0 0.0
+Node 83 95.0 15.0 0.0
+Node 84 100.0 15.0 0.0
+Node 85 0.0 20.0 0.0
+Node 86 5.0 20.0 0.0
+Node 87 10.0 20.0 0.0
+Node 88 15.0 20.0 0.0
+Node 89 20.0 20.0 0.0
+Node 90 25.0 20.0 0.0
+Node 91 30.0 20.0 0.0
+Node 92 35.0 20.0 0.0
+Node 93 40.0 20.0 0.0
+Node 94 45.0 20.0 0.0
+Node 95 50.0 20.0 0.0
+Node 96 55.0 20.0 0.0
+Node 97 60.0 20.0 0.0
+Node 98 65.0 20.0 0.0
+Node 99 70.0 20.0 0.0
+Node 100 75.0 20.0 0.0
+Node 101 80.0 20.0 0.0
+Node 102 85.0 20.0 0.0
+Node 103 90.0 20.0 0.0
+Node 104 95.0 20.0 0.0
+Node 105 100.0 20.0 0.0
+Node 106 80.0 25.0 0.0
+Node 107 85.0 25.0 0.0
+Node 108 90.0 25.0 0.0
+Node 109 95.0 25.0 0.0
+Node 110 100.0 25.0 0.0
+Node 111 80.0 30.0 0.0
+Node 112 85.0 30.0 0.0
+Node 113 90.0 30.0 0.0
+Node 114 95.0 30.0 0.0
+Node 115 100.0 30.0 0.0
+Node 116 80.0 35.0 0.0
+Node 117 85.0 35.0 0.0
+Node 118 90.0 35.0 0.0
+Node 119 95.0 35.0 0.0
+Node 120 100.0 35.0 0.0
+Node 121 80.0 40.0 0.0
+Node 122 85.0 40.0 0.0
+Node 123 90.0 40.0 0.0
+Node 124 95.0 40.0 0.0
+Node 125 100.0 40.0 0.0
+Node 126 80.0 45.0 0.0
+Node 127 85.0 45.0 0.0
+Node 128 90.0 45.0 0.0
+Node 129 95.0 45.0 0.0
+Node 130 100.0 45.0 0.0
+Node 131 80.0 50.0 0.0
+Node 132 85.0 50.0 0.0
+Node 133 90.0 50.0 0.0
+Node 134 95.0 50.0 0.0
+Node 135 100.0 50.0 0.0
+Node 136 80.0 55.0 0.0
+Node 137 85.0 55.0 0.0
+Node 138 90.0 55.0 0.0
+Node 139 95.0 55.0 0.0
+Node 140 100.0 55.0 0.0
+Node 141 80.0 60.0 0.0
+Node 142 85.0 60.0 0.0
+Node 143 90.0 60.0 0.0
+Node 144 95.0 60.0 0.0
+Node 145 100.0 60.0 0.0
+Node 146 80.0 65.0 0.0
+Node 147 85.0 65.0 0.0
+Node 148 90.0 65.0 0.0
+Node 149 95.0 65.0 0.0
+Node 150 100.0 65.0 0.0
+Node 151 80.0 70.0 0.0
+Node 152 85.0 70.0 0.0
+Node 153 90.0 70.0 0.0
+Node 154 95.0 70.0 0.0
+Node 155 100.0 70.0 0.0
+TriElement1 1 1 1 1 2 23
+TriElement1 2 1 1 1 23 22
+TriElement1 3 1 1 2 3 24
+TriElement1 4 1 1 2 24 23
+TriElement1 5 1 1 3 4 25
+TriElement1 6 1 1 3 25 24
+TriElement1 7 1 1 4 5 26
+TriElement1 8 1 1 4 26 25
+TriElement1 9 1 1 5 6 27
+TriElement1 10 1 1 5 27 26
+TriElement1 11 1 1 6 7 28
+TriElement1 12 1 1 6 28 27
+TriElement1 13 1 1 7 8 29
+TriElement1 14 1 1 7 29 28
+TriElement1 15 1 1 8 9 30
+TriElement1 16 1 1 8 30 29
+TriElement1 17 1 1 9 10 31
+TriElement1 18 1 1 9 31 30
+TriElement1 19 1 1 10 11 32
+TriElement1 20 1 1 10 32 31
+TriElement1 21 1 1 11 12 33
+TriElement1 22 1 1 11 33 32
+TriElement1 23 1 1 12 13 34
+TriElement1 24 1 1 12 34 33
+TriElement1 25 1 1 13 14 35
+TriElement1 26 1 1 13 35 34
+TriElement1 27 1 1 14 15 36
+TriElement1 28 1 1 14 36 35
+TriElement1 29 1 1 15 16 37
+TriElement1 30 1 1 15 37 36
+TriElement1 31 1 1 16 17 38
+TriElement1 32 1 1 16 38 37
+TriElement1 33 1 1 17 18 39
+TriElement1 34 1 1 17 39 38
+TriElement1 35 1 1 18 19 40
+TriElement1 36 1 1 18 40 39
+TriElement1 37 1 1 19 20 41
+TriElement1 38 1 1 19 41 40
+TriElement1 39 1 1 20 21 42
+TriElement1 40 1 1 20 42 41
+TriElement1 41 1 1 22 23 44
+TriElement1 42 1 1 22 44 43
+TriElement1 43 1 1 23 24 45
+TriElement1 44 1 1 23 45 44
+TriElement1 45 1 1 24 25 46
+TriElement1 46 1 1 24 46 45
+TriElement1 47 1 1 25 26 47
+TriElement1 48 1 1 25 47 46
+TriElement1 49 1 1 26 27 48
+TriElement1 50 1 1 26 48 47
+TriElement1 51 1 1 27 28 49
+TriElement1 52 1 1 27 49 48
+TriElement1 53 1 1 28 29 50
+TriElement1 54 1 1 28 50 49
+TriElement1 55 1 1 29 30 51
+TriElement1 56 1 1 29 51 50
+TriElement1 57 1 1 30 31 52
+TriElement1 58 1 1 30 52 51
+TriElement1 59 1 1 31 32 53
+TriElement1 60 1 1 31 53 52
+TriElement1 61 1 1 32 33 54
+TriElement1 62 1 1 32 54 53
+TriElement1 63 1 1 33 34 55
+TriElement1 64 1 1 33 55 54
+TriElement1 65 1 1 34 35 56
+TriElement1 66 1 1 34 56 55
+TriElement1 67 1 1 35 36 57
+TriElement1 68 1 1 35 57 56
+TriElement1 69 1 1 36 37 58
+TriElement1 70 1 1 36 58 57
+TriElement1 71 1 1 37 38 59
+TriElement1 72 1 1 37 59 58
+TriElement1 73 1 1 38 39 60
+TriElement1 74 1 1 38 60 59
+TriElement1 75 1 1 39 40 61
+TriElement1 76 1 1 39 61 60
+TriElement1 77 1 1 40 41 62
+TriElement1 78 1 1 40 62 61
+TriElement1 79 1 1 41 42 63
+TriElement1 80 1 1 41 63 62
+TriElement1 81 1 1 43 44 65
+TriElement1 82 1 1 43 65 64
+TriElement1 83 1 1 44 45 66
+TriElement1 84 1 1 44 66 65
+TriElement1 85 1 1 45 46 67
+TriElement1 86 1 1 45 67 66
+TriElement1 87 1 1 46 47 68
+TriElement1 88 1 1 46 68 67
+TriElement1 89 1 1 47 48 69
+TriElement1 90 1 1 47 69 68
+TriElement1 91 1 1 48 49 70
+TriElement1 92 1 1 48 70 69
+TriElement1 93 1 1 49 50 71
+TriElement1 94 1 1 49 71 70
+TriElement1 95 1 1 50 51 72
+TriElement1 96 1 1 50 72 71
+TriElement1 97 1 1 51 52 73
+TriElement1 98 1 1 51 73 72
+TriElement1 99 1 1 52 53 74
+TriElement1 100 1 1 52 74 73
+TriElement1 101 1 1 53 54 75
+TriElement1 102 1 1 53 75 74
+TriElement1 103 1 1 54 55 76
+TriElement1 104 1 1 54 76 75
+TriElement1 105 1 1 55 56 77
+TriElement1 106 1 1 55 77 76
+TriElement1 107 1 1 56 57 78
+TriElement1 108 1 1 56 78 77
+TriElement1 109 1 1 57 58 79
+TriElement1 110 1 1 57 79 78
+TriElement1 111 1 1 58 59 80
+TriElement1 112 1 1 58 80 79
+TriElement1 113 1 1 59 60 81
+TriElement1 114 1 1 59 81 80
+TriElement1 115 1 1 60 61 82
+TriElement1 116 1 1 60 82 81
+TriElement1 117 1 1 61 62 83
+TriElement1 118 1 1 61 83 82
+TriElement1 119 1 1 62 63 84
+TriElement1 120 1 1 62 84 83
+TriElement1 121 1 1 64 65 86
+TriElement1 122 1 1 64 86 85
+TriElement1 123 1 1 65 66 87
+TriElement1 124 1 1 65 87 86
+TriElement1 125 1 1 66 67 88
+TriElement1 126 1 1 66 88 87
+TriElement1 127 1 1 67 68 89
+TriElement1 128 1 1 67 89 88
+TriElement1 129 1 1 68 69 90
+TriElement1 130 1 1 68 90 89
+TriElement1 131 1 1 69 70 91
+TriElement1 132 1 1 69 91 90
+TriElement1 133 1 1 70 71 92
+TriElement1 134 1 1 70 92 91
+TriElement1 135 1 1 71 72 93
+TriElement1 136 1 1 71 93 92
+TriElement1 137 1 1 72 73 94
+TriElement1 138 1 1 72 94 93
+TriElement1 139 1 1 73 74 95
+TriElement1 140 1 1 73 95 94
+TriElement1 141 1 1 74 75 96
+TriElement1 142 1 1 74 96 95
+TriElement1 143 1 1 75 76 97
+TriElement1 144 1 1 75 97 96
+TriElement1 145 1 1 76 77 98
+TriElement1 146 1 1 76 98 97
+TriElement1 147 1 1 77 78 99
+TriElement1 148 1 1 77 99 98
+TriElement1 149 1 1 78 79 100
+TriElement1 150 1 1 78 100 99
+TriElement1 151 1 1 79 80 101
+TriElement1 152 1 1 79 101 100
+TriElement1 153 1 1 80 81 102
+TriElement1 154 1 1 80 102 101
+TriElement1 155 1 1 81 82 103
+TriElement1 156 1 1 81 103 102
+TriElement1 157 1 1 82 83 104
+TriElement1 158 1 1 82 104 103
+TriElement1 159 1 1 83 84 105
+TriElement1 160 1 1 83 105 104
+TriElement1 161 1 1 101 102 107
+TriElement1 162 1 1 101 107 106
+TriElement1 163 1 1 102 103 108
+TriElement1 164 1 1 102 108 107
+TriElement1 165 1 1 103 104 109
+TriElement1 166 1 1 103 109 108
+TriElement1 167 1 1 104 105 110
+TriElement1 168 1 1 104 110 109
+TriElement1 169 1 1 106 107 112
+TriElement1 170 1 1 106 112 111
+TriElement1 171 1 1 107 108 113
+TriElement1 172 1 1 107 113 112
+TriElement1 173 1 1 108 109 114
+TriElement1 174 1 1 108 114 113
+TriElement1 175 1 1 109 110 115
+TriElement1 176 1 1 109 115 114
+TriElement1 177 1 1 111 112 117
+TriElement1 178 1 1 111 117 116
+TriElement1 179 1 1 112 113 118
+TriElement1 180 1 1 112 118 117
+TriElement1 181 1 1 113 114 119
+TriElement1 182 1 1 113 119 118
+TriElement1 183 1 1 114 115 120
+TriElement1 184 1 1 114 120 119
+TriElement1 185 1 1 116 117 122
+TriElement1 186 1 1 116 122 121
+TriElement1 187 1 1 117 118 123
+TriElement1 188 1 1 117 123 122
+TriElement1 189 1 1 118 119 124
+TriElement1 190 1 1 118 124 123
+TriElement1 191 1 1 119 120 125
+TriElement1 192 1 1 119 125 124
+TriElement1 193 1 1 121 122 127
+TriElement1 194 1 1 121 127 126
+TriElement1 195 1 1 122 123 128
+TriElement1 196 1 1 122 128 127
+TriElement1 197 1 1 123 124 129
+TriElement1 198 1 1 123 129 128
+TriElement1 199 1 1 124 125 130
+TriElement1 200 1 1 124 130 129
+TriElement1 201 1 1 126 127 132
+TriElement1 202 1 1 126 132 131
+TriElement1 203 1 1 127 128 133
+TriElement1 204 1 1 127 133 132
+TriElement1 205 1 1 128 129 134
+TriElement1 206 1 1 128 134 133
+TriElement1 207 1 1 129 130 135
+TriElement1 208 1 1 129 135 134
+TriElement1 209 1 1 131 132 137
+TriElement1 210 1 1 131 137 136
+TriElement1 211 1 1 132 133 138
+TriElement1 212 1 1 132 138 137
+TriElement1 213 1 1 133 134 139
+TriElement1 214 1 1 133 139 138
+TriElement1 215 1 1 134 135 140
+TriElement1 216 1 1 134 140 139
+TriElement1 217 1 1 136 137 142
+TriElement1 218 1 1 136 142 141
+TriElement1 219 1 1 137 138 143
+TriElement1 220 1 1 137 143 142
+TriElement1 221 1 1 138 139 144
+TriElement1 222 1 1 138 144 143
+TriElement1 223 1 1 139 140 145
+TriElement1 224 1 1 139 145 144
+TriElement1 225 1 1 141 142 147
+TriElement1 226 1 1 141 147 146
+TriElement1 227 1 1 142 143 148
+TriElement1 228 1 1 142 148 147
+TriElement1 229 1 1 143 144 149
+TriElement1 230 1 1 143 149 148
+TriElement1 231 1 1 144 145 150
+TriElement1 232 1 1 144 150 149
+TriElement1 233 1 1 146 147 152
+TriElement1 234 1 1 146 152 151
+TriElement1 235 1 1 147 148 153
+TriElement1 236 1 1 147 153 152
+TriElement1 237 1 1 148 149 154
+TriElement1 238 1 1 148 154 153
+TriElement1 239 1 1 149 150 155
+TriElement1 240 1 1 149 155 154
+Restraint 1 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Restraint 22 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Restraint 43 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Restraint 64 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Restraint 85 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Load 151 0.0 0.0 -20.0
+Load 152 0.0 0.0 -20.0
+Load 153 0.0 0.0 -20.0
+Load 154 0.0 0.0 -20.0
+Load 155 0.0 0.0 -20.0
