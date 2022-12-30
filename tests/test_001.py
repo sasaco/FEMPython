@@ -6,7 +6,7 @@ from src.FemMain import initModel
 
 def test_sampleBeamHexa1():
 
-    fileName =  os.path.abspath(os.path.dirname(os.path.abspath(__file__)) 
+    fileName =  os.path.abspath(os.path.dirname(os.path.abspath(__file__))
                 + "/../examples")
     fileName += '/beam/sampleBeamHexa1.fem'
 
