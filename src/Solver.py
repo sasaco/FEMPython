@@ -119,8 +119,6 @@ def geomStiffnessMatrix(dof, model):
     disp = model.result.displacement
     matrix = np.zeros((dof, dof))
     kmax = 0
-    # for i in range(dof):
-    #     matrix.append([])
     for i in range(len(elements)):
         elem = elements[i]
         en = elem.nodes
@@ -191,12 +189,8 @@ def setElementMatrix(element, dof, matrix, km, kmax, model):
                 krow = km[i0+i1]
                 for j1 in range(dof):
                     cj1 = column0+j1
-                    # if cj1 in mrow:
                     mrow[cj1] += krow[j0+j1]
                     kmax=max(kmax, abs(mrow[cj1]))
-                    # else:
-                    #     mrow[cj1] = krow[j0+j1]
-                    #     kmax = max(kmax, abs(mrow[cj1]))
 
     return kmax
 
