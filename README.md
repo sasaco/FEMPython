@@ -1,409 +1,85 @@
-# 3次元有限要素法プログラム 入力データファイル書式
-
-- データは基本的に１行１データ
-- データの各項目はタブまたはスペース区切り
-- 行の最初にデータ種類を表すキーワードを記述し、後ろに必要なデータを並べる
-
-## 特性データ
-- Material
-- ShellParameter
-- BarParameter
-- Coordinates
-
-### 節点
-- Node
-
-### 梁要素
-- BEBarElement
-- TBarElement
-
-### シェル 要素
-- TriElement1
-- QuadElement
-
-### ソリッド要素
-- TetraElement1
-- WedgeElement1
-- HexaElement1
-- HexaElement1WT
-- TetraElement2
-- WedgeElement2
-- HexaElement
-
-### 境界条件
-- Restraint
-- Load
-- Pressure
-- Temperature
-- HTC
-
-### 計算結果
-- ResultType
-- EigenValue
-- Displacement
-- Strain1
-- Strain2
-- Stress1
-- Stress2
-- StrEnergy1
-- StrEnergy2
-- Temp
-
-## 各データの書式
-
-### 特性データ
-
-#### lMaterial：材料パラメータ
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|材料番号|
-|２個目| ヤング率 （縦弾性係数）|
-|３個目| ポアソン比|
-|４個目|横弾性係数（ダミー）実際には横弾性係数はヤング率とポアソン比から計算する|
-|５個目| 密度|
-|６個目| 熱伝導率|
-|７個目| 質量 比熱|
-
-
-#### ShellParameter：シェルパラメータ
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|パラメータ番号|
-|２個目|板厚|
-
-#### BarParameter：梁パラメータ
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|パラメータ番号|
-|２個目|断面種類 Circle またはRectangle<br>Circle：円形断面（パイプ状断面）|
-|３個目|外径|
-|４個目|内径（穴径）<br>Rectangle：矩形断面（角パイプ）|
-|３個目|外側幅（断面基準方向）|
-|４個目|外側高さ（断面基準と垂直方向）|
-|５個目|内側（穴）幅|
-|６個目|内側（穴）高さ|
-
-#### Coordinates：局所座標系
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|座標系番号|
-|２個目 ～４個目|局所座標系のx軸方向ベクトル cx|
-|５個目 ～７個目|局所座標系のy軸方向ベクトル cy|
-|８個目 ～１０個目|局所座標系のz軸方向ベクトル cz|
-
-- 局所座標系は境界条件の拘束条件・荷重条件で使用する
-- 各方向ベクトルはプログラム読み込み時に単位ベクトル $ ci/| $ $ ci| $ に変換される
-- $ |ci|>0 $ , $ ci・cj \neq 0 （i \neq j） $ が条件
-- 局所座標 $ x’ $ と全体座標 $ x $ は $ x= Cx’ $ ，$ x’= C^T x $ ，$ C=[cx,cy,cz] $ の関係 にある
-
-### Node：節点
+# Try Out Development Containers: C++
 
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|節点番号|
-|２個目|x座標|
-|３個目|y座標|
-|４個目|z座標|
+[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/vscode-remote-try-cpp)
 
-### 梁要素
+A **development container** is a running container with a well-defined tool/runtime stack and its prerequisites. You can try out development containers with **[GitHub Codespaces](https://github.com/features/codespaces)** or **[Visual Studio Code Dev Containers](https://aka.ms/vscode-remote/containers)**.
 
-#### BEBarElement：ベルヌーイ=オイラー梁要素
+This is a sample project that lets you try out either option in a few easy steps. We have a variety of other [vscode-remote-try-*](https://github.com/search?q=org%3Amicrosoft+vscode-remote-try-&type=Repositories) sample projects, too.
 
-##### TBarElement：ティモシェンコ梁要素
+> **Note:** If you already have a Codespace or dev container, you can jump to the [Things to try](#things-to-try) section.
 
-データ書式はベルヌーイ=オイラー梁要素と共通
+## Setting up the development container
 
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目|梁パラメータ番号|
-|４個目||
-|５個目|節点番号|
+### GitHub Codespaces
+Follow these steps to open this sample in a Codespace:
+1. Click the **Code** drop-down menu.
+2. Click on the **Codespaces** tab.
+3. Click **Create codespace on main** .
 
-以下はオプション
+For more info, check out the [GitHub documentation](https://docs.github.com/en/free-pro-team@latest/github/developing-online-with-codespaces/creating-a-codespace#creating-a-codespace).
 
-|  位置  | 説明  |
-| ---- | ---- |
-|６個目～８個目|断面内の基準方向ベクトル（断面幅方向）|
+### VS Code Dev Containers
 
-- ベクトルは梁要素の垂直平面に投影の上単位ベクトルに変換される
-- 指定しない場合は自動的に適当な方向（x軸またはy軸）に設定されるため円形断面では指定する必要はない
+If you already have VS Code and Docker installed, you can click the badge above or [here](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/vscode-remote-try-cpp) to get started. Clicking these links will cause VS Code to automatically install the Dev Containers extension if needed, clone the source code into a container volume, and spin up a dev container for use.
 
-### シェル
+Follow these steps to open this sample in a container using the VS Code Dev Containers extension:
 
-要素 節点番号の並び順は図を参照
+1. If this is your first time using a development container, please ensure your system meets the pre-reqs (i.e. have Docker installed) in the [getting started steps](https://aka.ms/vscode-remote/containers/getting-started).
 
-#### TriElement1：３角形１次要素（薄肉シェル）
+2. To use this repository, you can either open the repository in an isolated Docker volume:
 
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目|シェルパラメータ番号|
-|４個目|６個目－節点番号|
+    - Press <kbd>F1</kbd> and select the **Dev Containers: Try a Sample...** command.
+    - Choose the "C++" sample, wait for the container to start, and try things out!
+        > **Note:** Under the hood, this will use the **Dev Containers: Clone Repository in Container Volume...** command to clone the source code in a Docker volume instead of the local filesystem. [Volumes](https://docs.docker.com/storage/volumes/) are the preferred mechanism for persisting container data.
 
-#### QuadElement1：４角形１次要素（MITC4）
+   Or open a locally cloned copy of the code:
 
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目|シェルパラメータ番号|
-|４個目～７個目|節点番号|
+   - Clone this repository to your local filesystem.
+   - Press <kbd>F1</kbd> and select the **Dev Containers: Open Folder in Container...** command.
+   - Select the cloned copy of this folder, wait for the container to start, and try things out!
 
-#### シェル要素の節点ポインタ番号 ・辺ポインタ番号 （辺ポインタは境界条件設定に使用）
+## Things to try
 
-![](./data/img/shell_node_no.png)
+Once you have this sample opened, you'll be able to work with it like you would locally.
 
-入力データの節点番号はポインタ１，２，・・・に割り当てられる
+Some things to try:
 
+1. **Edit:**
+   - Open `main.cpp`
+   - Try adding some code and check out the language features.
+   - Make a spelling mistake and notice it is detected. The [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) extension was automatically installed because it is referenced in `.devcontainer/devcontainer.json`.
+   - Also notice that utilities like `Vcpkg` and the [C++](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools) extension are installed. Tools are installed in the `mcr.microsoft.com/devcontainers/cpp` image and Dev Container settings and metadata are automatically picked up from [image labels](https://containers.dev/implementors/reference/#labels).
 
-### ソリッド要素 節点番号の並び順は図を参照
+1. **Terminal:** Press <kbd>ctrl</kbd>+<kbd>shift</kbd>+<kbd>\`</kbd> and type `uname` and other Linux commands from the terminal window.
 
-#### TetraElement1 ：４面体１次要素
+1. **Build, Run, and Debug:**
+   - Open `main.cpp`
+   - Add a breakpoint (e.g. on line 7).
+   - Press <kbd>F5</kbd> to launch the app in the container.
+   - Once the breakpoint is hit, try hovering over variables, examining locals, and more.
 
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目～６個目|節点番号|
+1. **Install the GitHub CLI using a Dev Container Feature:**
+   - Press <kbd>F1</kbd> and select the **Dev Containers: Configure Container Features...** or **Codespaces: Configure Container Features...** command.
+   - Type "github" in the text box at the top.
+   - Check check box next to "GitHub CLI" (published by devcontainers) 
+   - Click OK
+   - Press <kbd>F1</kbd> and select the **Dev Containers: Rebuild Container** or **Codespaces: Rebuild Container** command so the modifications are picked up.
 
-#### WedgeElement1：楔形１次要素
+## Contributing
 
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目～８個目|節点番号|
+This project welcomes contributions and suggestions. Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit https://cla.microsoft.com.
 
-#### HexaElement1：６面体１次要素
+When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
 
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目～１０個目|節点番号|
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
+contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-#### HexaElement1WT：６面体１次非適合要素（Wilson-Taylor型）
+## License
 
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目～１０個目|節点番号|
-
-#### TetraElement2：４面体２次要素
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目～１２個目|節点番号|
-
-#### WedgeElement2：楔形２次要素
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目～１７個目|節点番号|
-
-#### HexaElement2：６面体２次要素
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|材料番号|
-|３個目～２２個目|節点番号|
-
-
-#### ４面体要素の節点ポインタ番号・面ポインタ番号（面ポインタは境界条件設定に使用）
-
-１次要素は節点４まで
-
-![](./data/img/tetra_node_no.png)
-
-
-#### 楔形要素の節点ポインタ番号・面ポインタ番号（面ポインタは境界条件設定に使用）
-
-１次要素は節点６まで
-
-![](./data/img/wedge_node_no.png)
-
-
-#### ６面体要素の節点ポインタ番号・面ポインタ番号（面ポインタは境界条件設定に使用）
-
-１次要素は節点８まで
-
-
-![](./data/img/hexa_node_no.png)
-
-
-入力データの節点番号はポインタ１，２，・・・に割り当てられる
-
-
-## 境界条件
-
-### Restraint：拘束条件
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|節点番号|
-|２個目|x方向拘束・強制変位の有無 １－拘束あり，０－拘束なし|
-|３個目|x方向強制変位量|
-|４個目|y方向拘束・強制変位の有無 １－拘束あり，０－拘束なし|
-|５個目|y方向強制変位量|
-|６個目|z方向拘束・強制変位の有無 １－拘束あり，０－拘束なし|
-|７個目|z方向強制変位量|
-
-以下はオプション（回転方向拘束はソリッド要素では無視される）
-
-|８個目|x軸周り方向拘束・強制変位の有無 １－拘束あり，０－拘束なし|
-|９個目|x軸周り方向強制変位量|
-|１０個目|y軸周り方向拘束・強制変位の有無 １－拘束あり，０－拘束なし|
-|１１個目|y軸周り方向強制変位量|
-|１２個目|z軸周り方向拘束・強制変位の有無 １－拘束あり，０－拘束なし|
-|１３個目|z軸周り方向強制変位量|
-
-８個目 または １４個目－局所座標系番号
-
-※ 回転成分は１３個目まで全て記述する必要あり（途中までの記述は無視される）
-
-### Load：荷重条件
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|節点番号|
-|２個目|荷重x方向成分|
-|３個目|荷重y方向成分|
-|４個目|荷重z方向成分|
-
-以下はオプション（回転方向成分はソリッド要素では無視される）
-
-|５個目|荷重（トルク）x軸周り方向成分|
-|６個目|荷重（トルク）y軸周り方向成分|
-|７個目|荷重（トルク）z軸周り方向成分|
-
-５個目または８個目－局所座標系番号
-
-※ 回転成分は７個目まで全て記述する必要あり（途中までの記述は無視される）
-
-
-### Pressure：面圧条件
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|要素境界 F＊（＊は面ポインタ番号）|
-|３個目|圧力の値|
-
-
-### Temperature：節点 温度条件
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|節点番号|
-|２個目|固定する温度|
-
-### HTC：熱伝達条件
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|要素番号|
-|２個目|要素境界 F＊（＊は面ポインタ番号）またはE＊（＊は辺ポインタ番号）|
-|３個目|熱伝達率|
-|４個目|雰囲気温度|
-
-## 計算結果
-
-- 変位・温度は節点での値
-- 歪・応力・歪エネルギー密度は以下の何れか
-- 節点データ：周辺要素の値を平均した節点での値
-- 要素データ：積分点の値を平均した要素での値
-
-### ResultType：計算結果種類
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|出力データ種類 Node（節点データ）またはElement（要素データ）|
-
-このキーワードで指定しない場合は節点データ
-
-### EigenValue：固有値
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|解析種類 Vibration （振動） またはBuckling（座屈）|
-|２個目|固有値の数値|
-
-- 振動では振動数f（固有値 $ λ $ に対し $ f= √λ/2 π $ ，$ λ=(2 πf)^2 $ ）
-- 座屈では固有値λ＝座屈荷重／モデル荷重
-
-### Displacement：節点変位
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|節点番号|
-|２個目|変位x方向成分|
-|３個目|変位y方向成分|
-|４個目|変位z方向成分|
-|５個目|変位（回転角）x軸周り方向成分|
-|６個目|変位（回転角）y軸周り方向成分|
-|７個目|変位（回転角）z軸周り方向成分|
-
-
-### Strain1，Strain2：歪（工学歪）
-
-1 ：シェル表面， 2 ：シェル裏面※
-
-|１個目|節点または要素番号|
-|２個目|歪x成分|
-|３個目|歪y成分|
-|４個目|歪z成分|
-|５個目|せん断歪xy 成分|
-|６個目|せん断歪yz 成分|
-|７個目|せん断歪zx 成分|
-
-### Stress1，Stress2：応力
-
-1 ：シェル表面， 2 ：シェル裏面※
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|節点または要素番号|
-|２個目|応力x成分|
-|３個目|応力y成分|
-|４個目|応力z成分|
-|５個目|せん断応力xy 成分|
-|６個目|せん断応力yz 成分|
-|７個目|せん断応力zx 成分|
-
-### StrEnergy1，StrEnergy2：歪エネルギー密度
-
-1 ：シェル表面， 2 ：シェル裏面※
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|節点または要素番号|
-|２個目|歪エネルギー密度|
-
-### Temp：節点温度
-
-|  位置  | 説明  |
-| ---- | ---- |
-|１個目|節点番号|
-|２個目|温度|
-
-#### シェル表面・裏面の値 について
-
-- ソリッド要素では1,2 同じ値が入る
-- 梁要素（円形断面）では曲げ応力の最大・最小の値（曲げの外側・内側の値）が1,2 に
-入る
-- 梁要素（矩形断面）では辺の中点及び角の計８点の歪エネルギー密度を比較し、最大の点
-及びその対称点の値が入る 曲げの外側が 1 、内側が 2
-（斜め方向の曲げは角、捩りでは長辺の中点が最大応力部位となるため）
-
-
+Copyright © Microsoft Corporation All rights reserved.<br />
+Licensed under the MIT License. See LICENSE in the project root for license information.

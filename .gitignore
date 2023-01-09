@@ -1,6 +1,1 @@
-__pycache__/
-dist/
-.vs/
-core/bin/
-core/obj/
-packages/
+bin/
