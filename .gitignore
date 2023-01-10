@@ -1,6 +1,5 @@
+# c++
+bin/
+
+# python
 __pycache__/
-dist/
-.vs/
-core/bin/
-core/obj/
-packages/
