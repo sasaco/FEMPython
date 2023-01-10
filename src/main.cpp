@@ -1,13 +1,15 @@
 #include <iostream>
-#include <string>
+#include <Eigen/Dense>
 
-using namespace std;
+using Eigen::MatrixXd;
 
-int main() {
-    cout << "Hello World\n";
-    cout << "Input: ";
-    string data;
-    getline(cin, data);
-    cout << "Output: " << data << "\n\n";
+int main()
+{
+    MatrixXd m(2,2);
+    m(0,0) = 3;
+    m(1,0) = 2.5;
+    m(0,1) = -1;
+    m(1,1) = m(1,0) + m(0,1);
+    std::cout << m << std::endl;
     return 0;
 }

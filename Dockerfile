@@ -1,7 +1,6 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-
 ENV TZ Asia/Tokyo
 
 RUN apt -y update \
@@ -55,4 +54,5 @@ RUN sudo apt install -y \
 
 
 # 起点となるディレクトリ（execコマンドでコンテナに入った際のディレクトリ）
-WORKDIR /home
+RUN mkdir -p /work
+WORKDIR /work
