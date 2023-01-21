@@ -16,7 +16,7 @@
         {
             "label": "somove",
             "type": "shell",
-            "command": "mv ${workspaceFolder}/core/FileIO.cpython-310-x86_64-linux-gnu.so ${workspaceFolder}/src/FileIO.so",
+            "command": "mv ${workspaceFolder}/core/core.cpython-310-x86_64-linux-gnu.so ${workspaceFolder}/src/core.so",
             "dependsOn": [
                 "make"
             ]

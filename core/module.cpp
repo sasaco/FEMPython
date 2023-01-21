@@ -1,55 +1,30 @@
-﻿#include <Python.h>
-
-#include <string>
-#include <vector>
-#include <sstream> // std::stringstream
-#include <istream> // std::getline
+#include <pybind11/pybind11.h>
 #include "FemDataModel.h"
 
+#include <Eigen/Core> //Eigenを指定してもコンパイルが通ることを確認
+
+#include <string>
 using namespace std;
-using std::vector;
 
-// FileIO.cpp で定義した関数を使用します。
-extern FemDataModel readFemModel(string s);
-
-
-PyObject* CreadFemModel(PyObject* self, PyObject* args) {
-
-	char* str = NULL;
-	if (!PyArg_ParseTuple(args, "s", &str)) {
-		return NULL;
-	}
-
-	if(str == NULL) {
-		return NULL;
-	}
-
-	FemDataModel model = readFemModel(string(str));
-
-
-	string result = "OK";
-	return Py_BuildValue("s", result);
-}
-
-static PyMethodDef FEMCore_methods[] = {
-
-	// The first property is the name exposed to Python, fast_tanh, the second is the C++
-	// function name that contains the implementation.
-	{ "readFemModel", (PyCFunction)CreadFemModel, METH_VARARGS, "Prints Message" },
-
-	// Terminate the array with an object containing nulls.
-	{ nullptr, nullptr, 0, nullptr }
-
+FemDataModel readFemModel(string s){
+    printf("function readFemModel() was executed.\n");
+    FemDataModel model = FemDataModel();
+    // インスタンス内のprivate変数に文字列を格納したインスタンスを返す
+    model.readString(s);
+    return model;
 };
 
-static PyModuleDef FEMCore_module = {
-	PyModuleDef_HEAD_INIT,
-	"FEMCore",                        // Module name to use with Python import statements
-	"Provides some functions, but faster",  // Module description
-	0,
-	FEMCore_methods                   // Structure that defines the methods of the module
-};
+PYBIND11_MODULE(core, m){
 
-PyMODINIT_FUNC PyInit_FEMCore() {
-	return PyModule_Create(&FEMCore_module);
+    // 関数のbind
+    m.def("readFemModel", &readFemModel);
+
+    // クラスのbind
+    pybind11::class_<FemDataModel>(m, "FemDataModel")
+            .def(pybind11::init())
+            .def("init", &FemDataModel::init)
+            .def("clear", &FemDataModel::clear)
+            // .def("read_string", &FemDataModel::readString)
+            // .def("print_string", &FemDataModel::printString);
+            
 }
