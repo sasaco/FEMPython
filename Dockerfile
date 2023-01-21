@@ -20,6 +20,4 @@ RUN apt-get install -y python3 python3-pip
 RUN pip3 install pybind11
 
 # Eigenのダウンロード（コンパイル時にincludeするためbuildは不要）
-RUN cd ${REPO} && git clone https://gitlab.com/libeigen/eigen.git -b 3.4
-
-WORKDIR /
+RUN git clone https://gitlab.com/libeigen/eigen.git -b 3.4

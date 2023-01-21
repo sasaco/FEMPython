@@ -23,7 +23,7 @@ C:\FEMPython
 ```
 cd /mnt/c/FEMPython
 docker build -t fem .
-docker run -name fem -dit fem
+docker run --name fem -dit fem
 ```
 
 3. VSCodeでRemoteログインする
