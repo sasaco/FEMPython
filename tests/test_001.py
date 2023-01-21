@@ -1,9 +1,9 @@
 import os
 import conftest
+import FileIO
 
 def test_sampleBeamHexa1():
 
-    import FileIO
 
     fileName = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../examples/beam/sampleBeamHexa1.fem')
     f = open(fileName, encoding="utf-8")

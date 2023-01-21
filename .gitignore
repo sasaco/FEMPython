@@ -1,5 +1,5 @@
 # c++
-bin/
+src/*.so
 
 # python
 __pycache__/
