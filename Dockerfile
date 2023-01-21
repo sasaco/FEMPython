@@ -10,11 +10,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
 RUN apt-get install -y curl wget vim git unzip cmake clang libssl-dev build-essential
 
-# RepositryデータをImageに移動
-ENV REPO=/FEMPython
-RUN mkdir /FEMPython
-COPY . ${REPO}
-
 # Pythonのインストール(今回は仮想環境構築は未実施)
 RUN apt-get install -y python3 python3-pip
 RUN pip3 install pybind11

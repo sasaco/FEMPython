@@ -1,0 +1,455 @@
+Material  1  206000.0  0.29  79844.961  7.8E-3  45.0  1.0
+ShellParameter 1 1.0
+Node 1 0.0 0.0 0.0
+Node 2 5.0 0.0 0.0
+Node 3 10.0 0.0 0.0
+Node 4 15.0 0.0 0.0
+Node 5 20.0 0.0 0.0
+Node 6 25.0 0.0 0.0
+Node 7 30.0 0.0 0.0
+Node 8 35.0 0.0 0.0
+Node 9 40.0 0.0 0.0
+Node 10 45.0 0.0 0.0
+Node 11 50.0 0.0 0.0
+Node 12 55.0 0.0 0.0
+Node 13 60.0 0.0 0.0
+Node 14 65.0 0.0 0.0
+Node 15 70.0 0.0 0.0
+Node 16 75.0 0.0 0.0
+Node 17 80.0 0.0 0.0
+Node 18 85.0 0.0 0.0
+Node 19 90.0 0.0 0.0
+Node 20 95.0 0.0 0.0
+Node 21 100.0 0.0 0.0
+Node 22 0.0 5.0 0.0
+Node 23 5.0 5.0 0.0
+Node 24 10.0 5.0 0.0
+Node 25 15.0 5.0 0.0
+Node 26 20.0 5.0 0.0
+Node 27 25.0 5.0 0.0
+Node 28 30.0 5.0 0.0
+Node 29 35.0 5.0 0.0
+Node 30 40.0 5.0 0.0
+Node 31 45.0 5.0 0.0
+Node 32 50.0 5.0 0.0
+Node 33 55.0 5.0 0.0
+Node 34 60.0 5.0 0.0
+Node 35 65.0 5.0 0.0
+Node 36 70.0 5.0 0.0
+Node 37 75.0 5.0 0.0
+Node 38 80.0 5.0 0.0
+Node 39 85.0 5.0 0.0
+Node 40 90.0 5.0 0.0
+Node 41 95.0 5.0 0.0
+Node 42 100.0 5.0 0.0
+Node 43 0.0 10.0 0.0
+Node 44 5.0 10.0 0.0
+Node 45 10.0 10.0 0.0
+Node 46 15.0 10.0 0.0
+Node 47 20.0 10.0 0.0
+Node 48 25.0 10.0 0.0
+Node 49 30.0 10.0 0.0
+Node 50 35.0 10.0 0.0
+Node 51 40.0 10.0 0.0
+Node 52 45.0 10.0 0.0
+Node 53 50.0 10.0 0.0
+Node 54 55.0 10.0 0.0
+Node 55 60.0 10.0 0.0
+Node 56 65.0 10.0 0.0
+Node 57 70.0 10.0 0.0
+Node 58 75.0 10.0 0.0
+Node 59 80.0 10.0 0.0
+Node 60 85.0 10.0 0.0
+Node 61 90.0 10.0 0.0
+Node 62 95.0 10.0 0.0
+Node 63 100.0 10.0 0.0
+Node 64 0.0 15.0 0.0
+Node 65 5.0 15.0 0.0
+Node 66 10.0 15.0 0.0
+Node 67 15.0 15.0 0.0
+Node 68 20.0 15.0 0.0
+Node 69 25.0 15.0 0.0
+Node 70 30.0 15.0 0.0
+Node 71 35.0 15.0 0.0
+Node 72 40.0 15.0 0.0
+Node 73 45.0 15.0 0.0
+Node 74 50.0 15.0 0.0
+Node 75 55.0 15.0 0.0
+Node 76 60.0 15.0 0.0
+Node 77 65.0 15.0 0.0
+Node 78 70.0 15.0 0.0
+Node 79 75.0 15.0 0.0
+Node 80 80.0 15.0 0.0
+Node 81 85.0 15.0 0.0
+Node 82 90.0 15.0 0.0
+Node 83 95.0 15.0 0.0
+Node 84 100.0 15.0 0.0
+Node 85 0.0 20.0 0.0
+Node 86 5.0 20.0 0.0
+Node 87 10.0 20.0 0.0
+Node 88 15.0 20.0 0.0
+Node 89 20.0 20.0 0.0
+Node 90 25.0 20.0 0.0
+Node 91 30.0 20.0 0.0
+Node 92 35.0 20.0 0.0
+Node 93 40.0 20.0 0.0
+Node 94 45.0 20.0 0.0
+Node 95 50.0 20.0 0.0
+Node 96 55.0 20.0 0.0
+Node 97 60.0 20.0 0.0
+Node 98 65.0 20.0 0.0
+Node 99 70.0 20.0 0.0
+Node 100 75.0 20.0 0.0
+Node 101 80.0 20.0 0.0
+Node 102 85.0 20.0 0.0
+Node 103 90.0 20.0 0.0
+Node 104 95.0 20.0 0.0
+Node 105 100.0 20.0 0.0
+Node 106 0.0 25.0 0.0
+Node 107 5.0 25.0 0.0
+Node 108 10.0 25.0 0.0
+Node 109 15.0 25.0 0.0
+Node 110 20.0 25.0 0.0
+Node 111 25.0 25.0 0.0
+Node 112 30.0 25.0 0.0
+Node 113 35.0 25.0 0.0
+Node 114 40.0 25.0 0.0
+Node 115 45.0 25.0 0.0
+Node 116 50.0 25.0 0.0
+Node 117 55.0 25.0 0.0
+Node 118 60.0 25.0 0.0
+Node 119 65.0 25.0 0.0
+Node 120 70.0 25.0 0.0
+Node 121 75.0 25.0 0.0
+Node 122 80.0 25.0 0.0
+Node 123 85.0 25.0 0.0
+Node 124 90.0 25.0 0.0
+Node 125 95.0 25.0 0.0
+Node 126 100.0 25.0 0.0
+Node 127 0.0 30.0 0.0
+Node 128 5.0 30.0 0.0
+Node 129 10.0 30.0 0.0
+Node 130 15.0 30.0 0.0
+Node 131 20.0 30.0 0.0
+Node 132 25.0 30.0 0.0
+Node 133 30.0 30.0 0.0
+Node 134 35.0 30.0 0.0
+Node 135 40.0 30.0 0.0
+Node 136 45.0 30.0 0.0
+Node 137 50.0 30.0 0.0
+Node 138 55.0 30.0 0.0
+Node 139 60.0 30.0 0.0
+Node 140 65.0 30.0 0.0
+Node 141 70.0 30.0 0.0
+Node 142 75.0 30.0 0.0
+Node 143 80.0 30.0 0.0
+Node 144 85.0 30.0 0.0
+Node 145 90.0 30.0 0.0
+Node 146 95.0 30.0 0.0
+Node 147 100.0 30.0 0.0
+Node 148 0.0 35.0 0.0
+Node 149 5.0 35.0 0.0
+Node 150 10.0 35.0 0.0
+Node 151 15.0 35.0 0.0
+Node 152 20.0 35.0 0.0
+Node 153 25.0 35.0 0.0
+Node 154 30.0 35.0 0.0
+Node 155 35.0 35.0 0.0
+Node 156 40.0 35.0 0.0
+Node 157 45.0 35.0 0.0
+Node 158 50.0 35.0 0.0
+Node 159 55.0 35.0 0.0
+Node 160 60.0 35.0 0.0
+Node 161 65.0 35.0 0.0
+Node 162 70.0 35.0 0.0
+Node 163 75.0 35.0 0.0
+Node 164 80.0 35.0 0.0
+Node 165 85.0 35.0 0.0
+Node 166 90.0 35.0 0.0
+Node 167 95.0 35.0 0.0
+Node 168 100.0 35.0 0.0
+Node 169 0.0 40.0 0.0
+Node 170 5.0 40.0 0.0
+Node 171 10.0 40.0 0.0
+Node 172 15.0 40.0 0.0
+Node 173 20.0 40.0 0.0
+Node 174 25.0 40.0 0.0
+Node 175 30.0 40.0 0.0
+Node 176 35.0 40.0 0.0
+Node 177 40.0 40.0 0.0
+Node 178 45.0 40.0 0.0
+Node 179 50.0 40.0 0.0
+Node 180 55.0 40.0 0.0
+Node 181 60.0 40.0 0.0
+Node 182 65.0 40.0 0.0
+Node 183 70.0 40.0 0.0
+Node 184 75.0 40.0 0.0
+Node 185 80.0 40.0 0.0
+Node 186 85.0 40.0 0.0
+Node 187 90.0 40.0 0.0
+Node 188 95.0 40.0 0.0
+Node 189 100.0 40.0 0.0
+Node 190 0.0 45.0 0.0
+Node 191 5.0 45.0 0.0
+Node 192 10.0 45.0 0.0
+Node 193 15.0 45.0 0.0
+Node 194 20.0 45.0 0.0
+Node 195 25.0 45.0 0.0
+Node 196 30.0 45.0 0.0
+Node 197 35.0 45.0 0.0
+Node 198 40.0 45.0 0.0
+Node 199 45.0 45.0 0.0
+Node 200 50.0 45.0 0.0
+Node 201 55.0 45.0 0.0
+Node 202 60.0 45.0 0.0
+Node 203 65.0 45.0 0.0
+Node 204 70.0 45.0 0.0
+Node 205 75.0 45.0 0.0
+Node 206 80.0 45.0 0.0
+Node 207 85.0 45.0 0.0
+Node 208 90.0 45.0 0.0
+Node 209 95.0 45.0 0.0
+Node 210 100.0 45.0 0.0
+Node 211 0.0 50.0 0.0
+Node 212 5.0 50.0 0.0
+Node 213 10.0 50.0 0.0
+Node 214 15.0 50.0 0.0
+Node 215 20.0 50.0 0.0
+Node 216 25.0 50.0 0.0
+Node 217 30.0 50.0 0.0
+Node 218 35.0 50.0 0.0
+Node 219 40.0 50.0 0.0
+Node 220 45.0 50.0 0.0
+Node 221 50.0 50.0 0.0
+Node 222 55.0 50.0 0.0
+Node 223 60.0 50.0 0.0
+Node 224 65.0 50.0 0.0
+Node 225 70.0 50.0 0.0
+Node 226 75.0 50.0 0.0
+Node 227 80.0 50.0 0.0
+Node 228 85.0 50.0 0.0
+Node 229 90.0 50.0 0.0
+Node 230 95.0 50.0 0.0
+Node 231 100.0 50.0 0.0
+QuadElement1 1 1 1 1 2 23 22
+QuadElement1 2 1 1 2 3 24 23
+QuadElement1 3 1 1 3 4 25 24
+QuadElement1 4 1 1 4 5 26 25
+QuadElement1 5 1 1 5 6 27 26
+QuadElement1 6 1 1 6 7 28 27
+QuadElement1 7 1 1 7 8 29 28
+QuadElement1 8 1 1 8 9 30 29
+QuadElement1 9 1 1 9 10 31 30
+QuadElement1 10 1 1 10 11 32 31
+QuadElement1 11 1 1 11 12 33 32
+QuadElement1 12 1 1 12 13 34 33
+QuadElement1 13 1 1 13 14 35 34
+QuadElement1 14 1 1 14 15 36 35
+QuadElement1 15 1 1 15 16 37 36
+QuadElement1 16 1 1 16 17 38 37
+QuadElement1 17 1 1 17 18 39 38
+QuadElement1 18 1 1 18 19 40 39
+QuadElement1 19 1 1 19 20 41 40
+QuadElement1 20 1 1 20 21 42 41
+QuadElement1 21 1 1 22 23 44 43
+QuadElement1 22 1 1 23 24 45 44
+QuadElement1 23 1 1 24 25 46 45
+QuadElement1 24 1 1 25 26 47 46
+QuadElement1 25 1 1 26 27 48 47
+QuadElement1 26 1 1 27 28 49 48
+QuadElement1 27 1 1 28 29 50 49
+QuadElement1 28 1 1 29 30 51 50
+QuadElement1 29 1 1 30 31 52 51
+QuadElement1 30 1 1 31 32 53 52
+QuadElement1 31 1 1 32 33 54 53
+QuadElement1 32 1 1 33 34 55 54
+QuadElement1 33 1 1 34 35 56 55
+QuadElement1 34 1 1 35 36 57 56
+QuadElement1 35 1 1 36 37 58 57
+QuadElement1 36 1 1 37 38 59 58
+QuadElement1 37 1 1 38 39 60 59
+QuadElement1 38 1 1 39 40 61 60
+QuadElement1 39 1 1 40 41 62 61
+QuadElement1 40 1 1 41 42 63 62
+QuadElement1 41 1 1 43 44 65 64
+QuadElement1 42 1 1 44 45 66 65
+QuadElement1 43 1 1 45 46 67 66
+QuadElement1 44 1 1 46 47 68 67
+QuadElement1 45 1 1 47 48 69 68
+QuadElement1 46 1 1 48 49 70 69
+QuadElement1 47 1 1 49 50 71 70
+QuadElement1 48 1 1 50 51 72 71
+QuadElement1 49 1 1 51 52 73 72
+QuadElement1 50 1 1 52 53 74 73
+QuadElement1 51 1 1 53 54 75 74
+QuadElement1 52 1 1 54 55 76 75
+QuadElement1 53 1 1 55 56 77 76
+QuadElement1 54 1 1 56 57 78 77
+QuadElement1 55 1 1 57 58 79 78
+QuadElement1 56 1 1 58 59 80 79
+QuadElement1 57 1 1 59 60 81 80
+QuadElement1 58 1 1 60 61 82 81
+QuadElement1 59 1 1 61 62 83 82
+QuadElement1 60 1 1 62 63 84 83
+QuadElement1 61 1 1 64 65 86 85
+QuadElement1 62 1 1 65 66 87 86
+QuadElement1 63 1 1 66 67 88 87
+QuadElement1 64 1 1 67 68 89 88
+QuadElement1 65 1 1 68 69 90 89
+QuadElement1 66 1 1 69 70 91 90
+QuadElement1 67 1 1 70 71 92 91
+QuadElement1 68 1 1 71 72 93 92
+QuadElement1 69 1 1 72 73 94 93
+QuadElement1 70 1 1 73 74 95 94
+QuadElement1 71 1 1 74 75 96 95
+QuadElement1 72 1 1 75 76 97 96
+QuadElement1 73 1 1 76 77 98 97
+QuadElement1 74 1 1 77 78 99 98
+QuadElement1 75 1 1 78 79 100 99
+QuadElement1 76 1 1 79 80 101 100
+QuadElement1 77 1 1 80 81 102 101
+QuadElement1 78 1 1 81 82 103 102
+QuadElement1 79 1 1 82 83 104 103
+QuadElement1 80 1 1 83 84 105 104
+QuadElement1 81 1 1 85 86 107 106
+QuadElement1 82 1 1 86 87 108 107
+QuadElement1 83 1 1 87 88 109 108
+QuadElement1 84 1 1 88 89 110 109
+QuadElement1 85 1 1 89 90 111 110
+QuadElement1 86 1 1 90 91 112 111
+QuadElement1 87 1 1 91 92 113 112
+QuadElement1 88 1 1 92 93 114 113
+QuadElement1 89 1 1 93 94 115 114
+QuadElement1 90 1 1 94 95 116 115
+QuadElement1 91 1 1 95 96 117 116
+QuadElement1 92 1 1 96 97 118 117
+QuadElement1 93 1 1 97 98 119 118
+QuadElement1 94 1 1 98 99 120 119
+QuadElement1 95 1 1 99 100 121 120
+QuadElement1 96 1 1 100 101 122 121
+QuadElement1 97 1 1 101 102 123 122
+QuadElement1 98 1 1 102 103 124 123
+QuadElement1 99 1 1 103 104 125 124
+QuadElement1 100 1 1 104 105 126 125
+QuadElement1 101 1 1 106 107 128 127
+QuadElement1 102 1 1 107 108 129 128
+QuadElement1 103 1 1 108 109 130 129
+QuadElement1 104 1 1 109 110 131 130
+QuadElement1 105 1 1 110 111 132 131
+QuadElement1 106 1 1 111 112 133 132
+QuadElement1 107 1 1 112 113 134 133
+QuadElement1 108 1 1 113 114 135 134
+QuadElement1 109 1 1 114 115 136 135
+QuadElement1 110 1 1 115 116 137 136
+QuadElement1 111 1 1 116 117 138 137
+QuadElement1 112 1 1 117 118 139 138
+QuadElement1 113 1 1 118 119 140 139
+QuadElement1 114 1 1 119 120 141 140
+QuadElement1 115 1 1 120 121 142 141
+QuadElement1 116 1 1 121 122 143 142
+QuadElement1 117 1 1 122 123 144 143
+QuadElement1 118 1 1 123 124 145 144
+QuadElement1 119 1 1 124 125 146 145
+QuadElement1 120 1 1 125 126 147 146
+QuadElement1 121 1 1 127 128 149 148
+QuadElement1 122 1 1 128 129 150 149
+QuadElement1 123 1 1 129 130 151 150
+QuadElement1 124 1 1 130 131 152 151
+QuadElement1 125 1 1 131 132 153 152
+QuadElement1 126 1 1 132 133 154 153
+QuadElement1 127 1 1 133 134 155 154
+QuadElement1 128 1 1 134 135 156 155
+QuadElement1 129 1 1 135 136 157 156
+QuadElement1 130 1 1 136 137 158 157
+QuadElement1 131 1 1 137 138 159 158
+QuadElement1 132 1 1 138 139 160 159
+QuadElement1 133 1 1 139 140 161 160
+QuadElement1 134 1 1 140 141 162 161
+QuadElement1 135 1 1 141 142 163 162
+QuadElement1 136 1 1 142 143 164 163
+QuadElement1 137 1 1 143 144 165 164
+QuadElement1 138 1 1 144 145 166 165
+QuadElement1 139 1 1 145 146 167 166
+QuadElement1 140 1 1 146 147 168 167
+QuadElement1 141 1 1 148 149 170 169
+QuadElement1 142 1 1 149 150 171 170
+QuadElement1 143 1 1 150 151 172 171
+QuadElement1 144 1 1 151 152 173 172
+QuadElement1 145 1 1 152 153 174 173
+QuadElement1 146 1 1 153 154 175 174
+QuadElement1 147 1 1 154 155 176 175
+QuadElement1 148 1 1 155 156 177 176
+QuadElement1 149 1 1 156 157 178 177
+QuadElement1 150 1 1 157 158 179 178
+QuadElement1 151 1 1 158 159 180 179
+QuadElement1 152 1 1 159 160 181 180
+QuadElement1 153 1 1 160 161 182 181
+QuadElement1 154 1 1 161 162 183 182
+QuadElement1 155 1 1 162 163 184 183
+QuadElement1 156 1 1 163 164 185 184
+QuadElement1 157 1 1 164 165 186 185
+QuadElement1 158 1 1 165 166 187 186
+QuadElement1 159 1 1 166 167 188 187
+QuadElement1 160 1 1 167 168 189 188
+QuadElement1 161 1 1 169 170 191 190
+QuadElement1 162 1 1 170 171 192 191
+QuadElement1 163 1 1 171 172 193 192
+QuadElement1 164 1 1 172 173 194 193
+QuadElement1 165 1 1 173 174 195 194
+QuadElement1 166 1 1 174 175 196 195
+QuadElement1 167 1 1 175 176 197 196
+QuadElement1 168 1 1 176 177 198 197
+QuadElement1 169 1 1 177 178 199 198
+QuadElement1 170 1 1 178 179 200 199
+QuadElement1 171 1 1 179 180 201 200
+QuadElement1 172 1 1 180 181 202 201
+QuadElement1 173 1 1 181 182 203 202
+QuadElement1 174 1 1 182 183 204 203
+QuadElement1 175 1 1 183 184 205 204
+QuadElement1 176 1 1 184 185 206 205
+QuadElement1 177 1 1 185 186 207 206
+QuadElement1 178 1 1 186 187 208 207
+QuadElement1 179 1 1 187 188 209 208
+QuadElement1 180 1 1 188 189 210 209
+QuadElement1 181 1 1 190 191 212 211
+QuadElement1 182 1 1 191 192 213 212
+QuadElement1 183 1 1 192 193 214 213
+QuadElement1 184 1 1 193 194 215 214
+QuadElement1 185 1 1 194 195 216 215
+QuadElement1 186 1 1 195 196 217 216
+QuadElement1 187 1 1 196 197 218 217
+QuadElement1 188 1 1 197 198 219 218
+QuadElement1 189 1 1 198 199 220 219
+QuadElement1 190 1 1 199 200 221 220
+QuadElement1 191 1 1 200 201 222 221
+QuadElement1 192 1 1 201 202 223 222
+QuadElement1 193 1 1 202 203 224 223
+QuadElement1 194 1 1 203 204 225 224
+QuadElement1 195 1 1 204 205 226 225
+QuadElement1 196 1 1 205 206 227 226
+QuadElement1 197 1 1 206 207 228 227
+QuadElement1 198 1 1 207 208 229 228
+QuadElement1 199 1 1 208 209 230 229
+QuadElement1 200 1 1 209 210 231 230
+Restraint 1 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Restraint 22 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Restraint 43 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Restraint 64 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Restraint 85 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Restraint 106 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Restraint 127 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Restraint 148 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Restraint 169 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Restraint 190 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Restraint 211 1 0.0 1 0.0 1 0.0 1 0.0 0 0.0 1 0.0
+Load 21 0.0 0.0 -0.5 0.0 0.0 0.0
+Load 42 0.0 0.0 -1.0 0.0 0.0 0.0
+Load 63 0.0 0.0 -1.0 0.0 0.0 0.0
+Load 84 0.0 0.0 -1.0 0.0 0.0 0.0
+Load 105 0.0 0.0 -1.0 0.0 0.0 0.0
+Load 126 0.0 0.0 -1.0 0.0 0.0 0.0
+Load 147 0.0 0.0 -1.0 0.0 0.0 0.0
+Load 168 0.0 0.0 -1.0 0.0 0.0 0.0
+Load 189 0.0 0.0 -1.0 0.0 0.0 0.0
+Load 210 0.0 0.0 -1.0 0.0 0.0 0.0
+Load 231 0.0 0.0 -0.5 0.0 0.0 0.0
