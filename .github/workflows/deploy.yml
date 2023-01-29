@@ -10,9 +10,6 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Chenge Directory
-        run: cd ./docs
-        
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
         with:
@@ -23,10 +20,11 @@ jobs:
         run: npm ci
       - name: Build website
         run: npm run build
+        working-directory: ./docs
 
       - uses: actions/upload-pages-artifact@v1
         with:
-          path: build
+          path: docs/build
 
   deploy:
     name: Deploy to GitHub Pages
