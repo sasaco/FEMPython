@@ -2,8 +2,23 @@
 
 ![image](https://user-images.githubusercontent.com/4043298/213848554-746cb8d1-441b-4ca3-88bf-cadfa9ec5963.png)
 
+## 使用方法
 
-# インストール
+https://sasaco.github.io/FEMPython/
+
+## ベンチマーク
+
+https://github.com/FEABeRjp/FEABeR
+
+
+## 注意点・免責事項
+
+https://github.com/sasaco/FEMPython/blob/main/LICENSE
+
+
+# 開発者wiki
+
+## インストール
 
 1. windows
 
@@ -11,11 +26,11 @@
 
 2. mac
 
-    *著者募集...*
+    ...
 
 3. linux
 
-    *著者募集...*
+    ...
 
 
 # 本ソースコードを適用したアプリ
@@ -24,11 +39,4 @@
 - 
 - 
 
-# ベンチマーク
 
-https://github.com/FEABeRjp/FEABeR
-
-
-# 注意点・免責事項
-
-https://github.com/sasaco/FEMPython/blob/main/LICENSE

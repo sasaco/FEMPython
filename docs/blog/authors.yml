@@ -1,17 +1,17 @@
-endi:
-  name: Endilie Yacop Sucipto
-  title: Maintainer of Docusaurus
-  url: https://github.com/endiliey
-  image_url: https://github.com/endiliey.png
+sasaco:
+  name: Sasazawa Yousuke
+  title: Maintainer of FEMFython
+  url: https://github.com/sasaco
+  image_url: https://github.com/sasaco.png
 
-yangshun:
-  name: Yangshun Tay
+test-a:
+  name: Test A
   title: Front End Engineer @ Facebook
-  url: https://github.com/yangshun
-  image_url: https://github.com/yangshun.png
+  url: https://github.com/test-a
+  image_url: https://github.com/test-a.png
 
-slorber:
-  name: Sébastien Lorber
+test-b:
+  name: Test B
   title: Docusaurus maintainer
-  url: https://sebastienlorber.com
-  image_url: https://github.com/slorber.png
+  url: https://github.com/test-b
+  image_url: https://github.com/test-b.png
