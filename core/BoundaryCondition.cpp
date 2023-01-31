@@ -30,10 +30,10 @@ void BoundaryCondition::init() {
     loadMax = 0;
     pressMax = 0;
 
-    for (int i = 0; i < loads.size(); i++) {
+    for (unsigned int i = 0; i < loads.size(); i++) {
         loadMax = max(loadMax, loads[i].magnitude());
     }
-    for (int i = 0; i < pressures.size(); i++) {
+    for (unsigned int i = 0; i < pressures.size(); i++) {
         pressMax = max(pressMax, pressures[i].press);
     }
 
@@ -53,7 +53,7 @@ int BoundaryCondition::setPointerStructure(int count) {
     for (int i = 0; i < dofAll; i++) {
         bcList.push_back(-1);
     }
-    for (int i = 0; i < restraints.size(); i++) {
+    for (unsigned int i = 0; i < restraints.size(); i++) {
         Restraint r = restraints[i];
         int index0 = nodeIndex[r.node];
         int rdof = dof[r.node];

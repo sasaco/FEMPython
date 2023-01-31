@@ -7,14 +7,14 @@
 using namespace std;
 using std::vector;
 
-#include<cblas.h>
+//#include<cblas.h>
 
 #include <Eigen/Core>
 #include <Eigen/LU>
 
-// Sparseƒwƒbƒ_‚ÍƒRƒ“ƒpƒCƒ‹‚ª‹°‚ë‚µ‚­’x‚­‚È‚éIII
+// Sparseï¿½wï¿½bï¿½_ï¿½ÍƒRï¿½ï¿½ï¿½pï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë‚µï¿½ï¿½ï¿½xï¿½ï¿½ï¿½È‚ï¿½Iï¿½Iï¿½I
 #include <Eigen/Sparse>
-// ‘ã‚í‚è‚É‚±‚¤‚·‚é
+// ï¿½ï¿½ï¿½ï¿½É‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //#include <Eigen/SparseCore>
 //#include <Eigen/SparseLU>
 //#include <Eigen/SparseQR>
@@ -25,7 +25,7 @@ typedef Eigen::Triplet<double> T;
 class Solver : public FemDataModel {
 
 private:
-    double PRECISION = 1e-10;	// ƒ}ƒgƒŠƒbƒNƒX¸“x
+    double PRECISION = 1e-10;	// ï¿½}ï¿½gï¿½ï¿½ï¿½bï¿½Nï¿½Xï¿½ï¿½ï¿½x
 
     MatrixXd _matrix;
     MatrixXd _matrix2;
@@ -35,8 +35,8 @@ private:
     SparseMatrix<double> vector_;
 
 
-    int  LU_METHOD = 0;	        // LU•ª‰ğ–@
-    int  ILUCG_METHOD = 1;      // •sŠ®‘SLU•ª‰ğ‹¤–ğŒù”z–@
+    int  LU_METHOD = 0;	        // LUï¿½ï¿½ï¿½ï¿½@
+    int  ILUCG_METHOD = 1;      // ï¿½sï¿½ï¿½ï¿½SLUï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½zï¿½@
 
     int dof;
     int method;

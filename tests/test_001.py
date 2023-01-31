@@ -13,9 +13,6 @@ def test_sampleBeamHexa1():
     m = core.readFemModel(s[:500])
     m.init()
     m.clear()
-    # m.print_string()
-    # m.read_string("test")
-    # m.print_string()
 
 if __name__ == "__main__":
     test_sampleBeamHexa1()

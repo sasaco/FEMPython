@@ -6,11 +6,11 @@
 #include "BarParameter.h"
 #include "Strain.h"
 #include "Stress.h"
-#include "Vector3.hpp"
+#include "Vector3Dim.hpp"
 
 #include<string>
 #include<vector>
-//#include<format>
+//#include<fmt/core.h>
 using namespace std;
 using std::string;
 using std::vector;
@@ -26,11 +26,11 @@ private:
 
     int param;
     bool isBar;
-    Vector3 axis;
+    Vector3Dim axis;
 
 public:
     BarElement();
-    BarElement(int label, int material, int param, vector<int> nodes, Vector3 axis);
+    BarElement(int label, int material, int param, vector<int> nodes, Vector3Dim axis);
 
     MatrixXd stiffnessMatrix(vector<FENode> p, Material material, Section sect);
 

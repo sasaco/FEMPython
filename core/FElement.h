@@ -3,7 +3,7 @@
 #include "Nodes.h"
 #include "FENode.h"
 #include "Vector3R.h"
-#include "Vector3.hpp"
+#include "Vector3Dim.hpp"
 
 #include <numeric>
 #include <vector>
@@ -25,7 +25,7 @@ private:
     bool isBar;
 
     // 方向余弦マトリックスを返す
-    vector<Vector3> dirVectors(vector<Vector3> p, Vector3 axis);
+    vector<Vector3Dim> dirVectors(vector<Vector3Dim> p, Vector3Dim axis);
 
 public:
     double C1_3 = 1 / 3;
@@ -60,11 +60,11 @@ public:
     VectorXd toLocalArray(vector<Vector3R> u, MatrixXd d);
 
     // 方向余弦マトリックスを返す
-    MatrixXd dirMatrix(vector<FENode> p, Vector3 axis);
+    MatrixXd dirMatrix(vector<FENode> p, Vector3Dim axis);
     MatrixXd dirMatrix(vector<FENode> p);
 
-    Vector3 normalVector(vector<FENode> p);
-    Vector3 normalVector(vector<Vector3> p);
+    Vector3Dim normalVector(vector<FENode> p);
+    Vector3Dim normalVector(vector<Vector3Dim> p);
 
     // 剛性マトリックスの方向を修正する
     void toDir3(MatrixXd d, MatrixXd k);
