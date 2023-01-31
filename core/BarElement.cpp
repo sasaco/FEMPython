@@ -11,7 +11,7 @@ BarElement::BarElement() : FElement() {
     isBar = true;
     param = -1;
 }
-BarElement::BarElement(int label, int material, int _param, vector<int> nodes, Vector3 _axis) :
+BarElement::BarElement(int label, int material, int _param, vector<int> nodes, Vector3Dim _axis) :
     FElement(label, material, nodes) {
     param = _param;
     isBar = true;

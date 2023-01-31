@@ -27,7 +27,7 @@ ShellElement::ShellElement(int _label, int material, int _param, vector<int> nod
 // sf - 形状関数行列
 // n - 法線ベクトル
 // t - 要素厚さ
-MatrixXd ShellElement::jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3 n, double t) {
+MatrixXd ShellElement::jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3Dim n, double t) {
     
     int count = nodeCount();
     MatrixXd result = MatrixXd::Zero(3, 3);
@@ -183,7 +183,7 @@ MatrixXd ShellElement::shapePart(vector<FENode> p, VectorXd x, double w, double 
     MatrixXd result(count, count);
 
     MatrixXd sf = shapeFunction(x(0), x(1));
-    Vector3 n = normalVector(p);
+    Vector3Dim n = normalVector(p);
     MatrixXd ja = jacobianMatrix(p, sf, n, t);
     double det = ja.determinant();
     double coef = 2 * w * abs(det);
@@ -211,7 +211,7 @@ MatrixXd ShellElement::gradPart(vector<FENode> p, VectorXd x, double w, double t
     MatrixXd result(count, count);
 
     MatrixXd sf = shapeFunction(x(0), x(1));
-    Vector3 n = normalVector(p);
+    Vector3Dim n = normalVector(p);
     MatrixXd ja = jacobianMatrix(p, sf, n, t);
     MatrixXd d = dirMatrix(p);
     MatrixXd gr = grad(p, ja, sf, d, t);
@@ -278,7 +278,7 @@ MatrixXd ShellElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u,
     int count = nodeCount();
     MatrixXd result = MatrixXd::Zero(6 * count, 6 * count);
     MatrixXd d = dirMatrix(p);
-    Vector3 n = normalVector(p);
+    Vector3Dim n = normalVector(p);
     VectorXd v = toArray(u, 6);
     double t = sp.thickness;
 
@@ -328,7 +328,7 @@ tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Str
 
     int count = nodeCount();
     MatrixXd d = dirMatrix(p);
-    Vector3 n = normalVector(p);
+    Vector3Dim n = normalVector(p);
     VectorXd v = toArray(u, 6);
     double t = sp.thickness;
 
@@ -377,7 +377,7 @@ tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Str
 // d - 方向余弦マトリックス
 // xsi,eta,zeta - ξ,η,ζ座標
 // t - 要素厚さ
-VectorXd ShellElement::strainPart(vector<FENode> p, VectorXd v, Vector3 n, MatrixXd d, double  xsi, double eta, double zeta, double t) {
+VectorXd ShellElement::strainPart(vector<FENode> p, VectorXd v, Vector3Dim n, MatrixXd d, double  xsi, double eta, double zeta, double t) {
 
     MatrixXd sf = shapeFunction(xsi, eta);
     MatrixXd ja = jacobianMatrix(p, sf, n, t);
@@ -396,7 +396,7 @@ tuple<Strain, Stress, double, Strain, Stress, double>
     ShellElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp) {
 
     MatrixXd d = dirMatrix(p);
-    Vector3 n = normalVector(p);
+    Vector3Dim n = normalVector(p);
     VectorXd v = toArray(u, 6);
     double t = sp.thickness;
     int count = (int)intP.size();

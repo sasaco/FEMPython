@@ -49,7 +49,7 @@ vector<string> split(string str, char del) {
 /// </summary>
 /// <param name="s">データ文字列のリスト</param>
 /// <returns></returns>
-FemDataModel readFemModel(string s)
+FemDataModel readFemModelDataStr(string s)
 {
     vector<string> lines = split(s, '\n');
 
@@ -61,7 +61,7 @@ FemDataModel readFemModel(string s)
 
     vector<string> res;
 
-    for (int i = 0; i < lines.size(); i++) {
+    for (unsigned int i = 0; i < lines.size(); i++) {
         
         vector<string> columns = split(lines[i], ' ');
 

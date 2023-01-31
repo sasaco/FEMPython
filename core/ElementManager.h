@@ -1,4 +1,4 @@
-#pragma once
+//#pragma once
 
 //#include "BorderManager.hpp"
 #include "ShellParameter.h"

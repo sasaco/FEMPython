@@ -3,7 +3,7 @@
 #include "ElementBorderBound.h"
 
 #include <string>
-//#include <format>
+//#include <fmt/core.h>
 #include <vector>
 using namespace std;         //  名前空間指定
 using std::string;

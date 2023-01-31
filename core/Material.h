@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-//#include <format>
+//#include <fmt/core.h>
 #include <string>
 using namespace std;         //  名前空間指定
 using std::string;

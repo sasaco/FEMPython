@@ -5,7 +5,7 @@
 
 #include <three/core/math.hpp>
 #include <three/core/quaternion.hpp>
-#include <three/core/vector3.hpp>
+#include <three/core/Vector3Dim.hpp>
 #include <three/core/vector4.hpp>
 
 namespace three {

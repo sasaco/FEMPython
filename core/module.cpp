@@ -23,7 +23,7 @@ PYBIND11_MODULE(core, m){
     pybind11::class_<FemDataModel>(m, "FemDataModel")
             .def(pybind11::init())
             .def("init", &FemDataModel::init)
-            .def("clear", &FemDataModel::clear)
+            .def("clear", &FemDataModel::clear);
             // .def("read_string", &FemDataModel::readString)
             // .def("print_string", &FemDataModel::printString);
             

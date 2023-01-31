@@ -1,12 +1,12 @@
 ﻿#pragma once
 
-#include "Vector3.hpp"
+#include "Vector3Dim.hpp"
 
-//#include <format>
+//#include <fmt/core.h>
 #include <string>
 using namespace std;
 
-class FENode : public Vector3 {
+class FENode : public Vector3Dim {
 
 private:
 

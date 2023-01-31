@@ -4,7 +4,7 @@
 #include "Coordinates.h"
 #include "FENode.h"
 
-//#include <format>
+//#include <fmt/core.h>
 #include <string>
 #include <vector>
 using namespace std;         //  名前空間指定

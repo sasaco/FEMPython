@@ -8,7 +8,7 @@
 #include "FENode.h"
 
 
-#include <format>
+#include <fmt/core.h>
 #include <numbers>
 #include <vector>
 #include <map>
@@ -22,6 +22,7 @@ class FemDataModel {
 
 private:
     double COEF_F_W = 0.5 / numbers::pi;    // f/ω比 1/2π
+    string s = "";
 
 
     bool hasShellBar;                       // シェル要素または梁要素を含まない
@@ -56,6 +57,7 @@ public:
     void clear();
     void init();
     int setNodeDoF();
+    void readString(string str);
     // void calculate();
     void calculateElementStress();
     void calculateNodeStress();

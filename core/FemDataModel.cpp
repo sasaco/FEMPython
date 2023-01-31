@@ -54,33 +54,33 @@ void FemDataModel::reNumbering(){
 
     map<int, int> map1;
 
-    for(int i=0;i< mesh.nodes.size();i++){
+    for(unsigned int i=0;i< mesh.nodes.size();i++){
         map1[mesh.nodes[i].label]=i;
     }
 
-    for(int i=0;i< mesh.elements.size();i++){
+    for(unsigned int i=0;i< mesh.elements.size();i++){
         resetNodes(map1, mesh.elements[i]);
     }
 
-    for(int i=0;i<bc.restraints.size();i++){
+    for(unsigned int i=0;i<bc.restraints.size();i++){
         resetNodePointer(map1, bc.restraints[i].node);
     }
-    for(int i=0;i<bc.loads.size();i++){
+    for(unsigned int i=0;i<bc.loads.size();i++){
         resetNodePointer(map1, bc.loads[i].node);
     }
-    for(int i=0;i<bc.temperature.size();i++){
+    for(unsigned int i=0;i<bc.temperature.size();i++){
         resetNodePointer(map1, bc.temperature[i].node);
     }
 
     map<int, int> map2;
-    for(int i=0;i< mesh.elements.size();i++){
+    for(unsigned int i=0;i< mesh.elements.size();i++){
         map2[mesh.elements[i].label()] = i;
     }
 
-    for(int i=0;i<bc.pressures.size();i++){
+    for(unsigned int i=0;i<bc.pressures.size();i++){
         resetElementPointer(map2, bc.pressures[i].element);
     }
-    for(int i=0;i<bc.htcs.size();i++){
+    for(unsigned int i=0;i<bc.htcs.size();i++){
         resetElementPointer(map2, bc.htcs[i].element);
     }
 }
@@ -91,13 +91,17 @@ void FemDataModel::reNumbering(){
 void FemDataModel::resetNodes(map<int, int> map, ElementManager &s) {
     vector<int> nodes = s.nodes();
     vector<int> tmp;
-    for (int i = 0; i < nodes.size(); i++) {
+    for (unsigned int i = 0; i < nodes.size(); i++) {
         if (map.count(nodes[i])) {
             tmp.push_back(map[nodes[i]]);
             //nodes[i] = map[nodes[i]];
         }
         else {
-            throw (format("節点番号{}は存在しません", nodes[i]));
+            std::string throwStr = "節点番号";
+            throwStr += std::to_string(nodes[i]);
+            throwStr += "は存在しません";
+            throw invalid_argument(throwStr);
+            //throw invalid_argument(fmt::format("節点番号{}は存在しません", nodes[i]));
         }
     }
     s.setNodes(tmp);
@@ -111,7 +115,11 @@ void FemDataModel::resetNodePointer(map<int, int> map, int &node) {
         node = map[node];
     }
     else {
-        throw (format("節点番号{}は存在しません", node));
+        std::string throwStr = "節点番号";
+        throwStr += std::to_string(node);
+        throwStr += "は存在しません";
+        throw invalid_argument(throwStr);
+        //throw invalid_argument(fmt::format("節点番号{}は存在しません", node));
     }
 }
 
@@ -123,7 +131,11 @@ void FemDataModel::resetElementPointer(map<int, int> map, int &element) {
         element = map[element];
     }
     else {
-        throw (format("要素番号{}は存在しません", element));
+        std::string throwStr = "要素番号";
+        throwStr += std::to_string(element);
+        throwStr += "は存在しません";
+        throw invalid_argument(throwStr);
+        //throw invalid_argument(fmt::format("要素番号{}は存在しません", element));
     }
 }
 
@@ -135,16 +147,20 @@ void FemDataModel::resetMaterialLabel(){
   }
   map<int, int> map;
 
-  for(int i=0;i<materials.size();i++){
+  for(unsigned int i=0;i<materials.size();i++){
     map[materials[i].label]=i;
   }
-  for(int i=0;i< mesh.elements.size();i++){
+  for(unsigned int i=0;i< mesh.elements.size();i++){
     int mat = mesh.elements[i].material();
     if (map.count(mat) > 0) {
         mesh.elements[i].setMaterial(map[mat]);
     }
     else{
-        throw (format("材料番号{}は存在しません", mat));
+        std::string throwStr = "材料番号";
+        throwStr += std::to_string(mat);
+        throwStr += "は存在しません";
+        throw invalid_argument(throwStr);
+        //throw invalid_argument(fmt::format("材料番号{}は存在しません", mat));
     }
   }
 }
@@ -161,14 +177,14 @@ void FemDataModel::resetParameterLabel(){
     map<int, int> map2;
     int shellbars = 0;
 
-    for(int i=0;i<shellParams.size();i++){
+    for(unsigned int i=0;i<shellParams.size();i++){
         map1[shellParams[i].label]=i;
     }
-    for(int i=0;i<barParams.size();i++){
+    for(unsigned int i=0;i<barParams.size();i++){
         map2[barParams[i].label]=i;
     }
 
-    for(int i=0;i< mesh.elements.size();i++){
+    for(unsigned int i=0;i< mesh.elements.size();i++){
 
         if(mesh.elements[i].isShell()){
             int param = mesh.elements[i].param();
@@ -177,7 +193,11 @@ void FemDataModel::resetParameterLabel(){
       	        shellbars++;
             }
             else{
-                throw (format("パラメータ番号{}は存在しません", param));
+                std::string throwStr = "パラメータ番号";
+                throwStr += std::to_string(param);
+                throwStr += "は存在しません";
+                throw invalid_argument(throwStr);
+                //throw invalid_argument(fmt::format("パラメータ番号{}は存在しません", param));
             }
         }
         else if(mesh.elements[i].isBar()){
@@ -188,7 +208,11 @@ void FemDataModel::resetParameterLabel(){
                 shellbars++;
             }
             else{
-                throw (format("パラメータ番号{}は存在しません", param));
+                std::string throwStr = "パラメータ番号";
+                throwStr += std::to_string(param);
+                throwStr += "は存在しません";
+                throw invalid_argument(throwStr);
+                //throw invalid_argument(fmt::format("パラメータ番号{}は存在しません", param));
             }
         }
     }
@@ -207,14 +231,14 @@ void FemDataModel::resetCoordinates(){
   }
 
   map<int, Coordinates> map;
-  for(int i=0;i<coordinates.size();i++){
+  for(unsigned int i=0;i<coordinates.size();i++){
     map[coordinates[i].label]=coordinates[i];
   }
 
-  for(int i=0;i<bc.restraints.size();i++){
+  for(unsigned int i=0;i<bc.restraints.size();i++){
       resetCoordinatesPointer<Restraint>(map, bc.restraints[i]);
   }
-  for(int i=0;i<bc.loads.size();i++){
+  for(unsigned int i=0;i<bc.loads.size();i++){
       resetCoordinatesPointer<Load>(map, bc.loads[i]);
   }
 }
@@ -230,7 +254,7 @@ void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, T &bc) {
     }
     bool hasFind = false;
     Coordinates cod;
-    for (int i = 0; i < map.size(); i++) {
+    for (int i = 0; i < static_cast<int>(map.size()); i++) {
         if (i == map[i].label) {
             cod = map[i];
             hasFind = true;
@@ -243,7 +267,11 @@ void FemDataModel::resetCoordinatesPointer(map<int, Coordinates> map, T &bc) {
         cod.toGlobal(bc.x, bc.globalX);
     }
     else {
-        throw (format("局所座標系番号{}存在しません", bc.coords));
+        std::string throwStr = "局所座標系番号";
+        throwStr += std::to_string(bc.coords);
+        throwStr += "は存在しません";
+        throw invalid_argument(throwStr);
+        //throw invalid_argument(fmt::format("局所座標系番号{}存在しません", bc.coords));
     }
 }
 
@@ -285,7 +313,7 @@ void FemDataModel::calculateElementStress() {
     for (int i = 0; i < elemCount; i++) {
         auto elem = elems[i];
         auto en = elem.nodes();
-        for (int j = 0; j < en.size(); j++) {
+        for (unsigned int j = 0; j < en.size(); j++) {
             int index = en[j];
             p.push_back(nodes[index]);
             v.push_back(result.displacement[index]);
@@ -333,7 +361,7 @@ void FemDataModel::calculateNodeStress() {
     for (int i = 0; i < elemCount; i++) {
         auto elem = elems[i];
         auto en = elem.nodes();
-        for (int j = 0; j < en.size(); j++) {
+        for (unsigned int j = 0; j < en.size(); j++) {
             int index = en[j];
             p.push_back(nodes[index]);
             v.push_back(result.displacement[index]);
@@ -358,7 +386,7 @@ void FemDataModel::calculateNodeStress() {
             auto eps2 = get<3>(s);
             auto str2 = get<4>(s);
             auto se2 = get<5>(s);
-            for (int j = 0; j < en.size(); j++) {
+            for (unsigned int j = 0; j < en.size(); j++) {
                 auto eaj = ea[j];
                 eps1[j].mul(eaj);
                 eps2[j].mul(eaj);
@@ -380,7 +408,7 @@ void FemDataModel::calculateNodeStress() {
             auto eps2 = get<3>(s);
             auto str2 = get<4>(s);
             auto se2 = get<5>(s);
-            for (int j = 0; j < en.size(); j++) {
+            for (unsigned int j = 0; j < en.size(); j++) {
                 int index = en[j];
                 result.addStructureData(index, eps1[j], str1[j], se1[j],
                     eps2[j], str2[j], se2[j]);
@@ -393,7 +421,7 @@ void FemDataModel::calculateNodeStress() {
             auto eps1 = get<0>(s);
             auto str1 = get<1>(s);
             auto se1 = get<2>(s);
-            for (int j = 0; j < en.size(); j++) {
+            for (unsigned int j = 0; j < en.size(); j++) {
                 auto eaj = ea[j];
                 eps1[j].mul(eaj);
                 str1[j].mul(eaj);
@@ -409,6 +437,11 @@ void FemDataModel::calculateNodeStress() {
             result.mulStructureData(i, 1 / angle(i));
         }
     }
+};
+
+void FemDataModel::readString(string str){
+    // private変数にstrを格納
+    s = str;
 };
 
 

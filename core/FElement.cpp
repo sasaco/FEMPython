@@ -97,14 +97,14 @@ VectorXd FElement::toLocalArray(vector<Vector3R> u, MatrixXd d) {
 // 方向余弦マトリックスを返す
 // p - 頂点座標
 // axis - 断面基準方向ベクトル
-MatrixXd FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
+MatrixXd FElement::dirMatrix(vector<FENode> p, Vector3Dim axis) {
 
-    vector<Vector3> vec(p.size());
-    for (int i = 0; i < p.size(); i++) {
-        vec[i] = Vector3(p[i].x, p[i].y, p[i].z);
+    vector<Vector3Dim> vec(p.size());
+    for (unsigned int i = 0; i < p.size(); i++) {
+        vec[i] = Vector3Dim(p[i].x, p[i].y, p[i].z);
     }
 
-    vector<Vector3> v = dirVectors(vec, axis);
+    vector<Vector3Dim> v = dirVectors(vec, axis);
 
     MatrixXd result(3, 3);
     result(0, 0) = v[0].x;
@@ -124,7 +124,7 @@ MatrixXd FElement::dirMatrix(vector<FENode> p, Vector3 axis) {
 
 MatrixXd FElement::dirMatrix(vector<FENode> p) {
     // この関数を呼ばれる時は axis を使わないはずだからダミーの axis を用意する
-    Vector3 axis;
+    Vector3Dim axis;
     return dirMatrix(p, axis);
 }
 
@@ -132,17 +132,17 @@ MatrixXd FElement::dirMatrix(vector<FENode> p) {
 // 方向余弦マトリックスを返す
 // p - 頂点座標
 // axis - 断面基準方向ベクトル
-vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
+vector<Vector3Dim> FElement::dirVectors(vector<Vector3Dim> p, Vector3Dim axis) {
 
-    vector<Vector3> result(3);
+    vector<Vector3Dim> result(3);
 
     if (p.size() == 2) {		// 梁要素
-        Vector3 v0 = p[0];
-        Vector3 v1 = p[1].clone().sub(v0).normalize();
+        Vector3Dim v0 = p[0];
+        Vector3Dim v1 = p[1].clone().sub(v0).normalize();
         
         double dt = v1.dot(axis);
 
-        auto v2 = Vector3(axis.x - dt * v1.x, axis.y - dt * v1.y, axis.z - dt * v1.z);
+        auto v2 = Vector3Dim(axis.x - dt * v1.x, axis.y - dt * v1.y, axis.z - dt * v1.z);
         if (v2.lengthSq() > 0) {
             v2.normalize();
         }
@@ -155,7 +155,7 @@ vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
                 v2.set(-v1.y * v1.x, 1 - v1.y * v1.y, -v1.y * v1.z).normalize();
             }
         }
-        auto v3 = Vector3().crossVectors(v1, v2);
+        auto v3 = Vector3Dim().crossVectors(v1, v2);
 
         result[0] = v1;
         result[1] = v2;
@@ -164,10 +164,10 @@ vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
         return result;
     }
     else if (p.size() > 2) {		// シェル要素
-        Vector3 v3 = normalVector(p);
-        Vector3 v2 = p[1].clone().sub(p[0]);
+        Vector3Dim v3 = normalVector(p);
+        Vector3Dim v2 = p[1].clone().sub(p[0]);
         v2 = v3.clone().cross(v2).normalize();
-        Vector3 v1 = v2.clone().cross(v3);
+        Vector3Dim v1 = v2.clone().cross(v3);
 
         result[0] = v1;
         result[1] = v2;
@@ -177,56 +177,56 @@ vector<Vector3> FElement::dirVectors(vector<Vector3> p, Vector3 axis) {
 
     }
 
-    throw exception("error on FElement::dirVectors");
+    throw runtime_error("error on FElement::dirVectors");
 }
 
-Vector3 FElement::normalVector(vector<FENode> p) {
+Vector3Dim FElement::normalVector(vector<FENode> p) {
 
-    vector<Vector3> v(p.size());
-    for (int i = 0; i < p.size(); i++) {
-        v[i] = Vector3(p[i].x, p[i].y, p[i].z);
+    vector<Vector3Dim> v(p.size());
+    for (unsigned int i = 0; i < p.size(); i++) {
+        v[i] = Vector3Dim(p[i].x, p[i].y, p[i].z);
     }
 
     return normalVector(v);
 }
 
-Vector3 FElement::normalVector(vector<Vector3> v) {
+Vector3Dim FElement::normalVector(vector<Vector3Dim> v) {
 
     if (v.size() < 3) {
-        throw exception("error on FElement::normalVector");
+        throw runtime_error("error on FElement::normalVector");
     }
     else if ((v.size() == 3) || (v.size() == 6)) {
-        auto v1 = Vector3().subVectors(v[1], v[0]);
-        auto v2 = Vector3().subVectors(v[2], v[0]);
+        auto v1 = Vector3Dim().subVectors(v[1], v[0]);
+        auto v2 = Vector3Dim().subVectors(v[2], v[0]);
         auto v3 = v1.cross(v2).normalize();
         return v3;
     }
     else if ((v.size() == 4) || (v.size() == 8)) {
-        auto v1 = Vector3().subVectors(v[2], v[0]);
-        auto v2 = Vector3().subVectors(v[3], v[1]);
+        auto v1 = Vector3Dim().subVectors(v[2], v[0]);
+        auto v2 = Vector3Dim().subVectors(v[3], v[1]);
         auto v3 = v1.cross(v2).normalize();
         return v3;
     }
     else {
         double vx = 0, vy = 0, vz = 0;
-        for (int i = 0; i < v.size(); i++) {
+        for (unsigned int i = 0; i < v.size(); i++) {
 
-            Vector3 p1 = v[(i + 1) % v.size()];
-            Vector3 p2 = v[(i + 2) % v.size()];
+            Vector3Dim p1 = v[(i + 1) % v.size()];
+            Vector3Dim p2 = v[(i + 2) % v.size()];
 
-            auto v1 = Vector3().subVectors(p1, v[i]);
-            auto v2 = Vector3().subVectors(p2, v[i]);
+            auto v1 = Vector3Dim().subVectors(p1, v[i]);
+            auto v2 = Vector3Dim().subVectors(p2, v[i]);
             auto norm = v1.cross(v2);
 
             vx += norm.x;
             vy += norm.y;
             vz += norm.z;
         }
-        auto v3 = Vector3(vx, vy, vz).normalize();
+        auto v3 = Vector3Dim(vx, vy, vz).normalize();
         return v3;
     }
 
-    return Vector3();
+    return Vector3Dim();
 }
 
 // 剛性マトリックスの方向を修正する

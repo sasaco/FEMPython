@@ -1,9 +1,9 @@
 ﻿#pragma once
-#include "vector3.hpp"
+#include "Vector3Dim.hpp"
 #include <vector>
 using std::vector;
 
-class Nodes : public Vector3 {
+class Nodes : public Vector3Dim {
 
 private:
 
