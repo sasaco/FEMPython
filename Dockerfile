@@ -17,3 +17,11 @@ RUN pip3 install pybind11
 
 # Eigenのダウンロード（コンパイル時にincludeするためbuildは不要）
 RUN git clone https://gitlab.com/libeigen/eigen.git -b 3.4
+
+#fmtのダウンロード and セットアップ
+RUN git clone https://github.com/fmtlib/fmt
+RUN cd fmt
+RUN mkdir build
+RUN cd build
+RUN cmake /fmt
+RUN make && make install
