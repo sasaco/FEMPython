@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from ShellElement import TRI1_INT
+from .ShellElement import TRI1_INT
 # from Vector3 import Vector3
 #--------------------------------------------------------------------#
 

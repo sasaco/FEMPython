@@ -1,8 +1,9 @@
-from BoundaryCondition import BoundaryCondition
-from Element import normalVector
-from Result import NODE_DATA, ELEMENT_DATA
-from Material import Material
-from Lanczos import eigByLanczosLUP, eigByLanczosILUCG, eigByArnoldiLUP, eigByArnoldiILUCG
+from .BoundaryCondition import BoundaryCondition
+from .Element import normalVector
+from .Result import NODE_DATA, ELEMENT_DATA
+from .Material import Material
+from .Lanczos import eigByLanczosLUP, eigByLanczosILUCG, eigByArnoldiLUP, eigByArnoldiILUCG
+
 import numpy as np
 from typing import List
 #--------------------------------------------------------------------#

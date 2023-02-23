@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List
-from SolidElement import HexaElement1
-from ElementBorder import addMatrix
+from .SolidElement import HexaElement1
+from .ElementBorder import addMatrix
 #--------------------------------------------------------------------#
 
 class HexaElement1WT(HexaElement1):

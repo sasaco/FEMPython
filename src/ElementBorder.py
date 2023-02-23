@@ -3,8 +3,8 @@ import numpy as np
 import copy
 from typing import List
 
-from Element import GTRI2, GX2, C1_6, GX3, GW3, C1_6, C1_3, normalize, normalVector
-from Nodes import Nodes
+from .Element import GTRI2, GX2, C1_6, GX3, GW3, C1_6, C1_3, normalize, normalVector
+from .Nodes import Nodes
 #--------------------------------------------------------------------#
 # 三角形2次要素の積分点のξ,η座標,重み係数
 TRI2_INT=[[GTRI2[0],GTRI2[0],C1_6],[GTRI2[1],GTRI2[0],C1_6],[GTRI2[0],GTRI2[1],C1_6]]

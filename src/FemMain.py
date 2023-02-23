@@ -1,5 +1,5 @@
-from FemDataModel import FemDataModel
-from FileIO import readFemModel
+from .FemDataModel import FemDataModel
+from .FileIO import readFemModel
 #--------------------------------------------------------------------#
 # 3次元有限要素法(FEM)
 
