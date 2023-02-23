@@ -1,0 +1,81 @@
+Material  1  21000.0  0.29  8139.5349  7.8E-4  45.0  1.0
+ShellParameter 1 5.0
+Node 1 0.0 0.0 0.0
+Node 2 1.0 0.0 0.0
+Node 3 2.0 0.0 0.0
+Node 4 3.0 0.0 0.0
+Node 5 4.0 0.0 0.0
+Node 6 5.0 0.0 0.0
+Node 7 6.0 0.0 0.0
+Node 8 7.0 0.0 0.0
+Node 9 8.0 0.0 0.0
+Node 10 9.0 0.0 0.0
+Node 11 10.0 0.0 0.0
+Node 12 0.0 1.0 0.0
+Node 13 1.0 1.0 0.0
+Node 14 2.0 1.0 0.0
+Node 15 3.0 1.0 0.0
+Node 16 4.0 1.0 0.0
+Node 17 5.0 1.0 0.0
+Node 18 6.0 1.0 0.0
+Node 19 7.0 1.0 0.0
+Node 20 8.0 1.0 0.0
+Node 21 9.0 1.0 0.0
+Node 22 10.0 1.0 0.0
+Node 23 0.0 2.0 0.0
+Node 24 1.0 2.0 0.0
+Node 25 2.0 2.0 0.0
+Node 26 3.0 2.0 0.0
+Node 27 4.0 2.0 0.0
+Node 28 5.0 2.0 0.0
+Node 29 6.0 2.0 0.0
+Node 30 7.0 2.0 0.0
+Node 31 8.0 2.0 0.0
+Node 32 9.0 2.0 0.0
+Node 33 10.0 2.0 0.0
+TriElement1 1 1 1 1 2 12
+TriElement1 2 1 1 12 2 13
+TriElement1 3 1 1 2 3 13
+TriElement1 4 1 1 13 3 14
+TriElement1 5 1 1 3 4 14
+TriElement1 6 1 1 14 4 15
+TriElement1 7 1 1 4 5 15
+TriElement1 8 1 1 15 5 16
+TriElement1 9 1 1 5 6 16
+TriElement1 10 1 1 16 6 17
+TriElement1 11 1 1 6 7 17
+TriElement1 12 1 1 17 7 18
+TriElement1 13 1 1 7 8 18
+TriElement1 14 1 1 18 8 19
+TriElement1 15 1 1 8 9 19
+TriElement1 16 1 1 19 9 20
+TriElement1 17 1 1 9 10 20
+TriElement1 18 1 1 20 10 21
+TriElement1 19 1 1 10 11 21
+TriElement1 20 1 1 21 11 22
+TriElement1 21 1 1 12 13 23
+TriElement1 22 1 1 23 13 24
+TriElement1 23 1 1 13 14 24
+TriElement1 24 1 1 24 14 25
+TriElement1 25 1 1 14 15 25
+TriElement1 26 1 1 25 15 26
+TriElement1 27 1 1 15 16 26
+TriElement1 28 1 1 26 16 27
+TriElement1 29 1 1 16 17 27
+TriElement1 30 1 1 27 17 28
+TriElement1 31 1 1 17 18 28
+TriElement1 32 1 1 28 18 29
+TriElement1 33 1 1 18 19 29
+TriElement1 34 1 1 29 19 30
+TriElement1 35 1 1 19 20 30
+TriElement1 36 1 1 30 20 31
+TriElement1 37 1 1 20 21 31
+TriElement1 38 1 1 31 21 32
+TriElement1 39 1 1 21 22 32
+TriElement1 40 1 1 32 22 33
+Restraint 1 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Restraint 12 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Restraint 23 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0 1 0.0
+Load 11 0.0 0.0 -25.0 0.0 0.0 0.0
+Load 22 0.0 0.0 -50.0 0.0 0.0 0.0
+Load 33 0.0 0.0 -25.0 0.0 0.0 0.0
