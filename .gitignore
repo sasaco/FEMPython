@@ -1,14 +1,3 @@
-# c++
-src/*.so
-
-# python
 __pycache__/
-<<<<<<< HEAD
-*.so
-.vs/
-packages/
-core/obj/
-=======
 .vs/
 .pytest_cache/
->>>>>>> python
