@@ -100,12 +100,12 @@ def stiffnessMatrix(dof, model):
             ri.coords.transMatrix(matrix, dof, index[ri.node], bcdof[i])
 
     # 絶対値が小さい成分を除去する
-    eps = PRECISION * kmax
-    for i in range(dof):
-        mrow = matrix[i]
-        for j in mrow:
-            if abs(j) < eps:
-                j = 0
+    # eps = PRECISION * kmax
+    # for i in range(dof):
+    #     mrow = matrix[i]
+    #     for j in mrow:
+    #         if abs(j) < eps:
+    #             j = 0
 
     return matrix
 
@@ -358,11 +358,10 @@ class Solver():
             if bcList[i] < 0:
                 reducedList.append(i)
 
-        # 剛性マトリックス・荷重ベクトルの作成
+        # 剛性マトリックスの作成
         matrix1 = stiffnessMatrix(self.dof, self.model)
 
-
-
+        # 荷重ベクトルの作成
         vector1 = loadVector(self.dof, self.model)
 
         # 拘束自由度を除去する

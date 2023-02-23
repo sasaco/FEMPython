@@ -1,8 +1,8 @@
 import pytest
-import conftest
 import sys
 import os
 
+import conftest
 from FemMain import initModel
 
 def test_sampleBeamHexa1():
