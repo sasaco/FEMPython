@@ -5,12 +5,34 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "pyTest",
+            "name": "Python",
             "type": "python",
             "request": "launch",
-            "stopOnEntry": false,
-            "module": "pytest",
-            "cwd": "${workspaceRoot}",
-        }
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "preLaunchTask": "somove",
+        },
+        {
+            "name": "c++",
+            "type": "lldb",
+            "request": "launch",
+            "program": "/usr/bin/python3",
+            "args": [
+                "${file}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/g++",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "somove",
+        }        
     ]
 }

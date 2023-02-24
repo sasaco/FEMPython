@@ -1,0 +1,26 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        // coreでmakeを実施してpybindのコンパイル生成物(.soファイル)を作る
+        {
+            "label": "make",
+            "type": "shell",
+            "command": "make",
+            "options": {
+                "cwd": "${workspaceFolder}/core"
+            }            
+        },
+        // .soファイルをcoreフォルダからpython実行フォルダ(tests)に移動
+        {
+            "label": "somove",
+            "type": "shell",
+            "command": "mv ${workspaceFolder}/core/core.cpython-310-x86_64-linux-gnu.so ${workspaceFolder}/src/core.so",
+            "dependsOn": [
+                "make"
+            ]
+        },
+
+    ]
+}
