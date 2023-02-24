@@ -3,3 +3,7 @@ src/*.so
 
 # python
 __pycache__/
+.vs/
+core/bin/
+core/obj/
+packages/
