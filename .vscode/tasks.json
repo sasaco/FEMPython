@@ -10,7 +10,7 @@
             "command": "make",
             "options": {
                 "cwd": "${workspaceFolder}/core"
-            }            
+            }
         },
         // .soファイルをcoreフォルダからpython実行フォルダ(tests)に移動
         {
