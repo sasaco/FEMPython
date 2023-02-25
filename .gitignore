@@ -1,9 +1,8 @@
 # c++
-src/*.so
+*.so
 
 # python
 __pycache__/
 .vs/
-core/bin/
-core/obj/
-packages/
+packages/*
+!packages/README.md
