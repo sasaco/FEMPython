@@ -14,7 +14,7 @@ vector<FENode> MeshModel::getNodes(ElementManager s){
     auto inodes = s.nodes();
     vector<FENode> p;
 
-    for(int i=0;i< inodes.size();i++){
+    for(unsigned int i=0;i< inodes.size();i++){
         auto n = nodes[inodes[i]];
         p.push_back(n);
     }

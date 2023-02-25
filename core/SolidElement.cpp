@@ -322,7 +322,6 @@ VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, VectorXd x) {
 tuple<Strain, Stress, double> SolidElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
 
     VectorXd v = FElement::toArray(u, 3);
-    int count = (int)intP.size();
     auto cf = double(1 / intP.size());
 
     VectorXd strain = VectorXd::Zero(6);
