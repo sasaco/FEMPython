@@ -364,19 +364,19 @@ void Solver::extruct(MatrixXd matrix1, VectorXd vector1, vector<int> list) {
 // 連立方程式を解く
 VectorXd Solver::solve() {
     
-    Eigen::SparseQR< Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver;  // solverオブジェクトを構築する。
-    solver.compute(matrix_);
+    // Eigen::SparseQR< Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int> > solver;  // solverオブジェクトを構築する。
+    // solver.compute(matrix_);
 
-    if (solver.info() != Eigen::Success) {
-        std::cerr << "decomposition failed" << std::endl;
-    }
-    VectorXd x = solver.solve(vector_);
+    // if (solver.info() != Eigen::Success) {
+    //     std::cerr << "decomposition failed" << std::endl;
+    // }
+    // VectorXd x = solver.solve(vector_);
 
 
-    Eigen::BiCGSTAB<MatrixXd> bicg;
-    // Eigen::ConjugateGradient<MatrixXd> cg;
-    bicg.compute(_matrix);
-    VectorXd xx = bicg.solve(_vector);
+    // Eigen::BiCGSTAB<MatrixXd> bicg;
+    // // Eigen::ConjugateGradient<MatrixXd> cg;
+    // bicg.compute(_matrix);
+    // VectorXd xx = bicg.solve(_vector);
 
 
     VectorXd result = _matrix.partialPivLu().solve(_vector);
