@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-class Vector3 {
+class Vector3Dim {
 public:
 
     union {
@@ -12,10 +12,10 @@ public:
         double xyz[3];
     };
 
-    Vector3() : x(0), y(0), z(0) { }
-    Vector3(double xIn, double yIn, double zIn) : x(xIn), y(yIn), z(zIn){ }
-    explicit Vector3(double value) : x(value), y(value), z(value) { }
-    explicit Vector3(double* values) : x(values[0]), y(values[1]), z(values[2]) { }
+    Vector3Dim() : x(0), y(0), z(0) { }
+    Vector3Dim(double xIn, double yIn, double zIn) : x(xIn), y(yIn), z(zIn){ }
+    explicit Vector3Dim(double value) : x(value), y(value), z(value) { }
+    explicit Vector3Dim(double* values) : x(values[0]), y(values[1]), z(values[2]) { }
 
     double& operator[](const int i) { return xyz[i]; }
     const double operator[](const int i) const { return xyz[i]; }
@@ -27,28 +27,28 @@ public:
     /// <param name="yIn"></param>
     /// <param name="zIn"></param>
     /// <returns></returns>
-    Vector3& set(double xIn, double yIn, double zIn) {
+    Vector3Dim& set(double xIn, double yIn, double zIn) {
         x = xIn;
         y = yIn;
         z = zIn;
         return *this;
     }
 
-    Vector3& copy(const Vector3& v) {
+    Vector3Dim& copy(const Vector3Dim& v) {
         x = v.x;
         y = v.y;
         z = v.z;
         return *this;
     }
 
-    Vector3& add(const Vector3& v) {
+    Vector3Dim& add(const Vector3Dim& v) {
         x += v.x;
         y += v.y;
         z += v.z;
         return *this;
     }
 
-    Vector3& add(const Vector3& a, const Vector3& b) {
+    Vector3Dim& add(const Vector3Dim& a, const Vector3Dim& b) {
         x = a.x + b.x;
         y = a.y + b.y;
         z = a.z + b.z;
@@ -60,21 +60,21 @@ public:
     /// </summary>
     /// <param name="v"></param>
     /// <returns></returns>
-    Vector3& sub(const Vector3& v) {
+    Vector3Dim& sub(const Vector3Dim& v) {
         x -= v.x;
         y -= v.y;
         z -= v.z;
         return *this;
     }
 
-    Vector3& multiplyScalar(double s) {
+    Vector3Dim& multiplyScalar(double s) {
         x *= s;
         y *= s;
         z *= s;
         return *this;
     }
 
-    Vector3& divideScalar(double s) {
+    Vector3Dim& divideScalar(double s) {
         if (s != 0.f) {
             x /= s;
             y /= s;
@@ -86,7 +86,7 @@ public:
         return *this;
     }
 
-    Vector3& negate() {
+    Vector3Dim& negate() {
         return multiplyScalar(-1.f);
     }
 
@@ -95,7 +95,7 @@ public:
     /// </summary>
     /// <param name="v"></param>
     /// <returns></returns>
-    double dot(const Vector3& v) const {
+    double dot(const Vector3Dim& v) const {
         return x * v.x + y * v.y + z * v.z;
     }
 
@@ -115,12 +115,12 @@ public:
     /// 
     /// </summary>
     /// <returns></returns>
-    Vector3& normalize() {
+    Vector3Dim& normalize() {
         return divideScalar(length());
     }
 
 
-    Vector3& crossVectors(const Vector3& a, const Vector3& b) {
+    Vector3Dim& crossVectors(const Vector3Dim& a, const Vector3Dim& b) {
 
         auto ax = a.x, ay = a.y, az = a.z;
         auto bx = b.x, by = b.y, bz = b.z;
@@ -135,26 +135,26 @@ public:
 
 
 
-    double distanceTo(const Vector3& v) const {
+    double distanceTo(const Vector3Dim& v) const {
         return sqrt(distanceToSquared(v));
     }
 
-    double distanceToSquared(const Vector3& v) const {
-        return Vector3().sub(*this, v).lengthSq();
+    double distanceToSquared(const Vector3Dim& v) const {
+        return Vector3Dim().sub(*this, v).lengthSq();
     }
 
-    Vector3& sub(const Vector3& a, const Vector3& b) {
+    Vector3Dim& sub(const Vector3Dim& a, const Vector3Dim& b) {
         x = a.x - b.x;
         y = a.y - b.y;
         z = a.z - b.z;
         return *this;
     }
 
-    Vector3& setLength(double l) {
+    Vector3Dim& setLength(double l) {
         return normalize().multiplyScalar(l);
     }
 
-    Vector3& lerpSelf(const Vector3& v, double alpha) {
+    Vector3Dim& lerpSelf(const Vector3Dim& v, double alpha) {
         x += (v.x - x) * alpha;
         y += (v.y - y) * alpha;
         z += (v.z - z) * alpha;
@@ -166,7 +166,7 @@ public:
     /// </summary>
     /// <param name="v"></param>
     /// <returns></returns>
-    inline Vector3& cross(const Vector3& v) {
+    inline Vector3Dim& cross(const Vector3Dim& v) {
 
         auto x = this->x, y = this->y, z = this->z;
 
@@ -184,7 +184,7 @@ public:
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    inline Vector3& subVectors(const Vector3& a, const Vector3& b) {
+    inline Vector3Dim& subVectors(const Vector3Dim& a, const Vector3Dim& b) {
 
         x = a.x - b.x;
         y = a.y - b.y;
@@ -195,7 +195,7 @@ public:
     }
 
 
-    bool equals(const Vector3& v) {
+    bool equals(const Vector3Dim& v) {
         return ((v.x == x) && (v.y == y) && (v.z == z));
     }
 
@@ -203,22 +203,22 @@ public:
         return (lengthSq() < 0.0001f /* almostZero */);
     }
 
-    Vector3 clone() const {
+    Vector3Dim clone() const {
         return *this;
     }
 };
 
-static_assert(sizeof(Vector3) == sizeof(double) * 3, "Invalid Vector3 storage size");
+static_assert(sizeof(Vector3Dim) == sizeof(double) * 3, "Invalid Vector3Dim storage size");
 
-inline Vector3 add(const Vector3& a, const Vector3& b) {
-    return Vector3().add(a, b);
+inline Vector3Dim add(const Vector3Dim& a, const Vector3Dim& b) {
+    return Vector3Dim().add(a, b);
 }
 
-inline Vector3 sub(const Vector3& a, const Vector3& b) {
-    return Vector3().sub(a, b);
+inline Vector3Dim sub(const Vector3Dim& a, const Vector3Dim& b) {
+    return Vector3Dim().sub(a, b);
 }
 
-inline double dot(const Vector3& a, const Vector3& b) {
+inline double dot(const Vector3Dim& a, const Vector3Dim& b) {
     return a.dot(b);
 }
 

@@ -1,4 +1,8 @@
+# c++
+*.so
+
+# python
 __pycache__/
 .vs/
-.pytest_cache/
-packages/
+packages/*
+!packages/README.md

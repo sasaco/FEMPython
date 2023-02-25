@@ -71,5 +71,5 @@ SRCS += Vector3R.cpp
 
 
 core: $(SRCS)
-	g++ -O3 -Wall -shared -std=c++20 -fPIC `python3 -m pybind11 --includes` -g $(SRCS) -o core`python3-config --extension-suffix` -isystem /eigen
+	g++ -O3 -Wall -shared -std=c++20 -fPIC `python3 -m pybind11 --includes` -g $(SRCS) -o core`python3-config --extension-suffix` -isystem ../packages/eigen
 # -g：デバッグ用のコンパイルを可能にするオプション。これを入れることでブレークポイントでのデバッグができる。

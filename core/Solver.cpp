@@ -55,7 +55,7 @@ MatrixXd Solver::heatMatrix() {
     int dof = (int)mesh.nodes.size();
     MatrixXd matrix(dof, dof);
 
-    for (int i = 0; i < mesh.elements.size(); i++) {
+    for (unsigned int i = 0; i < mesh.elements.size(); i++) {
         auto elem = mesh.elements[i];
         int count = elem.nodeCount();
         auto mat = materials[elem.material()];
@@ -129,7 +129,7 @@ void Solver::createHeatMatrix() {
 
     auto bcList = bc.bcList;
     vector<int> reducedList;
-    for (int i = 0; i < bcList.size(); i++) {
+    for (unsigned int i = 0; i < bcList.size(); i++) {
         if (bcList[i] < 0) {
             reducedList.push_back(i);
         }
@@ -140,7 +140,7 @@ void Solver::createHeatMatrix() {
     auto vector1 = tempVector(matrix1);
 
     // 拘束自由度を除去する
-    for (int i = 0; i < bcList.size(); i++) {
+    for (unsigned int i = 0; i < bcList.size(); i++) {
         if (bcList[i] >= 0) {
             auto t = bc.temperature[bcList[i]];
             for (int j = 0; j < vector1.size(); j++) {
@@ -162,7 +162,7 @@ MatrixXd Solver::stiffnessMatrix(int dof) {
     MatrixXd km;
     double kmax = 0;
 
-    for (int i = 0; i < elements.size(); i++) {
+    for (unsigned int i = 0; i < elements.size(); i++) {
         auto elem = elements[i];
         auto material = materials[elem.material()];
 
@@ -193,7 +193,7 @@ MatrixXd Solver::stiffnessMatrix(int dof) {
     auto rests = bc.restraints;
     auto index = bc.nodeIndex;
     auto bcdof = bc.dof;
-    for (int i = 0; i < rests.size(); i++) {
+    for (unsigned int i = 0; i < rests.size(); i++) {
         auto ri = rests[i];
         if (ri.coords) {
             // ri.coords.transMatrix(matrix, dof, index[ri.node], bcdof[i]);
@@ -225,7 +225,7 @@ VectorXd Solver::loadVector(int dof) {
     VectorXd vector = VectorXd::Zero(dof);
     auto index = bc.nodeIndex;
     auto bcdof = bc.dof;
-    for (int i = 0; i < loads.size(); i++) {
+    for (unsigned int i = 0; i < loads.size(); i++) {
         auto ld = loads[i];
         auto nd = ld.node;
         auto ldx = ld.globalX;
@@ -235,7 +235,7 @@ VectorXd Solver::loadVector(int dof) {
             vector(index0 + j) = ldx[j];
         }
     }
-    for (int i = 0; i < press.size(); i++) {
+    for (unsigned int i = 0; i < press.size(); i++) {
         /*
         auto border = press[i].getBorder();
         (model.mesh.elements[press[i].element]);
@@ -252,7 +252,7 @@ VectorXd Solver::loadVector(int dof) {
         */
     }
     auto rests = bc.restraints;
-    for (int i = 0; i < rests.size(); i++) {
+    for (unsigned int i = 0; i < rests.size(); i++) {
         auto ri = rests[i];
         if (ri.coords) {
             // ri.coords.transVector(vector, dof, index[ri.node], bcdof[i]);
@@ -269,7 +269,7 @@ void Solver::createStiffnessMatrix() {
     auto bcList = bc.bcList;
 
     vector<int> reducedList;
-    for (int i = 0; i < bcList.size(); i++) {
+    for (unsigned int i = 0; i < bcList.size(); i++) {
         if (bcList[i] < 0) {
             reducedList.push_back(i);
         }
@@ -280,7 +280,7 @@ void Solver::createStiffnessMatrix() {
     VectorXd vector1 = loadVector(dof);
 
     // 拘束自由度を除去する
-    for (int i = 0; i < bcList.size(); i++) {
+    for (unsigned int i = 0; i < bcList.size(); i++) {
         if (bcList[i] >= 0) {
             auto rx = bc.getRestDisp(bcList[i]);
             for (int j = 0; j < vector1.size(); j++) {

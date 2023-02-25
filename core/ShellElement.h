@@ -6,7 +6,6 @@
 #include "Stress.h"
 #include "Strain.h"
 
-//#include <format>
 #include <string>
 #include <vector>
 using std::vector;
@@ -31,7 +30,7 @@ public:
 
     virtual string getName() = 0;
 
-    MatrixXd jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3 n, double t);
+    MatrixXd jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3Dim n, double t);
 
     MatrixXd jacobInv(MatrixXd ja, MatrixXd d);
 
@@ -56,7 +55,7 @@ public:
     tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
         strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
 
-    VectorXd strainPart(vector<FENode> p, VectorXd v, Vector3 n, MatrixXd d, double  xsi, double eta, double zeta, double t);
+    VectorXd strainPart(vector<FENode> p, VectorXd v, Vector3Dim n, MatrixXd d, double  xsi, double eta, double zeta, double t);
 
     tuple<Strain, Stress, double, Strain, Stress, double>
         elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);

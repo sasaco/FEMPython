@@ -1,24 +1,21 @@
-import pytest
-import conftest
-import sys
 import os
-
-#from FemMain import initModel
+import conftest
+#import core
 
 def test_sampleBeamHexa1():
 
-    fileName = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) 
-                + '/examples/beam/sampleBeamHexa1.fem')
 
+    fileName = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/examples/beam/sampleBeamHexa1.fem')
     f = open(fileName, encoding="utf-8")
-    fstr = f.read()  
+    s = f.read()  # ファイル終端まで全て読んだデータを返す
     f.close()
 
-    # model = initModel(fstr)
-    # model.calculate()
-
-    assert True
-
+ #   m = core.readFemModel(s[:500])
+ #   m.init()
+ #   m.clear()
+    # m.print_string()
+    # m.read_string("test")
+    # m.print_string()
 
 if __name__ == "__main__":
     test_sampleBeamHexa1()
