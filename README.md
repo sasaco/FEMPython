@@ -1,5 +1,13 @@
 # Python から 呼び出せる オープンソースの有限要素ライブラリ
 
+FEMPython is a Python package for solving partial differential equations using the finite element method. It provides a simple and user-friendly interface for defining finite element models and solving them using a variety of numerical methods.
+
+With FEMPython, users can easily define complex geometries and boundary conditions, and choose from a variety of element types and numerical solvers. The package also includes a range of visualization tools for post-processing and analyzing simulation results.
+
+FEMPython is open-source and freely available on Github, making it accessible to a wide range of users in academia and industry. Its modular design and comprehensive documentation make it easy to use and extend, making it an ideal choice for researchers and practitioners alike.
+
+Whether you are an experienced finite element analyst or a beginner looking to learn more about numerical methods, FEMPython is a powerful tool for solving partial differential equations and simulating real-world problems. Try it out today and see what it can do for you!
+
 ## 使用方法
 
 https://fempython.gitbook.io
