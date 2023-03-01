@@ -21,7 +21,7 @@ using std::vector;
 class SolidElement : public FElement {
 
 private:
-    double PI = numbers::pi;
+    double PI = M_PI;
 
 protected:
     MatrixXd nodeP;

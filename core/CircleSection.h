@@ -4,9 +4,9 @@
 
 #include <string>
 //#include <fmt/core.h>
-#include <numbers>
 using namespace std;         //  名前空間指定
 using std::string;
+#include <math.h>
 
 //--------------------------------------------------------------------//
 // 円形断面
@@ -14,7 +14,7 @@ using std::string;
 class CircleSection {
 
 private:
-    const double PI = numbers::pi;
+    const double PI = M_PI;
 
     double d1;  // 外径
     double d2;  // 内径
