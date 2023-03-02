@@ -1,5 +1,10 @@
 import os
+import sys
 import conftest
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '../core'))
+
+import core
 
 def test_sampleBeamHexa1():
 
@@ -9,6 +14,7 @@ def test_sampleBeamHexa1():
     f = open(fileName, encoding="utf-8")
     s = f.read()  
     f.close()
+
 
     # main 関数を呼ぶ
     from main import initModel
