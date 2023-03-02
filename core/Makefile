@@ -10,7 +10,6 @@ SRCS += Coordinates.cpp
 SRCS += EigenValue.cpp
 SRCS += ElementBorderBound.cpp
 SRCS += ElementManager.cpp
-SRCS += ElementManager.h
 SRCS += FElement.cpp
 SRCS += FENode.cpp
 SRCS += FileIO.cpp

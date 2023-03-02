@@ -1,4 +1,4 @@
-﻿#include "./core/Element/SolidElement/SolidElement.h"
+﻿#include "SolidElement.h"
 
 //--------------------------------------------------------------------//
 // ソリッド要素
