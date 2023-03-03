@@ -9,3 +9,6 @@ packages/*
 
 # vscode setting
 .vscode/settings.json
+
+core/bin/
+core/obj/
