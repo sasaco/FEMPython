@@ -2,7 +2,7 @@
 SRCS = module.cpp
 SRCS += FemDataModel.cpp
 
-SRCS += BarElement.cpp
+SRCS += Element/BarElement/BarElement.cpp
 SRCS += BarParameter.cpp
 SRCS += BoundaryCondition.cpp
 SRCS += CircleSection.cpp
@@ -10,6 +10,7 @@ SRCS += Coordinates.cpp
 SRCS += EigenValue.cpp
 SRCS += ElementBorderBound.cpp
 SRCS += ElementManager.cpp
+#SRCS += ElementManager.h
 SRCS += FElement.cpp
 SRCS += FENode.cpp
 SRCS += FileIO.cpp
@@ -68,7 +69,8 @@ SRCS += Vector3R.cpp
 # SRCS += CircleSection.cpp 
 # SRCS += RectSection.cpp 
 
+INCLUDES=`python3 -m pybind11 --includes` -I$(HOME)/include/eigen3 -I$(HOME)/include -I.
 
 core: $(SRCS)
-	g++ -O3 -Wall -shared -std=c++20 -fPIC `python3 -m pybind11 --includes` -g $(SRCS) -o core`python3-config --extension-suffix` -isystem ../packages/eigen
+	g++ -O3 -Wall -shared -std=c++20 -fPIC $(INCLUDES) -g -o core`python3-config --extension-suffix` -undefined dynamic_lookup $(SRCS)
 # -g：デバッグ用のコンパイルを可能にするオプション。これを入れることでブレークポイントでのデバッグができる。
