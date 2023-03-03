@@ -2,10 +2,6 @@ import os
 import sys
 import conftest
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../core'))
-
-import core
-
 def test_sampleBeamHexa1():
 
     # サンプルファイルを読む
