@@ -6,3 +6,6 @@ __pycache__/
 .vs/
 packages/*
 !packages/README.md
+
+# vscode setting
+.vscode/settings.json
