@@ -9,7 +9,6 @@
 
 
 #include <fmt/core.h>
-#include <math.h>
 #include <vector>
 #include <map>
 using namespace std;
@@ -21,7 +20,9 @@ using std::vector;
 class FemDataModel {
 
 private:
-    double COEF_F_W = 0.5 / M_PI;    // f/ω比 1/2π
+    const double PI = 3.14159265358979323846;   // pi
+
+    double COEF_F_W = 0.5 / PI;    // f/ω比 1/2π
     string s = "";
 
 

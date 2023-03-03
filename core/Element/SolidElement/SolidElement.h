@@ -7,7 +7,6 @@
 #include "Strain.h"
 #include "Stress.h"
 
-//#include <fmt/core.h>
 #include <string>
 #include <vector>
 using namespace std;
@@ -16,12 +15,12 @@ using std::vector;
 
 #include<Eigen/Core>
 #include<Eigen/LU>
- using namespace Eigen;
+using namespace Eigen;
 
 class SolidElement : public FElement {
 
 private:
-    double PI = M_PI;
+    double PI = 3.14159265358979323846;   // pi
 
 protected:
     MatrixXd nodeP;

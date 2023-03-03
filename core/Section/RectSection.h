@@ -2,8 +2,6 @@
 #include "Material.h"
 
 #include <string>
-#include <math.h>
-//#include <fmt/core.h>
 using namespace std;         //  名前空間指定
 using std::string;
 
@@ -13,7 +11,7 @@ using std::string;
 class RectSection {
 
 private:
-    const double PI = M_PI;
+    const double PI = 3.14159265358979323846;   // pi
 
     double b1;  // 外側幅
     double h1;  // 外側高さ
@@ -41,8 +39,8 @@ public:
     // 矩形断面のせん断補正係数
     const double KS_RECT = 5 / 6;
     // 矩形断面の捩り係数
-    const double COEF_K1 = 64 / pow(M_PI, 5);
-    const double COEF_K = 8 / pow(M_PI, 2);
+    const double COEF_K1 = 64 / pow(PI, 5);
+    const double COEF_K = 8 / pow(PI, 2);
 
 
     RectSection(double ss[4]);

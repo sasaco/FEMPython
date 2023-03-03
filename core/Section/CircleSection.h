@@ -6,7 +6,7 @@
 //#include <fmt/core.h>
 using namespace std;         //  名前空間指定
 using std::string;
-#include <math.h>
+#include <cmath>
 
 //--------------------------------------------------------------------//
 // 円形断面
@@ -14,7 +14,7 @@ using std::string;
 class CircleSection {
 
 private:
-    const double PI = M_PI;
+    const double PI = 3.14159265358979323846;   // pi
 
     double d1;  // 外径
     double d2;  // 内径
