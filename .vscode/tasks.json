@@ -3,24 +3,24 @@
     // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
-        // coreでmakeを実施してpybindのコンパイル生成物(.soファイル)を作る
         {
             "label": "make",
             "type": "shell",
             "command": "make",
             "options": {
                 "cwd": "${workspaceFolder}/core"
-            }            
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
         },
-        // .soファイルをcoreフォルダからpython実行フォルダ(tests)に移動
         {
             "label": "somove",
             "type": "shell",
-            "command": "mv ${workspaceFolder}/core/core.cpython-310-x86_64-linux-gnu.so ${workspaceFolder}/src/core.so",
+            "command": "mv ${workspaceFolder}/core/core.cpython-310-x86_64-linux-gnu.so ${workspaceFolder}/core/bin/core.so",
             "dependsOn": [
                 "make"
             ]
-        },
-
+        }
     ]
 }

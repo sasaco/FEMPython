@@ -1,8 +1,16 @@
-# c++
-*.so
-
-# python
+# python cache
 __pycache__/
+
+# visual studio
 .vs/
 packages/*
 !packages/README.md
+
+# vscode
+.vscode/settings.json
+
+# C++ cache
+core/bin/*
+!core/bin/README.md
+
+core/obj/

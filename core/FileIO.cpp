@@ -49,7 +49,7 @@ vector<string> split(string str, char del) {
 /// </summary>
 /// <param name="s">データ文字列のリスト</param>
 /// <returns></returns>
-FemDataModel readFemModelDataStr(string s)
+Solver readFemModelDataStr(string s)
 {
     vector<string> lines = split(s, '\n');
 
@@ -228,7 +228,7 @@ FemDataModel readFemModelDataStr(string s)
         readFemResult(res);
     } else {
     */
-    model.calculate();
+    // model.calculate();
     // }
     
 
