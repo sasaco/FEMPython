@@ -17,7 +17,7 @@
         {
             "label": "somove",
             "type": "shell",
-            "command": "mv ${workspaceFolder}/core/core.cpython-310-x86_64-linux-gnu.so ${workspaceFolder}/src/core.so",
+            "command": "mv ${workspaceFolder}/core/core.cpython-310-x86_64-linux-gnu.so ${workspaceFolder}/core/bin/core.so",
             "dependsOn": [
                 "make"
             ]

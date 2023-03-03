@@ -10,5 +10,8 @@ packages/*
 # vscode setting
 .vscode/settings.json
 
-core/bin/
+# build file
+core/bin/*
+!core/bin/README.md
+
 core/obj/
