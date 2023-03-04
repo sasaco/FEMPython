@@ -66,22 +66,22 @@ MatrixXd SolidElement::strainMatrix(MatrixXd grad) {
 
     int count = nodeCount();
 
-    MatrixXd out = MatrixXd::Zero(3 * count, 6);
+    MatrixXd m = MatrixXd::Zero(3 * count, 6);
 
     for (int i = 0; i < count; i++) {
         int i3 = 3 * i;
-        out(i3, 0) = grad(i, 0);
-        out(i3 + 1, 1) = grad(i, 1);
-        out(i3 + 2, 2) = grad(i, 2);
-        out(i3, 3) = grad(i, 1);
-        out(i3 + 1, 3) = grad(i, 0);
-        out(i3 + 1, 4) = grad(i, 2);
-        out(i3 + 2, 4) = grad(i, 1);
-        out(i3, 5) = grad(i, 2);
-        out(i3 + 2, 5) = grad(i, 0);
+        m(i3, 0) = grad(i, 0);
+        m(i3 + 1, 1) = grad(i, 1);
+        m(i3 + 2, 2) = grad(i, 2);
+        m(i3, 3) = grad(i, 1);
+        m(i3 + 1, 3) = grad(i, 0);
+        m(i3 + 1, 4) = grad(i, 2);
+        m(i3 + 2, 4) = grad(i, 1);
+        m(i3, 5) = grad(i, 2);
+        m(i3 + 2, 5) = grad(i, 0);
     }
 
-    return out;
+    return m;
 }
 
 

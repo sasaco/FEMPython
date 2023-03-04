@@ -57,19 +57,19 @@ VectorXd FElement::toArray(vector<Vector3R> u, int dof) {
 
     int count = nodeCount();
 
-    VectorXd result(count + dof);
+    VectorXd v = VectorXd::Zero(count * dof);
 
+    int k = 0;
     for (int i = 0; i < count; i++) {
-
-        double* ux = u[i].x;
+        auto ux = u[i].x;
 
         for (int j = 0; j < dof; j++) {
-            int index = i + j;
-            result(index) = ux[j];
+            v(k) = ux[j];
+            k++;
         }
     }
 
-    return result;
+    return v;
 }
 
 
