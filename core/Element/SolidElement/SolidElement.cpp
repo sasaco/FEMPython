@@ -308,8 +308,7 @@ VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, VectorXd x) {
     MatrixXd ja = jacobianMatrix(p, sf);
     MatrixXd gr = grad(p, ja, sf);
     MatrixXd sm = strainMatrix(gr);
-
-    VectorXd result = v * sm;
+    VectorXd result = sm.transpose() * v;
 
     return result;
 };

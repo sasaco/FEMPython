@@ -382,7 +382,7 @@ VectorXd ShellElement::strainPart(vector<FENode> p, VectorXd v, Vector3Dim n, Ma
     MatrixXd sf = shapeFunction(xsi, eta);
     MatrixXd ja = jacobianMatrix(p, sf, n, t);
     MatrixXd sm = strainMatrix(ja, sf, d, zeta, t);
-    VectorXd result =  v * sm;
+    VectorXd result =   sm *v;
     return result;
 };
 
