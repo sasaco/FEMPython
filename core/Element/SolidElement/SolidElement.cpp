@@ -284,12 +284,14 @@ tuple<vector<Strain>, vector<Stress>, vector<double>>
     for (int i = 0; i < count; i++) {
 
         VectorXd eps = strainPart(p, v, nodeP.row(i));
-        strain.push_back(Strain(eps));
+        Strain stra = Strain(eps);
+        strain.push_back(stra);
 
         VectorXd str = d1 * eps;
-        stress.push_back(Stress(str));
+        Stress stre = Stress(str);
+        stress.push_back(stre);
 
-        double eng = 0.5 * strain[i].innerProduct(stress[i]);
+        double eng = 0.5 * stra.innerProduct(stre);
         energy.push_back(eng);
     }
 
