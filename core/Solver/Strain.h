@@ -3,9 +3,10 @@
 class Strain : public SymmetricTensor3 {
 
 private:
-    double xy;
-    double yz;
-    double zx;
+    // SymmetricTensor3 ƒNƒ‰ƒX
+    //double xy;
+    //double yz;
+    //double zx;
 
 
 public:

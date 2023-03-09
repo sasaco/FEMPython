@@ -122,8 +122,8 @@ void Result::initStrainAndStress(int count) {
 // eps1,str1,se1,eps2,str2,se2 - 表面・裏面の歪，応力，歪エネルギー密度
 void Result::addStructureData(int i, Strain eps1, Stress str1, double se1,
     Strain eps2, Stress str2, double se2) {
-    stress1[i].add(str1);
     strain1[i].add(eps1);
+    stress1[i].add(str1);
     sEnergy1[i] += se1;
     strain2[i].add(eps2);
     stress2[i].add(str2);

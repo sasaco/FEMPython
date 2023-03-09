@@ -197,15 +197,19 @@ Solver readFemModelDataStr(string s)
                 (new HeatTransferBound(stoi(columns[1]), columns[2].toUpperCase(),
                     stod(columns[3]), stod(columns[4])));
             }
+            */
             // 計算結果
             else if ((keyWord == "resulttype") && (columns.size() > 1)) {
-                if (columns[1].toLowerCase() == "element") {
-                    model.result.type = ELEMENT_DATA;
+                string keyWord1 = columns[1];
+                std::transform(keyWord1.begin(), keyWord1.end(), keyWord1.begin(), ::tolower);
+                if (keyWord1 == "element") {
+                    model.result.type = model.result.ELEMENT_DATA;
                 }
                 else {
-                    model.result.type = NODE_DATA;
+                    model.result.type = model.result.NODE_DATA;
                 }
             }
+            /*
             else if (((keyWord == "eigenvalue") && (columns.size() > 2)) ||
                 ((keyWord == "displacement") && (columns.size() > 7)) ||
                 ((keyWord == "strain1") && (columns.size() > 7)) ||

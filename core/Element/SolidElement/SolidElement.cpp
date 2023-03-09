@@ -323,13 +323,13 @@ VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, VectorXd x) {
 tuple<Strain, Stress, double> SolidElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
 
     VectorXd v = FElement::toArray(u, 3);
-    auto cf = double(1 / intP.size());
+    auto cf = 1 / (double)intP.rows();
 
     VectorXd strain = VectorXd::Zero(6);
     VectorXd stress = VectorXd::Zero(6);
     double energy = 0;
 
-    for (int i = 0; i < intP.size(); i++) {
+    for (int i = 0; i < intP.rows(); i++) {
         VectorXd eps = strainPart(p, v, intP.row(i));
         strain += eps;
 
