@@ -516,7 +516,7 @@ ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) 
         // return _TetraElement2.material =mat;
     }
     else if (key == "HexaElement1") {
-        _HexaElement1.strainStress(p, u, d1);
+        return _HexaElement1.strainStress(p, u, d1);
     }
     else if (key == "HexaElement2") {
         // return _HexaElement2.strainStress(p, u, d1);
@@ -531,6 +531,7 @@ ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) 
         // return _WedgeElement2.strainStress(p, u, d1);
     }
 
+    // ‚Ç‚ê‚É‚àŠY“–‚µ‚Èê‡ ‹ó‚Ì•Ï”‚ğ•Ô‚·
     vector<Strain> strain;
     vector<Stress> stress;
     vector<double> energy;

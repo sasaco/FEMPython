@@ -66,22 +66,22 @@ MatrixXd SolidElement::strainMatrix(MatrixXd grad) {
 
     int count = nodeCount();
 
-    MatrixXd out = MatrixXd::Zero(3 * count, 6);
+    MatrixXd m = MatrixXd::Zero(3 * count, 6);
 
     for (int i = 0; i < count; i++) {
         int i3 = 3 * i;
-        out(i3, 0) = grad(i, 0);
-        out(i3 + 1, 1) = grad(i, 1);
-        out(i3 + 2, 2) = grad(i, 2);
-        out(i3, 3) = grad(i, 1);
-        out(i3 + 1, 3) = grad(i, 0);
-        out(i3 + 1, 4) = grad(i, 2);
-        out(i3 + 2, 4) = grad(i, 1);
-        out(i3, 5) = grad(i, 2);
-        out(i3 + 2, 5) = grad(i, 0);
+        m(i3, 0) = grad(i, 0);
+        m(i3 + 1, 1) = grad(i, 1);
+        m(i3 + 2, 2) = grad(i, 2);
+        m(i3, 3) = grad(i, 1);
+        m(i3 + 1, 3) = grad(i, 0);
+        m(i3 + 1, 4) = grad(i, 2);
+        m(i3 + 2, 4) = grad(i, 1);
+        m(i3, 5) = grad(i, 2);
+        m(i3 + 2, 5) = grad(i, 0);
     }
 
-    return out;
+    return m;
 }
 
 
@@ -284,12 +284,14 @@ tuple<vector<Strain>, vector<Stress>, vector<double>>
     for (int i = 0; i < count; i++) {
 
         VectorXd eps = strainPart(p, v, nodeP.row(i));
-        strain.push_back(Strain(eps));
+        Strain stra = Strain(eps);
+        strain.push_back(stra);
 
         VectorXd str = d1 * eps;
-        stress.push_back(Stress(str));
+        Stress stre = Stress(str);
+        stress.push_back(stre);
 
-        double eng = 0.5 * strain[i].innerProduct(stress[i]);
+        double eng = 0.5 * stra.innerProduct(stre);
         energy.push_back(eng);
     }
 
@@ -308,8 +310,7 @@ VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, VectorXd x) {
     MatrixXd ja = jacobianMatrix(p, sf);
     MatrixXd gr = grad(p, ja, sf);
     MatrixXd sm = strainMatrix(gr);
-
-    VectorXd result = v * sm;
+    VectorXd result = sm.transpose() * v;
 
     return result;
 };
@@ -322,13 +323,13 @@ VectorXd SolidElement::strainPart(vector<FENode> p, VectorXd v, VectorXd x) {
 tuple<Strain, Stress, double> SolidElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
 
     VectorXd v = FElement::toArray(u, 3);
-    auto cf = double(1 / intP.size());
+    auto cf = 1 / (double)intP.rows();
 
     VectorXd strain = VectorXd::Zero(6);
     VectorXd stress = VectorXd::Zero(6);
     double energy = 0;
 
-    for (int i = 0; i < intP.size(); i++) {
+    for (int i = 0; i < intP.rows(); i++) {
         VectorXd eps = strainPart(p, v, intP.row(i));
         strain += eps;
 
