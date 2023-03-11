@@ -7,7 +7,7 @@ def initModel(s: str):
 
     model = core.readFemModel(s)
     model.calculate()
-    #model.clear()
+    result = model.result
 
     return model
 
