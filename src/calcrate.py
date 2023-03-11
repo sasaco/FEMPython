@@ -1,7 +1,4 @@
-if 'core' not in sys.modules:
-    import sys, os
-    sys.path.append(os.path.join(os.path.dirname(__file__), '../core/bin'))
-    import core
+import confcore, core
 
 class FrameCalc:
 
