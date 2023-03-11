@@ -1,6 +1,7 @@
 import os
 import sys
 import conftest
+import core
 
 def test_sampleBeamHexa1():
 
@@ -11,10 +12,16 @@ def test_sampleBeamHexa1():
     s = f.read()  
     f.close()
 
+    # C++ を直接呼び出すテスト
+    model = core.readFemModel(s)
+    model.calculate()
+    result = model.result
 
     # main 関数を呼ぶ
-    from main import initModel
-    m = initModel(s)
+    from dataInput import dataInput
+    inp = dataInput()
+    calc = inp.readTestData(s)
+    result = calc.calculate()
 
     assert True
 

@@ -22,11 +22,6 @@ private:
     // 矩形断面のせん断補正係数
     double KS_RECT = 5 / 6;
 
-    double nu;
-    double dens;
-    double sHeat;
-    double cv;	
-
     //void matrix2Dstrain(double out[3][3]);
     //void matrixAxiSymetric(double out[4][4]);
     //void matrixTorsion(double out[2][2]);
@@ -35,11 +30,11 @@ public:
     int label;
 
     double ee;
-    //double nu;
-    //double dens;
+    double nu;
+    double dens;
     double hCon;
-    //double sHeat;
-    //double cv;	// 体積比熱
+    double sHeat;
+    double cv;	  // 体積比熱
     double gg;    // 横弾性係数
 
     Material();
