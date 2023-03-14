@@ -71,21 +71,20 @@ PYBIND11_MODULE(core, m){
         .def("label", &ElementManager::label);
 
     pybind11::class_<Vector3R>(m, "Vector3R")
-        .def(pybind11::init());
-        // .def_readwrite("x", &Vector3R::x);
+        .def(pybind11::init())
+        .def_readwrite("x", &Vector3R::x);
 
     pybind11::class_<Restraint, Vector3R>(m, "Restraint")
         .def(pybind11::init<vector<string>>())
         .def_readwrite("node", &Restraint::node)
-        .def_readwrite("coords", &Restraint::coords);
-        // .def_readwrite("rest", &Restraint::rest)
-        // .def_readwrite("globalX", &Restraint::globalX);
+        .def_readwrite("coords", &Restraint::coords)
+        .def_readwrite("rest", &Restraint::rest);
 
     pybind11::class_<Load, Vector3R>(m, "Load")
         .def(pybind11::init<vector<string>>())
         .def_readwrite("node", &Load::node)
-        .def_readwrite("coords", &Load::coords);
-        // .def_readwrite("globalX", &Load::globalX);
+        .def_readwrite("coords", &Load::coords)
+        .def_readwrite("globalX", &Load::globalX);
 
 
     // 計算結果を参照するクラス

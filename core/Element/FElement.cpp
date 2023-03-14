@@ -80,14 +80,16 @@ VectorXd FElement::toLocalArray(vector<Vector3R> u, MatrixXd d) {
 
     VectorXd v(12);
 
-    int index = 0;
+    int k = 0;
     for (int i = 0; i < 2; i++) {
-        double* ux = u[i].x;
+        auto ux = u[i].x;
         for (int j = 0; j < 3; j++) {
-            v(index) = d(0, j) * ux[0] + d(1, j) * ux[1] + d(2, j) * ux[2];
+            v(k) = d(0, j) * ux[0] + d(1, j) * ux[1] + d(2, j) * ux[2];
+            k++;
         }
         for (int j = 0; j < 3; j++) {
-            v(index) = d(0, j) * ux[3] + d(1, j) * ux[4] + d(2, j) * ux[5];
+            v(k) = d(0, j) * ux[3] + d(1, j) * ux[4] + d(2, j) * ux[5];
+            k++;
         }
     }
 
