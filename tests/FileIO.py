@@ -1,5 +1,4 @@
 from calcrate import FrameCalc
-import core
 
 # テストデータを読み込む
 def readTestData(s: str) -> FrameCalc:
@@ -10,9 +9,12 @@ def readTestData(s: str) -> FrameCalc:
     mesh = model.mesh
     bc = model.bc
 
-    materials = [] # model.materials
+    materials = []
     nodes = [] 
-    elements = [] 
+    elements = []
+    shellParams = []
+    barParams = []
+    coordinates = []
     restraints = []
     loads = []
 
@@ -30,78 +32,65 @@ def readTestData(s: str) -> FrameCalc:
 
         # 材料データ
         if keyWord == "material" and columns_size > 7:
-            mat = core.Material(int(columns[1]), float(columns[2]),
+            mat = calc.core.Material(int(columns[1]), float(columns[2]),
                 float(columns[3]), float(columns[5]),
                 float(columns[6]), float(columns[7]))
             materials.append(mat)
 
         # シェルパラメータ
         elif keyWord == "shellparameter" and columns_size > 2:
-            pass
+            shell = calc.core.ShellParameter(int(columns[1]), float(columns[2]))
+            shellParams.append(shell)
 
         # 梁パラメータ
         elif keyWord == "barparameter" and columns_size > 4:
-            pass
+            bar = calc.core.BarParameter(int(columns[1]), columns[2], columns[3:])
+            barParams.append(bar)
 
         # 局所座標系
         elif keyWord == "coordinates" and columns_size > 10:
-            pass
+            cord = calc.core.readCoordinates(columns)
+            coordinates.append(cord)
 
         # 節点
         elif keyWord == "node" and columns_size > 4:
-            node = core.FENode(int(columns[1]), float(columns[2]),
+            node = calc.core.FENode(int(columns[1]), float(columns[2]),
                 float(columns[3]),
                 float(columns[4]))
             nodes.append(node)
         
         # 要素
-        elif keyWord == "bebarelement" and  columns_size > 5:
-            if columns_size < 8:
-                pass
-            else:
-                pass
-
+        elif keyWord == "bebarelement" and  columns_size > 5
+            or:
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "tbarelement" and  columns_size > 5:
-            if columns_size < 8:
-                pass
-            else:
-                pass
-
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "trielement1" and  columns_size > 6:
-            pass
-        
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "quadelement1" and  columns_size > 7:
-            pass
-
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "tetraelement1" and  columns_size > 6:
-            pass
-
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "wedgeelement1" and  columns_size > 8:
-            pass
-
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "hexaelement1" and  columns_size > 10:
-            elem = core.ElementManager("HexaElement1", columns)
-            elements.append(elem)
-
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "hexaelement1wt" and  columns_size > 10:
-            pass
-
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "tetraelement2" and  columns_size > 12:
-            pass
-
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "wedgeelement2" and  columns_size > 17:
-            pass
-
+            elements.append(calc.core.ElementManager(keyWord, columns))
         elif keyWord == "hexaelement2" and  columns_size > 22:
-            pass
+            elements.append(calc.core.ElementManager(keyWord, columns))
         
         # 境界条件
         elif keyWord == "restraint" and  columns_size > 7:
-            rest = core.Restraint(columns)
+            rest = calc.core.Restraint(columns)
             restraints.append(rest)
 
         elif keyWord == "load" and  columns_size > 4:
-            load = core.Load(columns)
+            load = calc.core.Load(columns)
             loads.append(load)
 
         elif keyWord == "pressure" and  columns_size > 3:
@@ -122,6 +111,10 @@ def readTestData(s: str) -> FrameCalc:
                 model.result.type = model.result.NODE_DATA
 
     model.materials = materials
+    # model.shellParams = shellParams
+    # model.barParams = barParams
+    # model.coordinates = coordinates
+
     model.mesh.nodes = nodes
     model.mesh.elements = elements
     model.bc.restraints = restraints

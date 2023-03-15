@@ -12,13 +12,7 @@ def test_sampleBeamHexa1():
     # src 関数を呼ぶテスト
     from FileIO import readTestData
     calc = readTestData(s)
-
-    ## C++ を直接呼び出すテスト
-    # import confcore, core
-    # calc = core.readFemModel(s)
-
-    calc.calculate()
-    result = calc.model.result
+    result = calc.calculate()
 
 
     assert True

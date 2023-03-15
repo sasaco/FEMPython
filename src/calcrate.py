@@ -1,10 +1,12 @@
-import confcore, core
+import config, core
 
 class FrameCalc:
 
     def __init__(self):
-        self.model = core.Solver()
+        self.core = core
+        self.model = self.core.Solver()
         self.model.clear()
+
 
     def calculate(self):
         self.model.calculate()
