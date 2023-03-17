@@ -29,9 +29,11 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src\main.py" />
+    <Compile Include="src\calcrate.py" />
+    <Compile Include="src\config.py" />
     <Compile Include="src\__init__.py" />
     <Compile Include="tests\conftest.py" />
+    <Compile Include="tests\FileIO.py" />
     <Compile Include="tests\test_001.py" />
   </ItemGroup>
   <ItemGroup>

@@ -15,6 +15,9 @@ def readTestData(s: str) -> FrameCalc:
     shellParams = []
     barParams = []
     coordinates = []
+    pressures = []
+    temperature = []
+    htcs = []
     restraints = []
     loads = []
 
@@ -60,28 +63,17 @@ def readTestData(s: str) -> FrameCalc:
             nodes.append(node)
         
         # 要素
-        elif keyWord == "bebarelement" and  columns_size > 5
-            or:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "tbarelement" and  columns_size > 5:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "trielement1" and  columns_size > 6:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "quadelement1" and  columns_size > 7:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "tetraelement1" and  columns_size > 6:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "wedgeelement1" and  columns_size > 8:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "hexaelement1" and  columns_size > 10:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "hexaelement1wt" and  columns_size > 10:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "tetraelement2" and  columns_size > 12:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "wedgeelement2" and  columns_size > 17:
-            elements.append(calc.core.ElementManager(keyWord, columns))
-        elif keyWord == "hexaelement2" and  columns_size > 22:
+        elif keyWord == "bebarelement" and  columns_size > 5 \
+          or keyWord == "tbarelement" and  columns_size > 5 \
+          or keyWord == "trielement1" and  columns_size > 6 \
+          or keyWord == "quadelement1" and  columns_size > 7 \
+          or keyWord == "tetraelement1" and  columns_size > 6 \
+          or keyWord == "wedgeelement1" and  columns_size > 8 \
+          or keyWord == "hexaelement1" and  columns_size > 10 \
+          or keyWord == "hexaelement1wt" and  columns_size > 10 \
+          or keyWord == "tetraelement2" and  columns_size > 12 \
+          or keyWord == "wedgeelement2" and  columns_size > 17 \
+          or keyWord == "hexaelement2" and  columns_size > 22:
             elements.append(calc.core.ElementManager(keyWord, columns))
         
         # 境界条件
@@ -94,13 +86,17 @@ def readTestData(s: str) -> FrameCalc:
             loads.append(load)
 
         elif keyWord == "pressure" and  columns_size > 3:
-            pass
+            press = calc.core.Pressure(int(columns[1]), columns[2], float(columns[3]))
+            pressures.append(press)
 
         elif keyWord == "temperature" and  columns_size > 2:
-            pass
+            temp = calc.core.Temperature(int(columns[1]), float(columns[2]))
+            temperature.append(temp)
 
         elif keyWord == "htc" and  columns_size > 4:
-            pass
+            htc = calc.core.HeatTransferBound(int(columns[1]), columns[2],
+                    float(columns[3]), float(columns[4]))
+            htcs.append(htc)
 
         # 計算結果
         elif keyWord == "resulttype" and  columns_size > 1:
@@ -117,8 +113,12 @@ def readTestData(s: str) -> FrameCalc:
 
     model.mesh.nodes = nodes
     model.mesh.elements = elements
+
     model.bc.restraints = restraints
     model.bc.loads = loads
+    #model.bc.pressures = pressures
+    #model.bc.temperature = temperature
+    #model.bc.htcs = htcs
 
     model.init()
 
