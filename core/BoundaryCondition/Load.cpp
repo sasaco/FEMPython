@@ -13,12 +13,14 @@ Load::Load(vector<string> ss) {
     coords = -1;
 
     node = stoi(ss[1]);
-    Vector3R::x[0] = stod(ss[2]);
-    Vector3R::x[1] = stod(ss[3]);
-    Vector3R::x[2] = stod(ss[4]);
-    Vector3R::x[3] = 0;
-    Vector3R::x[4] = 0;
-    Vector3R::x[5] = 0;
+
+    Vector3R::x.clear();
+    Vector3R::x.push_back(stod(ss[2]));
+    Vector3R::x.push_back(stod(ss[3]));
+    Vector3R::x.push_back(stod(ss[4]));
+    Vector3R::x.push_back(0);
+    Vector3R::x.push_back(0);
+    Vector3R::x.push_back(0);
 
     if (ss.size() < 8) {
         if (ss.size() > 5) {
@@ -34,8 +36,9 @@ Load::Load(vector<string> ss) {
         Vector3R::x[4] = stod(ss[6]);
         Vector3R::x[5] = stod(ss[7]);
     }
+    globalX.clear();
     for (int i = 0; i < 6; i++) {
-        globalX[i] = Vector3R::x[i];
+        globalX.push_back(Vector3R::x[i]);
     }
 }
 
@@ -50,8 +53,10 @@ Load::Load(int _node, int _coords,
 
     node = _node;
     coords = _coords;
+
+    globalX.clear();
     for (int i = 0; i < 6; i++) {
-        globalX[i] = Vector3R::x[i];
+        globalX.push_back(Vector3R::x[i]);
     }
 };
 

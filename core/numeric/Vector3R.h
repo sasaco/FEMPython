@@ -2,6 +2,12 @@
 
 #include <numbers>
 #include <cmath>
+#include <string>
+#include <vector>
+using namespace std;
+using std::string;
+using std::vector;
+
 
 //--------------------------------------------------------------------//
 // ３次元ベクトル（並進＋回転）
@@ -15,7 +21,8 @@ public:
     Vector3R();
     Vector3R(double _x, double _y, double _z, double _rx, double _ry, double _rz);
 
-    double x[6];
+    vector<double> x;
+
 
     // 並進成分の大きさを返す
     double magnitude();

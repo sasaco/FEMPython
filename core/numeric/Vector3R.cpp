@@ -4,14 +4,20 @@
 // ３次元ベクトル（並進＋回転）
 // x,y,z - x,y,z成分
 // rx,ry,rz - x,y,z軸周り回転角
-Vector3R::Vector3R() { }
+Vector3R::Vector3R() { 
+    x.clear();
+    for (int i = 0; i < 6; i++) {
+        x.push_back(0);
+    }
+}
 Vector3R::Vector3R(double _x, double _y, double _z, double _rx, double _ry, double _rz) {
-    x[0] = _x;
-    x[1] = _y;
-    x[2] = _z;
-    x[3] = _rx;
-    x[4] = _ry;
-    x[5] = _rz;
+    x.clear();
+    x.push_back(_x);
+    x.push_back(_y);
+    x.push_back(_z);
+    x.push_back(_rx);
+    x.push_back(_ry);
+    x.push_back(_rz);
 };
 
 // 並進成分の大きさを返す

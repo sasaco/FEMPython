@@ -21,7 +21,7 @@ private:
 public:
     int node;
     int coords;
-    double globalX[6];
+    vector<double> globalX;
 
     Load();
     Load(vector<string> columns);

@@ -21,44 +21,44 @@ class Result {
 private:
 
 
-    // ƒf[ƒ^Œ^
-    int NONE = -1;		    // ‹óƒf[ƒ^
-    int DISPLACEMENT = 0;	    // •ÏˆÊ
-    int STRAIN = 1;		    // ˜c
-    int STRESS = 2;		    // ‰—Í
-    int S_ENERGY = 3;		    // ˜cƒGƒlƒ‹ƒM[–§“x
-    int TEMPERATURE = 4;	    // ‰·“x
+    // ï¿½fï¿½[ï¿½^ï¿½^
+    int NONE = -1;		    // ï¿½ï¿½fï¿½[ï¿½^
+    int DISPLACEMENT = 0;	    // ï¿½Ïˆï¿½
+    int STRAIN = 1;		    // ï¿½c
+    int STRESS = 2;		    // ï¿½ï¿½ï¿½ï¿½
+    int S_ENERGY = 3;		    // ï¿½cï¿½Gï¿½lï¿½ï¿½ï¿½Mï¿½[ï¿½ï¿½ï¿½x
+    int TEMPERATURE = 4;	    // ï¿½ï¿½ï¿½x
 
-    // ¬•ª
-    int X = 0;		        // x¬•ª
-    int Y = 1;		        // y¬•ª
-    int Z = 2;		        // z¬•ª
-    int RX = 3;		        // x²‰ñ“]¬•ª
-    int RY = 4;		        // y²‰ñ“]¬•ª
-    int RZ = 5;		        // z²‰ñ“]¬•ª
-    int XY = 3;		        // xy‚¹‚ñ’f¬•ª
-    int YZ = 4;		        // yz‚¹‚ñ’f¬•ª
-    int ZX = 5;		        // zx‚¹‚ñ’f¬•ª
-    int MAGNITUDE = 6;	    // ‘å‚«‚³
-    int MAX_PRINCIPAL = 7;	// Å‘åå¬•ª
-    int MIN_PRINCIPAL = 8;	// Å¬å¬•ª
-    int MID_PRINCIPAL = 9;	// ’†ŠÔå¬•ª
-    int MAX_SHARE = 10;	    // Å‘å‚¹‚ñ’f¬•ª
-    int VON_MISES = 11;	    // ƒ~[ƒ[ƒX‰—Í
-    int SHIFT = 12;		    // ¬•ªƒVƒtƒg—Ê
+    // ï¿½ï¿½ï¿½ï¿½
+    int X = 0;		        // xï¿½ï¿½ï¿½ï¿½
+    int Y = 1;		        // yï¿½ï¿½ï¿½ï¿½
+    int Z = 2;		        // zï¿½ï¿½ï¿½ï¿½
+    int RX = 3;		        // xï¿½ï¿½ï¿½ï¿½]ï¿½ï¿½ï¿½ï¿½
+    int RY = 4;		        // yï¿½ï¿½ï¿½ï¿½]ï¿½ï¿½ï¿½ï¿½
+    int RZ = 5;		        // zï¿½ï¿½ï¿½ï¿½]ï¿½ï¿½ï¿½ï¿½
+    int XY = 3;		        // xyï¿½ï¿½ï¿½ï¿½fï¿½ï¿½ï¿½ï¿½
+    int YZ = 4;		        // yzï¿½ï¿½ï¿½ï¿½fï¿½ï¿½ï¿½ï¿½
+    int ZX = 5;		        // zxï¿½ï¿½ï¿½ï¿½fï¿½ï¿½ï¿½ï¿½
+    int MAGNITUDE = 6;	    // ï¿½å‚«ï¿½ï¿½
+    int MAX_PRINCIPAL = 7;	// ï¿½Å‘ï¿½å¬ï¿½ï¿½
+    int MIN_PRINCIPAL = 8;	// ï¿½Åï¿½ï¿½å¬ï¿½ï¿½
+    int MID_PRINCIPAL = 9;	// ï¿½ï¿½ï¿½Ôå¬ï¿½ï¿½
+    int MAX_SHARE = 10;	    // ï¿½Å‘å‚¹ï¿½ï¿½fï¿½ï¿½ï¿½ï¿½
+    int VON_MISES = 11;	    // ï¿½~ï¿½[ï¿½[ï¿½Xï¿½ï¿½ï¿½ï¿½
+    int SHIFT = 12;		    // ï¿½ï¿½ï¿½ï¿½ï¿½Vï¿½tï¿½gï¿½ï¿½
 
-    // •ÏˆÊ‚Ì¬•ª
+    // ï¿½ÏˆÊ‚Ìï¿½ï¿½ï¿½
     string DISP_COMPONENT[4] = { "Mag.", "x", "y", "z" };
 
     string DISP2_COMPONENT[7] = { "Mag.", "x", "y", "z", "rotx", "roty", "rotz" };
-    // ˜c‚Ì¬•ª
+    // ï¿½cï¿½Ìï¿½ï¿½ï¿½
     string STRAIN_COMPONENT[10] = { "Max.prin.", "Min.prin.", "Mid.prin.", "Max.share",
                                         "x", "y", "z", "xy", "yz", "zx" };
-    // ‰—Í‚Ì¬•ª
+    // ï¿½ï¿½ï¿½Í‚Ìï¿½ï¿½ï¿½
     string STRESS_COMPONENT[11] = { "Max.prin.", "Min.prin.", "Mid.prin.",
                                         "Max.share", "Von mises",
                                         "x", "y", "z", "xy", "yz", "zx" };
-    // ˜cƒGƒlƒ‹ƒM[–§“x‚Ì¬•ª
+    // ï¿½cï¿½Gï¿½lï¿½ï¿½ï¿½Mï¿½[ï¿½ï¿½ï¿½xï¿½Ìï¿½ï¿½ï¿½
     string  ENERGY_COMPONENT[1] = {"Energy"};
 
     map<string, int> COMP_MAP {
@@ -104,32 +104,33 @@ private:
         {"Energy 2" , 1}
     };
 
-    double EIG_EPS = 1e-10;           // ŒÅ—L’lŒvZ‚Ìû‘©è‡’l
-    string VIBRATION = "Vibration";	  // U“®‰ğÍ
-    string BUCKLING = "Buckling";	    // À‹ü‰ğÍ
+    double EIG_EPS = 1e-10;           // ï¿½Å—Lï¿½lï¿½vï¿½Zï¿½Ìï¿½ï¿½ï¿½è‡’l
+    string VIBRATION = "Vibration";	  // ï¿½Uï¿½ï¿½ï¿½ï¿½ï¿½
+    string BUCKLING = "Buckling";	    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
+    vector<EigenValue> eigenValue;	// ï¿½Å—Lï¿½lï¿½fï¿½[ï¿½^
+    vector<double> value;		    // ï¿½Rï¿½ï¿½ï¿½^ï¿½[ï¿½}ï¿½fï¿½[ï¿½^
+    double minValue;		        // ï¿½Rï¿½ï¿½ï¿½^ï¿½[ï¿½}ï¿½fï¿½[ï¿½^ï¿½Åï¿½ï¿½l
+    double maxValue;		        // ï¿½Rï¿½ï¿½ï¿½^ï¿½[ï¿½}ï¿½fï¿½[ï¿½^ï¿½Å‘ï¿½l
+
+public:
+    int NODE_DATA = 0;		// ï¿½ß“_ï¿½fï¿½[ï¿½^
+    int ELEMENT_DATA = 1;   // ï¿½vï¿½fï¿½fï¿½[ï¿½^
+    int type;		        // ï¿½fï¿½[ï¿½^ï¿½Ûï¿½ï¿½`ï¿½ÔFï¿½ß“_ï¿½fï¿½[ï¿½^
+    vector<Vector3R> displacement;  // ï¿½Ïˆï¿½
     
-    double dispMax;		            // •ÏˆÊ‚Ì‘å‚«‚³‚ÌÅ‘å’l
-    double angleMax;		        // ‰ñ“]Šp‚Ì‘å‚«‚³‚ÌÅ‘å’l
-    vector<Strain> strain1;		    // ß“_˜c
-    vector<Stress> stress1;		    // ß“_‰—Í
-    vector<double> sEnergy1;		// ß“_˜cƒGƒlƒ‹ƒM[–§“x
+    double dispMax;		            // ï¿½ÏˆÊ‚Ì‘å‚«ï¿½ï¿½ï¿½ÌÅ‘ï¿½l
+    double angleMax;		        // ï¿½ï¿½]ï¿½pï¿½Ì‘å‚«ï¿½ï¿½ï¿½ÌÅ‘ï¿½l
+    vector<Strain> strain1;		    // ï¿½ß“_ï¿½c
+    vector<Stress> stress1;		    // ï¿½ß“_ï¿½ï¿½ï¿½ï¿½
+    vector<double> sEnergy1;		// ï¿½ß“_ï¿½cï¿½Gï¿½lï¿½ï¿½ï¿½Mï¿½[ï¿½ï¿½ï¿½x
     vector<Strain> strain2;
     vector<Stress> stress2;
     vector<double> sEnergy2;
-    vector<double> temperature;		// ß“_‰·“x
-    double tempMax;		            // ‰·“x‚ÌÅ‘å’l
-    vector<EigenValue> eigenValue;	// ŒÅ—L’lƒf[ƒ^
-    bool calculated;	            // ŒvZ‘OŒvZŒ‹‰Ê–³‚µ
-    vector<double> value;		    // ƒRƒ“ƒ^[}ƒf[ƒ^
-    double minValue;		        // ƒRƒ“ƒ^[}ƒf[ƒ^Å¬’l
-    double maxValue;		        // ƒRƒ“ƒ^[}ƒf[ƒ^Å‘å’l
+    vector<double> temperature;		// ï¿½ß“_ï¿½ï¿½ï¿½x
+    double tempMax;		            // ï¿½ï¿½ï¿½xï¿½ÌÅ‘ï¿½l
+    bool calculated;	            // ï¿½vï¿½Zï¿½Oï¿½ï¿½ï¿½vï¿½Zï¿½ï¿½ï¿½Ê–ï¿½ï¿½ï¿½
 
-public:
-    int NODE_DATA = 0;		// ß“_ƒf[ƒ^
-    int ELEMENT_DATA = 1;   // —v‘fƒf[ƒ^
-    int type;		        // ƒf[ƒ^•ÛŒ`‘ÔFß“_ƒf[ƒ^
-    vector<Vector3R> displacement;  // •ÏˆÊ
 
     Result();
     void clear();

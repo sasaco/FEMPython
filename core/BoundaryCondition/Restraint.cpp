@@ -10,19 +10,22 @@ Restraint::Restraint() : Vector3R() {
 Restraint::Restraint(vector<string> ss) : Vector3R() {
 
     node = stoi(ss[1]);
-    rest[0] = stoi(ss[2]) != 0;
-    rest[1] = stoi(ss[4]) != 0;
-    rest[2] = stoi(ss[6]) != 0;
-    rest[3] = false;
-    rest[4] = false;
-    rest[5] = false;
+    
+    rest.clear();
+    rest.push_back(stoi(ss[2]) != 0);
+    rest.push_back(stoi(ss[4]) != 0);
+    rest.push_back(stoi(ss[6]) != 0);
+    rest.push_back(false);
+    rest.push_back(false);
+    rest.push_back(false);
 
-    Vector3R::x[0] = stod(ss[3]);
-    Vector3R::x[1] = stod(ss[5]);
-    Vector3R::x[2] = stod(ss[7]);
-    Vector3R::x[3] = 0;
-    Vector3R::x[4] = 0;
-    Vector3R::x[5] = 0;
+    Vector3R::x.clear();
+    Vector3R::x.push_back(stod(ss[3]));
+    Vector3R::x.push_back(stod(ss[5]));
+    Vector3R::x.push_back(stod(ss[7]));
+    Vector3R::x.push_back(0);
+    Vector3R::x.push_back(0);
+    Vector3R::x.push_back(0);
 
     coords = -1;
 
@@ -60,12 +63,13 @@ Restraint::Restraint(
     node = _node;
     coords = _coords;
 
-    rest[0] = restx; 
-    rest[1] = resty;
-    rest[2] = restz;
-    rest[3] = restrx;
-    rest[4] = restry;
-    rest[5] = restrz;
+    rest.clear();
+    rest.push_back(restx); 
+    rest.push_back(resty);
+    rest.push_back(restz);
+    rest.push_back(restrx);
+    rest.push_back(restry);
+    rest.push_back(restrz);
 
 };
 

@@ -21,8 +21,8 @@ private:
 public:
     int node;
     int coords;
-    bool rest[6];
-    double globalX[6];
+    vector<bool> rest;
+    vector<double> globalX;
 
     Restraint();
     Restraint(vector<string> columns);

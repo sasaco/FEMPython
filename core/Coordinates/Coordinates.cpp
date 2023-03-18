@@ -31,11 +31,16 @@ Coordinates::Coordinates(int _label,
 
 // グローバル座標系に変換する
 // x - ベクトル成分
-void Coordinates::toGlobal(double x[6], double out[6]) {
+void Coordinates::toGlobal(vector<double> x, vector<double> out) {
+
+    out.clear();
     for (int i = 0; i < 3; i++) {
-        out[i]     = c(0, i) * x[0] + c(1, i) * x[1] + c(2, i) * x[2];
-        out[i + 3] = c(0, i) * x[3] + c(1, i) * x[4] + c(2, i) * x[5];
+        out.push_back(c(0, i) * x[0] + c(1, i) * x[1] + c(2, i) * x[2]);
     }
+    for (int i = 3; i < 6; i++) {
+        out.push_back(c(0, i) * x[3] + c(1, i) * x[4] + c(2, i) * x[5]);
+    }
+
 }
 
 //

@@ -1,13 +1,13 @@
 #include "Result.h"
 
 //--------------------------------------------------------------------//
-// ŒvZŒ‹‰Ê
+// ï¿½vï¿½Zï¿½ï¿½ï¿½ï¿½
 Result::Result() {
     clear();
     type = NODE_DATA;
 };
 
-// ŒvZŒ‹‰Ê‚ğÁ‹‚·‚é
+// ï¿½vï¿½Zï¿½ï¿½ï¿½Ê‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 void Result::clear() {
 
     displacement.clear();
@@ -30,10 +30,10 @@ void Result::clear() {
 
 
 
-// ß“_‰·“x‚ğİ’è‚·‚é
-// bc - ‹«ŠEğŒ
-// t - ß“_‰·“x‚ğ•\‚·ƒxƒNƒgƒ‹
-// nodeCount - ß“_”
+// ï¿½ß“_ï¿½ï¿½ï¿½xï¿½ï¿½İ’è‚·ï¿½ï¿½
+// bc - ï¿½ï¿½ï¿½Eï¿½ï¿½ï¿½ï¿½
+// t - ï¿½ß“_ï¿½ï¿½ï¿½xï¿½ï¿½\ï¿½ï¿½ï¿½xï¿½Nï¿½gï¿½ï¿½
+// nodeCount - ï¿½ß“_ï¿½ï¿½
 void Result::setTemperature(BoundaryCondition bc, VectorXd t, int nodeCount) {
 
     temperature.clear();
@@ -54,10 +54,10 @@ void Result::setTemperature(BoundaryCondition bc, VectorXd t, int nodeCount) {
     calculated = true;
 }
 
-// ß“_•ÏˆÊ‚ğİ’è‚·‚é
-// bc - ‹«ŠEğŒ
-// disp - ß“_•ÏˆÊ‚ğ•\‚·ƒxƒNƒgƒ‹
-// nodeCount - ß“_”
+// ï¿½ß“_ï¿½ÏˆÊ‚ï¿½İ’è‚·ï¿½ï¿½
+// bc - ï¿½ï¿½ï¿½Eï¿½ï¿½ï¿½ï¿½
+// disp - ï¿½ß“_ï¿½ÏˆÊ‚ï¿½\ï¿½ï¿½ï¿½xï¿½Nï¿½gï¿½ï¿½
+// nodeCount - ï¿½ß“_ï¿½ï¿½
 void Result::setDisplacement(BoundaryCondition bc, VectorXd disp, int nodeCount) {
     
     displacement.clear();
@@ -70,16 +70,15 @@ void Result::setDisplacement(BoundaryCondition bc, VectorXd disp, int nodeCount)
         int i0 = bc.nodeIndex[i];
         auto bcDof = bc.dof[i];
         int r = -1;
-        double *x = v.x;
         for (int j = 0; j < bcDof; j++) {
             int bcl = bc.bcList[i0 + j];
             if (bcl < 0) {
-                x[j] = disp(ii);
+                v.x[j] = disp(ii);
                 ii++;
             }
             else {
                 r = (int)floor(bcl / 6);
-                x[j] = rests[r].x[j];
+                v.x[j] = rests[r].x[j];
             }
         }
         /*
@@ -95,8 +94,8 @@ void Result::setDisplacement(BoundaryCondition bc, VectorXd disp, int nodeCount)
 }
 
 
-// ß“_˜cE‰—Í‚ğ‰Šú‰»‚·‚é
-// count - ß“_”
+// ï¿½ß“_ï¿½cï¿½Eï¿½ï¿½ï¿½Í‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// count - ï¿½ß“_ï¿½ï¿½
 void Result::initStrainAndStress(int count) {
     strain1.clear();
     strain2.clear();
@@ -117,9 +116,9 @@ void Result::initStrainAndStress(int count) {
 
 
 
-// ß“_‚Ì\‘¢‰ğÍŒ‹‰Ê‚É’l‚ğ‰Á‚¦‚é
-// i - ß“_‚ÌƒCƒ“ƒfƒbƒNƒX
-// eps1,str1,se1,eps2,str2,se2 - •\–ÊE— –Ê‚Ì˜cC‰—ÍC˜cƒGƒlƒ‹ƒM[–§“x
+// ï¿½ß“_ï¿½Ì\ï¿½ï¿½ï¿½ï¿½ÍŒï¿½ï¿½Ê‚É’lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// i - ï¿½ß“_ï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
+// eps1,str1,se1,eps2,str2,se2 - ï¿½\ï¿½ÊEï¿½ï¿½ï¿½Ê‚Ì˜cï¿½Cï¿½ï¿½ï¿½ÍCï¿½cï¿½Gï¿½lï¿½ï¿½ï¿½Mï¿½[ï¿½ï¿½ï¿½x
 void Result::addStructureData(int i, Strain eps1, Stress str1, double se1,
     Strain eps2, Stress str2, double se2) {
     strain1[i].add(eps1);
@@ -131,9 +130,9 @@ void Result::addStructureData(int i, Strain eps1, Stress str1, double se1,
 };
 
 
-// ß“_‚Ì\‘¢‰ğÍŒ‹‰Ê‚É’l‚ğŠ|‚¯‚é
-// i - ß“_‚ÌƒCƒ“ƒfƒbƒNƒX
-// coef - ŒvZŒ‹‰Ê‚ÉŠ|‚¯‚éŒW”
+// ï¿½ß“_ï¿½Ì\ï¿½ï¿½ï¿½ï¿½ÍŒï¿½ï¿½Ê‚É’lï¿½ï¿½ï¿½|ï¿½ï¿½ï¿½ï¿½
+// i - ï¿½ß“_ï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
+// coef - ï¿½vï¿½Zï¿½ï¿½ï¿½Ê‚ÉŠ|ï¿½ï¿½ï¿½ï¿½Wï¿½ï¿½
 void Result::mulStructureData(int i, double coef) {
     strain1[i].mul(coef);
     stress1[i].mul(coef);
@@ -144,17 +143,17 @@ void Result::mulStructureData(int i, double coef) {
 }
 
 /*
-// ŒÅ—L’lƒf[ƒ^‚ğ’Ç‰Á‚·‚é
-// ev - ŒÅ—L’l
+// ï¿½Å—Lï¿½lï¿½fï¿½[ï¿½^ï¿½ï¿½Ç‰ï¿½ï¿½ï¿½ï¿½ï¿½
+// ev - ï¿½Å—Lï¿½l
 Result.prototype.addEigenValue = function(ev) {
     this.eigenValue.push(ev);
     this.calculated = true;
 };
 
-// ƒRƒ“ƒ^[}ƒf[ƒ^‚ğİ’è‚·‚é
-// param - ƒf[ƒ^‚Ìí—Ş
-// component - ƒf[ƒ^‚Ì¬•ª
-// data - ƒRƒ“ƒ^[}QÆŒ³
+// ï¿½Rï¿½ï¿½ï¿½^ï¿½[ï¿½}ï¿½fï¿½[ï¿½^ï¿½ï¿½İ’è‚·ï¿½ï¿½
+// param - ï¿½fï¿½[ï¿½^ï¿½Ìï¿½ï¿½
+// component - ï¿½fï¿½[ï¿½^ï¿½Ìï¿½ï¿½ï¿½
+// data - ï¿½Rï¿½ï¿½ï¿½^ï¿½[ï¿½}ï¿½Qï¿½ÆŒï¿½
 Result.prototype.setContour = function(param, component, data) {
     if (param < 0) return;
     data = data || this;
@@ -173,10 +172,10 @@ Result.prototype.setContour = function(param, component, data) {
     }
 };
 
-// ƒf[ƒ^‚ğæ‚èo‚·
-// param - ƒf[ƒ^‚Ìí—Ş
-// component - ƒf[ƒ^‚Ì¬•ª
-// index - ß“_‚ÌƒCƒ“ƒfƒbƒNƒX
+// ï¿½fï¿½[ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½oï¿½ï¿½
+// param - ï¿½fï¿½[ï¿½^ï¿½Ìï¿½ï¿½
+// component - ï¿½fï¿½[ï¿½^ï¿½Ìï¿½ï¿½ï¿½
+// index - ï¿½ß“_ï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
 Result.prototype.getData = function(param, component, index) {
     switch (param) {
     case DISPLACEMENT:
@@ -222,9 +221,9 @@ Result.prototype.getData = function(param, component, index) {
     return 0;
 };
 
-// ˜cE‰—Í‚ğæ‚èo‚·
-// s - ˜c or ‰—Í
-// component - ƒf[ƒ^‚Ì¬•ª
+// ï¿½cï¿½Eï¿½ï¿½ï¿½Í‚ï¿½ï¿½ï¿½ï¿½oï¿½ï¿½
+// s - ï¿½c or ï¿½ï¿½ï¿½ï¿½
+// component - ï¿½fï¿½[ï¿½^ï¿½Ìï¿½ï¿½ï¿½
 Result.prototype.getTensorComp = function(s, component) {
     if (component < 6) {
         return s.vector()[component];
@@ -242,9 +241,9 @@ Result.prototype.getTensorComp = function(s, component) {
     return 0;
 };
 
-// ƒf[ƒ^•¶š—ñ‚ğ•Ô‚·
-// nodes - ß“_
-// elems - —v‘f
+// ï¿½fï¿½[ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô‚ï¿½
+// nodes - ï¿½ß“_
+// elems - ï¿½vï¿½f
 Result.prototype.toStrings = function(nodes, elems) {
     var s = [], tuple, i;
     if (this.type == = ELEMENT_DATA) {

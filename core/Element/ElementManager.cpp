@@ -3,21 +3,72 @@
 ElementManager::ElementManager() {
     key = "";
 }
-ElementManager::ElementManager(string _key, vector<string> columns) {
+ElementManager::ElementManager(string keyWord, vector<string> columns) {
 
-    if (_key == "BEBarElement") {
-        //_BEBarElement = new BEBarElement();
+    // keyWordã¯ã€å°æ–‡å­—ã«å¤‰æ›ã™ã‚‹
+    std::transform(keyWord.begin(), keyWord.end(), keyWord.begin(), ::tolower);
+
+    if ((keyWord == "bebarelement") && (columns.size() > 5)) {
+        /*
+        if (columns.size() < 8) {
+            mesh->elements.push_back(new BEBarElement
+            (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
+                readVertex(ss, 4, 2)));
+        }
+        else {
+            mesh->elements.push_back(new BEBarElement
+            (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
+                readVertex(ss, 4, 2),
+                new THREE.Vector3().set(stod(columns[6]),
+                    stod(columns[7]),
+                    stod(columns[8]))));
+        }
+        */
     }
-    else if (_key == "TBarElement") {
-        //_TBarElement = new TBarElement();;
+    else if ((keyWord == "tbarelement") && (columns.size() > 5)) {
+        /*
+        if (columns.size() < 8) {
+            mesh->elements.push_back(new TBarElement
+            (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
+                readVertex(ss, 4, 2)));
+        }
+        else {
+            mesh->elements.push_back(new TBarElement
+            (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
+                readVertex(ss, 4, 2),
+                new THREE.Vector3().set(stod(columns[6]),
+                    stod(columns[7]),
+                    stod(columns[8]))));
+        }
+        */
     }
-    else if (_key == "TetraElement1") {
-        //_TetraElement1 = new TetraElement1();
+    else if ((keyWord == "trielement1") && (columns.size() > 6)) {
+        /*
+        mesh->elements.push_back(new TriElement1
+        (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
+            readVertex(ss, 4, 3)));
+        */
     }
-    else if (_key == "TetraElement2") {
-        //_TetraElement2 = new TetraElement2();
+    else if ((keyWord == "quadelement1") && (columns.size() > 7)) {
+        /*
+        mesh->elements.push_back(new QuadElement1
+        (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
+            readVertex(ss, 4, 4)));
+        */
     }
-    else if (_key == "HexaElement1") {
+    else if ((keyWord == "tetraelement1") && (columns.size() > 6)) {
+        /*
+        mesh->elements.push_back(new TetraElement1
+        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 4)));
+        */
+    }
+    else if ((keyWord == "wedgeelement1") && (columns.size() > 8)) {
+        /*
+        mesh->elements.push_back(new WedgeElement1
+        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 6)));
+        */
+    }
+    else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
         int label = stoi(columns[1]);
         int material = stoi(columns[2]);
         vector<int> nodes;
@@ -26,64 +77,70 @@ ElementManager::ElementManager(string _key, vector<string> columns) {
             nodes.push_back(no);
         }
         _HexaElement1 = HexaElement1(label, material, nodes);
+    }    
+    else if ((keyWord == "hexaelement1wt") && (columns.size() > 10)) {
+        /*
+        mesh->elements.push_back(new HexaElement1WT
+        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 8)));
+        */
     }
-    else if (_key == "HexaElement2") {
-        //_HexaElement2 new HexaElement2();
+    else if ((keyWord == "tetraelement2") && (columns.size() > 12)) {
+        /*
+        mesh->elements.push_back(new TetraElement2
+        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 10)));
+        */
     }
-    else if (_key == "HexaElement1WT") {
-        //_HexaElement1WT = new HexaElement1WT();
+    else if ((keyWord == "wedgeelement2") && (columns.size() > 17)) {
+        /*
+        mesh->elements.push_back(new WedgeElement2
+        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 15)));
+        */
     }
-    else if (_key == "WedgeElement1") {
-        //_WedgeElement1 = new WedgeElement1();
+    else if ((keyWord == "hexaelement2") && (columns.size() > 22)) {
+        /*
+        mesh->elements.push_back(new HexaElement2
+        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 20)));
+        */
     }
-    else if (_key == "WedgeElement2") {
-        //_WedgeElement2 = new WedgeElement2();
-    }
-    else if (key == "QuadElement1") {
-        //_QuadElement1.nodes = new QuadElement1();
-    }
-    else if (key == "TriElement1") {
-        //_TriElement1.nodes = new TriElement1();
-    }
-    key = _key;
 
+    key = keyWord;
 }
 
 
 
 vector<int> ElementManager::nodes() {
 
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         //return __BEBarElement.nodes;
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         //return _TBarElement.nodes;
     }
-    else if (key == "TetraElement1") {
+    else if (key == "tetraelement1") {
         //return _TetraElement1.nodes;
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         //return _TetraElement2.nodes;
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
         return _HexaElement1.nodes;
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         //return _HexaElement2.nodes;
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         //return _HexaElement1WT.nodes;
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         //return _WedgeElement1.nodes;
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         //return _WedgeElement2.nodes;
     }
-    else if (key == "QuadElement1") {
+    else if (key == "quadelement1") {
         //return _QuadElement1.nodes;
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         //return _TriElement1.nodes;
     }
 
@@ -93,37 +150,37 @@ vector<int> ElementManager::nodes() {
 
 void ElementManager::setNodes(vector<int> tmp) {
 
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         //_BEBarElement.nodes = tmp;
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         //_TBarElement.nodes = tmp;
     }
-    else if (key == "TetraElement1") {
+    else if (key == "tetraelement1") {
         //_TetraElement1.nodes = tmp;
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         //_TetraElement2.nodes = tmp;
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
         _HexaElement1.nodes = tmp;
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         //_HexaElement2.nodes = tmp;
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         //_HexaElement1WT.nodes = tmp;
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         //_WedgeElement1.nodes = tmp;
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         //_WedgeElement2.nodes = tmp;
     }
-    else if (key == "QuadElement1") {
+    else if (key == "quadelement1") {
         //_QuadElement1.nodes = tmp;
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         //_TriElement1.nodes = tmp;
     }
 
@@ -131,161 +188,161 @@ void ElementManager::setNodes(vector<int> tmp) {
 
 
 int ElementManager::label() {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         //return __BEBarElement.label;
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         //return _TBarElement.label;
     }
-    else if (key == "TetraElement1") {
+    else if (key == "tetraelement1") {
         //return _TetraElement1.label;
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         //return _TetraElement2.label;
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
         return _HexaElement1.label;
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         //return _HexaElement2.label;
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         //return _HexaElement1WT.label;
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         //return _WedgeElement1.label;
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         //return _WedgeElement2.label;
     }
-    else if (key == "QuadElement1") {
+    else if (key == "quadelement1") {
         //return _QuadElement1.label;
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         //return _TriElement1.label;
     }
     return -1;
 }
 
 int ElementManager::material() {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         //return __BEBarElement.material;
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         //return _TBarElement.material;
     }
-    else if (key == "TetraElement1") {
+    else if (key == "tetraelement1") {
         //return _TetraElement1.material;
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         //return _TetraElement2.material;
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
         return _HexaElement1.material;
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         //return _HexaElement2.material;
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         //return _HexaElement1WT.material;
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         //return _WedgeElement1.material;
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         //return _WedgeElement2.material;
     }
-    else if (key == "QuadElement1") {
+    else if (key == "quadelement1") {
         //return _QuadElement1.material;
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         //return _TriElement1.material;
     }
     return -1;
 }
 
 void ElementManager::setMaterial(int mat) {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         //_BEBarElement.material = mat;
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         //_TBarElement.material = mat;
     }
-    else if (key == "TetraElement1") {
+    else if (key == "tetraelement1") {
         //_TetraElement1.material = mat;
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         //_TetraElement2.material =mat;
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
         _HexaElement1.material = mat;
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         //_HexaElement2.material = mat;
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         //_HexaElement1WT.material = mat;
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         //_WedgeElement1.material = mat;
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         //_WedgeElement2.material = mat;
     }
-    else if (key == "QuadElement1") {
+    else if (key == "quadelement1") {
         //_QuadElement1.material = mat;
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         //_TriElement1.material = mat;
     }
 
 }
 int ElementManager::param() {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         //return __BEBarElement.param;
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         //return _TBarElement.param;
     }
-    else if (key == "QuadElement1") {
+    else if (key == "quadelement1") {
         //return _QuadElement1.param;
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         //return _TriElement1.param;
     }
     return -1;
 }
 
 void ElementManager::setParam(int param) {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         //_BEBarElement.param = param;
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         //_TBarElement.param = param;
     }
-    else if (key == "QuadElement1") {
+    else if (key == "quadelement1") {
         //_QuadElement1.param = param;
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         //_TriElement1.param = param;
     }
 }
 
 bool ElementManager::isShell() {
-    if (key == "QuadElement1") {
+    if (key == "quadelement1") {
         return true;
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         return true;
     }
     return false;
 }
 
 bool ElementManager::isBar() {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         return true;
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         return true;
     }
     return false;
@@ -297,104 +354,104 @@ int ElementManager::nodeCount() {
     return result;
 }
 
-/// <summary> Shell—p </summary>
+/// <summary> Shellï¿½p </summary>
 MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, ShellParameter sp) {
-    if (key == "QuadElement1") {
+    if (key == "quadelement1") {
         // return _QuadElement1.gradMatrix(nodes, h, sp);
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         // return _TriElement1.gradMatrix(nodes, h, sp);
     }
 
-    return MatrixXd(1, 1); // ‰¼
+    return MatrixXd(1, 1); // ï¿½ï¿½
 }
 
-/// <summary> Bar—p </summary>
+/// <summary> Barï¿½p </summary>
 MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, Section sp) {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         // return _BEBarElement.gradMatrix(nodes, h, sp);
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         // return _TBarElement.gradMatrix(nodes, h, sp);
     }
 
-    return MatrixXd(1, 1); // ‰¼
+    return MatrixXd(1, 1); // ï¿½ï¿½
 }
 
-/// <summary> Solid—p </summary>
+/// <summary> Solidï¿½p </summary>
 MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h) {
     
-    if (key == "TetraElement1") {
+    if (key == "tetraelement1") {
         // return _TetraElement1.gradMatrix(nodes, h);
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         // return _TetraElement2.material =mat;
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
         return _HexaElement1.gradMatrix(nodes, h);
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         // return _HexaElement2.gradMatrix(nodes, h);
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         // return _HexaElement1WT.gradMatrix(nodes, h);
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         // return _WedgeElement1.gradMatrix(nodes, h);
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         // return _WedgeElement2.gradMatrix(nodes, h);
     }
 
-    return MatrixXd(1, 1); // ‰¼
+    return MatrixXd(1, 1); // ï¿½ï¿½
 }
 
-/// <summary> Shell—p </summary>
+/// <summary> Shellï¿½p </summary>
 MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, MatrixXd d1, ShellParameter sp) {
-    if (key == "QuadElement1") {
+    if (key == "quadelement1") {
         // return _QuadElement1.stiffnessMatrix(p, d1, sp);
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         // return _TriElement1.stiffnessMatrix(p, d1, sp);
     }
 
-    return MatrixXd(1, 1); // ‰¼
+    return MatrixXd(1, 1); // ï¿½ï¿½
 }
 
-/// <summary> Bar—p </summary>
+/// <summary> Barï¿½p </summary>
 MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, Material d1, Section sp) {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         // return _BEBarElement.stiffnessMatrix(p, d1, sp);
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         // return _TBarElement.stiffnessMatrix(p, d1, sp);
     }
 
-    return MatrixXd(1, 1); // ‰¼
+    return MatrixXd(1, 1); // ï¿½ï¿½
 }
 
-/// <summary> Solid—p </summary>
+/// <summary> Solidï¿½p </summary>
 MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, MatrixXd d1) {
 
-    if (key == "TetraElement1") {
+    if (key == "tetraelement1") {
         // return _TetraElement1.stiffnessMatrix(p, d1);
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         // return _TetraElement2.stiffnessMatrix(p, d1);
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
         return _HexaElement1.stiffnessMatrix(p, d1);
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         // return _HexaElement2.stiffnessMatrix(p, d1);
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         // return _HexaElement1WT.stiffnessMatrix(p, d1);
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         // return _WedgeElement1.stiffnessMatrix(p, d1);
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         // return _WedgeElement2.stiffnessMatrix(p, d1);
     }
     return MatrixXd(1, 1);
@@ -402,17 +459,17 @@ MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, MatrixXd d1) {
 
 
 
-// —v‘f˜cE‰—Í‚ğ•Ô‚·
-// p - —v‘fß“_
-// u - ß“_•ÏˆÊ
-// d1 - ‰—Í - ˜cƒ}ƒgƒŠƒbƒNƒX
+// ï¿½vï¿½fï¿½cï¿½Eï¿½ï¿½ï¿½Í‚ï¿½Ô‚ï¿½
+// p - ï¿½vï¿½fï¿½ß“_
+// u - ï¿½ß“_ï¿½Ïˆï¿½
+// d1 - ï¿½ï¿½ï¿½ï¿½ - ï¿½cï¿½}ï¿½gï¿½ï¿½ï¿½bï¿½Nï¿½X
 tuple<Strain, Stress, double, Strain, Stress, double>
 ElementManager::elementStrainStress(
     vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp) {
-    if (key == "QuadElement1") {
+    if (key == "quadelement1") {
         // return _QuadElement1.elementStrainStress(p, u, d1, sp);
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         // return _TriElement1.elementStrainStress(p, u, d1, sp);
     }
 
@@ -426,10 +483,10 @@ ElementManager::elementStrainStress(
 tuple<Strain, Stress, double, Strain, Stress, double>
 ElementManager::elementStrainStress(
     vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         // return _BEBarElement.elementStrainStress(p, u, material, sect);
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         // return _TBarElement.elementStrainStress(p, u, material, sect);
     }
 
@@ -443,25 +500,25 @@ ElementManager::elementStrainStress(
 tuple<Strain, Stress, double> 
 ElementManager::elementStrainStress(
     vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
-    if (key == "TetraElement1") {
+    if (key == "tetraelement1") {
         // return _TetraElement1.elementStrainStress(p, u, d1);
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         // return _TetraElement2.elementStrainStress(p, u, d1);
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
         return _HexaElement1.elementStrainStress(p, u, d1);
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         // return _HexaElement2.elementStrainStress(p, u, d1);
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         // return _HexaElement1WT.elementStrainStress(p, u, d1);
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         // return _WedgeElement1.elementStrainStress(p, u, d1);
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         // return _WedgeElement2.elementStrainStress(p, u, d1);
     }
 
@@ -475,10 +532,10 @@ ElementManager::elementStrainStress(
 
 tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
 ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp) {
-    if (key == "QuadElement1") {
+    if (key == "quadelement1") {
         // return _QuadElement1.strainStress(p, u, d1);
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         // return _TriElement1.strainStress(p, u, d1);
     }
 
@@ -491,10 +548,10 @@ ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, 
 
 tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
 ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         // return _BEBarElement.strainStress(p, u, material, sect);
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         // return _TBarElement.strainStress(p, u, material, sect);
     }
 
@@ -509,29 +566,29 @@ ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, Material mate
 tuple<vector<Strain>, vector<Stress>, vector<double>>
 ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) {
 
-    if (key == "TetraElement1") {
+    if (key == "tetraelement1") {
         // return _TetraElement1.strainStress(p, u, d1);
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         // return _TetraElement2.material =mat;
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
         return _HexaElement1.strainStress(p, u, d1);
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         // return _HexaElement2.strainStress(p, u, d1);
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         // return _HexaElement1WT.strainStress(p, u, d1);
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         // return _WedgeElement1.strainStress(p, u, d1);
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         // return _WedgeElement2.strainStress(p, u, d1);
     }
 
-    // ‚Ç‚ê‚É‚àŠY“–‚µ‚Èê‡ ‹ó‚Ì•Ï”‚ğ•Ô‚·
+    // ï¿½Ç‚ï¿½É‚ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½ï¿½Èê‡ ï¿½ï¿½Ì•Ïï¿½ï¿½ï¿½Ô‚ï¿½
     vector<Strain> strain;
     vector<Stress> stress;
     vector<double> energy;
@@ -540,37 +597,37 @@ ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) 
 }
 
 VectorXd ElementManager::angle(vector<FENode> p) {
-    if (key == "BEBarElement") {
+    if (key == "bebarelement") {
         // return _BEBarElement.angle(p);
     }
-    else if (key == "TBarElement") {
+    else if (key == "tbarelement") {
         // return _TBarElement.angle(p);
     }
-    else if (key == "TetraElement1") {
+    else if (key == "tetraelement1") {
         // return _TetraElement1.angle(p);
     }
-    else if (key == "TetraElement2") {
+    else if (key == "tetraelement2") {
         // return _TetraElement2.material =mat;
     }
-    else if (key == "HexaElement1") {
+    else if (key == "hexaelement1") {
        return _HexaElement1.angle(p);
     }
-    else if (key == "HexaElement2") {
+    else if (key == "hexaelement2") {
         // return _HexaElement2.angle(p);
     }
-    else if (key == "HexaElement1WT") {
+    else if (key == "hexaelement1wt") {
         // return _HexaElement1WT.angle(p);
     }
-    else if (key == "WedgeElement1") {
+    else if (key == "wedgeelement1") {
         // return _WedgeElement1.angle(p);
     }
-    else if (key == "WedgeElement2") {
+    else if (key == "wedgeelement2") {
         // return _WedgeElement2.angle(p);
     }
-    else if (key == "QuadElement1") {
+    else if (key == "quadelement1") {
         // return _QuadElement1.angle(p);
     }
-    else if (key == "TriElement1") {
+    else if (key == "trielement1") {
         // return _TriElement1.angle(p);
     }
 
@@ -580,9 +637,9 @@ VectorXd ElementManager::angle(vector<FENode> p) {
 
 /*
 
-// —v‘f‹«ŠE‚ğ•Ô‚·
-// element - —v‘fƒ‰ƒxƒ‹
-// index - —v‘f‹«ŠE‚ÌƒCƒ“ƒfƒbƒNƒX
+// ï¿½vï¿½fï¿½ï¿½ï¿½Eï¿½ï¿½Ô‚ï¿½
+// element - ï¿½vï¿½fï¿½ï¿½ï¿½xï¿½ï¿½
+// index - ï¿½vï¿½fï¿½ï¿½ï¿½Eï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
 BorderManager ElementManager::border(int element, int index) {
     switch (index) {
     default:
@@ -595,9 +652,9 @@ BorderManager ElementManager::border(int element, int index) {
 }
 
 
-// —v‘f‹«ŠE•Ó‚ğ•Ô‚· —À—v‘f‚Å‚Í—v‘f‹«ŠE‚Æ“¯‚¶
-// element - —v‘fƒ‰ƒxƒ‹
-// index - —v‘f‹«ŠE•Ó‚ÌƒCƒ“ƒfƒbƒNƒX
+// ï¿½vï¿½fï¿½ï¿½ï¿½Eï¿½Ó‚ï¿½Ô‚ï¿½ ï¿½ï¿½ï¿½vï¿½fï¿½Å‚Í—vï¿½fï¿½ï¿½ï¿½Eï¿½Æ“ï¿½ï¿½ï¿½
+// element - ï¿½vï¿½fï¿½ï¿½ï¿½xï¿½ï¿½
+// index - ï¿½vï¿½fï¿½ï¿½ï¿½Eï¿½Ó‚ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
 BorderManager ElementManager::borderEdge(int element, int index) {
     return border(element, index);
 };
