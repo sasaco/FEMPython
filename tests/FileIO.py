@@ -1,4 +1,4 @@
-from calcrate import FrameCalc
+from main import FrameCalc
 
 # テストデータを読み込む
 def readTestData(s: str) -> FrameCalc:

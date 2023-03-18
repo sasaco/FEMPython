@@ -68,6 +68,7 @@ PYBIND11_MODULE(core, m){
 
     pybind11::class_<ElementManager>(m, "ElementManager")
         .def(pybind11::init<string, vector<string>>())
+        .def("nodes", &ElementManager::nodes)
         .def("label", &ElementManager::label);
 
     pybind11::class_<Vector3R>(m, "Vector3R")
