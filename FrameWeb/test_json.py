@@ -4,11 +4,16 @@ from calcrate import FrameCalc
 from dataInput import dataInput
 from usage import usage
 
+import FEMPython
+
+
 def test_out_json(out_text):
     fout=open('test.out.json', 'w')
     print(out_text, file=fout)
     fout.close()
     exit()
+
+
 
 
 # 入力データを読み込む
