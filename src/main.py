@@ -1,6 +1,4 @@
 import config, core
-from pyevtk.hl import imageToVTK, gridToVTK
-import pyvtk 
 
 class FrameCalc:
 
@@ -17,18 +15,16 @@ class FrameCalc:
 
 
     def vtk(self):
+        import pyvtk 
         import numpy as np
 
         XYZ = np.array([np.array([node.x, node.y, node.z]) for node in self.model.mesh.nodes])
-
         polygon = [elem.nodes() for elem in self.model.mesh.elements]
-
         structure = pyvtk.PolyData(points=XYZ, polygons=polygon) 
 
+
         pointdata = pyvtk.PointData(pyvtk.Scalars(XYZ[:,2], name='point-scalar', lookup_table='default')) 
-
         cellvalue = [np.mean([XYZ[node, 2]  for node in nodelist], dtype=np.float32) for nodelist in polygon] 
-
         celldata = pyvtk.CellData(pyvtk.Scalars(cellvalue, name='cell-scalar', lookup_table="default")) 
 
         vtk = pyvtk.VtkData( structure, "# test", celldata, pointdata) 
