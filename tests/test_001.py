@@ -15,7 +15,7 @@ def test_sampleBeamHexa1():
     vtk: str = fem.vtk()
 
     # 計算結果を書き込む
-    fileName = os.path.join(filePath, os.path.splitext(os.path.basename(fileName))[0]) + '.vtk'
+    fileName = os.path.join(filePath, 'output', os.path.splitext(os.path.basename(fileName))[0]) + '.vtk'
     with open(fileName, 'w') as f:
         f.write(vtk)
 
