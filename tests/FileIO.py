@@ -1,13 +1,10 @@
-from main import FrameCalc
+from main import FEMPython
 
 # テストデータを読み込む
-def readTestData(s: str) -> FrameCalc:
+def readTestData(s: str) -> FEMPython:
 
-    calc = FrameCalc()
+    calc = FEMPython()
     model = calc.model
-
-    mesh = model.mesh
-    bc = model.bc
 
     materials = []
     nodes = [] 

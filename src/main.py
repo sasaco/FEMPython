@@ -1,6 +1,6 @@
 import config, core
 
-class FrameCalc:
+class FEMPython:
 
     def __init__(self):
         self.core = core

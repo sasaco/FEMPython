@@ -1,11 +1,16 @@
+#import sys
+#sys.path.append('../src/')
+from main import FEMPython
+
+calc = FEMPython()
+model = calc.model
+model.clear()
+
 import json
 
 from calcrate import FrameCalc
 from dataInput import dataInput
 from usage import usage
-
-import FEMPython
-
 
 def test_out_json(out_text):
     fout=open('test.out.json', 'w')
