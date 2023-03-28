@@ -43,6 +43,87 @@ class FrameCalc:
         if error != None:
             return error, None
 
+
+        ### core ########################################################
+        """
+        from main import FEMPython
+
+        calc = FEMPython()
+
+        materials = []
+        nodes = [] 
+        elements = []
+        shellParams = []
+        barParams = []
+        coordinates = []
+        pressures = []
+        temperature = []
+        htcs = []
+        restraints = []
+        loads = []
+
+        # 材料データ
+        mat = calc.core.Material(int(columns[1]), float(columns[2]),
+            float(columns[3]), float(columns[5]),
+            float(columns[6]), float(columns[7]))
+        materials.append(mat)
+
+        # シェルパラメータ
+        shell = calc.core.ShellParameter(int(columns[1]), float(columns[2]))
+        shellParams.append(shell)
+
+        # 梁パラメータ
+        bar = calc.core.BarParameter(int(columns[1]), columns[2], columns[3:])
+        barParams.append(bar)
+
+        # 局所座標系
+        cord = calc.core.readCoordinates(columns)
+        coordinates.append(cord)
+
+        # 節点
+        node = calc.core.FENode(int(columns[1]), float(columns[2]),
+            float(columns[3]),
+            float(columns[4]))
+        nodes.append(node)
+        
+        # 要素
+        elements.append(calc.core.ElementManager("bebarelement", columns))
+        
+        # 境界条件
+        rest = calc.core.Restraint(columns)
+        restraints.append(rest)
+
+        # 荷重
+        load = calc.core.Load(columns)
+        loads.append(load)
+
+        # 温度
+        temp = calc.core.Temperature(int(columns[1]), float(columns[2]))
+        temperature.append(temp)
+
+        calc.model.materials = materials
+        calc.model.shellParams = shellParams
+        calc.model.barParams = barParams
+        calc.model.coordinates = coordinates
+
+        calc.model.mesh.nodes = nodes
+        calc.model.mesh.elements = elements
+
+        calc.model.bc.restraints = restraints
+        calc.model.bc.loads = loads
+        #calc.model.bc.pressures = pressures
+        calc.model.bc.temperature = temperature
+        #calc.model.bc.htcs = htcs
+
+        calc.model.init()
+
+        result = calc.calculate()
+        """
+        #################################################################
+
+
+
+
         # 節点に剛性マトリックスのインデックスを割り当てる
         self.nodeIndex = self.reNumbering()
 
