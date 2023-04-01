@@ -45,80 +45,93 @@ class FrameCalc:
 
 
         ### core ########################################################
-        """
+        
         from main import FEMPython
 
         calc = FEMPython()
 
-        materials = []
-        nodes = [] 
-        elements = []
-        shellParams = []
-        barParams = []
-        coordinates = []
-        pressures = []
-        temperature = []
-        htcs = []
-        restraints = []
-        loads = []
+        #materials = []
+        #nodes = [] 
+        #elements = []
+        #shellParams = []
+        #barParams = []
+        #coordinates = []
+        #pressures = []
+        #temperature = []
+        #htcs = []
+        #restraints = []
+        #loads = []
 
-        # 材料データ
-        mat = calc.core.Material(int(columns[1]), float(columns[2]),
-            float(columns[3]), float(columns[5]),
-            float(columns[6]), float(columns[7]))
-        materials.append(mat)
+        ## 材料データ
+        #mat = calc.core.Material(int(columns[1]), float(columns[2]),
+        #    float(columns[3]), float(columns[5]),
+        #    float(columns[6]), float(columns[7]))
+        #materials.append(mat)
 
-        # シェルパラメータ
-        shell = calc.core.ShellParameter(int(columns[1]), float(columns[2]))
-        shellParams.append(shell)
+        ## シェルパラメータ
+        #shell = calc.core.ShellParameter(int(columns[1]), float(columns[2]))
+        #shellParams.append(shell)
 
-        # 梁パラメータ
-        bar = calc.core.BarParameter(int(columns[1]), columns[2], columns[3:])
-        barParams.append(bar)
+        ## 梁パラメータ
+        #bar = calc.core.BarParameter(int(columns[1]), columns[2], columns[3:])
+        #barParams.append(bar)
 
-        # 局所座標系
-        cord = calc.core.readCoordinates(columns)
-        coordinates.append(cord)
+        ## 局所座標系
+        #cord = calc.core.readCoordinates(columns)
+        #coordinates.append(cord)
 
         # 節点
-        node = calc.core.FENode(int(columns[1]), float(columns[2]),
-            float(columns[3]),
-            float(columns[4]))
-        nodes.append(node)
+        for ID in self.inp.node:
+            node = self.inp.node[ID]
+            calc.addNode(ID, node['x'], node['y'], node['z'])
         
-        # 要素
-        elements.append(calc.core.ElementManager("bebarelement", columns))
+        ## 要素
+        # Bar部材の登録
+        for ID in self.inp.member:
+            member = self.inp.member[ID]
+            calc.addElement("barelement", 
+                            ID, 
+                            # int material
+                            member['e'], 
+                            # int _param
+                            member['xi'],
+                            member['yi'],
+                            member['zi'],
+                            member['xj'],
+                            member['yj'],
+                            member['zj'],
+                            member['cg'],
+                            # vector<int> nodes
+                            member['ni'],
+                            member['nj']
+                            # Vector3Dim _axis
+                            member.t)
+
+
+        # Shell部材の登録
+        for ID in self.inp.shell:
+            k = shellMatrix(inp, ID)
+            kmat.append(k)
+
+        #elements.append(calc.core.ElementManager("bebarelement", columns))
         
-        # 境界条件
-        rest = calc.core.Restraint(columns)
-        restraints.append(rest)
+        ## 境界条件
+        #rest = calc.core.Restraint(columns)
+        #restraints.append(rest)
 
-        # 荷重
-        load = calc.core.Load(columns)
-        loads.append(load)
+        ## 荷重
+        #load = calc.core.Load(columns)
+        #loads.append(load)
 
-        # 温度
-        temp = calc.core.Temperature(int(columns[1]), float(columns[2]))
-        temperature.append(temp)
+        ## 温度
+        #temp = calc.core.Temperature(int(columns[1]), float(columns[2]))
+        #temperature.append(temp)
 
-        calc.model.materials = materials
-        calc.model.shellParams = shellParams
-        calc.model.barParams = barParams
-        calc.model.coordinates = coordinates
 
-        calc.model.mesh.nodes = nodes
-        calc.model.mesh.elements = elements
+        calc.init()
 
-        calc.model.bc.restraints = restraints
-        calc.model.bc.loads = loads
-        #calc.model.bc.pressures = pressures
-        calc.model.bc.temperature = temperature
-        #calc.model.bc.htcs = htcs
-
-        calc.model.init()
-
-        result = calc.calculate()
-        """
+        #result = calc.calculate()
+        
         #################################################################
 
 

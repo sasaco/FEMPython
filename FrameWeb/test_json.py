@@ -19,8 +19,6 @@ def test_out_json(out_text):
     exit()
 
 
-
-
 # 入力データを読み込む
 inp = dataInput()
 inp.readTestData('test.json')

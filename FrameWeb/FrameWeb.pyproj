@@ -10,8 +10,9 @@
     <OutputPath>.</OutputPath>
     <Name>FrameWeb</Name>
     <RootNamespace>FrameWeb</RootNamespace>
-    <InterpreterId>Global|PythonCore|3.7</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.9</InterpreterId>
     <TestFramework>Pytest</TestFramework>
+    <IsWindowsApplication>False</IsWindowsApplication>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -45,7 +46,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|3.7" />
+    <InterpreterReference Include="Global|PythonCore|3.9" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
