@@ -39,11 +39,6 @@
       <Project>{52a338ba-afbe-4003-9354-a165d183ce92}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\src\FEMPython.pyproj">
-      <Name>FEMPython</Name>
-      <Project>{f5957b0b-97c5-484a-a5f0-973d19bcac88}</Project>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.9" />

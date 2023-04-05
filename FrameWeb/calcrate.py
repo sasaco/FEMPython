@@ -89,23 +89,7 @@ class FrameCalc:
         # Bar部材の登録
         for ID in self.inp.member:
             member = self.inp.member[ID]
-            calc.addElement("barelement", 
-                            ID, 
-                            # int material
-                            member['e'], 
-                            # int _param
-                            member['xi'],
-                            member['yi'],
-                            member['zi'],
-                            member['xj'],
-                            member['yj'],
-                            member['zj'],
-                            member['cg'],
-                            # vector<int> nodes
-                            member['ni'],
-                            member['nj']
-                            # Vector3Dim _axis
-                            member.t)
+            calc.addElement("barelement", ID, member['e'], member['xi'], member['yi'], member['zi'], member['xj'], member['yj'], member['zj'], member['cg'], member['ni'],  member['nj'], member.t)
 
 
         # Shell部材の登録

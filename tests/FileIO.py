@@ -4,7 +4,7 @@ from main import FEMPython
 def readTestData(s: str) -> FEMPython:
 
     calc = FEMPython()
-    model = calc.model
+    model = calc._model
 
     materials = []
     nodes = [] 
