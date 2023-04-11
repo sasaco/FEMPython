@@ -8,7 +8,7 @@ class Nodes : public Vector3Dim {
 private:
 
 public:
-    vector<int> nodes;
+    vector<string> nodes;
 
     Nodes();
     Nodes(vector<int> _nodes);

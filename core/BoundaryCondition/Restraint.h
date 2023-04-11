@@ -19,7 +19,7 @@ class Restraint : public Vector3R {
 private:
 
 public:
-    int node;
+    string node;
     int coords;
     vector<bool> rest;
     vector<double> globalX;

@@ -108,7 +108,7 @@ ElementManager::ElementManager(string keyWord, vector<string> columns) {
 
 
 
-vector<int> ElementManager::nodes() {
+vector<string> ElementManager::nodes() {
 
     if (key == "bebarelement") {
         //return __BEBarElement.nodes;

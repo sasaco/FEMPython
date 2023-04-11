@@ -32,8 +32,8 @@ private:
     // Method
     void reNumbering();
 
-    void resetNodes(map<int, int> map, ElementManager &s);
-    void resetNodePointer(map<int, int> map, int &node);
+    void resetNodes(map<string, int> map, ElementManager &s);
+    void resetNodePointer(map<string, int> map, string node);
     void resetElementPointer(map<int, int> map, int &element);
 
     void resetMaterialLabel();

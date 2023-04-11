@@ -95,7 +95,7 @@ Solver readFemModelDataStr(string s)
             */
             // 節点
             else if ((keyWord == "node") && (columns.size() > 4)) {
-                auto node = FENode(stoi(columns[1]), stod(columns[2]),
+                auto node = FENode(std::to_string(stoi(columns[1])), stod(columns[2]),
                     stod(columns[3]),
                     stod(columns[4]));
                 mesh->nodes.push_back(node);

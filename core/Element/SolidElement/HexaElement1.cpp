@@ -6,7 +6,7 @@
 // material - 材料のインデックス
 // nodes - 節点番号
 HexaElement1::HexaElement1() : SolidElement() {}
-HexaElement1::HexaElement1(int label, int material, vector<int> nodes) : 
+HexaElement1::HexaElement1(int label, int material, vector<string> nodes) : 
     SolidElement(label, material, nodes) {
 
     // 六面体1次要素の節点のξ,η,ζ座標

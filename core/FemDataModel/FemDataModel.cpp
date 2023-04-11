@@ -52,7 +52,7 @@ void FemDataModel::init(){
 // 節点・要素ポインタを設定する
 void FemDataModel::reNumbering(){
 
-    map<int, int> map1;
+    map<string, int> map1;
 
     for(unsigned int i=0;i< mesh.nodes.size();i++){
         map1[mesh.nodes[i].label]=i;
@@ -88,8 +88,8 @@ void FemDataModel::reNumbering(){
 // 節点集合の節点ラベルを再設定する
 // map - ラベルマップ
 // s - 節点集合
-void FemDataModel::resetNodes(map<int, int> map, ElementManager &s) {
-    vector<int> nodes = s.nodes();
+void FemDataModel::resetNodes(map<string, int> map, ElementManager &s) {
+    vector<string> nodes = s.nodes();
     vector<int> tmp;
     for (unsigned int i = 0; i < nodes.size(); i++) {
         if (map.count(nodes[i])) {
@@ -110,13 +110,13 @@ void FemDataModel::resetNodes(map<int, int> map, ElementManager &s) {
 // 節点ポインタを再設定する
 // map - ラベルマップ
 // bc - 境界条件
-void FemDataModel::resetNodePointer(map<int, int> map, int &node) {
+void FemDataModel::resetNodePointer(map<string, int> map, string node) {
     if ( map.count(node) > 0) {
         node = map[node];
     }
     else {
         std::string throwStr = "節点番号";
-        throwStr += std::to_string(node);
+        throwStr += node;
         throwStr += "は存在しません";
         throw invalid_argument(throwStr);
         //throw invalid_argument(fmt::format("節点番号{}は存在しません", node));
@@ -295,7 +295,7 @@ int FemDataModel::setNodeDoF(){
             }
         }
     }
-    return bc.setPointerStructure(nodeCount);
+    return bc.setPointerStructure(mesh.nodes);
 }
 
 
