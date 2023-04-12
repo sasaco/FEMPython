@@ -60,8 +60,12 @@ public:
     ElementManager(string key, vector<string> columns);
 
     int label();
-    vector<int> nodes();
-    void setNodes(vector<int> tmp);
+
+    vector<string> nodes();
+    void setNodes(vector<string> tmp);
+
+    vector<int> nodeIndexs; // 節点の合成マトリクス上のインデックス
+    void setIndexs(vector<int> tmp);
 
     int material();
     void setMaterial(int mat);

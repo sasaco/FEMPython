@@ -71,9 +71,9 @@ ElementManager::ElementManager(string keyWord, vector<string> columns) {
     else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
         int label = stoi(columns[1]);
         int material = stoi(columns[2]);
-        vector<int> nodes;
+        vector<string> nodes;
         for (int i = 3; i < 11; i++) {
-            int no = stoi(columns[i]);
+            string no = std::to_string(stoi(columns[i]));
             nodes.push_back(no);
         }
         _HexaElement1 = HexaElement1(label, material, nodes);
@@ -144,11 +144,15 @@ vector<string> ElementManager::nodes() {
         //return _TriElement1.nodes;
     }
 
-    vector<int> empty;
+    vector<string> empty;
     return empty;
 }
 
-void ElementManager::setNodes(vector<int> tmp) {
+void ElementManager::setIndexs(vector<int> tmp) {
+    nodeIndexs = tmp;
+}
+
+void ElementManager::setNodes(vector<string> tmp) {
 
     if (key == "bebarelement") {
         //_BEBarElement.nodes = tmp;

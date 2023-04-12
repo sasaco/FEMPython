@@ -20,6 +20,8 @@ private:
 
 public:
     string node;
+    int nodeIndex;
+
     int coords;
     vector<bool> rest;
     vector<double> globalX;

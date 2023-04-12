@@ -80,7 +80,7 @@ int BoundaryCondition::setPointerHeat(int count) {
     }
     for (int i = 0; i < temps; i++) {
         Temperature t = temperature[i];
-        bcList[t.node] = i;
+        bcList[t.nodeIndex] = i;
     }
     return temps;
 }

@@ -19,7 +19,9 @@ class Load : public Vector3R {
 private:
 
 public:
-    int node;
+    string node;
+    int nodeIndex;
+
     int coords;
     vector<double> globalX;
 

@@ -63,7 +63,7 @@ PYBIND11_MODULE(core, m){
         .def_readwrite("z", &Vector3Dim::z);
 
     pybind11::class_<FENode, Vector3Dim>(m, "FENode")
-        .def(pybind11::init<int, double, double, double>()) 
+        .def(pybind11::init<string, double, double, double>()) 
         .def_readwrite("label", &FENode::label);
 
     pybind11::class_<ElementManager>(m, "ElementManager")

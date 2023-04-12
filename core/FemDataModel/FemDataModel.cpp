@@ -63,13 +63,13 @@ void FemDataModel::reNumbering(){
     }
 
     for(unsigned int i=0;i<bc.restraints.size();i++){
-        resetNodePointer(map1, bc.restraints[i].node);
+        bc.restraints[i].nodeIndex = map1[bc.restraints[i].node];
     }
     for(unsigned int i=0;i<bc.loads.size();i++){
-        resetNodePointer(map1, bc.loads[i].node);
+        bc.loads[i].nodeIndex = map1[bc.loads[i].node];
     }
     for(unsigned int i=0;i<bc.temperature.size();i++){
-        resetNodePointer(map1, bc.temperature[i].node);
+        bc.temperature[i].nodeIndex = map1[bc.temperature[i].node];
     }
 
     map<int, int> map2;
@@ -98,16 +98,16 @@ void FemDataModel::resetNodes(map<string, int> map, ElementManager &s) {
         }
         else {
             std::string throwStr = "節点番号";
-            throwStr += std::to_string(nodes[i]);
+            throwStr += nodes[i];
             throwStr += "は存在しません";
             throw invalid_argument(throwStr);
             //throw invalid_argument(fmt::format("節点番号{}は存在しません", nodes[i]));
         }
     }
-    s.setNodes(tmp);
+    s.setIndexs(tmp);
 }
 
-// 節点ポインタを再設定する
+/*/ 節点ポインタを再設定する
 // map - ラベルマップ
 // bc - 境界条件
 void FemDataModel::resetNodePointer(map<string, int> map, string node) {
@@ -121,7 +121,7 @@ void FemDataModel::resetNodePointer(map<string, int> map, string node) {
         throw invalid_argument(throwStr);
         //throw invalid_argument(fmt::format("節点番号{}は存在しません", node));
     }
-}
+}*/
 
 // 要素ポインタを再設定する
 // map - ラベルマップ
@@ -282,8 +282,11 @@ int FemDataModel::setNodeDoF(){
     int nodeCount = (int)mesh.nodes.size();
     int elemCount = (int)mesh.elements.size();
     bc.dof.clear();
+
     for(int i=0;i<nodeCount;i++){
-        bc.dof.push_back(3);
+        auto fe = mesh.nodes[i];
+        auto key = fe.label;
+        bc.dof[key] = 3;
     }
     for(int i=0;i<elemCount;i++){
         auto elem = mesh.elements[i];
@@ -312,7 +315,7 @@ void FemDataModel::calculateElementStress() {
     vector<Vector3R> v;
     for (int i = 0; i < elemCount; i++) {
         auto elem = elems[i];
-        auto en = elem.nodes();
+        auto en = elem.nodeIndexs;
         for (unsigned int j = 0; j < en.size(); j++) {
             int index = en[j];
             p.push_back(nodes[index]);
@@ -360,7 +363,7 @@ void FemDataModel::calculateNodeStress() {
     result.initStrainAndStress(nodeCount);
     for (int i = 0; i < elemCount; i++) {
         auto elem = elems[i];
-        auto en = elem.nodes();
+        auto en = elem.nodeIndexs;
         for (unsigned int j = 0; j < en.size(); j++) {
             int index = en[j];
             p.push_back(nodes[index]);

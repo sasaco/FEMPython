@@ -30,7 +30,7 @@ private:
 
 public:
     BarElement();
-    BarElement(int label, int material, int param, vector<int> nodes, Vector3Dim axis);
+    BarElement(int label, int material, int param, vector<string> nodes, Vector3Dim axis);
 
     MatrixXd stiffnessMatrix(vector<FENode> p, Material material, Section sect);
 

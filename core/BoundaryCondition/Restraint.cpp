@@ -4,13 +4,15 @@
 //--------------------------------------------------------------------//
 // 拘束条件
 Restraint::Restraint() : Vector3R() {
-    node = -1;
+    node = "";
+    nodeIndex = -1;
     coords = -1;
 }
 Restraint::Restraint(vector<string> ss) : Vector3R() {
 
-    node = stoi(ss[1]);
-    
+    node = ss[1];
+    nodeIndex = -1;
+
     rest.clear();
     rest.push_back(stoi(ss[2]) != 0);
     rest.push_back(stoi(ss[4]) != 0);

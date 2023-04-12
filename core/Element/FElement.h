@@ -48,7 +48,7 @@ public:
     int material;
 
     FElement();
-    FElement(int _label, int _material, vector<int> _nodes);
+    FElement(int _label, int _material, vector<string> _nodes);
 
     // 積分点の剛性マトリックスを返す
     MatrixXd stiffPart(MatrixXd d, MatrixXd b, double coef);

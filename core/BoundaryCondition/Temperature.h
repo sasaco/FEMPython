@@ -15,11 +15,13 @@ class Temperature {
 private:
 
 public:
-    int node;
+    string node;
+    int nodeIndex;
+
     double t;
 
     Temperature();
-    Temperature(int _node, double _t);
+    Temperature(string _node, double _t);
 
     string toString(vector<FENode> nodes);
 };

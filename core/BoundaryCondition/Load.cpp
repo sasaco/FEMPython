@@ -5,14 +5,15 @@
 // 
 Load::Load() : Vector3R() {
     coords = -1;
-    node = -1;
-
+    node = "";
+    nodeIndex = -1;
 }
 Load::Load(vector<string> ss) {
 
     coords = -1;
 
-    node = stoi(ss[1]);
+    node = ss[1];
+    nodeIndex = -1;
 
     Vector3R::x.clear();
     Vector3R::x.push_back(stod(ss[2]));

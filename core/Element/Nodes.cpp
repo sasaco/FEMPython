@@ -1,7 +1,7 @@
 ﻿#include "Nodes.h"
 
 Nodes::Nodes() {}
-Nodes::Nodes(vector<int>_nodes) {
+Nodes::Nodes(vector<string>_nodes) {
     nodes = _nodes;
 }
 

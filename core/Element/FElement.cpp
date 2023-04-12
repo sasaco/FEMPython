@@ -11,7 +11,7 @@ FElement::FElement() : Nodes() {
     isShell = false;        // シェル要素ではない
     isBar = false;
 }
-FElement::FElement(int _label, int _material, vector<int> _nodes)
+FElement::FElement(int _label, int _material, vector<string> _nodes)
     : Nodes(_nodes) {
 
     label = _label;
