@@ -26,14 +26,14 @@ void Solver::calculate() {
         bc.setPointerHeat(dof);
         createHeatMatrix();
         auto tmp = solve();
-        result.setTemperature(bc, tmp, (int)mesh.nodes.size());
+        result.setTemperature(bc, tmp, mesh.nodes);
         calc = true;
     }
     if (bc.restraints.size() > 0) {
         dof = setNodeDoF();
         createStiffnessMatrix();
         auto d = solve();
-        result.setDisplacement(bc, d, (int)mesh.nodes.size());
+        result.setDisplacement(bc, d, mesh.nodes);
         if (result.type == result.ELEMENT_DATA) {
             calculateElementStress();
         }
@@ -79,7 +79,7 @@ MatrixXd Solver::heatMatrix() {
         }
 
         for (int i1 = 0; i1 < count; i1++) {
-            auto n = elem.nodes();
+            auto n = elem.nodeIndexs;
             for (int j1 = 0; j1 < count; j1++) {
                 matrix(n[i1], n[j1]) += ls(i1, j1);
             }

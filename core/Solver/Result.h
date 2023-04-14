@@ -135,8 +135,8 @@ public:
     Result();
     void clear();
 
-    void setTemperature(BoundaryCondition bc, VectorXd t, int nodeCount);
-    void setDisplacement(BoundaryCondition bc, VectorXd disp, int nodeCount);
+    void setTemperature(BoundaryCondition bc, VectorXd t, vector<FENode> node);
+    void setDisplacement(BoundaryCondition bc, VectorXd disp, vector<FENode> node);
     void initStrainAndStress(int count);
 
     void addStructureData(int i, Strain eps1, Stress str1, double se1,
