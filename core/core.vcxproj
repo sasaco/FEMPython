@@ -78,6 +78,9 @@
     <PublicIncludeDirectories>$(PublicIncludeDirectories)</PublicIncludeDirectories>
     <IncludePath>$(ProjectDir)Border;$(ProjectDir)BoundaryCondition;$(ProjectDir)Coordinates;$(ProjectDir)Element;$(ProjectDir)Element\BarElement;$(ProjectDir)Element\ShellElement;$(ProjectDir)Element\SolidElement;$(ProjectDir)FemDataModel;$(ProjectDir)Material;$(ProjectDir)numeric;$(ProjectDir)Section;$(ProjectDir)Solver;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(MSBuildProjectDirectory)\BoundaryCondition\;$(MSBuildProjectDirectory)\Coordinates\;$(MSBuildProjectDirectory)\Element\;$(MSBuildProjectDirectory)\FemDataModel\;$(MSBuildProjectDirectory)\Element\SolidElement\;$(MSBuildProjectDirectory)\Element\ShellElement\;$(MSBuildProjectDirectory)\Element\BarElement\;$(MSBuildProjectDirectory)\Material\;$(MSBuildProjectDirectory)\numeric\;$(MSBuildProjectDirectory)\Section\;$(MSBuildProjectDirectory)\Solver\;$(MSBuildProjectDirectory)\Border\;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -129,6 +132,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(PYTHONPATH)\include;$(PYTHONPATH)\Lib\site-packages\pybind11\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
