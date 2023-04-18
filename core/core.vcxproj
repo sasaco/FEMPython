@@ -80,6 +80,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(MSBuildProjectDirectory)\BoundaryCondition\;$(MSBuildProjectDirectory)\Coordinates\;$(MSBuildProjectDirectory)\Element\;$(MSBuildProjectDirectory)\FemDataModel\;$(MSBuildProjectDirectory)\Element\SolidElement\;$(MSBuildProjectDirectory)\Element\ShellElement\;$(MSBuildProjectDirectory)\Element\BarElement\;$(MSBuildProjectDirectory)\Material\;$(MSBuildProjectDirectory)\numeric\;$(MSBuildProjectDirectory)\Section\;$(MSBuildProjectDirectory)\Solver\;$(MSBuildProjectDirectory)\Border\;$(IncludePath)</IncludePath>
+    <TargetExt>.pyd</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -140,6 +141,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(PYTHONPATH)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
