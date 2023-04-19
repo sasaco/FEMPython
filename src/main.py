@@ -7,6 +7,7 @@ class FEMPython(_dataManager):
     def __init__(self):
         self._model = core.Solver()
         self._model.clear()
+        self.core = core
 
 
     def init(self):
@@ -30,26 +31,48 @@ class FEMPython(_dataManager):
 
 
     def calculate(self):
-        self.model.calculate()
-        return self.model.result
+        self._model.calculate()
+        return self._model.result
     
 
 
     def vtk(self):
-        import pyvtk 
         import numpy as np
+        from pyevtk.hl import imageToVTK
 
-        XYZ = np.array([np.array([node.x, node.y, node.z]) for node in self.model.mesh.nodes])
-        polygon = [elem.nodes() for elem in self.model.mesh.elements]
-        structure = pyvtk.PolyData(points=XYZ, polygons=polygon) 
+        ix = 128
+        jx = 128
+        kx = 128
 
+        xmin = 0.
+        xmax = 1.
+        ymin = 0.
+        ymax = 1.
+        zmin = 0.
+        zmax = 1.
 
-        pointdata = pyvtk.PointData(pyvtk.Scalars(XYZ[:,2], name='point-scalar', lookup_table='default')) 
-        cellvalue = [np.mean([XYZ[node, 2]  for node in nodelist], dtype=np.float32) for nodelist in polygon] 
-        celldata = pyvtk.CellData(pyvtk.Scalars(cellvalue, name='cell-scalar', lookup_table="default")) 
+        dx = (xmax-xmin)/ix
+        dy = (ymax-ymin)/jx
+        dz = (zmax-zmin)/kx
 
-        vtk = pyvtk.VtkData( structure, "# test", celldata, pointdata) 
+        x = xmin + 0.5*dx + np.arange(ix)*dx
+        y = ymin + 0.5*dy + np.arange(jx)*dy
+        z = zmin + 0.5*dz + np.arange(kx)*dz
 
-        return vtk.to_string().decode('utf-8')
+        xx,yy,zz = np.meshgrid(x,y,z)
 
+        ds = 0.1
+
+        x0 = (xmax+xmin)/2.
+        y0 = (ymax+ymin)/2.
+        z0 = (zmax+zmin)/2.
+
+        amp = 1.0
+
+        rr = (xx-x0)**2+(yy-y0)**2+(zz-z0)**2
+        qq = amp*np.exp(-rr/(2.*ds**2))
+
+        imageToVTK('./test',pointData={'quantity':qq})
+
+        return "OKS"
 

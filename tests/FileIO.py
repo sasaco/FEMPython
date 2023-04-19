@@ -3,8 +3,8 @@ from main import FEMPython
 # テストデータを読み込む
 def readTestData(s: str) -> FEMPython:
 
-    calc = FEMPython()
-    model = calc._model
+    fem = FEMPython()
+    model = fem._model
 
     materials = []
     nodes = [] 
@@ -32,29 +32,29 @@ def readTestData(s: str) -> FEMPython:
 
         # 材料データ
         if keyWord == "material" and columns_size > 7:
-            mat = calc.core.Material(int(columns[1]), float(columns[2]),
+            mat = fem.core.Material(int(columns[1]), float(columns[2]),
                 float(columns[3]), float(columns[5]),
                 float(columns[6]), float(columns[7]))
             materials.append(mat)
 
         # シェルパラメータ
         elif keyWord == "shellparameter" and columns_size > 2:
-            shell = calc.core.ShellParameter(int(columns[1]), float(columns[2]))
+            shell = fem.core.ShellParameter(int(columns[1]), float(columns[2]))
             shellParams.append(shell)
 
         # 梁パラメータ
         elif keyWord == "barparameter" and columns_size > 4:
-            bar = calc.core.BarParameter(int(columns[1]), columns[2], columns[3:])
+            bar = fem.core.BarParameter(int(columns[1]), columns[2], columns[3:])
             barParams.append(bar)
 
         # 局所座標系
         elif keyWord == "coordinates" and columns_size > 10:
-            cord = calc.core.readCoordinates(columns)
+            cord = fem.core.readCoordinates(columns)
             coordinates.append(cord)
 
         # 節点
         elif keyWord == "node" and columns_size > 4:
-            node = calc.core.FENode(int(columns[1]), float(columns[2]),
+            node = fem.core.FENode(str(columns[1]), float(columns[2]),
                 float(columns[3]),
                 float(columns[4]))
             nodes.append(node)
@@ -71,27 +71,27 @@ def readTestData(s: str) -> FEMPython:
           or keyWord == "tetraelement2" and  columns_size > 12 \
           or keyWord == "wedgeelement2" and  columns_size > 17 \
           or keyWord == "hexaelement2" and  columns_size > 22:
-            elements.append(calc.core.ElementManager(keyWord, columns))
+            elements.append(fem.core.ElementManager(keyWord, columns))
         
         # 境界条件
         elif keyWord == "restraint" and  columns_size > 7:
-            rest = calc.core.Restraint(columns)
+            rest = fem.core.Restraint(columns)
             restraints.append(rest)
 
         elif keyWord == "load" and  columns_size > 4:
-            load = calc.core.Load(columns)
+            load = fem.core.Load(columns)
             loads.append(load)
 
         elif keyWord == "pressure" and  columns_size > 3:
-            press = calc.core.Pressure(int(columns[1]), columns[2], float(columns[3]))
+            press = fem.core.Pressure(int(columns[1]), columns[2], float(columns[3]))
             pressures.append(press)
 
         elif keyWord == "temperature" and  columns_size > 2:
-            temp = calc.core.Temperature(int(columns[1]), float(columns[2]))
+            temp = fem.core.Temperature(int(columns[1]), float(columns[2]))
             temperature.append(temp)
 
         elif keyWord == "htc" and  columns_size > 4:
-            htc = calc.core.HeatTransferBound(int(columns[1]), columns[2],
+            htc = fem.core.HeatTransferBound(int(columns[1]), columns[2],
                     float(columns[3]), float(columns[4]))
             htcs.append(htc)
 
@@ -119,4 +119,4 @@ def readTestData(s: str) -> FEMPython:
 
     model.init()
 
-    return calc
+    return fem
