@@ -318,8 +318,9 @@ void FemDataModel::calculateElementStress() {
         auto en = elem.nodeIndexs;
         for (unsigned int j = 0; j < en.size(); j++) {
             int index = en[j];
-            p.push_back(nodes[index]);
-            v.push_back(result.displacement[index]);
+            auto node = nodes[index];
+            p.push_back(node);
+            v.push_back(result.displacement[node.label]);
         }
         auto material = materials[elem.material()];
         if (elem.isShell()) {
@@ -366,8 +367,9 @@ void FemDataModel::calculateNodeStress() {
         auto en = elem.nodeIndexs;
         for (unsigned int j = 0; j < en.size(); j++) {
             int index = en[j];
-            p.push_back(nodes[index]);
-            v.push_back(result.displacement[index]);
+            auto node = nodes[index];
+            p.push_back(node);
+            v.push_back(result.displacement[node.label]);
         }
         auto material = materials[elem.material()];
         auto m2d = material.matrix2Dstress();

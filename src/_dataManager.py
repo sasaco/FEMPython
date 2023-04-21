@@ -1,4 +1,4 @@
-import config, core
+import _config, core
 
 class _dataManager:
 

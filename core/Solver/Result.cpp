@@ -89,7 +89,7 @@ void Result::setDisplacement(BoundaryCondition bc, VectorXd disp, vector<FENode>
         */
         dispMax = max(dispMax, v.magnitude());
         angleMax = max(angleMax, v.magnitudeR());
-        displacement.push_back(v);
+        displacement[id] = v;
     }
     calculated = true;
 }

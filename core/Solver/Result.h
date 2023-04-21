@@ -117,7 +117,7 @@ public:
     int NODE_DATA = 0;		// �ߓ_�f�[�^
     int ELEMENT_DATA = 1;   // �v�f�f�[�^
     int type;		        // �f�[�^�ێ��`�ԁF�ߓ_�f�[�^
-    vector<Vector3R> displacement;  // �ψ�
+    map<string, Vector3R> displacement;  // �ψ�
     
     double dispMax;		            // �ψʂ̑傫���̍ő�l
     double angleMax;		        // ��]�p�̑傫���̍ő�l

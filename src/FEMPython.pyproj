@@ -29,8 +29,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src\config.py" />
-    <Compile Include="src\dataManager.py" />
+    <Compile Include="src\_config.py" />
+    <Compile Include="src\_dataManager.py" />
     <Compile Include="src\main.py" />
     <Compile Include="src\__init__.py" />
     <Compile Include="tests\conftest.py" />
