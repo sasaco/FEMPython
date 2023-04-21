@@ -1,6 +1,6 @@
-import config, core
+import _config, core
 
-from dataManager import _dataManager
+from _dataManager import _dataManager
 
 class FEMPython(_dataManager):
 
@@ -34,8 +34,4 @@ class FEMPython(_dataManager):
         self._model.calculate()
         return self._model.result
     
-
-
-    def vtk(self):
-        return "OKS"
 

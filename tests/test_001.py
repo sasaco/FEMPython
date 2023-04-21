@@ -12,9 +12,22 @@ def test_sampleBeamHexa1():
     # src 関数を呼ぶテスト
     fem = readTestData(s)
     result = fem.calculate()
-    ed = result.ELEMENT_DATA
-    vtk: str = fem.vtk()
-    
+    _type = result.type
+    _ELEMENT_DATA = result.ELEMENT_DATA
+    _NODE_DATA = result.NODE_DATA
+    _displacement = result.displacement
+    _dispMax = result.dispMax
+    _angleMax = result.angleMax
+    _strain1 = result.strain1
+    _stress1 = result.stress1
+    _sEnergy1 = result.sEnergy1
+    _strain2 = result.strain2
+    _stress2 = result.stress2
+    _sEnergy2 = result.sEnergy2
+    _temperature = result.temperature
+    _tempMax = result.tempMax
+    _calculated = result.calculated
+
 
     assert True
 
