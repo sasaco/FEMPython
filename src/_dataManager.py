@@ -6,11 +6,9 @@ class _dataManager:
 
         # core の 節点番号は int なので 節点Id と 節点番号 を変換する dict を持つ
         self._node_index = {}
-        self._current_node_index = 0
 
         # core の 部材番号は int なので 部材Id と 部材番号 を変換する dict を持つ
         self._element_index = {}
-        self._current_element_index = 0
 
         ## core 
         self._materials = []
@@ -28,36 +26,22 @@ class _dataManager:
 
     # 節点を追加する
     def addNode(self, ID: str, x: float, y: float, z: float):
-
-        self.node_index[ID] = self._current_node_index
-        node = core.FENode(self._current_node_index, x, y, z)
-
-        self._nodes.append(node)
-
-        self._current_node_index += 1
+        self._nodes.append(core.FENode(str(ID), float(x), float(y), float(z)))
 
 
     # 要素を追加する
-    def addBarElement(self, label, node_i, node_j, element, palam):
-
-        if node_i in self.node_index:
-            i_node_index = self.node_index[node_i]
-        if node_j in self.node_index:
-            j_node_index = self.node_index[node_j]
-
-
-        self._element_index[label] = self._current_element_index
-
+    def addElement(self, ID: str, ni: str, nj: str, e: str, cg: float, joint_i: int, joint_j: int):
         columns = []
-        columns.append(str(self._current_element_index))
-        columns.append(str(i_node_index))
-        columns.append(str(j_node_index))
-        columns.append(str())
+        columns.append(ID)
+        columns.append(str(ni))
+        columns.append(str(nj))
+        columns.append(str(e))
+        columns.append(str(cg))
+        columns.append(str(joint_i))
+        columns.append(str(joint_j))
         element = core.ElementManager("barelement", columns)
 
         self._elements.append(element)
-
-        self._current_element_index += 1
 
 
 

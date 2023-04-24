@@ -89,13 +89,13 @@ class FrameCalc:
         # Bar部材の登録
         for ID in self.inp.member:
             member = self.inp.member[ID]
-            calc.addElement("barelement", ID, member['e'], member['xi'], member['yi'], member['zi'], member['xj'], member['yj'], member['zj'], member['cg'], member['ni'],  member['nj'], member.t)
+            joint_i = 100*int(member['xi']) + 10*int(member['yi']) + int(member['zi'])
+            joint_j = 100*int(member['xj']) + 10*int(member['yj']) + int(member['zj'])
+            calc.addElement("barelement", ID, member['ni'],  member['nj'], member['e'], member['cg'], joint_i, joint_j)
 
 
         # Shell部材の登録
-        for ID in self.inp.shell:
-            k = shellMatrix(inp, ID)
-            kmat.append(k)
+
 
         #elements.append(calc.core.ElementManager("bebarelement", columns))
         
