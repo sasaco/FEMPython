@@ -9,7 +9,7 @@
 // hCon - 熱伝導率
 // sHeat - 比熱
 Material::Material() {}
-Material::Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat) {
+Material::Material(string _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat) {
     label = _label;
     ee = _ee;
     nu = _nu;

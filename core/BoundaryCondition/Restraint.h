@@ -22,14 +22,14 @@ public:
     string node;
     int nodeIndex;
 
-    int coords;
+    string coords;
     vector<bool> rest;
     vector<double> globalX;
 
     Restraint();
     Restraint(vector<string> columns);
 
-    Restraint(int _node, int _coords,
+    Restraint(string _node, string _coords,
         bool restx, bool resty, bool restz,
         double x, double y, double z,
         bool restrx, bool restry, bool restrz,

@@ -24,13 +24,13 @@ private:
     int I_YMZ[4] = { 1, 5, 7, 11 };	// y軸方向,z軸周り成分のインデックス
     int I_ZMY[4] = { 2, 4, 8, 10 };	// z軸方向,y軸周り成分のインデックス
 
-    int param;
+    string param;
     bool isBar;
     Vector3Dim axis;
 
 public:
     BarElement();
-    BarElement(int label, int material, int param, vector<string> nodes, Vector3Dim axis);
+    BarElement(string label, string material, string param, vector<string> nodes, Vector3Dim axis);
 
     MatrixXd stiffnessMatrix(vector<FENode> p, Material material, Section sect);
 

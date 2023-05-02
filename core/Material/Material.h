@@ -27,7 +27,7 @@ private:
     //void matrixTorsion(double out[2][2]);
 
 public:
-    int label;
+    string label;
 
     double ee;
     double nu;
@@ -38,7 +38,7 @@ public:
     double gg;    // 横弾性係数
 
     Material();
-    Material(int _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
+    Material(string _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
 
     MatrixXd matrix2Dstress();
     MatrixXd matrixShell();

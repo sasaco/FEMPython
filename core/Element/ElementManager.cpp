@@ -8,8 +8,12 @@ ElementManager::ElementManager(string keyWord, vector<string> columns) {
     // keyWordは、小文字に変換する
     std::transform(keyWord.begin(), keyWord.end(), keyWord.begin(), ::tolower);
 
-    if ((keyWord == "bebarelement") && (columns.size() > 5)) {
-        /*
+    if (keyWord == "barelement")  {
+        // frameWeb で用いる棒要素
+
+    }
+    else    if ((keyWord == "bebarelement") && (columns.size() > 5)) {
+            /*
         if (columns.size() < 8) {
             mesh->elements.push_back(new BEBarElement
             (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
@@ -69,8 +73,8 @@ ElementManager::ElementManager(string keyWord, vector<string> columns) {
         */
     }
     else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
-        int label = stoi(columns[1]);
-        int material = stoi(columns[2]);
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
         vector<string> nodes;
         for (int i = 3; i < 11; i++) {
             string no = std::to_string(stoi(columns[i]));
@@ -191,7 +195,7 @@ void ElementManager::setNodes(vector<string> tmp) {
 }
 
 
-int ElementManager::label() {
+string ElementManager::label() {
     if (key == "bebarelement") {
         //return __BEBarElement.label;
     }
@@ -225,10 +229,10 @@ int ElementManager::label() {
     else if (key == "trielement1") {
         //return _TriElement1.label;
     }
-    return -1;
+    return "";
 }
 
-int ElementManager::material() {
+string ElementManager::material() {
     if (key == "bebarelement") {
         //return __BEBarElement.material;
     }
@@ -262,10 +266,10 @@ int ElementManager::material() {
     else if (key == "trielement1") {
         //return _TriElement1.material;
     }
-    return -1;
+    return "";
 }
 
-void ElementManager::setMaterial(int mat) {
+void ElementManager::setMaterial(string mat) {
     if (key == "bebarelement") {
         //_BEBarElement.material = mat;
     }
@@ -301,7 +305,13 @@ void ElementManager::setMaterial(int mat) {
     }
 
 }
-int ElementManager::param() {
+
+void ElementManager::setMaterialIndex(int mat) {
+    materialIndex = mat;
+}
+
+
+string ElementManager::param() {
     if (key == "bebarelement") {
         //return __BEBarElement.param;
     }
@@ -314,10 +324,10 @@ int ElementManager::param() {
     else if (key == "trielement1") {
         //return _TriElement1.param;
     }
-    return -1;
+    return "";
 }
 
-void ElementManager::setParam(int param) {
+void ElementManager::setParam(string param) {
     if (key == "bebarelement") {
         //_BEBarElement.param = param;
     }
@@ -331,6 +341,11 @@ void ElementManager::setParam(int param) {
         //_TriElement1.param = param;
     }
 }
+
+void ElementManager::setParamIndex(int param) {
+    paramIndex = param;
+}
+
 
 bool ElementManager::isShell() {
     if (key == "quadelement1") {
@@ -357,6 +372,7 @@ int ElementManager::nodeCount() {
     int result = (int)node.size();
     return result;
 }
+
 
 /// <summary> Shell�p </summary>
 MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, ShellParameter sp) {

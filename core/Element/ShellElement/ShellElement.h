@@ -17,16 +17,14 @@ using namespace Eigen;
 class ShellElement : public FElement {
 
 private:
-    int label;
-    int param;
-    bool isShell;
+    string param;
 
     MatrixXd nodeP;
     MatrixXd intP;
 
 public:
     ShellElement();
-    ShellElement(int label, int material, int param, vector<string> nodes, MatrixXd _nodeP, MatrixXd _intP);
+    ShellElement(string label, string material, string param, vector<string> nodes, MatrixXd _nodeP, MatrixXd _intP);
 
     virtual string getName() = 0;
 

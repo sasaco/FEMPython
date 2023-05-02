@@ -48,7 +48,7 @@ Load::Load(vector<string> ss) {
 // coords - 局所座標系
 // x,y,z - x,y,z成分
 // rx,ry,rz - x,y,z軸周り回転成分
-Load::Load(int _node, int _coords, 
+Load::Load(string _node, string _coords,
             double x, double y, double z, double rx, double ry, double rz) :
     Vector3R(x, y, z, rx, ry, rz) {
 

@@ -14,6 +14,7 @@ using std::vector;
 
 // -----------------------------------------------------------------------------
 // BarElement
+#include "SEBarElement.h"
 //#include "BEBarElement.h"
 //#include "TBarElement.h"
 
@@ -41,6 +42,7 @@ private:
     string key;
 
     //// BarElement
+    SEBarElement _SEBarElement;
     //BEBarElement _BEBarElement = NULL;
     //TBarElement  _TBarElement = NULL;
     //// SolidElement
@@ -59,7 +61,7 @@ public:
     ElementManager();
     ElementManager(string key, vector<string> columns);
 
-    int label();
+    string label();
 
     vector<string> nodes();
     void setNodes(vector<string> tmp);
@@ -67,11 +69,15 @@ public:
     vector<int> nodeIndexs; // 節点の合成マトリクス上のインデックス
     void setIndexs(vector<int> tmp);
 
-    int material();
-    void setMaterial(int mat);
+    string material();
+    int materialIndex;         // 合成マトリクス上のインデックス
+    void setMaterial(string mat);
+    void setMaterialIndex(int mat);
 
-    int param();
-    void setParam(int param);
+    string param();
+    void setParam(string param);
+    int paramIndex;         // 合成マトリクス上のインデックス
+    void setParamIndex(int param);
 
     bool isShell();
     bool isBar();

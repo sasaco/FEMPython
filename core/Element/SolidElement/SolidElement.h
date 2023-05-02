@@ -29,7 +29,7 @@ protected:
 public:
 
     SolidElement();
-    SolidElement(int label, int material, vector<string> nodes);
+    SolidElement(string label, string material, vector<string> nodes);
 
     virtual MatrixXd jacobianMatrix(vector<FENode> p, MatrixXd sf);
 
