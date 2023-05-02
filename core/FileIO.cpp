@@ -72,7 +72,7 @@ Solver readFemModelDataStr(string s)
 
             // 材料データ
             if ((keyWord == "material") && (columns.size() > 7)) {
-                auto mat = Material(stoi(columns[1]), stod(columns[2]),
+                auto mat = Material(std::to_string(stoi(columns[1])), stod(columns[2]),
                     stod(columns[3]), stod(columns[5]),
                     stod(columns[6]), stod(columns[7]));
                 model.materials.push_back(mat);

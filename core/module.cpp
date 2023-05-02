@@ -31,7 +31,7 @@ PYBIND11_MODULE(core, m){
 
     // データをインプットするクラス
     pybind11::class_<Material>(m, "Material")
-        .def(pybind11::init<int, double, double, double, double, double>())
+        .def(pybind11::init<string, double, double, double, double, double>())
         .def_readwrite("label", &Material::label)
         .def_readwrite("ee", &Material::ee)
         .def_readwrite("nu", &Material::nu)

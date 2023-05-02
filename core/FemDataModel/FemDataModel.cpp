@@ -252,20 +252,8 @@ void FemDataModel::resetCoordinatesPointer(map<string, Coordinates> map, T &bc) 
         // 何もしない
         return;
     }
-    bool hasFind = false;
-    Coordinates cod;
-
-
-    for (int i = 0; i < static_cast<int>(map.size()); i++) {
-        if (i == map[i].label) {
-            cod = map[i];
-            hasFind = true;
-            break;
-        }
-    }
-
-    if (hasFind) {
-        bc.coords = cod.label;
+    if (map.count(bc.coords) > 0) {
+        Coordinates cod = map[bc.coords];
         cod.toGlobal(bc.x, bc.globalX);
     }
     else {
@@ -273,7 +261,6 @@ void FemDataModel::resetCoordinatesPointer(map<string, Coordinates> map, T &bc) 
         throwStr += bc.coords;
         throwStr += "は存在しません";
         throw invalid_argument(throwStr);
-        //throw invalid_argument(fmt::format("局所座標系番号{}存在しません", bc.coords));
     }
 }
 
