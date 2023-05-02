@@ -21,10 +21,10 @@ private:
     CircleSection* circleSection;
 
 public:
-    int label;
+    string label;
 
     BarParameter();
-    BarParameter(int label, string type, double* ss);
+    BarParameter(string label, string type, double* ss);
     ~BarParameter();
 
     Section section();

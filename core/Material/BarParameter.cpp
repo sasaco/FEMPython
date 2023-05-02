@@ -6,10 +6,10 @@
 // type - 断面種類
 // ss - データ文字列
 BarParameter::BarParameter() {
-    label = -1;
+    label = "";
     type = "";
 }
-BarParameter::BarParameter(int _label, string _type, double *ss) {
+BarParameter::BarParameter(string _label, string _type, double *ss) {
     
     label = _label;
     type = _type;

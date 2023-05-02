@@ -78,10 +78,10 @@ void FemDataModel::reNumbering(){
     }
 
     for(unsigned int i=0;i<bc.pressures.size();i++){
-        resetElementPointer(map2, bc.pressures[i].element);
+        bc.pressures[i].elementIndex = map2[bc.pressures[i].element];
     }
     for(unsigned int i=0;i<bc.htcs.size();i++){
-        resetElementPointer(map2, bc.htcs[i].element);
+        bc.htcs[i].elementIndex = map2[bc.htcs[i].element];
     }
 }
 
@@ -126,18 +126,18 @@ void FemDataModel::resetNodePointer(map<string, int> map, string node) {
 // 要素ポインタを再設定する
 // map - ラベルマップ
 // bc - 境界条件
-void FemDataModel::resetElementPointer(map<string, int> map, string element) {
-    if (map.count(element) > 0) {
-        element = map[element];
-    }
-    else {
-        std::string throwStr = "要素番号";
-        throwStr += element;
-        throwStr += "は存在しません";
-        throw invalid_argument(throwStr);
-        //throw invalid_argument(fmt::format("要素番号{}は存在しません", element));
-    }
-}
+//void FemDataModel::resetElementPointer(map<string, int> map, string element) {
+//    if (map.count(element) > 0) {
+//        element = map[element];
+//    }
+//    else {
+//        std::string throwStr = "要素番号";
+//        throwStr += element;
+//        throwStr += "は存在しません";
+//        throw invalid_argument(throwStr);
+//        //throw invalid_argument(fmt::format("要素番号{}は存在しません", element));
+//    }
+//}
 
 // 材料ポインタを設定する
 void FemDataModel::resetMaterialLabel(){
@@ -254,6 +254,8 @@ void FemDataModel::resetCoordinatesPointer(map<string, Coordinates> map, T &bc) 
     }
     bool hasFind = false;
     Coordinates cod;
+
+
     for (int i = 0; i < static_cast<int>(map.size()); i++) {
         if (i == map[i].label) {
             cod = map[i];

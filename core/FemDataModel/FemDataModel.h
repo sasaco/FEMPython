@@ -34,7 +34,7 @@ private:
 
     void resetNodes(map<string, int> map, ElementManager &s);
     //void resetNodePointer(map<string, int> map, string node);
-    void resetElementPointer(map<string, int> map, string element);
+    //void resetElementPointer(map<string, int> map, string element);
 
     void resetMaterialLabel();
     void resetParameterLabel();

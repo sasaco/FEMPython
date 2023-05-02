@@ -11,7 +11,7 @@ HeatTransferBound::HeatTransferBound()
     htc = 0;
     outTemp = 0;
 }
-HeatTransferBound::HeatTransferBound(int element, string face, double _htc, double _outTemp)
+HeatTransferBound::HeatTransferBound(string element, string face, double _htc, double _outTemp)
     : ElementBorderBound(element, face){
     htc = _htc;
     outTemp = _outTemp;

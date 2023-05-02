@@ -16,11 +16,12 @@ class ElementBorderBound {
 private:
 
 public:
-    int element;
+    string element;
+    int elementIndex;
     string face;
 
     ElementBorderBound();
-    ElementBorderBound(int _element, string _face);
+    ElementBorderBound(string _element, string _face);
 
     //BorderManager getBorder(ElementManager elem);
 
