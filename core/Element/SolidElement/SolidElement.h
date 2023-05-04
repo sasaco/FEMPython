@@ -55,7 +55,7 @@ public:
 
     virtual tuple<vector<Strain>, vector<Stress>, vector<double>> strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
-    VectorXd strainPart(vector<FENode> p, VectorXd v, VectorXd x);
+    virtual VectorXd strainPart(vector<FENode> p, VectorXd v, VectorXd x);
 
     virtual tuple<Strain, Stress, double> elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 

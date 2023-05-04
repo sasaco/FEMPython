@@ -164,7 +164,9 @@
     <ClCompile Include="Element\Nodes.cpp" />
     <ClCompile Include="Element\ShellElement\ShellElement.cpp" />
     <ClCompile Include="Element\SolidElement\HexaElement1.cpp" />
+    <ClCompile Include="Element\SolidElement\HexaElement1WT.cpp" />
     <ClCompile Include="Element\SolidElement\SolidElement.cpp" />
+    <ClCompile Include="Element\SolidElement\TetraElement1.cpp" />
     <ClCompile Include="FemDataModel\FemDataModel.cpp" />
     <ClCompile Include="FemDataModel\FENode.cpp" />
     <ClCompile Include="FemDataModel\MeshModel.cpp" />
@@ -201,7 +203,9 @@
     <ClInclude Include="Element\Nodes.h" />
     <ClInclude Include="Element\ShellElement\ShellElement.h" />
     <ClInclude Include="Element\SolidElement\HexaElement1.h" />
+    <ClInclude Include="Element\SolidElement\HexaElement1WT.h" />
     <ClInclude Include="Element\SolidElement\SolidElement.h" />
+    <ClInclude Include="Element\SolidElement\TetraElement1.h" />
     <ClInclude Include="FemDataModel\FemDataModel.h" />
     <ClInclude Include="FemDataModel\FENode.h" />
     <ClInclude Include="FemDataModel\MeshModel.h" />

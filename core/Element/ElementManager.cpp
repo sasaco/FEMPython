@@ -8,7 +8,7 @@ ElementManager::ElementManager(string keyWord, vector<string> columns) {
     // keyWordは、小文字に変換する
     std::transform(keyWord.begin(), keyWord.end(), keyWord.begin(), ::tolower);
 
-    if (keyWord == "barelement")  {
+    if (keyWord == "sebarelement")  {
         // frameWeb で用いる棒要素
 
     }
