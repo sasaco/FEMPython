@@ -32,14 +32,14 @@ def readTestData(s: str) -> FEMPython:
 
         # 材料データ
         if keyWord == "material" and columns_size > 7:
-            mat = fem.core.Material(int(columns[1]), float(columns[2]),
+            mat = fem.core.Material(str(columns[1]), float(columns[2]),
                 float(columns[3]), float(columns[5]),
                 float(columns[6]), float(columns[7]))
             materials.append(mat)
 
         # シェルパラメータ
         elif keyWord == "shellparameter" and columns_size > 2:
-            shell = fem.core.ShellParameter(int(columns[1]), float(columns[2]))
+            shell = fem.core.ShellParameter(str(columns[1]), float(columns[2]))
             shellParams.append(shell)
 
         # 梁パラメータ
@@ -49,7 +49,10 @@ def readTestData(s: str) -> FEMPython:
 
         # 局所座標系
         elif keyWord == "coordinates" and columns_size > 10:
-            cord = fem.core.readCoordinates(columns)
+            cord = fem.core.Coordinates(str(columns[1]),
+                                       float(columns[2]),float(columns[3]),float(columns[4]),
+                                       float(columns[5]),float(columns[6]),float(columns[7]),
+                                       float(columns[8]),float(columns[9]),float(columns[10]))
             coordinates.append(cord)
 
         # 節点
@@ -60,7 +63,8 @@ def readTestData(s: str) -> FEMPython:
             nodes.append(node)
         
         # 要素
-        elif keyWord == "bebarelement" and  columns_size > 5 \
+        elif keyWord == "sebarelement" and  columns_size > 5 \
+          or keyWord == "bebarelement" and  columns_size > 5 \
           or keyWord == "tbarelement" and  columns_size > 5 \
           or keyWord == "trielement1" and  columns_size > 6 \
           or keyWord == "quadelement1" and  columns_size > 7 \

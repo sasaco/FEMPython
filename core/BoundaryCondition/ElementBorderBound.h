@@ -18,6 +18,7 @@ private:
 public:
     string element;
     int elementIndex;
+
     string face;
 
     ElementBorderBound();

@@ -29,13 +29,13 @@ private:
 public:
     string label;
 
-    double ee;
-    double nu;
-    double dens;
-    double hCon;
-    double sHeat;
-    double cv;	  // 体積比熱
-    double gg;    // 横弾性係数
+    double ee;      // ヤング率 (縦弾性係数)
+    double nu;      // ポアソン比
+    double dens;    // 密度
+    double hCon;    // 熱伝導率
+    double sHeat;   // 比熱
+    double cv;      // 体積比熱
+    double gg;      // 横弾性係数
 
     Material();
     Material(string _label, double _ee, double _nu, double _dens, double _hCon, double _sHeat);
