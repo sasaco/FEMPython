@@ -169,6 +169,8 @@
     <ClCompile Include="Element\SolidElement\SolidElement.cpp" />
     <ClCompile Include="Element\SolidElement\TetraElement1.cpp" />
     <ClCompile Include="Element\SolidElement\TetraElement2.cpp" />
+    <ClCompile Include="Element\SolidElement\WedgeElement1.cpp" />
+    <ClCompile Include="Element\SolidElement\WedgeElement2.cpp" />
     <ClCompile Include="FemDataModel\FemDataModel.cpp" />
     <ClCompile Include="FemDataModel\FENode.cpp" />
     <ClCompile Include="FemDataModel\MeshModel.cpp" />
@@ -210,6 +212,8 @@
     <ClInclude Include="Element\SolidElement\SolidElement.h" />
     <ClInclude Include="Element\SolidElement\TetraElement1.h" />
     <ClInclude Include="Element\SolidElement\TetraElement2.h" />
+    <ClInclude Include="Element\SolidElement\WedgeElement1.h" />
+    <ClInclude Include="Element\SolidElement\WedgeElement2.h" />
     <ClInclude Include="FemDataModel\FemDataModel.h" />
     <ClInclude Include="FemDataModel\FENode.h" />
     <ClInclude Include="FemDataModel\MeshModel.h" />
