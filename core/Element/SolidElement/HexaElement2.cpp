@@ -62,123 +62,104 @@ MatrixXd HexaElement2::shapeFunction(double xsi, double eta, double zeta) {
     MatrixXd result(20, 4);
 
     result(0, 0) = 0.125 * (1 - xsi) * (1 - eta) * (1 - zeta) * (-xsi - eta - zeta - 2);
-    result(0, 0) = 0.125 * (1 - eta) * (1 - zeta) * (2 * xsi + eta + zeta + 1),
-    result(0, 0) = 0.125 * (1 - xsi) * (1 - zeta) * (xsi + 2 * eta + zeta + 1),
-    result(0, 0) = 0.125 * (1 - xsi) * (1 - eta) * (xsi + eta + 2 * zeta + 1)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.125 * (1 + xsi) * (1 - eta) * (1 - zeta) * (xsi - eta - zeta - 2),
-    result(0, 0) = 0.125 * (1 - eta) * (1 - zeta) * (2 * xsi - eta - zeta - 1),
-    result(0, 0) = 0.125 * (1 + xsi) * (1 - zeta) * (-xsi + 2 * eta + zeta + 1),
-    result(0, 0) = 0.125 * (1 + xsi) * (1 - eta) * (-xsi + eta + 2 * zeta + 1)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.125 * (1 + xsi) * (1 + eta) * (1 - zeta) * (xsi + eta - zeta - 2),
-    result(0, 0) = 0.125 * (1 + eta) * (1 - zeta) * (2 * xsi + eta - zeta - 1),
-    result(0, 0) = 0.125 * (1 + xsi) * (1 - zeta) * (xsi + 2 * eta - zeta - 1),
-    result(0, 0) = 0.125 * (1 + xsi) * (1 + eta) * (-xsi - eta + 2 * zeta + 1)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.125 * (1 - xsi) * (1 + eta) * (1 - zeta) * (-xsi + eta - zeta - 2),
-    result(0, 0) = 0.125 * (1 + eta) * (1 - zeta) * (2 * xsi - eta + zeta + 1),
-    result(0, 0) = 0.125 * (1 - xsi) * (1 - zeta) * (-xsi + 2 * eta - zeta - 1),
-    result(0, 0) = 0.125 * (1 - xsi) * (1 + eta) * (xsi - eta + 2 * zeta + 1)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.125 * (1 - xsi) * (1 - eta) * (1 + zeta) * (-xsi - eta + zeta - 2),
-    result(0, 0) = 0.125 * (1 - eta) * (1 + zeta) * (2 * xsi + eta - zeta + 1),
-    result(0, 0) = 0.125 * (1 - xsi) * (1 + zeta) * (xsi + 2 * eta - zeta + 1),
-    result(0, 0) = 0.125 * (1 - xsi) * (1 - eta) * (-xsi - eta + 2 * zeta - 1)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.125 * (1 + xsi) * (1 - eta) * (1 + zeta) * (xsi - eta + zeta - 2),
-    result(0, 0) = 0.125 * (1 - eta) * (1 + zeta) * (2 * xsi - eta + zeta - 1),
-    result(0, 0) = 0.125 * (1 + xsi) * (1 + zeta) * (-xsi + 2 * eta - zeta + 1),
-    result(0, 0) = 0.125 * (1 + xsi) * (1 - eta) * (xsi - eta + 2 * zeta - 1)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.125 * (1 + xsi) * (1 + eta) * (1 + zeta) * (xsi + eta + zeta - 2),
-    result(0, 0) = 0.125 * (1 + eta) * (1 + zeta) * (2 * xsi + eta + zeta - 1),
-    result(0, 0) = 0.125 * (1 + xsi) * (1 + zeta) * (xsi + 2 * eta + zeta - 1),
-    result(0, 0) = 0.125 * (1 + xsi) * (1 + eta) * (xsi + eta + 2 * zeta - 1)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.125 * (1 - xsi) * (1 + eta) * (1 + zeta) * (-xsi + eta + zeta - 2),
-    result(0, 0) = 0.125 * (1 + eta) * (1 + zeta) * (2 * xsi - eta - zeta + 1),
-    result(0, 0) = 0.125 * (1 - xsi) * (1 + zeta) * (-xsi + 2 * eta + zeta - 1),
-    result(0, 0) = 0.125 * (1 - xsi) * (1 + eta) * (-xsi + eta + 2 * zeta - 1)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 - eta) * (1 - zeta),
-    result(0, 0) = -0.5 * xsi * (1 - eta) * (1 - zeta),
-    result(0, 0) = -0.25 * (1 + xsi) * (1 - xsi) * (1 - zeta),
-    result(0, 0) = -0.25 * (1 + xsi) * (1 - xsi) * (1 - eta)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 + xsi) * (1 + eta) * (1 - eta) * (1 - zeta),
-    result(0, 0) = 0.25 * (1 + eta) * (1 - eta) * (1 - zeta),
-    result(0, 0) = -0.5 * (1 + xsi) * eta * (1 - zeta),
-    result(0, 0) = -0.25 * (1 + xsi) * (1 + eta) * (1 - eta)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 + eta) * (1 - zeta),
-    result(0, 0) = -0.5 * xsi * (1 + eta) * (1 - zeta),
-    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 - zeta),
-    result(0, 0) = -0.25 * (1 + xsi) * (1 - xsi) * (1 + eta)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 - xsi) * (1 + eta) * (1 - eta) * (1 - zeta),
-    result(0, 0) = -0.25 * (1 + eta) * (1 - eta) * (1 - zeta),
-    result(0, 0) = -0.5 * (1 - xsi) * eta * (1 - zeta),
-    result(0, 0) = -0.25 * (1 - xsi) * (1 + eta) * (1 - eta)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 - eta) * (1 + zeta),
-    result(0, 0) = -0.5 * xsi * (1 - eta) * (1 + zeta),
-    result(0, 0) = -0.25 * (1 + xsi) * (1 - xsi) * (1 + zeta),
-    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 - eta)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 + xsi) * (1 + eta) * (1 - eta) * (1 + zeta),
-    result(0, 0) = 0.25 * (1 + eta) * (1 - eta) * (1 + zeta),
-    result(0, 0) = -0.5 * (1 + xsi) * eta * (1 + zeta),
-    result(0, 0) = 0.25 * (1 + xsi) * (1 + eta) * (1 - eta)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 + eta) * (1 + zeta),
-    result(0, 0) = -0.5 * xsi * (1 + eta) * (1 + zeta),
-    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 + zeta),
-    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 + eta)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 - xsi) * (1 + eta) * (1 - eta) * (1 + zeta),
-    result(0, 0) = -0.25 * (1 + eta) * (1 - eta) * (1 + zeta),
-    result(0, 0) = -0.5 * (1 - xsi) * eta * (1 + zeta),
-    result(0, 0) = 0.25 * (1 - xsi) * (1 + eta) * (1 - eta)
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 - xsi) * (1 - eta) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = -0.25 * (1 - eta) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = -0.25 * (1 - xsi) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = -0.5 * (1 - xsi) * (1 - eta) * zeta
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 + xsi) * (1 - eta) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = 0.25 * (1 - eta) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = -0.25 * (1 + xsi) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = -0.5 * (1 + xsi) * (1 - eta) * zeta
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 + xsi) * (1 + eta) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = 0.25 * (1 + eta) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = 0.25 * (1 + xsi) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = -0.5 * (1 + xsi) * (1 + eta) * zeta
-    result(0, 0) = 
-    result(0, 0) = 
-    result(0, 0) = 0.25 * (1 - xsi) * (1 + eta) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = -0.25 * (1 + eta) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = 0.25 * (1 - xsi) * (1 + zeta) * (1 - zeta),
-    result(0, 0) = -0.5 * (1 - xsi) * (1 + eta) * zeta
-    result(0, 0) = 
-    };
+    result(0, 1) = 0.125 * (1 - eta) * (1 - zeta) * (2 * xsi + eta + zeta + 1);
+    result(0, 2) = 0.125 * (1 - xsi) * (1 - zeta) * (xsi + 2 * eta + zeta + 1);
+    result(0, 3) = 0.125 * (1 - xsi) * (1 - eta) * (xsi + eta + 2 * zeta + 1);
+
+    result(1, 0) = 0.125 * (1 + xsi) * (1 - eta) * (1 - zeta) * (xsi - eta - zeta - 2);
+    result(1, 1) = 0.125 * (1 - eta) * (1 - zeta) * (2 * xsi - eta - zeta - 1);
+    result(1, 2) = 0.125 * (1 + xsi) * (1 - zeta) * (-xsi + 2 * eta + zeta + 1);
+    result(1, 3) = 0.125 * (1 + xsi) * (1 - eta) * (-xsi + eta + 2 * zeta + 1);
+
+    result(2, 0) = 0.125 * (1 + xsi) * (1 + eta) * (1 - zeta) * (xsi + eta - zeta - 2);
+    result(2, 1) = 0.125 * (1 + eta) * (1 - zeta) * (2 * xsi + eta - zeta - 1);
+    result(2, 2) = 0.125 * (1 + xsi) * (1 - zeta) * (xsi + 2 * eta - zeta - 1);
+    result(2, 3) = 0.125 * (1 + xsi) * (1 + eta) * (-xsi - eta + 2 * zeta + 1);
+
+    result(3, 0) = 0.125 * (1 - xsi) * (1 + eta) * (1 - zeta) * (-xsi + eta - zeta - 2);
+    result(3, 1) = 0.125 * (1 + eta) * (1 - zeta) * (2 * xsi - eta + zeta + 1);
+    result(3, 2) = 0.125 * (1 - xsi) * (1 - zeta) * (-xsi + 2 * eta - zeta - 1);
+    result(3, 3) = 0.125 * (1 - xsi) * (1 + eta) * (xsi - eta + 2 * zeta + 1);
+
+    result(4, 0) = 0.125 * (1 - xsi) * (1 - eta) * (1 + zeta) * (-xsi - eta + zeta - 2);
+    result(4, 1) = 0.125 * (1 - eta) * (1 + zeta) * (2 * xsi + eta - zeta + 1);
+    result(4, 2) = 0.125 * (1 - xsi) * (1 + zeta) * (xsi + 2 * eta - zeta + 1);
+    result(4, 3) = 0.125 * (1 - xsi) * (1 - eta) * (-xsi - eta + 2 * zeta - 1);
+
+    result(0, 0) = 0.125 * (1 + xsi) * (1 - eta) * (1 + zeta) * (xsi - eta + zeta - 2);
+    result(0, 1) = 0.125 * (1 - eta) * (1 + zeta) * (2 * xsi - eta + zeta - 1);
+    result(0, 2) = 0.125 * (1 + xsi) * (1 + zeta) * (-xsi + 2 * eta - zeta + 1);
+    result(0, 3) = 0.125 * (1 + xsi) * (1 - eta) * (xsi - eta + 2 * zeta - 1);
+
+    result(0, 0) = 0.125 * (1 + xsi) * (1 + eta) * (1 + zeta) * (xsi + eta + zeta - 2);
+    result(0, 1) = 0.125 * (1 + eta) * (1 + zeta) * (2 * xsi + eta + zeta - 1);
+    result(0, 2) = 0.125 * (1 + xsi) * (1 + zeta) * (xsi + 2 * eta + zeta - 1);
+    result(0, 3) = 0.125 * (1 + xsi) * (1 + eta) * (xsi + eta + 2 * zeta - 1);
+
+    result(0, 0) = 0.125 * (1 - xsi) * (1 + eta) * (1 + zeta) * (-xsi + eta + zeta - 2);
+    result(0, 1) = 0.125 * (1 + eta) * (1 + zeta) * (2 * xsi - eta - zeta + 1);
+    result(0, 2) = 0.125 * (1 - xsi) * (1 + zeta) * (-xsi + 2 * eta + zeta - 1);
+    result(0, 3) = 0.125 * (1 - xsi) * (1 + eta) * (-xsi + eta + 2 * zeta - 1);
+
+    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 - eta) * (1 - zeta);
+    result(0, 1) = -0.5 * xsi * (1 - eta) * (1 - zeta);
+    result(0, 2) = -0.25 * (1 + xsi) * (1 - xsi) * (1 - zeta);
+    result(0, 3) = -0.25 * (1 + xsi) * (1 - xsi) * (1 - eta);
+
+    result(0, 0) = 0.25 * (1 + xsi) * (1 + eta) * (1 - eta) * (1 - zeta);
+    result(0, 1) = 0.25 * (1 + eta) * (1 - eta) * (1 - zeta);
+    result(0, 2) = -0.5 * (1 + xsi) * eta * (1 - zeta);
+    result(0, 3) = -0.25 * (1 + xsi) * (1 + eta) * (1 - eta);
+
+    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 + eta) * (1 - zeta);
+    result(0, 1) = -0.5 * xsi * (1 + eta) * (1 - zeta);
+    result(0, 2) = 0.25 * (1 + xsi) * (1 - xsi) * (1 - zeta);
+    result(0, 3) = -0.25 * (1 + xsi) * (1 - xsi) * (1 + eta);
+
+    result(0, 0) = 0.25 * (1 - xsi) * (1 + eta) * (1 - eta) * (1 - zeta);
+    result(0, 1) = -0.25 * (1 + eta) * (1 - eta) * (1 - zeta);
+    result(0, 2) = -0.5 * (1 - xsi) * eta * (1 - zeta);
+    result(0, 3) = -0.25 * (1 - xsi) * (1 + eta) * (1 - eta);
+
+    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 - eta) * (1 + zeta);
+    result(0, 1) = -0.5 * xsi * (1 - eta) * (1 + zeta);
+    result(0, 2) = -0.25 * (1 + xsi) * (1 - xsi) * (1 + zeta);
+    result(0, 3) = 0.25 * (1 + xsi) * (1 - xsi) * (1 - eta);
+
+    result(0, 0) = 0.25 * (1 + xsi) * (1 + eta) * (1 - eta) * (1 + zeta);
+    result(0, 1) = 0.25 * (1 + eta) * (1 - eta) * (1 + zeta);
+    result(0, 2) = -0.5 * (1 + xsi) * eta * (1 + zeta);
+    result(0, 3) = 0.25 * (1 + xsi) * (1 + eta) * (1 - eta);
+
+    result(0, 0) = 0.25 * (1 + xsi) * (1 - xsi) * (1 + eta) * (1 + zeta);
+    result(0, 1) = -0.5 * xsi * (1 + eta) * (1 + zeta);
+    result(0, 2) = 0.25 * (1 + xsi) * (1 - xsi) * (1 + zeta);
+    result(0, 3) = 0.25 * (1 + xsi) * (1 - xsi) * (1 + eta);
+
+    result(0, 0) = 0.25 * (1 - xsi) * (1 + eta) * (1 - eta) * (1 + zeta);
+    result(0, 1) = -0.25 * (1 + eta) * (1 - eta) * (1 + zeta);
+    result(0, 2) = -0.5 * (1 - xsi) * eta * (1 + zeta);
+    result(0, 3) = 0.25 * (1 - xsi) * (1 + eta) * (1 - eta);
+
+    result(0, 0) = 0.25 * (1 - xsi) * (1 - eta) * (1 + zeta) * (1 - zeta);
+    result(0, 1) = -0.25 * (1 - eta) * (1 + zeta) * (1 - zeta);
+    result(0, 2) = -0.25 * (1 - xsi) * (1 + zeta) * (1 - zeta);
+    result(0, 3) = -0.5 * (1 - xsi) * (1 - eta) * zeta;
+
+    result(0, 0) = 0.25 * (1 + xsi) * (1 - eta) * (1 + zeta) * (1 - zeta);
+    result(0, 1) = 0.25 * (1 - eta) * (1 + zeta) * (1 - zeta);
+    result(0, 2) = -0.25 * (1 + xsi) * (1 + zeta) * (1 - zeta);
+    result(0, 3) = -0.5 * (1 + xsi) * (1 - eta) * zeta;
+
+    result(0, 0) = 0.25 * (1 + xsi) * (1 + eta) * (1 + zeta) * (1 - zeta);
+    result(0, 1) = 0.25 * (1 + eta) * (1 + zeta) * (1 - zeta);
+    result(0, 2) = 0.25 * (1 + xsi) * (1 + zeta) * (1 - zeta);
+    result(0, 3) = -0.5 * (1 + xsi) * (1 + eta) * zeta;
+
+    result(0, 0) = 0.25 * (1 - xsi) * (1 + eta) * (1 + zeta) * (1 - zeta);
+    result(0, 1) = -0.25 * (1 + eta) * (1 + zeta) * (1 - zeta);
+    result(0, 2) = 0.25 * (1 - xsi) * (1 + zeta) * (1 - zeta);
+    result(0, 3) = -0.5 * (1 - xsi) * (1 + eta) * zeta;
+
+    return result;
 }
