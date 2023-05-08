@@ -67,5 +67,8 @@ public:
     Vector3Dim normalVector(vector<Vector3Dim> p);
 
     // 剛性マトリックスの方向を修正する
+    void toDir(MatrixXd d, MatrixXd k);
+
+    // 剛性マトリックスの方向を修正する
     void toDir3(MatrixXd d, MatrixXd k);
 };

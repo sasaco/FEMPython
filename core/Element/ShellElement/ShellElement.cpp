@@ -11,12 +11,9 @@
 ShellElement::ShellElement() : FElement() {
     isShell = true;
 }
-ShellElement::ShellElement(string _label, string material, string _param, vector<string> nodes,
-    MatrixXd _nodeP, MatrixXd _intP) :
+ShellElement::ShellElement(string _label, string material, string _param, vector<string> nodes) :
     FElement(_label, material, nodes) {
     isShell = true;
-    nodeP = _nodeP;
-    intP = _intP;
 }
 
 

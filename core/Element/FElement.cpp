@@ -234,6 +234,18 @@ Vector3Dim FElement::normalVector(vector<Vector3Dim> v) {
 // 剛性マトリックスの方向を修正する
 // d - 方向余弦マトリックス
 // k - 剛性マトリックス
+void FElement::toDir(MatrixXd d, MatrixXd k) {
+    MatrixXd a = d * k;
+    for (int i = 0; i < k.rows(); i++) {
+        for (int j = 0; j < k.cols(); j++) {
+            k[i, j] = a.row(i).dot(d.row(j));
+        }
+    }
+}
+
+// 剛性マトリックスの方向を修正する
+// d - 方向余弦マトリックス
+// k - 剛性マトリックス
 void FElement::toDir3(MatrixXd d, MatrixXd k) {
 
     MatrixXd a = MatrixXd::Zero(3, 3);

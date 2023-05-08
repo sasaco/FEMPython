@@ -19,12 +19,13 @@ class ShellElement : public FElement {
 private:
     string param;
 
+protected:
     MatrixXd nodeP;
     MatrixXd intP;
 
 public:
     ShellElement();
-    ShellElement(string label, string material, string param, vector<string> nodes, MatrixXd _nodeP, MatrixXd _intP);
+    ShellElement(string label, string material, string param, vector<string> nodes);
 
     virtual string getName() = 0;
 
