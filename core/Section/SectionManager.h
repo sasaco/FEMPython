@@ -2,37 +2,45 @@
 
 #include"Material.h"
 
+#include"RectSection.h"
+#include"CircleSection.h"
+
 #include<Eigen/Core>
 using namespace Eigen;
 
 class SectionManager {
 
 private:
+    string type;
+    RectSection _RectSection;
+    CircleSection _CircleSection;
 
 public:
+    SectionManager();
+    SectionManager(string _type, vector<double> ss);
 
     // ’f–ÊÏ
-    double area;
-    // ’f–Ê‚QŸƒ‚[ƒƒ“ƒg
-    double iy;
-    double iz;
-    // ’f–Ê‚QŸ‹Éƒ‚[ƒƒ“ƒg
-    double ip;
+    double area();
 
-    SectionManager();
+    // ’f–Ê‚QŸƒ‚[ƒƒ“ƒg
+    double iy();
+    double iz();
+
+    // ’f–Ê‚QŸ‹Éƒ‚[ƒƒ“ƒg
+    double ip();
 
     // ‚¹‚ñ’f•â³ŒW”‚ğ•Ô‚·
-    virtual double shearCoef() = 0;
+    double shearCoef();
 
     // ˜cE‰—ÍƒxƒNƒgƒ‹‚ğ•Ô‚·
-    virtual MatrixXd strainStress(Material material, double ex, double thd, double kpy, double kpz,
-        double sy, double sz) = 0;
+    MatrixXd strainStress(Material material, double ex, double thd, double kpy, double kpz,
+        double sy, double sz);
 
     // ¿—ÊEdSü‚è‚ÌŠµ«ƒ‚[ƒƒ“ƒg‚ğ•Ô‚·
-    virtual VectorXd massInertia(double dens, double l) = 0;
+    VectorXd massInertia(double dens, double l);
 
     // ’f–Ê‚ğ•\‚·•¶š—ñ‚ğ•Ô‚·
-    virtual string toString() = 0;
+    string toString();
 
 
 };

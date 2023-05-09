@@ -49,7 +49,7 @@ PYBIND11_MODULE(core, m){
 
 
     pybind11::class_<BarParameter>(m, "BarParameter")
-        .def(pybind11::init<string, string, double*>())
+        .def(pybind11::init<string, string, vector<double>>())
         .def_readwrite("label", &BarParameter::label);
 
 

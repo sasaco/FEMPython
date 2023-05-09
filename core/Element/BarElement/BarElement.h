@@ -35,21 +35,21 @@ public:
     BarElement();
     BarElement(string label, string material, string param, vector<string> nodes, Vector3Dim axis);
 
-    MatrixXd stiffnessMatrix(vector<FENode> p, Material material, SectionManager &sect);
+    MatrixXd stiffnessMatrix(vector<FENode> p, Material material, SectionManager sect);
 
-    virtual MatrixXd stiffBend(double l, Material material, SectionManager &sect) = 0;
+    virtual MatrixXd stiffBend(double l, Material material, SectionManager sect) = 0;
 
-    MatrixXd gradMatrix(vector<FENode> p, double coef, SectionManager &sect);
+    MatrixXd gradMatrix(vector<FENode> p, double coef, SectionManager sect);
 
-    MatrixXd geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect);
+    MatrixXd geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect);
 
     tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
-        strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect);
+        strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect);
 
-    virtual vector<VectorXd> bendCurveShare(VectorXd v, double l, Material material, SectionManager &sect) = 0;
+    virtual vector<VectorXd> bendCurveShare(VectorXd v, double l, Material material, SectionManager sect) = 0;
 
     tuple<Strain, Stress, double, Strain, Stress, double>
-        elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect);
+        elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect);
 
     string toString(vector< Material> materials, vector<BarParameter> params, vector<FENode> p);
 

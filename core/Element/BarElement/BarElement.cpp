@@ -23,14 +23,14 @@ BarElement::BarElement(string label, string material, string _param, vector<stri
 // p - 要素節点
 // material - 材料
 // sect - 梁断面パラメータ
-MatrixXd BarElement::stiffnessMatrix(vector<FENode> p, Material material, SectionManager &sect) {
+MatrixXd BarElement::stiffnessMatrix(vector<FENode> p, Material material, SectionManager sect) {
     
     MatrixXd kk = MatrixXd::Zero(12, 12);
     double l = p[0].distanceTo(p[1]);
     MatrixXd d = dirMatrix(p, axis);
 
-    double kx = material.ee * sect.area / l;
-    double kt = material.gg * sect.ip / l;
+    double kx = material.ee * sect.area() / l;
+    double kt = material.gg * sect.ip() / l;
 
     kk(0, 0) = kx;
     kk(0, 6) = -kx;
@@ -64,9 +64,9 @@ MatrixXd BarElement::stiffnessMatrix(vector<FENode> p, Material material, Sectio
 // p - 要素節点
 // coef - 係数
 // sect - 梁断面パラメータ
-MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, SectionManager &sect) {
+MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, SectionManager sect) {
 
-    double c = coef * sect.area / p[0].distanceTo(p[1]);
+    double c = coef * sect.area() / p[0].distanceTo(p[1]);
 
     MatrixXd result(2, 2);
     result(0, 0) = c; 
@@ -84,13 +84,13 @@ MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, SectionManager &s
 // u - 節点変位
 // material - 材料
 // sect - 梁断面パラメータ
-MatrixXd BarElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect) {
+MatrixXd BarElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect) {
     
     double l2 = p[0].distanceToSquared(p[1]);
     MatrixXd d = dirMatrix(p, axis);
     VectorXd v = toLocalArray(u, d);
     MatrixXd kk = MatrixXd::Zero(12, 12);
-    double sx = material.ee * sect.area * (v[6] - v[0]) / l2;
+    double sx = material.ee * sect.area() * (v[6] - v[0]) / l2;
     for (int i = 0; i < 3; i++) {
         kk(i, i) = sx;
         kk(i + 6, i) = -sx;
@@ -108,7 +108,7 @@ MatrixXd BarElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, M
 // material - 材料
 // sect - 梁断面パラメータ
 tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
-    BarElement::strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect) {
+    BarElement::strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect) {
 
     double l = p[0].distanceTo(p[1]);
     MatrixXd d = dirMatrix(p, axis);
@@ -167,7 +167,7 @@ tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Str
 // material - 材料
 // sect - 梁断面パラメータ
 tuple<Strain, Stress, double, Strain, Stress, double>
-    BarElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect) {
+    BarElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect) {
 
     double l = p[0].distanceTo(p[1]);
     MatrixXd d = dirMatrix(p, axis);

@@ -64,17 +64,17 @@ public:
     vector<string> nodes();
     void setNodes(vector<string> tmp);
 
-    vector<int> nodeIndexs; // ß“_‚Ì‡¬ƒ}ƒgƒŠƒNƒXã‚ÌƒCƒ“ƒfƒbƒNƒX
+    vector<int> nodeIndexs; // ï¿½ß“_ï¿½Ìï¿½ï¿½ï¿½ï¿½}ï¿½gï¿½ï¿½ï¿½Nï¿½Xï¿½ï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
     void setIndexs(vector<int> tmp);
 
     string material();
-    int materialIndex;         // ‡¬ƒ}ƒgƒŠƒNƒXã‚ÌƒCƒ“ƒfƒbƒNƒX
+    int materialIndex;         // ï¿½ï¿½ï¿½ï¿½ï¿½}ï¿½gï¿½ï¿½ï¿½Nï¿½Xï¿½ï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
     void setMaterial(string mat);
     void setMaterialIndex(int mat);
 
     string param();
     void setParam(string param);
-    int paramIndex;         // ‡¬ƒ}ƒgƒŠƒNƒXã‚ÌƒCƒ“ƒfƒbƒNƒX
+    int paramIndex;         // ï¿½ï¿½ï¿½ï¿½ï¿½}ï¿½gï¿½ï¿½ï¿½Nï¿½Xï¿½ï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½X
     void setParamIndex(int param);
 
     bool isShell();
@@ -83,18 +83,18 @@ public:
     int nodeCount();
 
     MatrixXd gradMatrix(vector<FENode>nodes, double h, ShellParameter sp);
-    MatrixXd gradMatrix(vector<FENode>nodes, double h, SectionManager &sp);
+    MatrixXd gradMatrix(vector<FENode>nodes, double h, SectionManager sp);
     MatrixXd gradMatrix(vector<FENode>nodes, double h);
 
     MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1, ShellParameter sp);
-    MatrixXd stiffnessMatrix(vector<FENode> p, Material d1, SectionManager &sp);
+    MatrixXd stiffnessMatrix(vector<FENode> p, Material d1, SectionManager sp);
     MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1);
 
 
     tuple<Strain, Stress, double, Strain, Stress, double>
         elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
     tuple<Strain, Stress, double, Strain, Stress, double>
-        elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect);
+        elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect);
     tuple<Strain, Stress, double> 
         elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
@@ -102,7 +102,7 @@ public:
     tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
         strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
     tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
-        strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect);
+        strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect);
     tuple<vector<Strain>, vector<Stress>, vector<double>>
         strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 

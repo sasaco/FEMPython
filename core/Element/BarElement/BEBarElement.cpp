@@ -22,11 +22,11 @@ string BEBarElement::getName() {
 // l - 要素長さ
 // material - 材料
 // sect - 梁断面パラメータ
-MatrixXd BEBarElement::stiffBend(double l, Material material, SectionManager &sect) {
+MatrixXd BEBarElement::stiffBend(double l, Material material, SectionManager sect) {
 
     double kc = material.ee / (l * l * l);
-    double kcy = kc * sect.iy;
-    double kcz = kc * sect.iz;
+    double kcy = kc * sect.iy();
+    double kcz = kc * sect.iz();
 
     double kcy12 = 12 * kcy;
     double kcy6l = 6 * kcy * l;
@@ -54,7 +54,7 @@ MatrixXd BEBarElement::stiffBend(double l, Material material, SectionManager &se
 // l - 要素長さ
 // material - 材料
 // sect - 梁断面パラメータ
-vector<VectorXd> BEBarElement::bendCurveShare(VectorXd v, double l, Material material, SectionManager &sect) {
+vector<VectorXd> BEBarElement::bendCurveShare(VectorXd v, double l, Material material, SectionManager sect) {
 
     double ckap1 = 6 / (l * l);
     double ckap2 = 4 / l;

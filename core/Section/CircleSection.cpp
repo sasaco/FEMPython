@@ -4,7 +4,8 @@
 //--------------------------------------------------------------------//
 // 円形断面
 // ss - データ文字列
-CircleSection::CircleSection(double ss[2]) {
+CircleSection::CircleSection() {}
+CircleSection::CircleSection(vector<double> ss) {
 
     d1 = ss[0];	// 外径
     d2 = ss[1];	// 内径

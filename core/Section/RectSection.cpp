@@ -3,7 +3,8 @@
 //--------------------------------------------------------------------//
 // 矩形断面
 // ss - データ文字列
-RectSection::RectSection(double ss[4]) {
+RectSection::RectSection() {}
+RectSection::RectSection(vector<double> ss) {
 
     double b1 = ss[0];   // 外側幅
     double h1 = ss[1];   // 外側高さ
@@ -43,7 +44,6 @@ RectSection::RectSection(double ss[4]) {
         ip2 = k2[0] * i22;
     }
     else {
-        double k2[4];
         auto k2 = rectCoef(h2 / b2);
         ip2 = k2[0] * i21;
     }

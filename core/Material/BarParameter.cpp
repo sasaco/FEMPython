@@ -7,35 +7,20 @@
 // ss - データ文字列
 BarParameter::BarParameter() {
     label = "";
-    type = "";
 }
-BarParameter::BarParameter(string _label, string _type, double *ss) {
+BarParameter::BarParameter(string _label, string _type, vector<double> ss) {
     
     label = _label;
-    type = _type;
+
+    string type = _type;
 
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
-    if (type == "circle") {
-        circleSection = new CircleSection(ss);
-    }
-    else if (type == "rectangle") {
-        rectSection = new RectSection(ss);
-    }
-}
-
-BarParameter::~BarParameter() {
-    delete circleSection;
-    delete rectSection;
+    _Section = SectionManager(type, ss);
 }
 
 SectionManager BarParameter::section() {
-    if (type == "circle") {
-        return *circleSection;
-    }
-    else if (type == "rectangle") {
-        return *rectSection;
-    }
+    return _Section;
 }
 
 // 梁パラメータを表す文字列を返す

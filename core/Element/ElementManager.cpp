@@ -387,7 +387,7 @@ MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, ShellParamete
 }
 
 /// <summary> Bar�p </summary>
-MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, SectionManager &sp) {
+MatrixXd ElementManager::gradMatrix(vector<FENode>nodes, double h, SectionManager sp) {
     if (key == "bebarelement") {
         // return _BEBarElement.gradMatrix(nodes, h, sp);
     }
@@ -439,7 +439,7 @@ MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, MatrixXd d1, ShellPar
 }
 
 /// <summary> Bar�p </summary>
-MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, Material d1, SectionManager &sp) {
+MatrixXd ElementManager::stiffnessMatrix(vector<FENode> p, Material d1, SectionManager sp) {
     if (key == "bebarelement") {
         // return _BEBarElement.stiffnessMatrix(p, d1, sp);
     }
@@ -502,7 +502,7 @@ ElementManager::elementStrainStress(
 
 tuple<Strain, Stress, double, Strain, Stress, double>
 ElementManager::elementStrainStress(
-    vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect) {
+    vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect) {
     if (key == "bebarelement") {
         // return _BEBarElement.elementStrainStress(p, u, material, sect);
     }
@@ -567,7 +567,7 @@ ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, 
 }
 
 tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
-ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect) {
+ElementManager::strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager sect) {
     if (key == "bebarelement") {
         // return _BEBarElement.strainStress(p, u, material, sect);
     }

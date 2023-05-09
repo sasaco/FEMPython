@@ -11,9 +11,9 @@ public:
 
     string getName() override;
 
-    MatrixXd stiffBend(double l, Material material, SectionManager &sect) override;
+    MatrixXd stiffBend(double l, Material material, SectionManager sect) override;
 
-    vector<VectorXd> bendCurveShare(VectorXd v, double l, Material material, SectionManager &sect) override;
+    vector<VectorXd> bendCurveShare(VectorXd v, double l, Material material, SectionManager sect) override;
 
     MatrixXd massMatrix(vector<FENode> p, double dens, SectionManager sect);
 
