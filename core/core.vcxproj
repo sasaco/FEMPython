@@ -159,6 +159,7 @@
     <ClCompile Include="Coordinates\Coordinates.cpp" />
     <ClCompile Include="Element\BarElement\BarElement.cpp" />
     <ClCompile Include="Element\BarElement\BEBarElement.cpp" />
+    <ClCompile Include="Element\BarElement\TBarElement.cpp" />
     <ClCompile Include="Element\ElementManager.cpp" />
     <ClCompile Include="Element\FElement.cpp" />
     <ClCompile Include="Element\Nodes.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="Coordinates\Coordinates.h" />
     <ClInclude Include="Element\BarElement\BarElement.h" />
     <ClInclude Include="Element\BarElement\BEBarElement.h" />
+    <ClInclude Include="Element\BarElement\TBarElement.h" />
     <ClInclude Include="Element\ElementManager.h" />
     <ClInclude Include="Element\FElement.h" />
     <ClInclude Include="Element\Nodes.h" />

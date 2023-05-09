@@ -10,9 +10,11 @@ SectionManager::SectionManager(string _type, vector<double> ss) {
 
     if (type == "circle") {
         _CircleSection = CircleSection(ss);
+        _RectSection = RectSection();
     }
     else if (type == "rectangle") {
         _RectSection = RectSection(ss);
+        _CircleSection = CircleSection();
     }
 }
 
