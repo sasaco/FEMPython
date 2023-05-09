@@ -237,8 +237,9 @@ Vector3Dim FElement::normalVector(vector<Vector3Dim> v) {
 void FElement::toDir(MatrixXd d, MatrixXd k) {
     MatrixXd a = d * k;
     for (int i = 0; i < k.rows(); i++) {
+        VectorXd ai = a.row(i);
         for (int j = 0; j < k.cols(); j++) {
-            k[i, j] = a.row(i).dot(d.row(j));
+            k(i, j) = ai.dot(d.row(j));
         }
     }
 }
