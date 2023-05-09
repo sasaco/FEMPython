@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Material.h"
+#include "SectionManager.h"
 
 #include <string>
 //#include <fmt/core.h>
@@ -11,7 +12,7 @@ using std::string;
 //--------------------------------------------------------------------//
 // 円形断面
 // ss - データ文字列
-class CircleSection {
+class CircleSection : public SectionManager {
 
 private:
     const double PI = 3.14159265358979323846;   // pi
@@ -33,15 +34,15 @@ public:
     CircleSection(double ss[2]);
 
     // せん断補正係数を返す
-    double shearCoef();
+    double shearCoef() override;
 
     // 歪・応力ベクトルを返す
-    void strainStress(Material material, double ex, double thd, double kpy, double kpz,
-        double sy, double sz, double out[4][6]);
+    MatrixXd strainStress(Material material, double ex, double thd, double kpy, double kpz,
+        double sy, double sz) override;
 
     // 質量・重心周りの慣性モーメントを返す
-    void massInertia(double dens, double l, double out[4]);
+    VectorXd massInertia(double dens, double l) override;
 
     // 断面を表す文字列を返す
-    string toString();
+    string toString() override;
 };

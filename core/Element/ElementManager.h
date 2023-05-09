@@ -3,7 +3,7 @@
 //#include "BorderManager.hpp"
 #include "ShellParameter.h"
 #include "BarParameter.h"
-#include "Section.h"
+#include "SectionManager.h"
 
 #include <iostream>
 #include <string>
@@ -14,7 +14,6 @@ using std::vector;
 
 // -----------------------------------------------------------------------------
 // BarElement
-#include "SEBarElement.h"
 //#include "BEBarElement.h"
 //#include "TBarElement.h"
 
@@ -42,7 +41,6 @@ private:
     string key;
 
     //// BarElement
-    SEBarElement _SEBarElement;
     //BEBarElement _BEBarElement = NULL;
     //TBarElement  _TBarElement = NULL;
     //// SolidElement
@@ -85,18 +83,18 @@ public:
     int nodeCount();
 
     MatrixXd gradMatrix(vector<FENode>nodes, double h, ShellParameter sp);
-    MatrixXd gradMatrix(vector<FENode>nodes, double h, Section sp);
+    MatrixXd gradMatrix(vector<FENode>nodes, double h, SectionManager &sp);
     MatrixXd gradMatrix(vector<FENode>nodes, double h);
 
     MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1, ShellParameter sp);
-    MatrixXd stiffnessMatrix(vector<FENode> p, Material d1, Section sp);
+    MatrixXd stiffnessMatrix(vector<FENode> p, Material d1, SectionManager &sp);
     MatrixXd stiffnessMatrix(vector<FENode> p, MatrixXd d1);
 
 
     tuple<Strain, Stress, double, Strain, Stress, double>
         elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
     tuple<Strain, Stress, double, Strain, Stress, double>
-        elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect);
+        elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect);
     tuple<Strain, Stress, double> 
         elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
@@ -104,7 +102,7 @@ public:
     tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
         strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
     tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
-        strainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect);
+        strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect);
     tuple<vector<Strain>, vector<Stress>, vector<double>>
         strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 

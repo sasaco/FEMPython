@@ -29,9 +29,13 @@ BarParameter::~BarParameter() {
     delete rectSection;
 }
 
-Section BarParameter::section() {
-    auto sect = Section();
-    return sect;
+SectionManager BarParameter::section() {
+    if (type == "circle") {
+        return *circleSection;
+    }
+    else if (type == "rectangle") {
+        return *rectSection;
+    }
 }
 
 // 梁パラメータを表す文字列を返す

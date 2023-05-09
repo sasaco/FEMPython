@@ -23,7 +23,7 @@ BarElement::BarElement(string label, string material, string _param, vector<stri
 // p - 要素節点
 // material - 材料
 // sect - 梁断面パラメータ
-MatrixXd BarElement::stiffnessMatrix(vector<FENode> p, Material material, Section sect) {
+MatrixXd BarElement::stiffnessMatrix(vector<FENode> p, Material material, SectionManager &sect) {
     
     MatrixXd kk = MatrixXd::Zero(12, 12);
     double l = p[0].distanceTo(p[1]);
@@ -64,7 +64,7 @@ MatrixXd BarElement::stiffnessMatrix(vector<FENode> p, Material material, Sectio
 // p - 要素節点
 // coef - 係数
 // sect - 梁断面パラメータ
-MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, Section sect) {
+MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, SectionManager &sect) {
 
     double c = coef * sect.area / p[0].distanceTo(p[1]);
 
@@ -84,7 +84,7 @@ MatrixXd BarElement::gradMatrix(vector<FENode> p, double coef, Section sect) {
 // u - 節点変位
 // material - 材料
 // sect - 梁断面パラメータ
-MatrixXd BarElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
+MatrixXd BarElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect) {
     
     double l2 = p[0].distanceToSquared(p[1]);
     MatrixXd d = dirMatrix(p, axis);
@@ -108,7 +108,7 @@ MatrixXd BarElement::geomStiffnessMatrix(vector<FENode> p, vector<Vector3R> u, M
 // material - 材料
 // sect - 梁断面パラメータ
 tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Stress>, vector<double>>
-    BarElement::strainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
+    BarElement::strainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect) {
 
     double l = p[0].distanceTo(p[1]);
     MatrixXd d = dirMatrix(p, axis);
@@ -124,16 +124,16 @@ tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Str
     double ex = (v[6] - v[0]) / l;
     double thd = (v[9] - v[3]) / l;
 
-    MatrixXd ks = bendCurveShare(v, l, material, sect);
+    vector<VectorXd> ks = bendCurveShare(v, l, material, sect);
 
-    VectorXd kpy = ks.row(0);
-    VectorXd kpz = ks.row(1);
-    VectorXd sy = ks.row(2);
-    VectorXd sz = ks.row(3);
+    VectorXd kpy = ks[0];
+    VectorXd kpz = ks[1];
+    VectorXd sy = ks[2];
+    VectorXd sz = ks[3];
 
     for (int i = 0; i < 2; i++) {
 
-        MatrixXd str = sect.strainStress(material, ex, thd, kpy[i], kpz[i], sy, sz);
+        MatrixXd str = sect.strainStress(material, ex, thd, kpy[i], kpz[i], sy[0], sz[0]);
 
         Strain trai1 = Strain(str.row(0));
         Stress sres1 = Stress(str.row(1));
@@ -167,7 +167,7 @@ tuple<vector<Strain>, vector<Stress>, vector<double>, vector<Strain>, vector<Str
 // material - 材料
 // sect - 梁断面パラメータ
 tuple<Strain, Stress, double, Strain, Stress, double>
-    BarElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, Section sect) {
+    BarElement::elementStrainStress(vector<FENode> p, vector<Vector3R> u, Material material, SectionManager &sect) {
 
     double l = p[0].distanceTo(p[1]);
     MatrixXd d = dirMatrix(p, axis);
@@ -175,16 +175,16 @@ tuple<Strain, Stress, double, Strain, Stress, double>
     double ex = (v[6] - v[0]) / l;
     double thd = (v[9] - v[3]) / l;
 
-    MatrixXd ks = bendCurveShare(v, l, material, sect);
+    auto ks = bendCurveShare(v, l, material, sect);
 
-    VectorXd kpy = ks.row(0);
-    VectorXd kpz = ks.row(1);
-    VectorXd sy = ks.row(2);
-    VectorXd sz = ks.row(3);
+    VectorXd kpy = ks[0];
+    VectorXd kpz = ks[1];
+    VectorXd sy = ks[2];
+    VectorXd sz = ks[3];
 
     vector<MatrixXd> str;
     for (int i = 0; i < 2; i++) {
-        str.push_back(sect.strainStress(material, ex, thd, kpy[i], kpz[i], sy, sz));
+        str.push_back(sect.strainStress(material, ex, thd, kpy[i], kpz[i], sy[0], sz[0]));
     }
 
     VectorXd st0 = str[0].row(0) + str[1].row(0);

@@ -158,7 +158,7 @@
     <ClCompile Include="BoundaryCondition\Temperature.cpp" />
     <ClCompile Include="Coordinates\Coordinates.cpp" />
     <ClCompile Include="Element\BarElement\BarElement.cpp" />
-    <ClCompile Include="Element\BarElement\SEBarElement.cpp" />
+    <ClCompile Include="Element\BarElement\BEBarElement.cpp" />
     <ClCompile Include="Element\ElementManager.cpp" />
     <ClCompile Include="Element\FElement.cpp" />
     <ClCompile Include="Element\Nodes.cpp" />
@@ -185,7 +185,7 @@
     <ClCompile Include="numeric\Vector3R.cpp" />
     <ClCompile Include="Section\CircleSection.cpp" />
     <ClCompile Include="Section\RectSection.cpp" />
-    <ClCompile Include="Section\Section.cpp" />
+    <ClCompile Include="Section\SectionManager.cpp" />
     <ClCompile Include="Solver\EigenValue.cpp" />
     <ClCompile Include="Solver\Result.cpp" />
     <ClCompile Include="Solver\Solver.cpp" />
@@ -203,7 +203,7 @@
     <ClInclude Include="BoundaryCondition\Temperature.h" />
     <ClInclude Include="Coordinates\Coordinates.h" />
     <ClInclude Include="Element\BarElement\BarElement.h" />
-    <ClInclude Include="Element\BarElement\SEBarElement.h" />
+    <ClInclude Include="Element\BarElement\BEBarElement.h" />
     <ClInclude Include="Element\ElementManager.h" />
     <ClInclude Include="Element\FElement.h" />
     <ClInclude Include="Element\Nodes.h" />
@@ -229,7 +229,7 @@
     <ClInclude Include="numeric\Vector3R.h" />
     <ClInclude Include="Section\CircleSection.h" />
     <ClInclude Include="Section\RectSection.h" />
-    <ClInclude Include="Section\Section.h" />
+    <ClInclude Include="Section\SectionManager.h" />
     <ClInclude Include="Solver\EigenValue.h" />
     <ClInclude Include="Solver\Result.h" />
     <ClInclude Include="Solver\Solver.h" />

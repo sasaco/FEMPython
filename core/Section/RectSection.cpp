@@ -24,15 +24,13 @@ RectSection::RectSection(double ss[4]) {
     double ip1;
     double ip2;
     if (b1 >= h1) {
-        double k1[4];
-        rectCoef(b1 / h1, k1);
+        auto k1 = rectCoef(b1 / h1);
         ip1 = k1[0] * i12;
         zy = k1[1] * h1;
         zz = k1[3] * zy;
     }
     else {
-        double k1[4];
-        rectCoef(h1 / b1, k1);
+        auto k1 = rectCoef(h1 / b1);
         ip1 = k1[0] * i11;
         zz = k1[1] * b1;
         zy = k1[3] * zz;
@@ -41,13 +39,12 @@ RectSection::RectSection(double ss[4]) {
         ip2 = 0;
     }
     else if (b2 >= h2) {
-        double k2[4];
-        rectCoef(b2 / h2, k2);
+        auto k2 = rectCoef(b2 / h2);
         ip2 = k2[0] * i22;
     }
     else {
         double k2[4];
-        rectCoef(h2 / b2, k2);
+        auto k2 = rectCoef(h2 / b2);
         ip2 = k2[0] * i21;
     }
     ip = ip1 - ip2;		// 断面２次極モーメント
@@ -65,8 +62,8 @@ double RectSection::shearCoef() {
 // thd - 比捩り角
 // kpy,kpz - 曲げによる曲率
 // sy,sz - 断面せん断歪
-void RectSection::strainStress(Material material, double ex, double thd, double kpy, double kpz,
-    double sy, double sz, double out[4][6]) {
+MatrixXd RectSection::strainStress(Material material, double ex, double thd, double kpy, double kpz,
+    double sy, double sz) {
 
     double sby = 0.5 * kpy * b1;
     double sbz = 0.5 * kpz * h1;
@@ -102,33 +99,35 @@ void RectSection::strainStress(Material material, double ex, double thd, double 
 
     int j = (imax + 4) % 8;
 
-    out[0][0] = eps[imax][0];
-    out[0][1] = 0;
-    out[0][2] = 0;
-    out[0][3] = eps[imax][1];
-    out[0][4] = 0;
-    out[0][5] = eps[imax][2];
+    MatrixXd out(4, 6);
 
-    out[1][0] = ee * eps[imax][0];
-    out[1][1] = 0;
-    out[1][2] = 0;
-    out[1][3] = gg * eps[imax][1];
-    out[1][4] = 0;
-    out[1][5] = gg * eps[imax][2];
+    out(0, 0) = eps[imax][0];
+    out(0, 1) = 0;
+    out(0, 2) = 0;
+    out(0, 3) = eps[imax][1];
+    out(0, 4) = 0;
+    out(0, 5) = eps[imax][2];
 
-    out[2][0] = eps[j][0];
-    out[2][1] = 0;
-    out[2][2] = 0;
-    out[2][3] = eps[j][1];
-    out[2][4] = 0;
-    out[2][5] = eps[j][2];
+    out(1, 0) = ee * eps[imax][0];
+    out(1, 1) = 0;
+    out(1, 2) = 0;
+    out(1, 3) = gg * eps[imax][1];
+    out(1, 4) = 0;
+    out(1, 5) = gg * eps[imax][2];
 
-    out[3][0] = ee * eps[j][0];
-    out[3][1] = 0;
-    out[3][2] = 0;
-    out[3][3] = gg * eps[j][1];
-    out[3][4] = 0;
-    out[3][5] = gg * eps[j][2];
+    out(2, 0) = eps[j][0];
+    out(2, 1) = 0;
+    out(2, 2) = 0;
+    out(2, 3) = eps[j][1];
+    out(2, 4) = 0;
+    out(2, 5) = eps[j][2];
+
+    out(3, 0) = ee * eps[j][0];
+    out(3, 1) = 0;
+    out(3, 2) = 0;
+    out(3, 3) = gg * eps[j][1];
+    out(3, 4) = 0;
+    out(3, 5) = gg * eps[j][2];
 
 };
 
@@ -136,11 +135,12 @@ void RectSection::strainStress(Material material, double ex, double thd, double 
 // 質量・重心周りの慣性モーメントを返す
 // dens - 密度
 // l - 要素長さ
-void RectSection::massInertia(double dens, double l, double out[4]) {
+VectorXd RectSection::massInertia(double dens, double l) {
     double dl = dens * l;
     double dly = dl * iz;
     double dlz = dl * iy;
 
+    VectorXd out(4);
     out[0] = dl * area;
     out[1] = dly + dlz;
     out[2] = dly;
@@ -159,7 +159,7 @@ string RectSection::toString() {
 
 // 矩形断面の捩り係数を求める
 // ba - 辺の長さ比b/a
-void RectSection::rectCoef(double ba, double out[4]) {
+VectorXd RectSection::rectCoef(double ba) {
 
     double dk1s = 0;
     double dks = 0;
@@ -201,8 +201,11 @@ void RectSection::rectCoef(double ba, double out[4]) {
     double k = 1 - COEF_K * dks;
     double b = COEF_K * dbs;
 
+    VectorXd out(4);
     out[0] = k1;
     out[1] = k;
     out[2] = k1 / k;
     out[3] = b / k;
+
+    return out;
 }

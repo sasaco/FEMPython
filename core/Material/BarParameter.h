@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "RectSection.h"
 #include "CircleSection.h"
-#include "Section.h"
+#include "SectionManager.h"
 
 #include <algorithm>
 #include <string>
@@ -27,6 +27,6 @@ public:
     BarParameter(string label, string type, double* ss);
     ~BarParameter();
 
-    Section section();
+    SectionManager section();
     string toString();
 };
