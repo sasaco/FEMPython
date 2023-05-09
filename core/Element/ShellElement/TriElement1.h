@@ -5,6 +5,7 @@
 class TriElement1 : public ShellElement {
 
 private:
+    
     // 三角形1次要素の節点のξ,η座標
     Eigen::Matrix<double, 3, 2> TRI1_NODE;
 
@@ -16,16 +17,14 @@ private:
 
     // 三角形1次要素の質量マトリックス係数
     Eigen::Matrix<double, 3, 3> TRI1_MASS1;
-
+    
 
 public:
     TriElement1();
     TriElement1(string label, string material, string param, vector<string> nodes);
 
     string getName() override;
-
-    int nodeCount() override;
-
+    
     MatrixXd shapeFunction(double xsi, double eta) override;
 
     MatrixXd shapeFunction2(double xsi, double eta);
@@ -50,8 +49,8 @@ public:
 
     MatrixXd strainMatrix(MatrixXd sf1, MatrixXd sf3, MatrixXd jinv, MatrixXd d, double zeta, double t);
 
-    Strain toStrain(VectorXd s);
+    Strain toStrain(VectorXd s) override;
 
-    Stress toStress(VectorXd s);
-
+    Stress toStress(VectorXd s) override;
+    
 };

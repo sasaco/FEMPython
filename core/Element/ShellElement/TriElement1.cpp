@@ -504,15 +504,15 @@ MatrixXd TriElement1::strainMatrix(MatrixXd sf1, MatrixXd  sf3, MatrixXd jinv, M
 // ベクトルを歪に変換する
 // s - 歪ベクトル
 Strain TriElement1::toStrain(VectorXd s) {
-    VectorXd _s;
+    VectorXd _s = s;
     _s << s[0], s[1], 0, s[2], 0, 0;
-    return Strain(_s);
+    return Strain(s);
 }
 
 // ベクトルを歪に変換する
 // s - 歪ベクトル
 Stress TriElement1::toStress(VectorXd s) {
-    VectorXd _s;
+    VectorXd _s = s;
     _s << s[0], s[1], 0, s[2], 0, 0;
-    return Stress(_s);
+    return Stress(s);
 }

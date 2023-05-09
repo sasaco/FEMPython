@@ -162,7 +162,9 @@
     <ClCompile Include="Element\ElementManager.cpp" />
     <ClCompile Include="Element\FElement.cpp" />
     <ClCompile Include="Element\Nodes.cpp" />
+    <ClCompile Include="Element\ShellElement\QuadElement1.cpp" />
     <ClCompile Include="Element\ShellElement\ShellElement.cpp" />
+    <ClCompile Include="Element\ShellElement\TriElement1.cpp" />
     <ClCompile Include="Element\SolidElement\HexaElement1.cpp" />
     <ClCompile Include="Element\SolidElement\HexaElement1WT.cpp" />
     <ClCompile Include="Element\SolidElement\HexaElement2.cpp" />
@@ -205,7 +207,9 @@
     <ClInclude Include="Element\ElementManager.h" />
     <ClInclude Include="Element\FElement.h" />
     <ClInclude Include="Element\Nodes.h" />
+    <ClInclude Include="Element\ShellElement\QuadElement1.h" />
     <ClInclude Include="Element\ShellElement\ShellElement.h" />
+    <ClInclude Include="Element\ShellElement\TriElement1.h" />
     <ClInclude Include="Element\SolidElement\HexaElement1.h" />
     <ClInclude Include="Element\SolidElement\HexaElement1WT.h" />
     <ClInclude Include="Element\SolidElement\HexaElement2.h" />

@@ -26,7 +26,7 @@ protected:
 public:
     ShellElement();
     ShellElement(string label, string material, string param, vector<string> nodes);
-
+    
     virtual string getName() = 0;
 
     MatrixXd jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3Dim n, double t);
@@ -59,12 +59,12 @@ public:
     tuple<Strain, Stress, double, Strain, Stress, double>
         elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
 
-    Strain toStrain(VectorXd s);
+    virtual Strain toStrain(VectorXd s);
 
-    Stress toStress(VectorXd s);
+    virtual Stress toStress(VectorXd s);
 
     string toString(vector<Material> materials, vector<ShellParameter> params, vector<FENode> p);
-
+    
 };
 
 
