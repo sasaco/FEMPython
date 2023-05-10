@@ -8,6 +8,10 @@
 // nodes - 節点番号
 // axis - 断面基準方向ベクトル
 TBarElement::TBarElement() : BarElement(){}
+TBarElement::TBarElement(string label, string material, string param, vector<string> nodes) :
+    BarElement(label, material, param, nodes) {
+
+};
 TBarElement::TBarElement(string label, string material, string param, vector<string> nodes, Vector3Dim axis) :
     BarElement(label, material, param, nodes, axis){
 };

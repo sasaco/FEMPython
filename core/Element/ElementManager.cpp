@@ -12,65 +12,111 @@ ElementManager::ElementManager(string keyWord, vector<string> columns) {
         // frameWeb で用いる棒要素
 
     }
-    else    if ((keyWord == "bebarelement") && (columns.size() > 5)) {
-            /*
+    else if ((keyWord == "bebarelement") && (columns.size() > 5)) {
+
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        string param = std::to_string(stoi(columns[3]));
+        vector<string> nodes;
+        for (int i = 4; i < 6; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+
         if (columns.size() < 8) {
-            mesh->elements.push_back(new BEBarElement
-            (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
-                readVertex(ss, 4, 2)));
+            _BEBarElement = BEBarElement(label, material, param, nodes);
         }
         else {
-            mesh->elements.push_back(new BEBarElement
-            (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
-                readVertex(ss, 4, 2),
-                new THREE.Vector3().set(stod(columns[6]),
-                    stod(columns[7]),
-                    stod(columns[8]))));
+            double x = stod(columns[6]);
+            double y = stod(columns[7]);
+            double z = stod(columns[8]);
+            Vector3Dim axis = Vector3Dim(x, y, z);
+            _BEBarElement = BEBarElement(label, material, param, nodes, axis);
         }
-        */
     }
     else if ((keyWord == "tbarelement") && (columns.size() > 5)) {
-        /*
+        
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        string param = std::to_string(stoi(columns[3]));
+        vector<string> nodes;
+        for (int i = 4; i < 6; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+
         if (columns.size() < 8) {
-            mesh->elements.push_back(new TBarElement
-            (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
-                readVertex(ss, 4, 2)));
+            _TBarElement = TBarElement(label, material, param, nodes);
         }
         else {
-            mesh->elements.push_back(new TBarElement
-            (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
-                readVertex(ss, 4, 2),
-                new THREE.Vector3().set(stod(columns[6]),
-                    stod(columns[7]),
-                    stod(columns[8]))));
+            double x = stod(columns[6]);
+            double y = stod(columns[7]); 
+            double z = stod(columns[8]);
+            Vector3Dim axis = Vector3Dim(x, y, z);
+            _TBarElement = TBarElement(label, material, param, nodes, axis);
         }
-        */
     }
     else if ((keyWord == "trielement1") && (columns.size() > 6)) {
-        /*
-        mesh->elements.push_back(new TriElement1
-        (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
-            readVertex(ss, 4, 3)));
-        */
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        string param = std::to_string(stoi(columns[3]));
+        vector<string> nodes;
+        for (int i = 4; i < 7; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+        _TriElement1 = TriElement1(label, material, param, nodes);
     }
     else if ((keyWord == "quadelement1") && (columns.size() > 7)) {
-        /*
-        mesh->elements.push_back(new QuadElement1
-        (stoi(columns[1]), stoi(columns[2]), stoi(columns[3]),
-            readVertex(ss, 4, 4)));
-        */
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        string param = std::to_string(stoi(columns[3]));
+        vector<string> nodes;
+        for (int i = 4; i < 8; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+        _QuadElement1 = QuadElement1(label, material, param, nodes);
     }
     else if ((keyWord == "tetraelement1") && (columns.size() > 6)) {
-        /*
-        mesh->elements.push_back(new TetraElement1
-        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 4)));
-        */
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        vector<string> nodes;
+        for (int i = 3; i < 7; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+        _TetraElement1 = TetraElement1(label, material, nodes);
+    }
+    else if ((keyWord == "tetraelement2") && (columns.size() > 12)) {
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        vector<string> nodes;
+        for (int i = 3; i < 13; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+        _TetraElement2 = TetraElement2(label, material, nodes);
     }
     else if ((keyWord == "wedgeelement1") && (columns.size() > 8)) {
-        /*
-        mesh->elements.push_back(new WedgeElement1
-        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 6)));
-        */
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        vector<string> nodes;
+        for (int i = 3; i < 9; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+        _WedgeElement1 = WedgeElement1(label, material, nodes);
+    }
+    else if ((keyWord == "wedgeelement2") && (columns.size() > 17)) {
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        vector<string> nodes;
+        for (int i = 3; i < 18; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+        _WedgeElement2 = WedgeElement2(label, material, nodes);
     }
     else if ((keyWord == "hexaelement1") && (columns.size() > 10)) {
         string label = std::to_string(stoi(columns[1]));
@@ -82,29 +128,25 @@ ElementManager::ElementManager(string keyWord, vector<string> columns) {
         }
         _HexaElement1 = HexaElement1(label, material, nodes);
     }    
-    else if ((keyWord == "hexaelement1wt") && (columns.size() > 10)) {
-        /*
-        mesh->elements.push_back(new HexaElement1WT
-        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 8)));
-        */
-    }
-    else if ((keyWord == "tetraelement2") && (columns.size() > 12)) {
-        /*
-        mesh->elements.push_back(new TetraElement2
-        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 10)));
-        */
-    }
-    else if ((keyWord == "wedgeelement2") && (columns.size() > 17)) {
-        /*
-        mesh->elements.push_back(new WedgeElement2
-        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 15)));
-        */
-    }
     else if ((keyWord == "hexaelement2") && (columns.size() > 22)) {
-        /*
-        mesh->elements.push_back(new HexaElement2
-        (stoi(columns[1]), stoi(columns[2]), readVertex(ss, 3, 20)));
-        */
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        vector<string> nodes;
+        for (int i = 3; i < 23; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+        _HexaElement2 = HexaElement2(label, material, nodes);
+    }
+    else if ((keyWord == "hexaelement1wt") && (columns.size() > 10)) {
+        string label = std::to_string(stoi(columns[1]));
+        string material = std::to_string(stoi(columns[2]));
+        vector<string> nodes;
+        for (int i = 3; i < 11; i++) {
+            string no = std::to_string(stoi(columns[i]));
+            nodes.push_back(no);
+        }
+        _HexaElement1WT = HexaElement1WT(label, material, nodes);
     }
 
     key = keyWord;

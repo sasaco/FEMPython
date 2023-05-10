@@ -7,6 +7,9 @@
 // nodes - 節点番号
 // axis - 断面基準方向ベクトル
 BEBarElement::BEBarElement() : BarElement() {}
+BEBarElement::BEBarElement(string label, string material, string param, vector<string> nodes) :
+    BarElement(label, material, param, nodes) {
+};
 BEBarElement::BEBarElement(string label, string material, string param, vector<string> nodes, Vector3Dim axis) :
     BarElement(label, material, param, nodes, axis){
 };

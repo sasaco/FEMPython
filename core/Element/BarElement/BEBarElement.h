@@ -7,6 +7,7 @@ private:
 
 public:
     BEBarElement();
+    BEBarElement(string label, string material, string param, vector<string> nodes);
     BEBarElement(string label, string material, string param, vector<string> nodes, Vector3Dim axis);
 
     string getName() override;

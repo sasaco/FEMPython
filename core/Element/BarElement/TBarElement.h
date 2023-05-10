@@ -8,6 +8,7 @@ private:
 
 public:
     TBarElement();
+    TBarElement(string label, string material, string param, vector<string> nodes);
     TBarElement(string label, string material, string param, vector<string> nodes, Vector3Dim axis);
 
     string getName() override;

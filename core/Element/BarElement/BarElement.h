@@ -33,6 +33,7 @@ protected:
 
 public:
     BarElement();
+    BarElement(string label, string material, string param, vector<string> nodes);
     BarElement(string label, string material, string param, vector<string> nodes, Vector3Dim axis);
 
     MatrixXd stiffnessMatrix(vector<FENode> p, Material material, SectionManager sect);
