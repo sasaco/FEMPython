@@ -3,13 +3,7 @@
 
 #include "Solver.h"
 
-// FileIO.cpp で定義した関数を使用します
-extern Solver readFemModelDataStr(string s);
-
 PYBIND11_MODULE(core, m){
-
-    // テスト用サンプルデータ読み取り関数のbind
-    m.def("readFemModel", &readFemModelDataStr);
 
     // クラスのbind
     pybind11::class_<FemDataModel>(m, "FemDataModel")
@@ -102,6 +96,9 @@ PYBIND11_MODULE(core, m){
         .def_readwrite("node", &Load::node)
         .def_readwrite("coords", &Load::coords)
         .def_readwrite("globalX", &Load::globalX);
+
+    pybind11::class_<ElementBorderBound>(m, "ElementBorderBound")
+        .def(pybind11::init<string, string>());
 
     pybind11::class_<Pressure, ElementBorderBound>(m, "Pressure")
         .def(pybind11::init<string, string, double>());
