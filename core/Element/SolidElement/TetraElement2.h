@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "SolidElement.h";
+#include "SolidElement.h"
 
-class TetraElement2 : SolidElement {
+class TetraElement2 : public SolidElement {
 
 private:
     Eigen::Matrix<double, 10, 3> TETRA2_NODE;

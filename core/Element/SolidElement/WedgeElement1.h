@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "SolidElement.h"
 
-class WedgeElement1 : SolidElement {
+class WedgeElement1 : public SolidElement {
 
 private:
     // 楔形1次要素の節点のξ,η,ζ座標

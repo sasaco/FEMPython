@@ -22,16 +22,18 @@ class BarElement : public FElement {
 
 private:
 
-    string param;
     bool isBar;
 
 protected:
+
     int I_YMZ[4] = { 1, 5, 7, 11 };	// y軸方向,z軸周り成分のインデックス
     int I_ZMY[4] = { 2, 4, 8, 10 };	// z軸方向,y軸周り成分のインデックス
 
     Vector3Dim axis;
 
 public:
+    string param;
+
     BarElement();
     BarElement(string label, string material, string param, vector<string> nodes);
     BarElement(string label, string material, string param, vector<string> nodes, Vector3Dim axis);

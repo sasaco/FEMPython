@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "SolidElement.h";
+#include "SolidElement.h"
 
 /// <summary>
 /// 四面体1次要素

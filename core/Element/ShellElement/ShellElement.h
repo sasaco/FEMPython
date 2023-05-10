@@ -17,13 +17,14 @@ using namespace Eigen;
 class ShellElement : public FElement {
 
 private:
-    string param;
 
 protected:
     MatrixXd nodeP;
     MatrixXd intP;
 
 public:
+    string param;
+
     ShellElement();
     ShellElement(string label, string material, string param, vector<string> nodes);
     
