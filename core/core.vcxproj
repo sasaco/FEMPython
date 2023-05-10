@@ -177,7 +177,6 @@
     <ClCompile Include="FemDataModel\FemDataModel.cpp" />
     <ClCompile Include="FemDataModel\FENode.cpp" />
     <ClCompile Include="FemDataModel\MeshModel.cpp" />
-    <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="Material\BarParameter.cpp" />
     <ClCompile Include="Material\Material.cpp" />
     <ClCompile Include="Material\ShellParameter.cpp" />
