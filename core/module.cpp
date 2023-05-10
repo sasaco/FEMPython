@@ -31,7 +31,7 @@ PYBIND11_MODULE(core, m){
 
     // データをインプットするクラス
     pybind11::class_<Material>(m, "Material")
-        .def(pybind11::init<int, double, double, double, double, double>())
+        .def(pybind11::init<string, double, double, double, double, double>())
         .def_readwrite("label", &Material::label)
         .def_readwrite("ee", &Material::ee)
         .def_readwrite("nu", &Material::nu)
@@ -40,6 +40,22 @@ PYBIND11_MODULE(core, m){
         .def_readwrite("sHeat", &Material::sHeat)
         .def_readwrite("cv", &Material::cv)
         .def_readwrite("gg", &Material::gg);
+
+
+    pybind11::class_<ShellParameter>(m, "ShellParameter")
+        .def(pybind11::init<string, double>())
+        .def_readwrite("label", &ShellParameter::label)
+        .def_readwrite("thickness", &ShellParameter::thickness);
+
+
+    pybind11::class_<BarParameter>(m, "BarParameter")
+        .def(pybind11::init<string, string, vector<double>>())
+        .def_readwrite("label", &BarParameter::label);
+
+
+    pybind11::class_<Coordinates>(m, "Coordinates")
+        .def(pybind11::init<string, double, double, double, double, double, double, double, double, double>())
+        .def_readwrite("label", &Coordinates::label);
 
 
     pybind11::class_<MeshModel>(m, "MeshModel")
@@ -63,7 +79,7 @@ PYBIND11_MODULE(core, m){
         .def_readwrite("z", &Vector3Dim::z);
 
     pybind11::class_<FENode, Vector3Dim>(m, "FENode")
-        .def(pybind11::init<int, double, double, double>()) 
+        .def(pybind11::init<string, double, double, double>()) 
         .def_readwrite("label", &FENode::label);
 
     pybind11::class_<ElementManager>(m, "ElementManager")
@@ -86,6 +102,16 @@ PYBIND11_MODULE(core, m){
         .def_readwrite("node", &Load::node)
         .def_readwrite("coords", &Load::coords)
         .def_readwrite("globalX", &Load::globalX);
+
+    pybind11::class_<Pressure, ElementBorderBound>(m, "Pressure")
+        .def(pybind11::init<string, string, double>());
+
+    pybind11::class_<Temperature>(m, "Temperature")
+    .def(pybind11::init<string, double>());
+
+    pybind11::class_<HeatTransferBound, ElementBorderBound>(m, "HeatTransferBound")
+        .def(pybind11::init<string, string, double, double>());
+
 
 
     // 計算結果を参照するクラス

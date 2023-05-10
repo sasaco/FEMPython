@@ -14,10 +14,15 @@ using std::string;
 class CircleSection {
 
 private:
-    const double PI = 3.14159265358979323846;   // pi
+    double PI = 3.14159265358979323846;   // pi
 
     double d1;  // 外径
     double d2;  // 内径
+
+public:
+    // 円形断面のせん断補正係数
+    double KS_CIRCLE = 6 / 7;
+
     // 断面積
     double area;
     // 断面２次モーメント
@@ -26,21 +31,18 @@ private:
     // 断面２次極モーメント
     double ip;
 
-public:
-    // 円形断面のせん断補正係数
-    const double KS_CIRCLE = 6 / 7;
-
-    CircleSection(double ss[2]);
+    CircleSection();
+    CircleSection(vector<double> ss);
 
     // せん断補正係数を返す
     double shearCoef();
 
     // 歪・応力ベクトルを返す
-    void strainStress(Material material, double ex, double thd, double kpy, double kpz,
-        double sy, double sz, double out[4][6]);
+    MatrixXd strainStress(Material material, double ex, double thd, double kpy, double kpz,
+        double sy, double sz);
 
     // 質量・重心周りの慣性モーメントを返す
-    void massInertia(double dens, double l, double out[4]);
+    VectorXd massInertia(double dens, double l);
 
     // 断面を表す文字列を返す
     string toString();

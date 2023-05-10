@@ -6,7 +6,7 @@
 // material - 材料のインデックス
 // nodes - 節点番号
 HexaElement1::HexaElement1() : SolidElement() {}
-HexaElement1::HexaElement1(int label, int material, vector<int> nodes) : 
+HexaElement1::HexaElement1(string label, string material, vector<string> nodes) :
     SolidElement(label, material, nodes) {
 
     // 六面体1次要素の節点のξ,η,ζ座標
@@ -114,19 +114,19 @@ MatrixXd HexaElement1::massMatrix(vector<FENode> p, double dens) {
     }
 
     double coef = dens * ja;
-    MatrixXd m = MatrixXd::Zero(24, 24);
+    MatrixXd result = MatrixXd::Zero(24, 24);
 
     for (int i = 0; i < 8; i++) {
         int i3 = 3 * i;
         for (int j = 0; j < 8; j++) {
             double value = coef * HEXA1_MASS_BASE(i, j);
             int j3 = 3 * j;
-            m(i3, j3) += value;
-            m(i3 + 1, j3 + 1) += value;
-            m(i3 + 2, j3 + 2) += value;
+            result(i3, j3) += value;
+            result(i3 + 1, j3 + 1) += value;
+            result(i3 + 2, j3 + 2) += value;
         }
     }
-    return m;
+    return result;
 }
 
 // 要素節点の角度を返す
@@ -138,5 +138,5 @@ VectorXd HexaElement1::angle(vector<FENode> p){
     th(i+4) = solidAngle(p[i+4], p[(i+1)%4+4], p[(i+3)%4+4], p[i]);
   }
   return th;
-};
+}
 

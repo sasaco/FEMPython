@@ -15,11 +15,9 @@ private:
 
 
 public:
-    int element;
     double press;
-    string face;
 
     Pressure();
-    Pressure(int _element, std::string _face, double _press);
+    Pressure(string _element, std::string _face, double _press);
     //string toString(vector<ElementManager> elems);
 };

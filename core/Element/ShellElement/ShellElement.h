@@ -17,17 +17,17 @@ using namespace Eigen;
 class ShellElement : public FElement {
 
 private:
-    int label;
-    int param;
-    bool isShell;
 
+protected:
     MatrixXd nodeP;
     MatrixXd intP;
 
 public:
-    ShellElement();
-    ShellElement(int label, int material, int param, vector<int> nodes, MatrixXd _nodeP, MatrixXd _intP);
+    string param;
 
+    ShellElement();
+    ShellElement(string label, string material, string param, vector<string> nodes);
+    
     virtual string getName() = 0;
 
     MatrixXd jacobianMatrix(vector<FENode> p, MatrixXd sf, Vector3Dim n, double t);
@@ -60,12 +60,12 @@ public:
     tuple<Strain, Stress, double, Strain, Stress, double>
         elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1, ShellParameter sp);
 
-    Strain toStrain(VectorXd s);
+    virtual Strain toStrain(VectorXd s);
 
-    Stress toStress(VectorXd s);
+    virtual Stress toStress(VectorXd s);
 
     string toString(vector<Material> materials, vector<ShellParameter> params, vector<FENode> p);
-
+    
 };
 
 

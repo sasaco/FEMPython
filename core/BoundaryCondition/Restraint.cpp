@@ -4,13 +4,15 @@
 //--------------------------------------------------------------------//
 // 拘束条件
 Restraint::Restraint() : Vector3R() {
-    node = -1;
-    coords = -1;
+    node = "";
+    nodeIndex = -1;
+    coords = "";
 }
 Restraint::Restraint(vector<string> ss) : Vector3R() {
 
-    node = stoi(ss[1]);
-    
+    node = ss[1];
+    nodeIndex = -1;
+
     rest.clear();
     rest.push_back(stoi(ss[2]) != 0);
     rest.push_back(stoi(ss[4]) != 0);
@@ -54,7 +56,7 @@ Restraint::Restraint(vector<string> ss) : Vector3R() {
 // restrx,restry,restrz - x,y,z方向の回転拘束の有無
 // rx,ry,rz - 強制変位のx,y,z軸周り回転角
 Restraint::Restraint(
-    int _node, int _coords,
+    string _node, string _coords,
     bool restx, bool resty, bool restz,
     double x, double y, double z,
     bool restrx, bool restry, bool restrz, 

@@ -78,6 +78,10 @@
     <PublicIncludeDirectories>$(PublicIncludeDirectories)</PublicIncludeDirectories>
     <IncludePath>$(ProjectDir)Border;$(ProjectDir)BoundaryCondition;$(ProjectDir)Coordinates;$(ProjectDir)Element;$(ProjectDir)Element\BarElement;$(ProjectDir)Element\ShellElement;$(ProjectDir)Element\SolidElement;$(ProjectDir)FemDataModel;$(ProjectDir)Material;$(ProjectDir)numeric;$(ProjectDir)Section;$(ProjectDir)Solver;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(MSBuildProjectDirectory)\BoundaryCondition\;$(MSBuildProjectDirectory)\Coordinates\;$(MSBuildProjectDirectory)\Element\;$(MSBuildProjectDirectory)\FemDataModel\;$(MSBuildProjectDirectory)\Element\SolidElement\;$(MSBuildProjectDirectory)\Element\ShellElement\;$(MSBuildProjectDirectory)\Element\BarElement\;$(MSBuildProjectDirectory)\Material\;$(MSBuildProjectDirectory)\numeric\;$(MSBuildProjectDirectory)\Section\;$(MSBuildProjectDirectory)\Solver\;$(MSBuildProjectDirectory)\Border\;$(IncludePath)</IncludePath>
+    <TargetExt>.pyd</TargetExt>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -114,6 +118,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(PYTHONPATH)\include;$(PYTHONPATH)\Lib\site-packages\pybind11\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,12 +134,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(PYTHONPATH)\include;$(PYTHONPATH)\Lib\site-packages\pybind11\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(PYTHONPATH)\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -150,12 +158,22 @@
     <ClCompile Include="BoundaryCondition\Temperature.cpp" />
     <ClCompile Include="Coordinates\Coordinates.cpp" />
     <ClCompile Include="Element\BarElement\BarElement.cpp" />
+    <ClCompile Include="Element\BarElement\BEBarElement.cpp" />
+    <ClCompile Include="Element\BarElement\TBarElement.cpp" />
     <ClCompile Include="Element\ElementManager.cpp" />
     <ClCompile Include="Element\FElement.cpp" />
     <ClCompile Include="Element\Nodes.cpp" />
+    <ClCompile Include="Element\ShellElement\QuadElement1.cpp" />
     <ClCompile Include="Element\ShellElement\ShellElement.cpp" />
+    <ClCompile Include="Element\ShellElement\TriElement1.cpp" />
     <ClCompile Include="Element\SolidElement\HexaElement1.cpp" />
+    <ClCompile Include="Element\SolidElement\HexaElement1WT.cpp" />
+    <ClCompile Include="Element\SolidElement\HexaElement2.cpp" />
     <ClCompile Include="Element\SolidElement\SolidElement.cpp" />
+    <ClCompile Include="Element\SolidElement\TetraElement1.cpp" />
+    <ClCompile Include="Element\SolidElement\TetraElement2.cpp" />
+    <ClCompile Include="Element\SolidElement\WedgeElement1.cpp" />
+    <ClCompile Include="Element\SolidElement\WedgeElement2.cpp" />
     <ClCompile Include="FemDataModel\FemDataModel.cpp" />
     <ClCompile Include="FemDataModel\FENode.cpp" />
     <ClCompile Include="FemDataModel\MeshModel.cpp" />
@@ -168,7 +186,7 @@
     <ClCompile Include="numeric\Vector3R.cpp" />
     <ClCompile Include="Section\CircleSection.cpp" />
     <ClCompile Include="Section\RectSection.cpp" />
-    <ClCompile Include="Section\Section.cpp" />
+    <ClCompile Include="Section\SectionManager.cpp" />
     <ClCompile Include="Solver\EigenValue.cpp" />
     <ClCompile Include="Solver\Result.cpp" />
     <ClCompile Include="Solver\Solver.cpp" />
@@ -186,12 +204,22 @@
     <ClInclude Include="BoundaryCondition\Temperature.h" />
     <ClInclude Include="Coordinates\Coordinates.h" />
     <ClInclude Include="Element\BarElement\BarElement.h" />
+    <ClInclude Include="Element\BarElement\BEBarElement.h" />
+    <ClInclude Include="Element\BarElement\TBarElement.h" />
     <ClInclude Include="Element\ElementManager.h" />
     <ClInclude Include="Element\FElement.h" />
     <ClInclude Include="Element\Nodes.h" />
+    <ClInclude Include="Element\ShellElement\QuadElement1.h" />
     <ClInclude Include="Element\ShellElement\ShellElement.h" />
+    <ClInclude Include="Element\ShellElement\TriElement1.h" />
     <ClInclude Include="Element\SolidElement\HexaElement1.h" />
+    <ClInclude Include="Element\SolidElement\HexaElement1WT.h" />
+    <ClInclude Include="Element\SolidElement\HexaElement2.h" />
     <ClInclude Include="Element\SolidElement\SolidElement.h" />
+    <ClInclude Include="Element\SolidElement\TetraElement1.h" />
+    <ClInclude Include="Element\SolidElement\TetraElement2.h" />
+    <ClInclude Include="Element\SolidElement\WedgeElement1.h" />
+    <ClInclude Include="Element\SolidElement\WedgeElement2.h" />
     <ClInclude Include="FemDataModel\FemDataModel.h" />
     <ClInclude Include="FemDataModel\FENode.h" />
     <ClInclude Include="FemDataModel\MeshModel.h" />
@@ -203,7 +231,7 @@
     <ClInclude Include="numeric\Vector3R.h" />
     <ClInclude Include="Section\CircleSection.h" />
     <ClInclude Include="Section\RectSection.h" />
-    <ClInclude Include="Section\Section.h" />
+    <ClInclude Include="Section\SectionManager.h" />
     <ClInclude Include="Solver\EigenValue.h" />
     <ClInclude Include="Solver\Result.h" />
     <ClInclude Include="Solver\Solver.h" />

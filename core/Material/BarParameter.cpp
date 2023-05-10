@@ -6,32 +6,21 @@
 // type - 断面種類
 // ss - データ文字列
 BarParameter::BarParameter() {
-    label = -1;
-    type = "";
+    label = "";
 }
-BarParameter::BarParameter(int _label, string _type, double *ss) {
+BarParameter::BarParameter(string _label, string _type, vector<double> ss) {
     
     label = _label;
-    type = _type;
+
+    string type = _type;
 
     std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
-    if (type == "circle") {
-        circleSection = new CircleSection(ss);
-    }
-    else if (type == "rectangle") {
-        rectSection = new RectSection(ss);
-    }
+    _Section = SectionManager(type, ss);
 }
 
-BarParameter::~BarParameter() {
-    delete circleSection;
-    delete rectSection;
-}
-
-Section BarParameter::section() {
-    auto sect = Section();
-    return sect;
+SectionManager BarParameter::section() {
+    return _Section;
 }
 
 // 梁パラメータを表す文字列を返す

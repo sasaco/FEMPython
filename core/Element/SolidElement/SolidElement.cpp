@@ -8,7 +8,7 @@
 // nodeP - 節点のξ,η,ζ座標
 // intP - 積分点のξ,η,ζ座標,重み係数
 SolidElement::SolidElement() : FElement() { }
-SolidElement::SolidElement(int label, int material, vector<int> nodes) :
+SolidElement::SolidElement(string label, string material, vector<string> nodes) :
     FElement(label, material, nodes) {
 };
 
@@ -392,5 +392,25 @@ double SolidElement::solidAngle(FENode p0, FENode p1, FENode p2, FENode p3) {
     double a2 = max(min(-v23.dot(v12), 1.0), -1.0);
     double a3 = max(min(-v31.dot(v23), 1.0), -1.0);
     double result = acos(a1) + acos(a2) + acos(a3) - PI;
+    return result;
+}
+
+// 平面上の角度を求める
+// p0 - 基点
+// p1,p2 - 頂点
+double SolidElement::planeAngle(FENode p0, FENode p1, FENode p2) {
+    FENode v1, v2, v3;
+    p1.clone(v1);
+    v1.sub(p0);
+    p2.clone(v2);
+    v2.sub(p0);
+
+    FENode v12, v23;
+    v1.clone(v12);
+    v12.normalize();
+    v2.clone(v23);
+    v23.normalize();
+
+    double result = acos(min(max(v12.dot(v23), 0.0), 1.0));
     return result;
 }

@@ -8,17 +8,11 @@
 // press - 面圧
 Pressure::Pressure() :
     ElementBorderBound() {
-    element = -1;
     press = 0;
-    face = "";
 }
-Pressure::Pressure(int _element, string _face, double _press) : 
+Pressure::Pressure(string _element, string _face, double _press) :
     ElementBorderBound(_element, _face) {
-
-    element = _element;
     press = _press;
-    face = _face;
-
 }
 
 // 面圧条件を表す文字列を返す

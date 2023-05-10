@@ -5,14 +5,15 @@
 // 
 Load::Load() : Vector3R() {
     coords = -1;
-    node = -1;
-
+    node = "";
+    nodeIndex = -1;
 }
 Load::Load(vector<string> ss) {
 
     coords = -1;
 
-    node = stoi(ss[1]);
+    node = ss[1];
+    nodeIndex = -1;
 
     Vector3R::x.clear();
     Vector3R::x.push_back(stod(ss[2]));
@@ -47,7 +48,7 @@ Load::Load(vector<string> ss) {
 // coords - 局所座標系
 // x,y,z - x,y,z成分
 // rx,ry,rz - x,y,z軸周り回転成分
-Load::Load(int _node, int _coords, 
+Load::Load(string _node, string _coords,
             double x, double y, double z, double rx, double ry, double rz) :
     Vector3R(x, y, z, rx, ry, rz) {
 

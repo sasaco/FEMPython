@@ -8,24 +8,28 @@
 // n11,n12,n13,n21,n22,n23,n31,n32,n33 - 座標変換マトリックスの成分
 Coordinates::Coordinates(){}
 
-Coordinates::Coordinates(int _label, 
+Coordinates::Coordinates(string _label,
     double n11, double n12, double n13,
     double n21, double n22, double n23, 
     double n31, double n32, double n33) {
     
     label = _label;
 
-    c(0, 0) = n11;
-    c(0, 1) = n12;
-    c(0, 2) = n13;
+    c << n11, n12, n13,
+         n21, n22, n23,
+         n31, n32, n33;
 
-    c(1, 0) = n21;
-    c(1, 1) = n22;
-    c(1, 2) = n23;
-
-    c(2, 0) = n31;
-    c(2, 1) = n32;
-    c(2, 2) = n33;
+    // 単位ベクトルに変換する
+    for (int i = 0; i < 3; i++) {
+        double cf = pow(c(i, 0), 2) + pow(c(i, 1), 2) + pow(c(i, 2), 2);
+        if (cf == 0) {
+            throw runtime_error("座標系" + _label + "の軸方向ベクトルが0です");
+        }
+        cf = 1 / sqrt(cf);
+        c(i, 0) *= cf;
+        c(i, 1) *= cf;
+        c(i, 2) *= cf;
+    }
 }
 
 

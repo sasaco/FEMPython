@@ -7,8 +7,7 @@
     <StartupFile>tests\test_001.py</StartupFile>
     <SearchPath>
     </SearchPath>
-    <WorkingDirectory>
-    </WorkingDirectory>
+    <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>FEMPython</Name>
     <RootNamespace>FEMPython</RootNamespace>
@@ -19,6 +18,7 @@
     <UnitTestRootDirectory>.</UnitTestRootDirectory>
     <InterpreterArguments>-i</InterpreterArguments>
     <IsWindowsApplication>False</IsWindowsApplication>
+    <InterpreterId>Global|ContinuumAnalytics|Anaconda39-64</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,7 +29,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src\config.py" />
+    <Compile Include="src\_config.py" />
+    <Compile Include="src\_dataManager.py" />
     <Compile Include="src\main.py" />
     <Compile Include="src\__init__.py" />
     <Compile Include="tests\conftest.py" />
@@ -46,6 +47,9 @@
       <Project>{52a338ba-afbe-4003-9354-a165d183ce92}</Project>
       <Private>True</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|ContinuumAnalytics|Anaconda39-64" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

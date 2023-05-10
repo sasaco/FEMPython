@@ -6,12 +6,12 @@
 // material - 材料のインデックス
 // nodes - 節点番号
 FElement::FElement() : Nodes() {
-    label = -1;
-    material = -1;
+    label = "";
+    material = "";
     isShell = false;        // シェル要素ではない
     isBar = false;
 }
-FElement::FElement(int _label, int _material, vector<int> _nodes)
+FElement::FElement(string _label, string _material, vector<string> _nodes)
     : Nodes(_nodes) {
 
     label = _label;
@@ -229,6 +229,19 @@ Vector3Dim FElement::normalVector(vector<Vector3Dim> v) {
     }
 
     return Vector3Dim();
+}
+
+// 剛性マトリックスの方向を修正する
+// d - 方向余弦マトリックス
+// k - 剛性マトリックス
+void FElement::toDir(MatrixXd d, MatrixXd k) {
+    MatrixXd a = d * k;
+    for (int i = 0; i < k.rows(); i++) {
+        VectorXd ai = a.row(i);
+        for (int j = 0; j < k.cols(); j++) {
+            k(i, j) = ai.dot(d.row(j));
+        }
+    }
 }
 
 // 剛性マトリックスの方向を修正する

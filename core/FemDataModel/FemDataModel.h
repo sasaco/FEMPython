@@ -32,16 +32,16 @@ private:
     // Method
     void reNumbering();
 
-    void resetNodes(map<int, int> map, ElementManager &s);
-    void resetNodePointer(map<int, int> map, int &node);
-    void resetElementPointer(map<int, int> map, int &element);
+    void resetNodes(map<string, int> map, ElementManager &s);
+    //void resetNodePointer(map<string, int> map, string node);
+    //void resetElementPointer(map<string, int> map, string element);
 
     void resetMaterialLabel();
     void resetParameterLabel();
     void resetCoordinates();
 
     template <typename T>
-    void resetCoordinatesPointer(map<int, Coordinates> map, T &bc);
+    void resetCoordinatesPointer(map<string, Coordinates> map, T &bc);
 
 
 public:

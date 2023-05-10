@@ -117,7 +117,7 @@ public:
     int NODE_DATA = 0;		// �ߓ_�f�[�^
     int ELEMENT_DATA = 1;   // �v�f�f�[�^
     int type;		        // �f�[�^�ێ��`�ԁF�ߓ_�f�[�^
-    vector<Vector3R> displacement;  // �ψ�
+    map<string, Vector3R> displacement;  // �ψ�
     
     double dispMax;		            // �ψʂ̑傫���̍ő�l
     double angleMax;		        // ��]�p�̑傫���̍ő�l
@@ -135,8 +135,8 @@ public:
     Result();
     void clear();
 
-    void setTemperature(BoundaryCondition bc, VectorXd t, int nodeCount);
-    void setDisplacement(BoundaryCondition bc, VectorXd disp, int nodeCount);
+    void setTemperature(BoundaryCondition bc, VectorXd t, vector<FENode> node);
+    void setDisplacement(BoundaryCondition bc, VectorXd disp, vector<FENode> node);
     void initStrainAndStress(int count);
 
     void addStructureData(int i, Strain eps1, Stress str1, double se1,

@@ -21,7 +21,7 @@ private:
 
 public:
     HexaElement1();
-    HexaElement1(int label, int material, vector<int> nodes);
+    HexaElement1(string label, string material, vector<string> nodes);
 
     string getName() override;
 
@@ -29,5 +29,5 @@ public:
 
     MatrixXd massMatrix(vector<FENode> p, double dens) override;
 
-    VectorXd angle(vector<FENode> p);
+    VectorXd angle(vector<FENode> p) override;
 };

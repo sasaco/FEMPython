@@ -34,12 +34,12 @@ void Result::clear() {
 // bc - ���E����
 // t - �ߓ_���x��\���x�N�g��
 // nodeCount - �ߓ_��
-void Result::setTemperature(BoundaryCondition bc, VectorXd t, int nodeCount) {
+void Result::setTemperature(BoundaryCondition bc, VectorXd t, vector<FENode> node) {
 
     temperature.clear();
     auto temp = bc.temperature;
     int ii = 0;
-    for (int i = 0; i < nodeCount; i++) {
+    for (int i = 0; i < node.size(); i++) {
         double tt = 0;
         if (bc.bcList[i] < 0) {
             tt = t(ii);
@@ -58,17 +58,18 @@ void Result::setTemperature(BoundaryCondition bc, VectorXd t, int nodeCount) {
 // bc - ���E����
 // disp - �ߓ_�ψʂ�\���x�N�g��
 // nodeCount - �ߓ_��
-void Result::setDisplacement(BoundaryCondition bc, VectorXd disp, int nodeCount) {
+void Result::setDisplacement(BoundaryCondition bc, VectorXd disp, vector<FENode> node) {
     
     displacement.clear();
     dispMax = 0;
     angleMax = 0;
     auto rests = bc.restraints;
     int ii = 0;
-    for (int i = 0; i < nodeCount; i++) {
+    for (int i = 0; i < node.size(); i++) {
         Vector3R v = Vector3R();
-        int i0 = bc.nodeIndex[i];
-        auto bcDof = bc.dof[i];
+        string id = node[i].label;
+        int i0 = bc.nodeIndex[id];
+        auto bcDof = bc.dof[id];
         int r = -1;
         for (int j = 0; j < bcDof; j++) {
             int bcl = bc.bcList[i0 + j];
@@ -88,7 +89,7 @@ void Result::setDisplacement(BoundaryCondition bc, VectorXd disp, int nodeCount)
         */
         dispMax = max(dispMax, v.magnitude());
         angleMax = max(angleMax, v.magnitudeR());
-        displacement.push_back(v);
+        displacement[id] = v;
     }
     calculated = true;
 }
