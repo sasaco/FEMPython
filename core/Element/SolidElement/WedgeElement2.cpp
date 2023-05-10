@@ -139,3 +139,23 @@ MatrixXd WedgeElement2::shapeFunction(double xsi, double eta, double zeta) {
     return result;
 
 }
+
+// 要素節点の角度を返す
+// p - 要素節点
+VectorXd WedgeElement2::angle(vector<FENode> p) {
+
+    VectorXd th;
+    th << solidAngle(p[0], p[6], p[8], p[12]),
+        solidAngle(p[1], p[6], p[7], p[14]),
+        solidAngle(p[2], p[7], p[8], p[14]),
+        solidAngle(p[3], p[9], p[11], p[12]),
+        solidAngle(p[4], p[10], p[9], p[13]),
+        solidAngle(p[5], p[11], p[10], p[14]),
+        planeAngle(p[6], p[2], p[9]), planeAngle(p[7], p[0], p[10]),
+        planeAngle(p[8], p[1], p[11]), planeAngle(p[9], p[6], p[5]),
+        planeAngle(p[10], p[7], p[3]), planeAngle(p[11], p[8], p[4]),
+        planeAngle(p[12], p[13], p[14]), planeAngle(p[13], p[14], p[12]),
+        planeAngle(p[14], p[12], p[13]);
+
+    return th;
+}

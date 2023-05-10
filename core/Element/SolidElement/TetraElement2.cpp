@@ -100,3 +100,22 @@ MatrixXd TetraElement2::shapeFunction(double xsi, double eta, double zeta) {
 
     return result;
 }
+
+// 要素節点の角度を返す
+// p - 要素節点
+VectorXd TetraElement2::angle(vector<FENode> p) {
+
+    VectorXd th;
+    th << solidAngle(p[0], p[4], p[6], p[7]),
+          solidAngle(p[1], p[5], p[4], p[8]),
+          solidAngle(p[2], p[6], p[5], p[9]),
+          solidAngle(p[3], p[7], p[8], p[9]),
+          planeAngle(p[4], p[2], p[3]),
+          planeAngle(p[5], p[0], p[3]),
+          planeAngle(p[6], p[1], p[3]), 
+          planeAngle(p[7], p[1], p[2]),
+          planeAngle(p[8], p[2], p[0]),
+          planeAngle(p[9], p[0], p[1]);
+
+    return th;
+}

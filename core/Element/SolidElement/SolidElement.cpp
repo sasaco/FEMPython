@@ -394,3 +394,23 @@ double SolidElement::solidAngle(FENode p0, FENode p1, FENode p2, FENode p3) {
     double result = acos(a1) + acos(a2) + acos(a3) - PI;
     return result;
 }
+
+// 平面上の角度を求める
+// p0 - 基点
+// p1,p2 - 頂点
+double SolidElement::planeAngle(FENode p0, FENode p1, FENode p2) {
+    FENode v1, v2, v3;
+    p1.clone(v1);
+    v1.sub(p0);
+    p2.clone(v2);
+    v2.sub(p0);
+
+    FENode v12, v23;
+    v1.clone(v12);
+    v12.normalize();
+    v2.clone(v23);
+    v23.normalize();
+
+    double result = acos(min(max(v12.dot(v23), 0.0), 1.0));
+    return result;
+}

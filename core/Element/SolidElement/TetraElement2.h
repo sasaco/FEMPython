@@ -15,4 +15,6 @@ public:
 
     MatrixXd shapeFunction(double xsi, double eta, double zeta) override;
 
+    VectorXd angle(vector<FENode> p) override;
+
 };

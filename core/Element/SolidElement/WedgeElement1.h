@@ -20,4 +20,5 @@ public:
  
     MatrixXd massMatrix(vector<FENode> p, double dens) override;
 
+    VectorXd angle(vector<FENode> p) override;
 };

@@ -105,3 +105,14 @@ MatrixXd WedgeElement1::massMatrix(vector<FENode> p, double dens) {
 
     return result;
 }
+
+// 要素節点の角度を返す
+// p - 要素節点
+VectorXd WedgeElement1::angle(vector<FENode> p) {
+    VectorXd th(6);
+    for (int i = 0; i < 3; i++) {
+        th[i] = solidAngle(p[i], p[(i + 1) % 3], p[(i + 2) % 3], p[i + 3]);
+        th[i + 3] = solidAngle(p[i + 3], p[(i + 1) % 3 + 3], p[(i + 2) % 3 + 3], p[i]);
+    }
+    return th;
+}

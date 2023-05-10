@@ -65,6 +65,8 @@ public:
 
     double solidAngle(FENode p0, FENode p1, FENode p2, FENode p3);
 
+    double planeAngle(FENode p0, FENode p1, FENode p2);
+
     string toString(vector<Material> materials, vector<FENode> p);
 };
 

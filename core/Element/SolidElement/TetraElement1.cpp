@@ -249,3 +249,14 @@ tuple<Strain, Stress, double>
 
     return result;
 }
+
+
+// 要素節点の角度を返す
+// p - 要素節点
+VectorXd TetraElement1::angle(vector<FENode> p) {
+    VectorXd th(4);
+    for (int i = 0; i < 4; i++) {
+        th(i) = solidAngle(p[i], p[(i + 1) % 4], p[(i + 2) % 4], p[(i + 3) % 4]);
+    }
+    return th;
+}

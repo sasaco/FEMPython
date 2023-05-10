@@ -34,5 +34,7 @@ public:
     tuple<vector<Strain>, vector<Stress>, vector<double>> strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) override;
 
     tuple<Strain, Stress, double> elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1) override;
+
+    VectorXd angle(vector<FENode> p) override;
 };
 
