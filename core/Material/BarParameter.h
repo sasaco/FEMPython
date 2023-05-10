@@ -1,7 +1,5 @@
 ﻿#pragma once
-#include "RectSection.h"
-#include "CircleSection.h"
-#include "Section.h"
+#include "SectionManager.h"
 
 #include <algorithm>
 #include <string>
@@ -16,17 +14,14 @@ using std::string;
 class BarParameter {
 
 private:
-    string type;
-    RectSection* rectSection;
-    CircleSection* circleSection;
+    SectionManager _Section;
 
 public:
-    int label;
+    string label;
 
     BarParameter();
-    BarParameter(int label, string type, double* ss);
-    ~BarParameter();
+    BarParameter(string _label, string _type, vector<double> ss);
 
-    Section section();
+    SectionManager section();
     string toString();
 };

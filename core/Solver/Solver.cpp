@@ -26,14 +26,14 @@ void Solver::calculate() {
         bc.setPointerHeat(dof);
         createHeatMatrix();
         auto tmp = solve();
-        result.setTemperature(bc, tmp, (int)mesh.nodes.size());
+        result.setTemperature(bc, tmp, mesh.nodes);
         calc = true;
     }
     if (bc.restraints.size() > 0) {
         dof = setNodeDoF();
         createStiffnessMatrix();
         auto d = solve();
-        result.setDisplacement(bc, d, (int)mesh.nodes.size());
+        result.setDisplacement(bc, d, mesh.nodes);
         if (result.type == result.ELEMENT_DATA) {
             calculateElementStress();
         }
@@ -58,17 +58,17 @@ MatrixXd Solver::heatMatrix() {
     for (unsigned int i = 0; i < mesh.elements.size(); i++) {
         auto elem = mesh.elements[i];
         int count = elem.nodeCount();
-        auto mat = materials[elem.material()];
+        auto mat = materials[elem.materialIndex];
         auto h = mat.hCon;
         MatrixXd ls;
         if (elem.isShell()) {
-            int param = elem.param();
+            int param = elem.paramIndex;
             auto sp = shellParams[param];
             auto nodes = mesh.getNodes(elem);
             ls = elem.gradMatrix(nodes, h, sp);
         }
         else if (elem.isBar()) {
-            int param = elem.param();
+            int param = elem.paramIndex;
             auto sect = barParams[param].section();
             auto nodes = mesh.getNodes(elem);
             ls = elem.gradMatrix(nodes, h, sect);
@@ -79,7 +79,7 @@ MatrixXd Solver::heatMatrix() {
         }
 
         for (int i1 = 0; i1 < count; i1++) {
-            auto n = elem.nodes();
+            auto n = elem.nodeIndexs;
             for (int j1 = 0; j1 < count; j1++) {
                 matrix(n[i1], n[j1]) += ls(i1, j1);
             }
@@ -164,10 +164,10 @@ MatrixXd Solver::stiffnessMatrix(int dof) {
 
     for (unsigned int i = 0; i < elements.size(); i++) {
         auto elem = elements[i];
-        auto material = materials[elem.material()];
+        auto material = materials[elem.materialIndex];
 
         if (elem.isShell()) {
-            auto sp = shellParams[elem.param()];
+            auto sp = shellParams[elem.paramIndex];
             if (elem.getName() == "TriElement1") {
                 auto m2d = material.matrix2Dstress();
                 km = elem.stiffnessMatrix(mesh.getNodes(elem), m2d, sp);
@@ -179,7 +179,7 @@ MatrixXd Solver::stiffnessMatrix(int dof) {
             kmax = setElementMatrix(elem, 6, matrix, km, kmax);
         }
         else if (elem.isBar()) {
-            auto sect = barParams[elem.param()].section();
+            auto sect = barParams[elem.paramIndex].section();
             km = elem.stiffnessMatrix(mesh.getNodes(elem), material, sect);
             kmax = setElementMatrix(elem, 6, matrix, km, kmax);
         }
@@ -195,7 +195,7 @@ MatrixXd Solver::stiffnessMatrix(int dof) {
     auto bcdof = bc.dof;
     for (unsigned int i = 0; i < rests.size(); i++) {
         auto ri = rests[i];
-        if (ri.coords) {
+        if (ri.coords != "") {
             // ri.coords.transMatrix(matrix, dof, index[ri.node], bcdof[i]);
         }
     }
@@ -254,7 +254,7 @@ VectorXd Solver::loadVector(int dof) {
     auto rests = bc.restraints;
     for (unsigned int i = 0; i < rests.size(); i++) {
         auto ri = rests[i];
-        if (ri.coords) {
+        if (ri.coords != "") {
             // ri.coords.transVector(vector, dof, index[ri.node], bcdof[i]);
         }
     }

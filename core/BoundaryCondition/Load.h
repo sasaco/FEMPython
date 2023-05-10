@@ -19,13 +19,15 @@ class Load : public Vector3R {
 private:
 
 public:
-    int node;
-    int coords;
+    string node;
+    int nodeIndex;
+
+    string coords;
     vector<double> globalX;
 
     Load();
     Load(vector<string> columns);
-    Load(int _node, int _coords, double x, double y, double z, double rx, double ry, double rz);
+    Load(string _node, string _coords, double x, double y, double z, double rx, double ry, double rz);
 
     string toString(vector<FENode> nodes);
 };

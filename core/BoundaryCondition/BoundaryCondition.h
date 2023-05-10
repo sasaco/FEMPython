@@ -12,6 +12,7 @@
 using namespace std;
 using std::vector;
 #include <algorithm>
+#include <map>
 
 //--------------------------------------------------------------------//
 // 境界条件
@@ -28,8 +29,8 @@ private:
     void compareElementLabel(vector<T> target);
 
 public:
-    vector<int> dof;		// 節点の自由度
-    vector<int> nodeIndex;	// 荷重ベクトルの節点ポインタ
+    map<string, int> dof;		// 節点の自由度
+    map<string, int> nodeIndex;	// 荷重ベクトルの節点ポインタ
 
     vector<int> bcList;		// 境界条件を設定した節点のリスト
     vector<Restraint> restraints;	    // 拘束条件
@@ -42,7 +43,7 @@ public:
 
     void clear();
     void init();
-    int setPointerStructure(int count);
+    int setPointerStructure(vector<FENode> nodes);
     int setPointerHeat(int count);
     double getRestDisp(int bc);
 

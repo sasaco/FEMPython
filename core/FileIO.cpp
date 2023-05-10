@@ -72,7 +72,7 @@ Solver readFemModelDataStr(string s)
 
             // 材料データ
             if ((keyWord == "material") && (columns.size() > 7)) {
-                auto mat = Material(stoi(columns[1]), stod(columns[2]),
+                auto mat = Material(std::to_string(stoi(columns[1])), stod(columns[2]),
                     stod(columns[3]), stod(columns[5]),
                     stod(columns[6]), stod(columns[7]));
                 model.materials.push_back(mat);
@@ -95,7 +95,7 @@ Solver readFemModelDataStr(string s)
             */
             // 節点
             else if ((keyWord == "node") && (columns.size() > 4)) {
-                auto node = FENode(stoi(columns[1]), stod(columns[2]),
+                auto node = FENode(std::to_string(stoi(columns[1])), stod(columns[2]),
                     stod(columns[3]),
                     stod(columns[4]));
                 mesh->nodes.push_back(node);

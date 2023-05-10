@@ -42,13 +42,15 @@ void BoundaryCondition::init() {
 
 // 構造解析の節点ポインタを設定する
 // count - 節点数
-int BoundaryCondition::setPointerStructure(int count) {
+int BoundaryCondition::setPointerStructure(vector<FENode> nodes) {
     nodeIndex.clear();
     bcList.clear();
+
     int dofAll = 0;
-    for (int i = 0; i < count; i++) {
-        nodeIndex.push_back(dofAll);
-        dofAll += dof[i];
+    for (int i = 0; i < nodes.size(); i++) {
+        FENode node = nodes[i];
+        nodeIndex[node.label] = dofAll;
+        dofAll += dof[node.label];
     }
     for (int i = 0; i < dofAll; i++) {
         bcList.push_back(-1);
@@ -78,7 +80,7 @@ int BoundaryCondition::setPointerHeat(int count) {
     }
     for (int i = 0; i < temps; i++) {
         Temperature t = temperature[i];
-        bcList[t.node] = i;
+        bcList[t.nodeIndex] = i;
     }
     return temps;
 }

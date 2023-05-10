@@ -6,11 +6,13 @@
 // node - 節点ラベル
 // t - 温度
 Temperature::Temperature() {
-    node = -1;
+    node = "";
+    nodeIndex = -1;
     t = 0;
 };
-Temperature::Temperature(int _node, double _t) {
+Temperature::Temperature(string _node, double _t) {
     node = _node;
+    nodeIndex = -1;
     t = _t;
 };
 

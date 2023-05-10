@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "Vector3Dim.hpp"
+#include <string>
 #include <vector>
+using namespace std;
 using std::vector;
 
 class Nodes : public Vector3Dim {
@@ -8,10 +10,10 @@ class Nodes : public Vector3Dim {
 private:
 
 public:
-    vector<int> nodes;
+    vector<string> nodes;
 
     Nodes();
-    Nodes(vector<int> _nodes);
+    Nodes(vector<string> _nodes);
 
     virtual int nodeCount();
 

@@ -5,11 +5,10 @@
 // label - 節点ラベル
 // x,y,z - x,y,z座標
 FENode::FENode() {
-    label = -1;
+    label = "";
     x = 0, y = 0, z = 0;
 };
-FENode::FENode(int _label, double _x, double _y, double _z) {
-
+FENode::FENode(string _label, double _x, double _y, double _z) {
     label = _label;
     x = _x;
     y = _y;
@@ -18,7 +17,6 @@ FENode::FENode(int _label, double _x, double _y, double _z) {
 
 // 節点のコピーを返す
 void FENode::clone(FENode out) {
-
     out.label = label;
     out.x = x;
     out.y = y;

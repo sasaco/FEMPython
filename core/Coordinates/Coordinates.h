@@ -15,11 +15,11 @@ private:
     MatrixXd c;
 
 public:
-    int label;
+    string label;
 
     Coordinates();
 
-    Coordinates(int _label,
+    Coordinates(string _label,
         double n11, double n12, double n13,
         double n21, double n22, double n23,
         double n31, double n32, double n33);

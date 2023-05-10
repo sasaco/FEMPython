@@ -11,10 +11,10 @@ class FENode : public Vector3Dim {
 private:
 
 public:
-    int label;
+    string label;
 
     FENode();
-    FENode(int _label, double _x, double _y, double _z);
+    FENode(string _label, double _x, double _y, double _z);
 
     void clone(FENode out);
 

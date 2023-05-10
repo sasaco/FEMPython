@@ -29,7 +29,7 @@ protected:
 public:
 
     SolidElement();
-    SolidElement(int label, int material, vector<int> nodes);
+    SolidElement(string label, string material, vector<string> nodes);
 
     virtual MatrixXd jacobianMatrix(vector<FENode> p, MatrixXd sf);
 
@@ -55,7 +55,7 @@ public:
 
     virtual tuple<vector<Strain>, vector<Stress>, vector<double>> strainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
-    VectorXd strainPart(vector<FENode> p, VectorXd v, VectorXd x);
+    virtual VectorXd strainPart(vector<FENode> p, VectorXd v, VectorXd x);
 
     virtual tuple<Strain, Stress, double> elementStrainStress(vector<FENode> p, vector<Vector3R> u, MatrixXd d1);
 
@@ -64,6 +64,8 @@ public:
     virtual  VectorXd angle(vector<FENode> p) = 0;
 
     double solidAngle(FENode p0, FENode p1, FENode p2, FENode p3);
+
+    double planeAngle(FENode p0, FENode p1, FENode p2);
 
     string toString(vector<Material> materials, vector<FENode> p);
 };

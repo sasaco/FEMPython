@@ -11,7 +11,7 @@ MeshModel::MeshModel(){
 // s - 節点集合
 vector<FENode> MeshModel::getNodes(ElementManager s){
 
-    auto inodes = s.nodes();
+    auto inodes = s.nodeIndexs;
     vector<FENode> p;
 
     for(unsigned int i=0;i< inodes.size();i++){

@@ -21,13 +21,13 @@ using namespace Eigen;
 class FElement : public Nodes {
 
 private:
-    bool isShell;
-    bool isBar;
-
     // 方向余弦マトリックスを返す
     vector<Vector3Dim> dirVectors(vector<Vector3Dim> p, Vector3Dim axis);
 
 public:
+    bool isShell;
+    bool isBar;
+
     double C1_3 = 1 / 3;
     double C1_6 = 1 / 6;
     double C1_12 = 1 / 12;
@@ -44,11 +44,11 @@ public:
     // ガウス積分の重み係数
     double GW3[3] = { 5 / 9, 8 / 9, 5 / 9 };
 
-    int label;
-    int material;
+    string label;
+    string material;
 
     FElement();
-    FElement(int _label, int _material, vector<int> _nodes);
+    FElement(string _label, string _material, vector<string> _nodes);
 
     // 積分点の剛性マトリックスを返す
     MatrixXd stiffPart(MatrixXd d, MatrixXd b, double coef);
@@ -65,6 +65,9 @@ public:
 
     Vector3Dim normalVector(vector<FENode> p);
     Vector3Dim normalVector(vector<Vector3Dim> p);
+
+    // 剛性マトリックスの方向を修正する
+    void toDir(MatrixXd d, MatrixXd k);
 
     // 剛性マトリックスの方向を修正する
     void toDir3(MatrixXd d, MatrixXd k);
