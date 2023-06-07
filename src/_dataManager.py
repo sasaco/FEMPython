@@ -30,15 +30,19 @@ class _dataManager:
 
 
     # —v‘f‚ğ’Ç‰Á‚·‚é
-    def addElement(self, ID: str, ni: str, nj: str, e: str, cg: float, joint_i: int, joint_j: int):
+    def addElement(self, ID, ni,  nj, e, cg, xi, yi, zi, xj, yj, zj):
         columns = []
         columns.append(ID)
         columns.append(str(ni))
         columns.append(str(nj))
         columns.append(str(e))
         columns.append(str(cg))
-        columns.append(str(joint_i))
-        columns.append(str(joint_j))
+        columns.append(str(xi))
+        columns.append(str(yi))
+        columns.append(str(zi))
+        columns.append(str(xj))
+        columns.append(str(yj))
+        columns.append(str(zj))
         element = core.ElementManager("barelement", columns)
 
         self._elements.append(element)

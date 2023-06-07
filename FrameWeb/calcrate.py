@@ -46,9 +46,9 @@ class FrameCalc:
 
         ### core ########################################################
         
-        from main import FEMPython
+        from main import FEMPython as calc
 
-        calc = FEMPython()
+        # calc = FEMPython()
 
         #materials = []
         #nodes = [] 
@@ -91,7 +91,10 @@ class FrameCalc:
             member = self.inp.member[ID]
             joint_i = 100*int(member['xi']) + 10*int(member['yi']) + int(member['zi'])
             joint_j = 100*int(member['xj']) + 10*int(member['yj']) + int(member['zj'])
-            calc.addElement("sebarelement", ID, member['ni'],  member['nj'], member['e'], member['cg'], joint_i, joint_j)
+            calc.addElement("sebarelement", ID, member['ni'],  member['nj'], member['e'], member['cg'], 
+                            member['xi'], member['yi'], member['zi'],
+                            member['xj'], member['yj'], member['zj'])
+
 
 
         # Shell部材の登録
