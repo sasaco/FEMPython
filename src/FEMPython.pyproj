@@ -18,7 +18,7 @@
     <UnitTestRootDirectory>.</UnitTestRootDirectory>
     <InterpreterArguments>-i</InterpreterArguments>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>Global|ContinuumAnalytics|Anaconda39-64</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.10</InterpreterId>
     <SuppressEnvironmentCreationPrompt>True</SuppressEnvironmentCreationPrompt>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -48,6 +48,9 @@
       <Project>{52a338ba-afbe-4003-9354-a165d183ce92}</Project>
       <Private>True</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.10" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

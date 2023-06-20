@@ -4,15 +4,10 @@ class _dataManager:
 
     def __init__(self):
 
-        # core の 節点番号は int なので 節点Id と 節点番号 を変換する dict を持つ
-        self._node_index = {}
-
-        # core の 部材番号は int なので 部材Id と 部材番号 を変換する dict を持つ
-        self._element_index = {}
 
         ## core 
         self._materials = []
-        self._nodes = [] 
+        self.nodes = {} 
         self._elements = []
         self._shellParams = []
         self._barParams = []
@@ -23,11 +18,12 @@ class _dataManager:
         self._restraints = []
         self._loads = []
 
-
-    # 節点を追加する
+    # 節点
+    ## 節点を追加する
     def addNode(self, ID: str, x: float, y: float, z: float):
-        self._nodes.append(core.FENode(str(ID), float(x), float(y), float(z)))
-
+        key = str(ID)
+        self.nodes[key] = core.FENode(key, float(x), float(y), float(z))
+    
 
     # 要素を追加する
     def addElement(self, ID, ni,  nj, e, cg, xi, yi, zi, xj, yj, zj):

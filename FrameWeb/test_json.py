@@ -1,11 +1,3 @@
-#import sys
-#sys.path.append('../src/')
-from main import FEMPython
-
-calc = FEMPython()
-model = calc.model
-model.clear()
-
 import json
 
 from calcrate import FrameCalc

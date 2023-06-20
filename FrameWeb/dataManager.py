@@ -7,6 +7,8 @@ from dataInput import dataInput
 from matrixBar import tMatrix
 import copy
 
+from main import FEMPython
+
 class dataManager:
 
     def __init__(self, _inp):
@@ -66,7 +68,12 @@ class dataManager:
 
         target_load = self.base.load[CaseID]
 
+        ## core を生成する
+        calc = FEMPython()
+
         ## 節点情報をセット
+        calc
+        ### 旧式 --- 削除予定
         self.node = copy.deepcopy(self.base.node)
 
         ## 材料情報をセット
