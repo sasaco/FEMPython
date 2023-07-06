@@ -43,6 +43,48 @@ class FrameCalc:
         if error != None:
             return error, None
 
+        # 新方式 FEMPython使用 ---------------------------------------------
+        ## core を生成する
+        from main import FEMPython
+        calc = FEMPython()
+
+        for ID in self.inp.node:
+            n = self.inp.node[ID]
+            calc.node.add(ID, n.x, n.y, n.z )
+
+        # Bar部材の登録
+        for ID in self.inp.member:
+            m = barMatrix(self.inp, ID)
+            calc.bar_element.add(ID, m.IDi, m.IDj, m.eNo, m.eNo)
+            calc.material.add(m.eNo, )
+            calc.bar_paramater.add(m.eNo, )
+
+
+        # Shell部材の剛性マトリックス
+        for ID in self.inp.shell:
+            s = shellMatrix(self.inp, ID)
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # 旧方式 削除予定 --------------------------------------------------
+
         # 節点に剛性マトリックスのインデックスを割り当てる
         self.nodeIndex = self.reNumbering()
 
