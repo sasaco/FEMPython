@@ -3,7 +3,7 @@ import sys
 import os
 
 import conftest
-from FemMain import initModel
+from src import initModel
 
 def test_sampleBeamHexa1():
 
