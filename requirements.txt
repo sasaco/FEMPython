@@ -1,4 +1,0 @@
-numpy
-pytest
-pybind11
-pyevtk

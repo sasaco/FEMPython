@@ -1,26 +1,44 @@
-FROM ubuntu:22.04
+ARG FUNCTION_DIR="/function"
 
-# タイムゾーン
-RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+FROM registry.gitlab.com/frontistr-commons/frontistr/fistr1:v5.1
 
-# 対話モードOFF
-ENV DEBIAN_FRONTEND=noninteractive
+# Install aws-lambda-cpp build dependencies
+RUN apt-get update && \
+    apt-get install -y \
+    python3 \
+    python3-pip
 
-# Linux基本設定
-RUN apt-get update
-RUN apt-get install -y curl wget vim git unzip cmake clang libssl-dev build-essential
+# RUN apt-get update && \
+#   apt-get install -y \
+#   g++ \
+#   make \
+#   cmake \
+#   unzip \
+#   libcurl4-openssl-dev
 
-# Pythonのインストール(今回は仮想環境構築は未実施)
-RUN apt-get install -y python3 python3-pip
-RUN pip3 install -r requirements.txt
+# Include global arg in this stage of the build
+ARG FUNCTION_DIR
+# Create function directory
+RUN mkdir -p ${FUNCTION_DIR}
 
-# Eigenのダウンロード（コンパイル時にincludeするためbuildは不要）
-RUN git clone https://gitlab.com/libeigen/eigen.git -b 3.4
+# Copy function code
+COPY app/* ${FUNCTION_DIR}
 
-#fmtのダウンロード and セットアップ
-RUN git clone https://github.com/fmtlib/fmt
-RUN cd fmt
-RUN mkdir build
-RUN cd build
-RUN cmake /fmt
-RUN make && make install
+# # Install the runtime interface client
+RUN pip install \
+        --target ${FUNCTION_DIR} \
+        awslambdaric
+
+# Multi-stage build: grab a fresh copy of the base image
+# FROM python:buster
+
+# Include global arg in this stage of the build
+ARG FUNCTION_DIR
+# Set working directory to function root directory
+WORKDIR ${FUNCTION_DIR}
+
+# Copy in the build image dependencies
+# COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
+
+ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
+CMD [ "app.handler" ]

@@ -1,8 +1,0 @@
-version: "0"
-services:
-  fem:
-    image: sasaco/fempython-env
-    volumes:
-      - .:/home
-    working_dir: /home
-    tty: true
