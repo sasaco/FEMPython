@@ -1,29 +1,55 @@
-# frontistr-python
-FrontISTR を クラウドで用いる
-
-# [Lambda コンテナイメージの作成](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/images-create.html#images-create-from-alt)
-
-1. docker build コマンドを使用して Docker イメージをビルドします。イメージの名前を入力します。次の例では、イメージに hello-world という名前を付けています。
+Docker Compose では、docker run時に`-it`オプションをつける代わりに、docker-compose.yml ファイルに、`tty: true` と `stdin_open: true` を書きます。
+`tty: true` はdocker run時の`-t`オプションにあたいするもので、 `stdin_open: true`はdocker run時の`-i`オプションにあたいするものです。
+つまり、Docker Composeを使う場合でも、指定方法が異なるだけで、やっていることは同じで、コンテナとホストマシンの標準入出力をつないでいます。
 
 ```
-docker build -t hello-world .    
+version: '3'
+services:
+  py:
+    image: python:3.7
+    tty: true
+    stdin_open: true
 ```
 
-2. Amazon ECR レジストリに対し、Docker CLI を認証します。
+
+[FrontISTR v5.0 を ubuntu 18.04 LTS(等)でcmakeを使って動かす手順](https://qiita.com/sakurano/items/1dc321a9b9d7fd035396) より 
+
+**システム共通バイナリとしてインストール を行った**
+
+# docker 操作
+
+## ベースイメージの 取得
 
 ```
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com    
+docker pull python:buster
 ```
 
-3. create-repository コマンドを使用して、Amazon ECR にリポジトリを作成します。
+#  ベースイメージに対して行ったこと
+
+## パッケージインストール
+
+ビルド環境及び並列計算の構築
 
 ```
-aws ecr create-repository --repository-name hello-world --image-scanning-configuration scanOnPush=true --image-tag-mutability MUTABLE
+apt install build-essential cmake gfortran git curl ruby libopenmpi-dev 
 ```
 
-4. リポジトリ名と一致するタグをイメージに付け、docker push コマンドを使用してそのイメージを Amazon ECR にデプロイします。
+## オプショナルのライブラリ
 
 ```
-docker tag  hello-world:latest 123456789012.dkr.ecr.us-east-1.amazonaws.com/hello-world:latest
-docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/hello-world:latest     
+apt install libmetis5 libopenblas-dev libmumps-dev libmetis-dev 
+apt install trilinos-all-dev libptscotch-dev
+```
+
+## FrontISTRをコンパイルとインストール
+
+### システム共通バイナリとしてインストール
+
+```
+git clone https://github.com/FrontISTR/FrontISTR
+cd FrontISTR/; mkdir build; cd build
+cmake ../
+make -j 16
+su
+make install 
 ```

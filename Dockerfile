@@ -1,44 +1,19 @@
-ARG FUNCTION_DIR="/function"
+# 使用するubuntuのバージョンを指定
+FROM ubuntu:18.04
 
-FROM registry.gitlab.com/frontistr-commons/frontistr/fistr1:v5.1
+# FrontISTRをコンパイルするのに必要なツールやパッケージをインストール
+RUN \
+    apt update && \
+    apt -y upgrade && \
+    apt install -y build-essential cmake gfortran git curl ruby libopenmpi-dev && \
+    apt install -y unzip vim wget sudo
 
-# Install aws-lambda-cpp build dependencies
-RUN apt-get update && \
-    apt-get install -y \
-    python3 \
-    python3-pip
+# ライブラリのインストール
+RUN \
+    apt install -y libmetis5 libopenblas-dev libmumps-dev libmetis-dev && \
+    apt install -y trilinos-all-dev libptscotch-dev
 
-# RUN apt-get update && \
-#   apt-get install -y \
-#   g++ \
-#   make \
-#   cmake \
-#   unzip \
-#   libcurl4-openssl-dev
 
-# Include global arg in this stage of the build
-ARG FUNCTION_DIR
-# Create function directory
-RUN mkdir -p ${FUNCTION_DIR}
-
-# Copy function code
-COPY app/* ${FUNCTION_DIR}
-
-# # Install the runtime interface client
-RUN pip install \
-        --target ${FUNCTION_DIR} \
-        awslambdaric
-
-# Multi-stage build: grab a fresh copy of the base image
-# FROM python:buster
-
-# Include global arg in this stage of the build
-ARG FUNCTION_DIR
-# Set working directory to function root directory
-WORKDIR ${FUNCTION_DIR}
-
-# Copy in the build image dependencies
-# COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
-
-ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
-CMD [ "app.handler" ]
+# FrontISTRのリポジトリをクローン
+RUN \
+    git clone https://github.com/sasaco/FrontISTR
