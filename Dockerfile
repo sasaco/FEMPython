@@ -1,26 +1,22 @@
-FROM ubuntu:22.04
+# 使用するubuntuのバージョンを指定
+FROM ubuntu:18.04
 
-# タイムゾーン
-RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+# FrontISTRをコンパイルするのに必要なツールやパッケージをインストール
+RUN apt update && \
+    apt -y upgrade && \
+    apt install -y build-essential cmake gfortran git curl ruby libopenmpi-dev && \
+    apt install -y unzip vim wget sudo
 
-# 対話モードOFF
-ENV DEBIAN_FRONTEND=noninteractive
+# ライブラリのインストール
+RUN apt install -y libmetis5 libopenblas-dev libmumps-dev libmetis-dev && \
+    apt install -y trilinos-all-dev libptscotch-dev
 
-# Linux基本設定
-RUN apt-get update
-RUN apt-get install -y curl wget vim git unzip cmake clang libssl-dev build-essential
 
-# Pythonのインストール(今回は仮想環境構築は未実施)
-RUN apt-get install -y python3 python3-pip
-RUN pip3 install -r requirements.txt
+# Pythonのインストール
+RUN apt install -y python3 python3-pip
+# RUN pip3 install -r requirements.txt
 
-# Eigenのダウンロード（コンパイル時にincludeするためbuildは不要）
-RUN git clone https://gitlab.com/libeigen/eigen.git -b 3.4
 
-#fmtのダウンロード and セットアップ
-RUN git clone https://github.com/fmtlib/fmt
-RUN cd fmt
-RUN mkdir build
-RUN cd build
-RUN cmake /fmt
-RUN make && make install
+# FrontISTRのリポジトリをクローン
+WORKDIR /home/
+RUN git clone https://github.com/sasaco/FEMPython

@@ -1,48 +1,55 @@
-# Python から 呼び出せる オープンソースの有限要素ライブラリ
+Docker Compose では、docker run時に`-it`オプションをつける代わりに、docker-compose.yml ファイルに、`tty: true` と `stdin_open: true` を書きます。
+`tty: true` はdocker run時の`-t`オプションにあたいするもので、 `stdin_open: true`はdocker run時の`-i`オプションにあたいするものです。
+つまり、Docker Composeを使う場合でも、指定方法が異なるだけで、やっていることは同じで、コンテナとホストマシンの標準入出力をつないでいます。
 
-FEMPython is a Python package for solving partial differential equations using the finite element method. It provides a simple and user-friendly interface for defining finite element models and solving them using a variety of numerical methods.
-
-With FEMPython, users can easily define complex geometries and boundary conditions, and choose from a variety of element types and numerical solvers. The package also includes a range of visualization tools for post-processing and analyzing simulation results.
-
-FEMPython is open-source and freely available on Github, making it accessible to a wide range of users in academia and industry. Its modular design and comprehensive documentation make it easy to use and extend, making it an ideal choice for researchers and practitioners alike.
-
-Whether you are an experienced finite element analyst or a beginner looking to learn more about numerical methods, FEMPython is a powerful tool for solving partial differential equations and simulating real-world problems. Try it out today and see what it can do for you!
-
-## 使用方法
-
-https://fempython.gitbook.io
-
-## ベンチマーク
-
-https://github.com/FEABeRjp/FEABeR
+```
+version: '3'
+services:
+  py:
+    image: python:3.7
+    tty: true
+    stdin_open: true
+```
 
 
-## 注意点・免責事項
+[FrontISTR v5.0 を ubuntu 18.04 LTS(等)でcmakeを使って動かす手順](https://qiita.com/sakurano/items/1dc321a9b9d7fd035396) より 
 
-https://github.com/sasaco/FEMPython/blob/main/LICENSE
+**システム共通バイナリとしてインストール を行った**
 
+# docker 操作
 
-# 開発者wiki
+## ベースイメージの 取得
 
-## インストール
+```
+docker pull python:buster
+```
 
-1. windows
+#  ベースイメージに対して行ったこと
 
-    [開発環境 構築～Windows（wsl）編～](https://github.com/sasaco/FEMPython/wiki/%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83-%E6%A7%8B%E7%AF%89%EF%BD%9EWindows%EF%BC%88wsl%EF%BC%89%E7%B7%A8%EF%BD%9E)
+## パッケージインストール
 
-2. mac
+ビルド環境及び並列計算の構築
 
-    [開発環境 構築～Mac 編～](https://github.com/sasaco/FEMPython/wiki/%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83-%E6%A7%8B%E7%AF%89%EF%BD%9EMac-%E7%B7%A8%EF%BD%9E)
+```
+apt install build-essential cmake gfortran git curl ruby libopenmpi-dev 
+```
 
-3. Docker
+## オプショナルのライブラリ
 
-    [開発環境 構築～Docker 編～](https://github.com/sasaco/FEMPython/wiki/%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83-%E6%A7%8B%E7%AF%89%EF%BD%9EDocker-%E7%B7%A8%EF%BD%9E)
+```
+apt install libmetis5 libopenblas-dev libmumps-dev libmetis-dev 
+apt install trilinos-all-dev libptscotch-dev
+```
 
+## FrontISTRをコンパイルとインストール
 
-# 本ソースコードを適用したアプリ
+### システム共通バイナリとしてインストール
 
-- https://pypi.org/project/FEMPython/
-- 
-- 
-
-
+```
+git clone https://github.com/FrontISTR/FrontISTR
+cd FrontISTR/; mkdir build; cd build
+cmake ../
+make -j 16
+su
+make install 
+```
