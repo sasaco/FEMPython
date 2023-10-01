@@ -11,12 +11,13 @@ RUN apt update && \
 RUN apt install -y libmetis5 libopenblas-dev libmumps-dev libmetis-dev && \
     apt install -y trilinos-all-dev libptscotch-dev
 
-
 # Pythonのインストール
 RUN apt install -y python3 python3-pip
 # RUN pip3 install -r requirements.txt
 
-
 # FrontISTRのリポジトリをクローン
-WORKDIR /root/
-RUN git clone  --recursive https://github.com/sasaco/FEMPython
+# WORKDIR /root/
+# RUN git clone  --recursive https://github.com/sasaco/FEMPython
+
+# Pythonモジュールのインストール
+# RUN pip3 install -r /root/FEMPython/requirements.txt
