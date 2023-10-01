@@ -18,5 +18,5 @@ RUN apt install -y python3 python3-pip
 
 
 # FrontISTRのリポジトリをクローン
-RUN \
-    git clone https://github.com/sasaco/FrontISTR
+WORKDIR /home/
+RUN git clone https://github.com/sasaco/FEMPython
