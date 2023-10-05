@@ -2,36 +2,43 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "step1 cmake",
+            "label": "clean",
+            "type": "shell",
+            "command": "rmdir",
+            "args": ["${workspaceFolder}/FrontISTR/build"]
+        },
+        {
+            "label": "mkdir",
+            "type": "shell",
+            "command": "mkdir",
+            "args": ["${workspaceFolder}/FrontISTR/build"]
+        },
+        {
+            "label": "cmake",
             "type": "shell",
             "command": "cmake",
+            "args": ["${workspaceFolder}/FrontISTR"],
             "options": {
-                "cwd": "${workspaceFolder}/FrontISTR/build"
-            },
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
+                "cwd": "${workspaceFolder}/FrontISTR/build" // 作業ディレクトリ
             }
         },
         {
             "label": "make",
             "type": "shell",
             "command": "make",
+            "args": ["-j4"],
             "options": {
-                "cwd": "${workspaceFolder}/core"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ]
+                "cwd": "${workspaceFolder}/FrontISTR/build"
+            }
         },
         {
-            "label": "somove",
+            "label": "install",
             "type": "shell",
-            "command": "mv ${workspaceFolder}/core/core.cpython-310-x86_64-linux-gnu.so ${workspaceFolder}/core/bin/core.so",
-            "dependsOn": [
-                "make"
-            ]
+            "command": "make",
+            "args": ["install"],
+            "options": {
+                "cwd": "${workspaceFolder}/FrontISTR/build"
+            }
         }
     ]
 }
