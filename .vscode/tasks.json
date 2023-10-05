@@ -39,6 +39,16 @@
             "options": {
                 "cwd": "${workspaceFolder}/FrontISTR/build"
             }
+        },
+        {
+            "label": "run test01",
+            "type": "shell",
+            "command": "fistr1",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}/tests/01_elastic_hinge"
+            }
         }
+
     ]
 }
