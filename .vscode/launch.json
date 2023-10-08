@@ -1,21 +1,28 @@
 {
-    "name": "(gdb) fistr Launch",
-    "type": "cppdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/FrontISTR/build/fistr1/fistr1",
-    "args": [],
-    "stopAtEntry": true,
-    "cwd": "${workspaceFolder}/tests/01_elastic_hinge", 
-    "environment": [],
-    "externalConsole": false,
-    "MIMode": "gdb",
-    "miDebuggerPath": "/usr/bin/gdb",
-    "setupCommands": [
-        {
-            "description": "Enable pretty-printing for gdb",
-            "text": "-enable-pretty-printing",
-            "ignoreFailures": true
-        }
-
+     "configurations": [
+    {
+        "name": "(gdb) 起動",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/FrontISTR/build/fistr1/fistr1",
+        "args": [],
+        "stopAtEntry": true,
+        "cwd": "${workspaceFolder}/tests/01_elastic_hinge", // "${fileDirname}",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "setupCommands": [
+            {
+                "description": "gdb の再フォーマットを有効にする",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            },
+            {
+                "description": "逆アセンブリ フレーバーを Intel に設定",
+                "text": "-gdb-set disassembly-flavor intel",
+                "ignoreFailures": true
+            }
+        ]
+    }
     ]
 }
