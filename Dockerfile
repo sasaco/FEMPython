@@ -4,7 +4,7 @@ FROM ubuntu:18.04
 # FrontISTRをコンパイルするのに必要なツールやパッケージをインストール
 RUN apt update && \
     apt -y upgrade && \
-    apt install -y build-essential cmake gfortran git curl ruby libopenmpi-dev && \
+    apt install -y build-essential cmake gfortran gdb git curl ruby libopenmpi-dev && \
     apt install -y unzip vim wget sudo
 
 # ライブラリのインストール
