@@ -2,52 +2,35 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "clean",
+            "label": "_clean",
             "type": "shell",
-            "command": "rmdir",
-            "args": ["${workspaceFolder}/FrontISTR/build"]
+            "command": "rm",
+            "args": ["-rf" ,"${workspaceFolder}/FrontISTR/build"]
         },
         {
-            "label": "mkdir",
+            "label": "_mkdir",
             "type": "shell",
             "command": "mkdir",
-            "args": ["${workspaceFolder}/FrontISTR/build"]
+            "args": ["${workspaceFolder}/FrontISTR/build"],
+            "dependsOn": [
+                "_clean",
+            ],
         },
         {
             "label": "cmake",
             "type": "shell",
             "command": "cmake",
-            "args": ["${workspaceFolder}/FrontISTR"],
+            "args": [
+                "${workspaceFolder}/FrontISTR",
+                "-DCMAKE_BUILD_TYPE='Debug'",               // デバッグモードで cmake
+                "-DCMAKE_INSTALL_PREFIX=/usr/local/bin"     // fistr1のインストールディレクトリ
+            ],
             "options": {
                 "cwd": "${workspaceFolder}/FrontISTR/build" // 作業ディレクトリ
-            }
-        },
-        {
-            "label": "make",
-            "type": "shell",
-            "command": "make",
-            "args": ["-j4"],
-            "options": {
-                "cwd": "${workspaceFolder}/FrontISTR/build"
-            }
-        },
-        {
-            "label": "install",
-            "type": "shell",
-            "command": "make",
-            "args": ["install"],
-            "options": {
-                "cwd": "${workspaceFolder}/FrontISTR/build"
-            }
-        },
-        {
-            "label": "run test01",
-            "type": "shell",
-            "command": "fistr1",
-            "args": [],
-            "options": {
-                "cwd": "${workspaceFolder}/tests/01_elastic_hinge"
-            }
+            },
+            "dependsOn": [
+                "_mkdir",
+            ],
         }
 
     ]

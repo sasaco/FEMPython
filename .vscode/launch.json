@@ -1,13 +1,13 @@
 {
      "configurations": [
     {
-        "name": "(gdb) 起動",
+        "name": "fistr1(gdb)起動 = 開いてるファイルを計算",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/FrontISTR/build/fistr1/fistr1",
+        "program": "/usr/local/bin/fistr1",
         "args": [],
         "stopAtEntry": true,
-        "cwd": "${workspaceFolder}/tests/01_elastic_hinge", // "${fileDirname}",
+        "cwd": "${fileDirname}", // 現在開かれているファイルのディレクトリ
         "environment": [],
         "externalConsole": false,
         "MIMode": "gdb",
