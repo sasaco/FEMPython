@@ -4,7 +4,7 @@
         "name": "fistr1(gdb)起動 = 開いてるファイルを計算",
         "type": "cppdbg",
         "request": "launch",
-        "program": "/usr/local/bin/fistr1",
+        "program": "${workspaceFolder}/FrontISTR/bin/fistr1",
         "args": [],
         "stopAtEntry": true,
         "cwd": "${fileDirname}", // 現在開かれているファイルのディレクトリ

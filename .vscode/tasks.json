@@ -17,13 +17,13 @@
             ],
         },
         {
-            "label": "cmake",
+            "label": "_cmake",
             "type": "shell",
             "command": "cmake",
             "args": [
                 "${workspaceFolder}/FrontISTR",
                 "-DCMAKE_BUILD_TYPE='Debug'",               // デバッグモードで cmake
-                "-DCMAKE_INSTALL_PREFIX=/usr/local/bin"     // fistr1のインストールディレクトリ
+                "-DCMAKE_INSTALL_PREFIX=${workspaceFolder}/FrontISTR/"     // fistr1のインストールディレクトリ
             ],
             "options": {
                 "cwd": "${workspaceFolder}/FrontISTR/build" // 作業ディレクトリ
@@ -31,7 +31,19 @@
             "dependsOn": [
                 "_mkdir",
             ],
-        }
+        },
+        {
+            "label": "install",
+            "type": "shell",
+            "command": "make",
+            "args": ["install"],
+            "options": {
+                "cwd": "${workspaceFolder}/FrontISTR/build"
+            },
+            "dependsOn": [
+                "_cmake",
+            ],
+        },
 
     ]
 }
