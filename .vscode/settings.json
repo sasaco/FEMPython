@@ -1,5 +1,3 @@
 {
-    "cmake.configureOnOpen": false, // このプロジェクトでは自動的にcmakeを構成しない
-    "cmake.sourceDirectory": "/workspaces/FEMPython/FrontISTR", 
     "workbench.colorTheme": "Quiet Light" 
 }
