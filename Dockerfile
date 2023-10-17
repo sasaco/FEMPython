@@ -1,5 +1,5 @@
 # 使用するubuntuのバージョンを指定
-FROM registry.gitlab.com/frontistr-commons/frontistr/runtime:mkl
+FROM registry.gitlab.com/frontistr-commons/frontistr/fistr1:master
 
 # FrontISTRをコンパイルするのに必要なツールやパッケージをインストール
 RUN apt update && \
