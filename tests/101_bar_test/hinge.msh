@@ -6,10 +6,12 @@
 !NODE
        1,     0.00000,     0.00000,     0.00000
        2,     1.00000,     0.00000,     0.00000
+       3,     0.00000,     0.00000,     0.00000
+       4,     1.00000,     0.00000,     0.00000
 
 # 要素コネクティビティの定義       
-!ELEMENT, TYPE=611
-       1,       1,       2
+!ELEMENT, TYPE=641
+       1,      1,      2,      3,      4
 
 # セクションデータの定義
 !SECTION, TYPE=BEAM, EGRP=ALL, MATERIAL=M1
@@ -26,6 +28,7 @@
 # 節点グループ
 !NGROUP, NGRP=FIXEDPOINT
  1
+ 3
 !NGROUP, NGRP=LOADPOINT
  2
 
