@@ -1,0 +1,25 @@
+#  Control File for FISTR
+
+## Analysis Control
+!VERSION
+ 3
+
+## 解析の種別の指定
+!SOLUTION, TYPE=STATIC
+
+## Solver Control
+### 変位境界条件の定義
+!BOUNDARY, GRPID=1
+ FIXEDPOINT, 1, 3, 0.000000
+!CLOAD, GRPID=1
+ LOADPOINT, 1, 0.01000
+!SOLVER,METHOD=CG,PRECOND=1,ITERLOG=YES,TIMELOG=YES
+ 10000, 1
+ 1.0e-08, 1.0, 0.0
+!WRITE,VISUAL
+!WRITE,RESULT
+!VISUAL,method=PSR
+!surface_num=1
+!surface 1
+!output_type=VTK
+!END

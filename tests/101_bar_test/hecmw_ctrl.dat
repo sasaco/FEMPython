@@ -1,0 +1,18 @@
+#
+# for solver
+#
+#メッシュデータファイル名の定義（単一領域モデルでは必須）
+!MESH, NAME=fstrMSH, TYPE=HECMW-ENTIRE
+ hinge.msh
+
+# 解析制御データファイル名の定義（必須）
+!CONTROL, NAME=fstrCNT
+ hinge.cnt
+
+# 解析結果データファイル名の定義（任意）
+!RESULT, NAME=fstrRES, IO=OUT
+ hinge.res
+
+# 可視化データファイル名の定義（任意
+!RESULT, NAME=vis_out, IO=OUT
+ hinge_vis
