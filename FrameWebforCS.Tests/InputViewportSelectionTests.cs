@@ -265,18 +265,30 @@ public sealed class InputViewportSelectionTests
     {
         RunSta(() =>
         {
-            using var load = new InputLoadComponent();
-            var spread = load.Controls.OfType<FpSpread>().Single();
-            load.CreateControl();
-            var selected = new List<(int Row, string Column)>();
-            load.GridSelectionChanged += (row, column) => selected.Add((row, column));
-            Assert.True(load.SelectGridRow(3, "ty"));
-            Assert.Equal(1, spread.ActiveSheetIndex);
-            Assert.Equal(2, spread.ActiveSheet.ActiveRowIndex);
-            Assert.Equal(11, spread.ActiveSheet.ActiveColumnIndex);
-            Assert.Empty(selected);
-            RaiseEnterCell(spread, 4, 7);
-            Assert.Contains((5, "p1"), selected);
+            var service = InputLoadService.Instance;
+            try
+            {
+                using (var document = JsonDocument.Parse("""
+                    {"load":{"1":{"input_rows":[1,2,3,4,5]}}}
+                    """)) service.setLoadJson(document.RootElement);
+                using var load = new InputLoadComponent();
+                var spread = load.Controls.OfType<FpSpread>().Single();
+                load.CreateControl();
+                var selected = new List<(int Row, string Column)>();
+                load.GridSelectionChanged += (row, column) => selected.Add((row, column));
+                Assert.True(load.SelectGridRow(3, "ty"));
+                Assert.Equal(1, spread.ActiveSheetIndex);
+                Assert.Equal(2, spread.ActiveSheet.ActiveRowIndex);
+                Assert.Equal(11, spread.ActiveSheet.ActiveColumnIndex);
+                Assert.Empty(selected);
+                RaiseEnterCell(spread, 4, 7);
+                Assert.Contains((5, "p1"), selected);
+            }
+            finally
+            {
+                service.clear();
+                service.SelectCase("1");
+            }
         });
     }
 

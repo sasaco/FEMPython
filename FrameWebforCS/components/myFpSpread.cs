@@ -1,6 +1,7 @@
 ﻿using FarPoint.Win.Spread;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 
 namespace FrameWebforCS.components
@@ -13,6 +14,11 @@ namespace FrameWebforCS.components
             Font = new Font("ＭＳ ゴシック", 9F);
             KeyDown += myFpSpread_KeyDown;
         }
+
+        // A sheet-specific handler can consume Delete before the shared cell clear.
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        internal Func<SheetView, bool>? DeleteKeyInterceptor { get; set; }
 
         public SheetView AddNewSheetView()
         {
@@ -43,6 +49,12 @@ namespace FrameWebforCS.components
             var sheet = ActiveSheet;
             if (sheet?.DataSource == null)
                 return;
+
+            if (DeleteKeyInterceptor?.Invoke(sheet) == true)
+            {
+                e.SuppressKeyPress = true;
+                return;
+            }
 
             int row = sheet.ActiveRowIndex;
             int column = sheet.ActiveColumnIndex;

@@ -52,7 +52,7 @@ FrameWeb3は、構造モデルの編集、骨組有限要素解析、結果確�
 | Maintainability | Keep analysis, frontend, startup, printing, conversion, and agent-infrastructure responsibilities independently testable. | Component-specific gates report their working directory and failing command. |
 | Platform | Keep the supported local workflow executable from Windows PowerShell. | Bootstrap, setup, and verification paths do not require WSL or Bash. |
 | Result contract | Expose exactly one validated AnalysisResultSet success schema, with no compatibility or display-specific alternatives; keep calculation input redesign outside this refactor. | Zero alternate success schemas; zero runtime result adapters; unique case/state coordinates; atomic response; deterministic case-major order. |
-| Result-set correctness v1 | Preserve deterministic input-derived case order and accepted state order, isolate mutable solver state per case, preserve case-specific support sets, validate every snapshot variant, apply no post-solve display multiplier, and fail atomically. | Maximum 256 cases; zero partial responses; zero duplicate case/state coordinates; exactly one final load-step per nonlinear case; identical geometric public topology across cases. |
+| Result-set correctness v1 | Preserve deterministic input-derived case order and accepted state order, isolate mutable solver state per case, preserve case-specific support sets, validate every snapshot variant, apply no post-solve display multiplier, and fail atomically. | No fixed case-count ceiling in the initial release; zero partial responses; zero duplicate case/state coordinates; exactly one final load-step per nonlinear case; identical geometric public topology across cases. |
 
 ## アーキテクチャ (Architecture)
 
@@ -103,7 +103,7 @@ FrameWeb3は次の境界を持つコンポーネント指向モノレポであ�
 - 計算encoderとC#印刷APIのwire契約が同値と証明されるまで共有しない。
 - `.venv`、`node_modules`、`dist`、`bin`、`obj`、cache、vendor frontend資産はsource componentではない。
 - local environment/authentication fileはmachine固有値を含み得るため、bootstrap automationで上書き・commitしない。
-- Load Case Set Analysisは一要求256 casesを上限とし、途中失敗時にpartial result setを返さない。
+- Load Case Set Analysisは初期版ではケース数の固定上限を設けず、途中失敗時にpartial result setを返さない。
 
 - The C# desktop migration replaces frontend behavior only: Python remains the FEM implementation, successful calculations use only `AnalysisResultSet v1`, calculation and printing transports stay separate, and legacy client/print compatibility is not required.
 
@@ -144,6 +144,7 @@ FrameWeb3は次の境界を持つコンポーネント指向モノレポであ�
 | Make WorkspaceControl the sole visible viewport and OpenGL-context owner in the FrameWebforJS-parity shell; route panels and overlays consume typed state and commands but never create a second renderer, selection subscription, or result publisher. | A single owner preserves the completed renderer lifecycle, captured-revision publication, selection synchronization, cancellation, and bounded shutdown guarantees while the visible shell is replaced. It also makes resource-counter tests capable of detecting duplicated GL contexts and event subscriptions across route and overlay transitions. | Keep ProjectDocumentContent as a second visible viewport owner; allow each route screen to host its own renderer; retain the old docking document behind a compatibility shell. | 2026-09-21 |
 | Use the proven Python (native) + Native attach and Python-breakpoint binding gate for development debugging of FrameWebforCS calls into FrameWeb/src through pythonnet; C#-to-Python F11 is not required. | The isolated PythonNetDebugProbe stopped in Python without F11 when the module was imported after attach and the source breakpoint had bound (Children > 0) before the target function was invoked. A two-stage application gate makes this order deterministic. | Rely on the ordinary C# F5 debugger, cross-language F11, a fixed delay after Attach2, or the unobserved Python LoadComplete event. | 2026-09-27 |
 | Run FrameWebforCS desktop calculations in process through pythonnet, calling FrameWeb build_analysis_result_set directly; supersede the earlier private loopback HTTP desktop calculation transport for this application. | The user selected pythonnet after a working mixed-debugger attach and breakpoint-binding probe. One runtime owner supports the required attach, import, bind, and call sequence without a second calculation transport. | Retain the private loopback HTTP desktop calculation boundary or add an HTTP fallback alongside pythonnet. | 2026-09-27 |
+| Do not impose a fixed analysis case-count ceiling in the initial release across the C# bridge, Python calculation/result validators, or Angular result validation; supersede the earlier 256-case rule. | The owner did not choose the inherited 256 value and prefers a simple initial version that accepts valid moving-load case fan-out without an arbitrary count rejection. Preserve per-case semantic validation and the existing ordered atomic result contract. | Keep the inherited 256-case cap; add a separate C# bridge cap or complex capacity policy before measuring a real need. | 2026-09-27 |
 
 ## TODO / Open Questions
 

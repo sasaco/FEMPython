@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -19,6 +20,7 @@ namespace FrameWebforCS.components.input
             ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2) ? "load_values" : "load_names";
         internal float LoadScale => (float)_loadScale.Value;
         private bool _syncingSelection;
+        private bool _rowHeaderSelection;
         private readonly InputLoadService _service = InputLoadService.Instance;
         private readonly ComboBox _caseSelector = new();
         private readonly NumericUpDown _loadScale = new();
@@ -45,10 +47,7 @@ namespace FrameWebforCS.components.input
             _caseSelector.SelectedIndexChanged += (_, _) =>
             {
                 if (_caseSelector.SelectedItem is string id)
-                {
                     _service.SelectCase(id);
-                    fpSpread1_Sheet2.SheetName = id;
-                }
             };
             Controls.Add(_caseSelector);
             // JS ThreeLoadService.guiEnable exposes LoadScale (0..400, default 100)
@@ -68,6 +67,7 @@ namespace FrameWebforCS.components.input
             _loadScalePanel.Visible = ActiveLoadDisplayMode == "load_values";
             Controls.Add(_loadScalePanel);
             _service.CasesChanged += RefreshCaseSelector;
+            _service.IntensityRowMoved += OnIntensityRowMoved;
             RefreshCaseSelector(this, EventArgs.Empty);
 
             float w = 0;
@@ -80,13 +80,20 @@ namespace FrameWebforCS.components.input
 
             this.Width = (int)w;
             fpSpread1.EnterCell += OnEnterCell;
+            fpSpread1.MouseDown += OnSpreadMouseDown;
+            fpSpread1.KeyDown += OnSpreadKeyDown;
+            fpSpread1.DeleteKeyInterceptor = DeleteSelectedIntensityRows;
             fpSpread1.ActiveSheetChanged += OnActiveSheetChanged;
             HandleCreated += OnDisplayActivated;
             VisibleChanged += OnDisplayActivated;
             Disposed += (_, _) =>
             {
                 _service.CasesChanged -= RefreshCaseSelector;
+                _service.IntensityRowMoved -= OnIntensityRowMoved;
                 fpSpread1.EnterCell -= OnEnterCell;
+                fpSpread1.MouseDown -= OnSpreadMouseDown;
+                fpSpread1.KeyDown -= OnSpreadKeyDown;
+                fpSpread1.DeleteKeyInterceptor = null;
                 fpSpread1.ActiveSheetChanged -= OnActiveSheetChanged;
                 HandleCreated -= OnDisplayActivated;
                 VisibleChanged -= OnDisplayActivated;
@@ -95,8 +102,82 @@ namespace FrameWebforCS.components.input
 
         private void OnActiveSheetChanged(object? sender, EventArgs e)
         {
+            _rowHeaderSelection = false;
             _loadScalePanel.Visible = ActiveLoadDisplayMode == "load_values";
             ActiveLoadDisplayModeChanged?.Invoke(ActiveLoadDisplayMode);
+        }
+
+        private void OnSpreadMouseDown(object? sender, MouseEventArgs e)
+        {
+            _rowHeaderSelection = ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2) &&
+                fpSpread1.HitTest(e.X, e.Y).Type == HitTestType.RowHeader;
+        }
+
+        private void OnIntensityRowMoved(string caseId, int row)
+        {
+            // The service reorders the bound list while Spread commits the edit.
+            // Move the active cell only after that binding transaction has ended.
+            if (!IsDisposed && IsHandleCreated)
+                BeginInvoke((System.Action)(() =>
+                {
+                    if (!IsDisposed && SelectGridRow(row, "LoadId", caseId))
+                        GridSelectionChanged?.Invoke(row, "loadid");
+                }));
+        }
+
+        private void OnSpreadKeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.Modifiers != Keys.None || e.KeyCode is not (Keys.Oem5 or Keys.Oem102) ||
+                fpSpread1.EditMode || !ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2))
+                return;
+
+            int displayIndex = fpSpread1_Sheet2.ActiveRowIndex;
+            clsLoadIntensityRow? current = _service.GetIntensityRowAt(displayIndex);
+            string caseId = current?.CaseId ?? _service.SelectedCaseId;
+            int row = current?.Row ?? 1;
+            if (_service.InsertIntensityRow(caseId, row))
+                SelectGridRow(row, caseId: caseId);
+            e.SuppressKeyPress = true;
+        }
+
+        private bool DeleteSelectedIntensityRows(SheetView sheet)
+        {
+            if (!ReferenceEquals(sheet, fpSpread1_Sheet2) || !_rowHeaderSelection)
+                return false;
+
+            var selections = sheet.GetSelections();
+            // Row-header selections use column -1. A cell range spanning every
+            // visible column must still use the ordinary cell-value Delete path.
+            if (selections.Length == 0 || selections.Any(range =>
+                    range.Column != -1 || range.ColumnCount != -1))
+                return false;
+
+            var indices = new HashSet<int>();
+            foreach (var range in selections)
+            {
+                int end = range.RowCount < 0 ? sheet.RowCount :
+                    Math.Min(sheet.RowCount, range.Row + range.RowCount);
+                for (int row = Math.Max(0, range.Row); row < end; row++)
+                    indices.Add(row);
+            }
+            var rows = indices.OrderBy(index => index)
+                .Select(_service.GetIntensityRowAt)
+                .Where(row => row != null)
+                .Select(row => (row!.CaseId, row.Row)).ToArray();
+            if (rows.Length == 0) return true;
+
+            int firstIndex = indices.Min();
+            if (_service.DeleteIntensityRows(rows))
+            {
+                _rowHeaderSelection = false;
+                int next = Math.Min(firstIndex, sheet.RowCount - 1);
+                if (next >= 0)
+                {
+                    var selected = _service.GetIntensityRowAt(next);
+                    if (selected != null) SelectGridRow(selected.Row, caseId: selected.CaseId);
+                }
+            }
+            return true;
         }
 
         private void OnDisplayActivated(object? sender, EventArgs e)
@@ -109,15 +190,22 @@ namespace FrameWebforCS.components.input
         {
             if (_syncingSelection || e.Row < 0 || e.Column < 0 ||
                 !ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2)) return;
+            clsLoadIntensityRow? row = _service.GetIntensityRowAt(e.Row);
+            if (row == null) return;
+            if (_caseSelector.Items.Contains(row.CaseId))
+                _caseSelector.SelectedItem = row.CaseId;
+            else
+                _service.SelectCase(row.CaseId);
             string column = fpSpread1_Sheet2.Columns[e.Column].DataField?.ToLowerInvariant() ?? "";
-            // JS InputLoadComponent.selectEnd sends its 1-based row and field key.
-            GridSelectionChanged?.Invoke(e.Row + 1, column);
+            GridSelectionChanged?.Invoke(row.Row, column);
         }
 
         internal bool SelectGridRow(int row, string? column = null, string? caseId = null)
         {
-            if (IsDisposed || row < 1 || row > fpSpread1_Sheet2.RowCount) return false;
-            if (caseId != null && !_caseSelector.Items.Contains(caseId)) return false;
+            if (IsDisposed || row < 1) return false;
+            string targetCase = caseId ?? _service.SelectedCaseId;
+            int displayIndex = _service.FindIntensityRowIndex(targetCase, row);
+            if (displayIndex < 0) return false;
             int columnIndex = 1;
             if (column != null)
                 for (int i = 0; i < fpSpread1_Sheet2.ColumnCount; i++)
@@ -126,9 +214,13 @@ namespace FrameWebforCS.components.input
             _syncingSelection = true;
             try
             {
-                if (caseId != null) _caseSelector.SelectedItem = caseId;
+                _rowHeaderSelection = false;
+                if (_caseSelector.Items.Contains(targetCase))
+                    _caseSelector.SelectedItem = targetCase;
+                else
+                    _service.SelectCase(targetCase);
                 fpSpread1.ActiveSheetIndex = 1;
-                fpSpread1_Sheet2.SetActiveCell(row - 1, columnIndex);
+                fpSpread1_Sheet2.SetActiveCell(displayIndex, columnIndex);
             }
             finally { _syncingSelection = false; }
             return true;
@@ -183,9 +275,9 @@ namespace FrameWebforCS.components.input
 
             for (int i = 0; i < column.Count; i++)
                 column[i].Locked = false;
-            column[0].Locked = true;
-            column[0].BackColor = SystemColors.Control;
+            column[0].Locked = false;
             fpSpread1_Sheet2.Protect = true;
+            fpSpread1_Sheet2.SelectionPolicy = FarPoint.Win.Spread.Model.SelectionPolicy.MultiRange;
 
             header.Cells[0, 0].Text = "実荷重番号";
             header.Cells[1, 0].Text = "";
@@ -253,9 +345,7 @@ namespace FrameWebforCS.components.input
         internal void RefreshDimension()
         {
             if (fpSpread1.EditMode) fpSpread1.StopCellEditing();
-            string selectedCase = _service.SelectedCaseId;
             SetSheet2();
-            fpSpread1_Sheet2.SheetName = selectedCase;
             float width = 100;
             foreach (Column column in fpSpread1_Sheet2.Columns) width += column.Width;
             Width = (int)width;
