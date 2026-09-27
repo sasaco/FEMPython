@@ -5,6 +5,7 @@ using SingleFormsDemo;
 using System.Reflection;
 using System.Text.Json;
 using THREE;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 using Xunit;
 
 namespace FrameWebforCS.Tests;
@@ -82,11 +83,14 @@ public sealed class DimensionStateTests
         // here so this test runs deterministically without a display device.
         typeof(SceneService).GetField("camera", BindingFlags.Instance | BindingFlags.NonPublic)!
             .SetValue(scene, scene.PerspectiveCamera);
-        scene.controls = new TrackballControls(scene, scene.PerspectiveCamera);
+        scene.controls = new TrackballControls(scene, scene.PerspectiveCamera)
+        {
+            StaticMoving = true
+        };
         scene.PerspectiveCamera.Position.Set(21, 34, -56);
-        scene.PerspectiveCamera.Rotation.X = 0.2f;
-        scene.PerspectiveCamera.Rotation.Y = -0.4f;
-        scene.PerspectiveCamera.Rotation.Z = 0.6f;
+        scene.controls.Target.Set(3, 4, 5);
+        scene.controls.Update();
+        var originalDirection = scene.PerspectiveCamera.GetWorldDirection(new Vector3()).Clone();
         input.RegisterSceneService(scene);
         try
         {
@@ -94,25 +98,127 @@ public sealed class DimensionStateTests
             Assert.Same(scene.OrthographicCamera, scene.CurrentCamera);
             Assert.Same(scene.OrthographicCamera, scene.controls.camera);
             Assert.True(scene.controls.NoRotate);
-            Assert.Equal(21, scene.OrthographicCamera.Position.X);
-            Assert.Equal(34, scene.OrthographicCamera.Position.Y);
+            Assert.Equal(0, scene.OrthographicCamera.Position.X);
+            Assert.Equal(0, scene.OrthographicCamera.Position.Y);
             Assert.Equal(-10, scene.OrthographicCamera.Position.Z);
+            Assert.Equal(0, scene.controls.Target.X);
+            Assert.Equal(0, scene.controls.Target.Y);
+            Assert.Equal(0, scene.controls.Target.Z);
+            scene.controls.Update();
+            AssertZParallel();
 
             input.SetDimension(3);
+            scene.controls.Update();
             Assert.Same(scene.PerspectiveCamera, scene.CurrentCamera);
             Assert.Same(scene.PerspectiveCamera, scene.controls.camera);
             Assert.False(scene.controls.NoRotate);
             Assert.Equal(21, scene.PerspectiveCamera.Position.X);
             Assert.Equal(34, scene.PerspectiveCamera.Position.Y);
             Assert.Equal(-56, scene.PerspectiveCamera.Position.Z);
-            Assert.Equal(0.2f, scene.PerspectiveCamera.Rotation.X);
-            Assert.Equal(-0.4f, scene.PerspectiveCamera.Rotation.Y);
-            Assert.Equal(0.6f, scene.PerspectiveCamera.Rotation.Z);
+            Assert.Equal(3, scene.controls.Target.X);
+            Assert.Equal(4, scene.controls.Target.Y);
+            Assert.Equal(5, scene.controls.Target.Z);
+            var restoredDirection = scene.PerspectiveCamera.GetWorldDirection(new Vector3());
+            Assert.Equal(originalDirection.X, restoredDirection.X, 5);
+            Assert.Equal(originalDirection.Y, restoredDirection.Y, 5);
+            Assert.Equal(originalDirection.Z, restoredDirection.Z, 5);
         }
         finally
         {
             input.UnregisterSceneService(scene);
             Load("{}");
+        }
+
+        void AssertZParallel()
+        {
+            var direction = scene.OrthographicCamera.GetWorldDirection(new Vector3());
+            Assert.Equal(0, direction.X, 5);
+            Assert.Equal(0, direction.Y, 5);
+            Assert.Equal(1, direction.Z, 5);
+        }
+    }
+
+    [Fact]
+    public void TwoDCameraPanAndWheelZoomKeepZParallelViewWhileRotationIsDisabled()
+    {
+        var input = InputDataService.Instance;
+        Load("{}");
+        var scene = new SceneService
+        {
+            PerspectiveCamera = new PerspectiveCamera(70, 4f / 3f, 0.1f, 1000),
+            OrthographicCamera = new OrthographicCamera(-40, 40, 30, -30, -1000, 1000),
+            renderer = new GLRenderer { Width = 800, Height = 600 }
+        };
+        typeof(SceneService).GetField("camera", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(scene, scene.PerspectiveCamera);
+        scene.controls = new TrackballControls(scene, scene.PerspectiveCamera)
+        {
+            StaticMoving = true
+        };
+        input.RegisterSceneService(scene);
+        try
+        {
+            input.SetDimension(2);
+            Assert.True(scene.controls.NoRotate);
+            Assert.False(scene.controls.NoPan);
+            Assert.False(scene.controls.NoZoom);
+
+            scene.OnMouseDown(MouseButton.Left, 100, 100);
+            scene.OnMouseMove(MouseButton.Left, 200, 150);
+            scene.controls.Update();
+            scene.OnMouseUp(MouseButton.Left, 200, 150);
+            AssertZParallel();
+
+            scene.OnMouseDown(MouseButton.Right, 100, 100);
+            scene.OnMouseMove(MouseButton.Right, 200, 150);
+            scene.controls.Update();
+            scene.OnMouseUp(MouseButton.Right, 200, 150);
+            Assert.NotEqual(0, scene.OrthographicCamera.Position.X);
+            Assert.NotEqual(0, scene.OrthographicCamera.Position.Y);
+            Assert.Equal(scene.OrthographicCamera.Position.X, scene.controls.Target.X, 5);
+            Assert.Equal(scene.OrthographicCamera.Position.Y, scene.controls.Target.Y, 5);
+            Assert.Equal(-10, scene.OrthographicCamera.Position.Z, 5);
+            Assert.Equal(0, scene.controls.Target.Z, 5);
+            AssertZParallel();
+
+            float originalZoom = scene.OrthographicCamera.Zoom;
+            float originalProjectionScale = scene.OrthographicCamera.ProjectionMatrix.Elements[0];
+            scene.OnMouseWheel(200, 150, 120);
+            scene.controls.Update();
+            Assert.True(scene.OrthographicCamera.Zoom > originalZoom);
+            Assert.NotEqual(originalProjectionScale,
+                scene.OrthographicCamera.ProjectionMatrix.Elements[0]);
+            AssertZParallel();
+
+            input.SetDimension(3);
+            input.SetDimension(2);
+            scene.controls.Update();
+            Assert.Equal(scene.OrthographicCamera.Position.X, scene.controls.Target.X, 5);
+            Assert.Equal(scene.OrthographicCamera.Position.Y, scene.controls.Target.Y, 5);
+            Assert.True(scene.OrthographicCamera.Zoom > originalZoom);
+            AssertZParallel();
+
+            Load("""{"dimension":2,"three":{"camera":{"x":12,"y":8,"z":-25}}}""");
+            scene.controls.Update();
+            Assert.Equal(12, scene.OrthographicCamera.Position.X);
+            Assert.Equal(8, scene.OrthographicCamera.Position.Y);
+            Assert.Equal(-25, scene.OrthographicCamera.Position.Z);
+            Assert.Equal(12, scene.controls.Target.X);
+            Assert.Equal(8, scene.controls.Target.Y);
+            AssertZParallel();
+        }
+        finally
+        {
+            input.UnregisterSceneService(scene);
+            Load("{}");
+        }
+
+        void AssertZParallel()
+        {
+            var direction = scene.OrthographicCamera.GetWorldDirection(new Vector3());
+            Assert.Equal(0, direction.X, 5);
+            Assert.Equal(0, direction.Y, 5);
+            Assert.Equal(1, direction.Z, 5);
         }
     }
 

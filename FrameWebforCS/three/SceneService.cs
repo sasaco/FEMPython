@@ -33,6 +33,7 @@ namespace SingleFormsDemo
         // gui
         public TrackballControls controls;
         public GLControl glControl;
+        private THREE.Vector3? _perspectiveTarget;
 
         private InputDataService input_data = InputDataService.Instance;
         // 初期化
@@ -107,11 +108,15 @@ namespace SingleFormsDemo
                 this.camera = this.OrthographicCamera;
             }
 
-            // 初期位置
-            this.camera.Position.X = 50.0f;
-            this.camera.Position.Y = 50.0f;
-            this.camera.Position.Z = -50.0f;
-            this.camera.LookAt(0, 0, 0);
+            // Keep each camera's own view when switching dimensions.
+            this.PerspectiveCamera.Position.Set(50.0f, 50.0f, -50.0f);
+            this.PerspectiveCamera.LookAt(0, 0, 0);
+            if (this.input_data.dimension == 2)
+            {
+                this.OrthographicCamera.Up.Set(0, -1, 0);
+                this.OrthographicCamera.Position.Set(0, 0, -10);
+                this.OrthographicCamera.LookAt(0, 0, 0);
+            }
 
             this.camera.Name = "camera";
             this.scene.Add(this.camera);
@@ -122,13 +127,17 @@ namespace SingleFormsDemo
         {
             if (input_data.dimension == 2)
             {
-                // 2次元に切り替わった場合は、ポジションと回転角をリセットする
-                var pos = this.camera.Position;
+                // The 2D camera keeps its own pan, independent of the 3D pose.
+                if (ReferenceEquals(this.camera, this.PerspectiveCamera) && this.controls != null)
+                    _perspectiveTarget = this.controls.Target.Clone();
+                var pos = this.OrthographicCamera.Position;
                 this.camera = this.OrthographicCamera;
-                this.camera.Up = new THREE.Vector3(0, -1, 0);
+                this.camera.Up.Set(0, -1, 0);
                 this.camera.Position.X = pos.X;
                 this.camera.Position.Y = pos.Y;
                 this.camera.Position.Z = -10;
+                if (this.controls != null)
+                    this.controls.Target.Set(pos.X, pos.Y, 0);
                 this.camera.LookAt(pos.X, pos.Y, 0);
 
                 // 2次元なら回転できないように設定する
@@ -141,7 +150,9 @@ namespace SingleFormsDemo
                 // The perspective camera is reused across round trips. Its position and
                 // rotation are the last 3D view, not the flattened 2D camera pose.
                 this.camera = this.PerspectiveCamera;
-                this.camera.Up = new THREE.Vector3(0, 0, -1);
+                this.camera.Up.Set(0, 0, -1);
+                if (this.controls != null && _perspectiveTarget != null)
+                    this.controls.Target.Copy(_perspectiveTarget);
 
                 // 3次元なら回転できるように設定する
                 if (this.controls != null)
@@ -160,6 +171,8 @@ namespace SingleFormsDemo
             var previousCamera = camera;
             var previousControlCamera = controls?.camera;
             bool previousNoRotate = controls?.NoRotate ?? false;
+            var previousTarget = controls?.Target.Clone();
+            var previousPerspectiveTarget = _perspectiveTarget?.Clone();
             var perspective = Capture(PerspectiveCamera);
             var orthographic = Capture(OrthographicCamera);
             try
@@ -177,7 +190,9 @@ namespace SingleFormsDemo
                 {
                     controls.camera = previousControlCamera;
                     controls.NoRotate = previousNoRotate;
+                    if (previousTarget != null) controls.Target.Copy(previousTarget);
                 }
+                _perspectiveTarget = previousPerspectiveTarget;
                 throw;
             }
         }
@@ -207,9 +222,16 @@ namespace SingleFormsDemo
         {
             camera.Position.Set(x, y, z);
             if (input_data.dimension == 2)
+            {
+                controls?.Target.Set(x, y, 0);
                 camera.LookAt(x, y, 0);
+            }
             else
+            {
+                controls?.Target.Set(0, 0, 0);
+                _perspectiveTarget = controls?.Target.Clone();
                 camera.LookAt(0, 0, 0);
+            }
         }
 
         public void createRender()

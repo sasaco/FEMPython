@@ -41,6 +41,11 @@ namespace THREE
         // internal variables
         private Vector3 target = Vector3.Zero();
 
+        public Vector3 Target => target;
+
+        private const float MinOrthographicZoom = 0.0001f;
+        private const float MaxOrthographicZoom = 10000f;
+
         private Vector3 lastPosition = Vector3.Zero();
 
         public STATE state = STATE.NONE;
@@ -193,15 +198,12 @@ namespace THREE
             {
                 var factor = touchZoomDistanceStart / touchZoomDistanceEnd;
                 touchZoomDistanceStart = touchZoomDistanceEnd;
-                eye = eye * factor;
+                ApplyZoomFactor(factor);
             }
             else
             {
                 var factor = (float)(1.0 + (zoomEnd.Y - zoomStart.Y) * ZoomSpeed);
-                if (factor != 1.0 && factor > 0.0f)
-                {
-                    eye.MultiplyScalar(factor);
-                }
+                ApplyZoomFactor(factor);
                 if (StaticMoving)
                 {
                     zoomStart = new Vector2(zoomEnd.X, zoomEnd.Y);
@@ -211,6 +213,27 @@ namespace THREE
                     zoomStart.Y += (zoomEnd.Y - zoomStart.Y) * DynamicDampingFactor;
                 }
 
+            }
+        }
+
+        private void ApplyZoomFactor(float factor)
+        {
+            if (factor == 1.0f || !float.IsFinite(factor) || factor <= 0.0f)
+                return;
+
+            if (camera is OrthographicCamera orthographicCamera)
+            {
+                if (!float.IsFinite(orthographicCamera.Zoom) || orthographicCamera.Zoom <= 0.0f)
+                    return;
+
+                double zoom = orthographicCamera.Zoom / (double)factor;
+                orthographicCamera.Zoom = (float)System.Math.Clamp(
+                    zoom, MinOrthographicZoom, MaxOrthographicZoom);
+                orthographicCamera.UpdateProjectionMatrix();
+            }
+            else
+            {
+                eye.MultiplyScalar(factor);
             }
         }
         private void PanCamera()
