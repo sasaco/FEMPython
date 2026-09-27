@@ -1,11 +1,13 @@
-namespace FrameWebforCS.components.input;
+using FrameWebforCS.components.input;
+
+namespace FrameWebforCS.three;
 
 /// <summary>
 /// The ordered getEnableLoad, repeat, checkIntoMemberL1, checkMember2 and
 /// checkIntoMember stages from JS InputLoadService.getMemberLoadJson(0).
 /// Raw row distance carry and physical member/local carry are independent.
 /// </summary>
-internal static class LoadLegacyMemberConversion
+internal static class MemberLoadExpansion
 {
     private const int MaximumExpandedRows = 100_000;
 

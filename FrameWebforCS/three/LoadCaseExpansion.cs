@@ -1,11 +1,13 @@
-namespace FrameWebforCS.components.input;
+using FrameWebforCS.components.input;
+
+namespace FrameWebforCS.three;
 
 /// <summary>
 /// Display projection of JS InputLoadService.getMemberLoadJson(0). The input rows remain
 /// unchanged for editing and saving; the returned rows refer to one member each and keep
 /// the source grid row for highlighting. Distances are model units, not normalized fractions.
 /// </summary>
-internal static class LoadDisplayConversion
+internal static class LoadCaseExpansion
 {
     private const int MaximumExpandedRows = 100_000;
 
@@ -27,7 +29,7 @@ internal static class LoadDisplayConversion
             source.Length > 0 && int.TryParse(caseId, out numericCase);
         if (!moving)
         {
-            var projected = LoadLegacyMemberConversion.Convert(source, roundedLengths, null);
+            var projected = MemberLoadExpansion.Convert(source, roundedLengths, null);
             if (projected.Count > 0) result[caseId] = projected;
             return result;
         }
@@ -56,7 +58,7 @@ internal static class LoadDisplayConversion
         for (int step = 0; step <= count; step++)
         {
             float shift = RoundMm(-negativeDistances + RoundMm(step * llPitch.Value));
-            var projected = LoadLegacyMemberConversion.Convert(source, roundedLengths, shift);
+            var projected = MemberLoadExpansion.Convert(source, roundedLengths, shift);
             if (projected.Count == 0) continue;
             string key = step == 0 ? caseId : (numericCase + step / divisor)
                 .ToString(System.Globalization.CultureInfo.InvariantCulture);

@@ -131,7 +131,7 @@ internal sealed class ThreeLoadsService : IDisposable
         foreach (var (id, data) in cases)
         {
             projected[id] = (data.NodeLoads.ToList(), new List<LoadMemberDisplay>());
-            var expanded = LoadDisplayConversion.ExpandMemberLoads(id, data.MemberLoads,
+            var expanded = LoadCaseExpansion.ExpandMemberLoads(id, data.MemberLoads,
                 lengths, data.Symbol, data.LLPitch);
             if (data.Symbol == "LL" && expanded.Count > 1)
                 _movingCases[id] = expanded.Keys.ToArray();
