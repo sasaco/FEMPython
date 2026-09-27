@@ -1,61 +1,62 @@
-﻿using System;
-using System.Drawing;
+﻿using FarPoint.Win.Spread;
+using System;
 using System.Windows.Forms;
 
 namespace FrameWebforCS.components.input
 {
     public partial class InputPanelComponent : UserControl
     {
-        private readonly DataGridView _grid;
+        private readonly SheetView fpSpread1_Sheet1;
         private bool _suppressSelection;
         internal event Action<int?>? PanelSelected;
 
         public InputPanelComponent()
         {
             InitializeComponent();
-            // JS input-panel.component binds row, e and point-1..4. The desktop grid
-            // uses the same row IDs and edits InputPanelService's sparse backing rows.
-            _grid = new DataGridView
+
+            fpSpread1_Sheet1 = fpSpread1.AddNewSheetView();
+            fpSpread1_Sheet1.SheetName = "面要素";
+            fpSpread1_Sheet1.AutoGenerateColumns = false;
+            fpSpread1_Sheet1.DataAutoCellTypes = false;
+            fpSpread1_Sheet1.DataAutoHeadings = false;
+            fpSpread1_Sheet1.RowHeaderAutoText = HeaderAutoText.Numbers;
+            fpSpread1_Sheet1.StartingRowNumber = 1;
+            fpSpread1_Sheet1.ColumnCount = 5;
+            fpSpread1_Sheet1.DataSource = InputPanelService.Instance.Panels;
+
+            var header = fpSpread1_Sheet1.ColumnHeader;
+            var columns = fpSpread1_Sheet1.Columns;
+            string[] fields = { nameof(clsPanel.E), nameof(clsPanel.Point1), nameof(clsPanel.Point2),
+                nameof(clsPanel.Point3), nameof(clsPanel.Point4) };
+            string[] titles = { "材料 No", "節点 1", "節点 2", "節点 3", "節点 4" };
+            for (int i = 0; i < fields.Length; i++)
             {
-                Dock = DockStyle.Fill,
-                AutoGenerateColumns = false,
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                RowHeadersWidth = 64,
-                BackgroundColor = Color.White,
-                DataSource = InputPanelService.Instance.Panels
-            };
-            AddColumn(nameof(clsPanel.E), "材料 No", 90);
-            AddColumn(nameof(clsPanel.Point1), "節点 1", 90);
-            AddColumn(nameof(clsPanel.Point2), "節点 2", 90);
-            AddColumn(nameof(clsPanel.Point3), "節点 3", 90);
-            AddColumn(nameof(clsPanel.Point4), "節点 4", 90);
-            _grid.RowPostPaint += (_, e) =>
-                _grid.Rows[e.RowIndex].HeaderCell.Value = (e.RowIndex + 1).ToString();
-            _grid.CellEnter += (_, e) =>
-            {
-                if (!_suppressSelection) PanelSelected?.Invoke(e.RowIndex >= 0 ? e.RowIndex + 1 : null);
-            };
-            Controls.Add(_grid);
+                header.Cells[0, i].Text = titles[i];
+                columns[i].DataField = fields[i];
+                columns[i].Width = 90;
+            }
+
+            Width = fields.Length * 90 + 100;
+            fpSpread1.EnterCell += OnEnterCell;
+            Disposed += (_, _) => fpSpread1.EnterCell -= OnEnterCell;
+        }
+
+        private void OnEnterCell(object? sender, EnterCellEventArgs e)
+        {
+            if (_suppressSelection || IsDisposed || e.Row < 0 || e.Column < 0) return;
+            PanelSelected?.Invoke(e.Row + 1);
         }
 
         internal void SelectPanel(int? id)
         {
-            if (id is < 1 or > 100_000) return;
+            if (IsDisposed || id is < 1 or > 100_000) return;
             _suppressSelection = true;
             try
             {
-                if (id.HasValue) _grid.CurrentCell = _grid.Rows[id.Value - 1].Cells[0];
-                else
-                {
-                    _grid.ClearSelection();
-                    _grid.CurrentCell = null;
-                }
+                if (id.HasValue) fpSpread1_Sheet1.SetActiveCell(id.Value - 1, 0);
+                else fpSpread1_Sheet1.ClearSelection();
             }
             finally { _suppressSelection = false; }
         }
-
-        private void AddColumn(string property, string title, int width) => _grid.Columns.Add(
-            new DataGridViewTextBoxColumn { DataPropertyName = property, HeaderText = title, Width = width });
     }
 }
