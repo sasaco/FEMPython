@@ -1,9 +1,29 @@
 # Python.NET mixed-mode debugger probe
 
-This isolated console program checks whether this machine's Visual Studio 2026
-can step from a C# pythonnet call into CPython and show Python locals. A working
-command-line run establishes only embedding; the three debugger behaviors must
-be checked in Visual Studio.
+This isolated console program checks Visual Studio 2026 debugging of Python
+code hosted by a C# pythonnet process. The preferred workflow stops at a Python
+breakpoint without stepping from C#.
+
+## One-command Python breakpoint run
+
+Open the probe project in Visual Studio, then run this from the repository root
+in PowerShell. Pass the PID of that Visual Studio instance if more than one is
+open:
+
+```powershell
+& tools/PythonNetDebugProbe/StartMixedDebug.ps1 -VisualStudioProcessId <VS_PID> -Experiment PythonBreakpoint
+```
+
+The command builds the probe, sets a breakpoint at `probe_calculation.py:2`,
+temporarily disables probe C# breakpoints, starts the process, and attaches **Python
+(native) + Native**. The probe then imports the Python module. Only after the
+Python breakpoint reports `Children > 0` does the command release
+`calculate(7, 5)`. Visual Studio stops in `calculate()` without F11. Continue
+in Visual Studio to let the command print `Python result: 27` and exit.
+
+The separate output directory `bin/PythonBreakpoint/net10.0` prevents a prior
+debugged probe from locking the executable used for this run. This is a probe
+workflow; it does not change the C# project's ordinary F5 configuration.
 
 ## Run from the repository root (PowerShell)
 

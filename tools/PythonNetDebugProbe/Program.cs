@@ -30,8 +30,21 @@ PythonEngine.Initialize();
 try
 {
     Console.WriteLine($"PID {Environment.ProcessId}; CPython {PythonEngine.Version}");
-    Console.WriteLine("Attach Visual Studio with Python, Managed and Native debugging, then press Enter.");
+    Console.WriteLine(args.Contains("--breakpoint-gate", StringComparer.Ordinal)
+        ? "Waiting for automated Python (native) and Native attach."
+        : "Attach Visual Studio with Python, Managed and Native debugging, then press Enter.");
     Console.ReadLine();
+
+    if (args.Contains("--breakpoint-gate", StringComparer.Ordinal))
+    {
+        using (Py.GIL())
+        using (PyObject module = Py.Import("probe_calculation"))
+        {
+            Console.WriteLine("PYTHON_MODULE_READY");
+        }
+
+        Console.ReadLine();
+    }
 
     using (Py.GIL())
     {
