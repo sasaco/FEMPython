@@ -17,6 +17,10 @@ namespace FrameWebforCS
             InitializeComponent();
 
             three = new ThreeComponent(glControl1);
+            // JS ThreeComponent.ngOnDestroy is empty. The native timer, GL resources,
+            // and event subscriptions need an explicit owner on form close.
+            FormClosing += (_, _) => three.Dispose();
+            Disposed += (_, _) => three.Dispose();
         }
 
         private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs e)

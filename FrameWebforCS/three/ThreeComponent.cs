@@ -3,6 +3,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.WinForms;
 using SingleFormsDemo;
+using FrameWebforCS.providers;
 using System.ComponentModel;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
@@ -11,6 +12,9 @@ namespace FrameWebforCS.three
     public class ThreeComponent : GLControl
     {
         public SceneService threeInstance = null;
+        private ThreeService? _threeService;
+        private bool _disposed;
+        private Point? _mouseDownPosition;
 
         private System.Windows.Forms.Timer _timer;
         private int timeInterval = 10;
@@ -47,7 +51,12 @@ namespace FrameWebforCS.three
 
         private void Render()
         {
+            if (_disposed || threeInstance == null)
+                return;
             this.glControl.MakeCurrent();
+            // Existing WinForms timer owns the GL frame; apply the coordinator's queued
+            // changes here instead of JS SceneService's immediate render calls.
+            _threeService?.FlushPending();
             threeInstance.render();
             this.glControl.SwapBuffers();
         }
@@ -64,6 +73,8 @@ namespace FrameWebforCS.three
             threeInstance = new SceneService();
             threeInstance.OnInit(glControl);
             threeInstance.OnResize(new ResizeEventArgs(glControl.ClientSize.Width, glControl.ClientSize.Height));
+
+            _threeService = new ThreeService(threeInstance);
 
             Run();
         }
@@ -104,6 +115,7 @@ namespace FrameWebforCS.three
 
         private void glControl_MouseDown(object? sender, System.Windows.Forms.MouseEventArgs e)
         {
+            _mouseDownPosition = e.Button == MouseButtons.Left ? e.Location : null;
             threeInstance?.OnMouseDown(GetMouseButton(e), e.X, e.Y);
         }
 
@@ -115,6 +127,44 @@ namespace FrameWebforCS.three
         private void glControl_MouseUp(object? sender, System.Windows.Forms.MouseEventArgs e)
         {
             threeInstance?.OnMouseUp(GetMouseButton(e), e.X, e.Y);
+            // JS picks on pointerdown. Delay selection until a short MouseUp click so
+            // a TrackballControls drag does not also highlight a node.
+            if (e.Button == MouseButtons.Left && _mouseDownPosition is { } start &&
+                Math.Abs(e.X - start.X) <= 4 && Math.Abs(e.Y - start.Y) <= 4)
+                _threeService?.SelectAt(e.X, e.Y, glControl.ClientSize.Width, glControl.ClientSize.Height);
+            _mouseDownPosition = null;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && !_disposed)
+            {
+                _timer?.Stop();
+                _timer?.Dispose();
+                glControl.Load -= glControl_Load;
+                glControl.Paint -= glControl_Paint;
+                glControl.KeyDown -= glControl_KeyDown;
+                glControl.KeyPress -= glControl_KeyPress;
+                glControl.KeyUp -= glControl_KeyUp;
+                glControl.MouseDown -= glControl_MouseDown;
+                glControl.MouseMove -= glControl_MouseMove;
+                glControl.MouseUp -= glControl_MouseUp;
+                glControl.Resize -= glControl_Resize;
+                glControl.MouseWheel -= glControl_MouseWheel;
+                if (threeInstance != null && !glControl.IsDisposed)
+                {
+                    glControl.MakeCurrent();
+                }
+                _threeService?.Dispose();
+                if (threeInstance != null)
+                {
+                    if (!glControl.IsDisposed)
+                        threeInstance.renderer?.Dispose();
+                    InputDataService.Instance.UnregisterSceneService(threeInstance);
+                }
+                _disposed = true;
+            }
+            base.Dispose(disposing);
         }
 
         private void glControl_KeyUp(object? sender, KeyEventArgs e)

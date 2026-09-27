@@ -42,6 +42,9 @@ namespace FrameWebforCS.providers
         private SceneService? _sceneService;
         private (float X, float Y, float Z)? _cameraPosition;
 
+        internal long DocumentRevision { get; private set; }
+        internal event Action<long>? FileReplaced;
+
         internal void RegisterSceneService(SceneService sceneService)
         {
             _sceneService = sceneService;
@@ -49,6 +52,12 @@ namespace FrameWebforCS.providers
             {
                 sceneService.SetCameraPosition(position.X, position.Y, position.Z);
             }
+        }
+
+        internal void UnregisterSceneService(SceneService sceneService)
+        {
+            if (ReferenceEquals(_sceneService, sceneService))
+                _sceneService = null;
         }
 
 
@@ -118,6 +127,10 @@ namespace FrameWebforCS.providers
 
         internal void JsonDataOpen(JsonElement rootElement)
         {
+            // JS loadInputData clears inputs first and the menu then calls three.fileload().
+            // Validate/stage nodes first so a failed load leaves the current node scene intact.
+            // TODO: other input services still need rollback for whole-document atomic loading.
+            var preparedNodes = InputNodesService.ParseNodeJson(rootElement);
             var combineCoordinator = ResultCombineDisgCoordinator.Instance;
             var combineFsecCoordinator = ResultCombineFsecCoordinator.Instance;
             var combineReacCoordinator = ResultCombineReacCoordinator.Instance;
@@ -140,6 +153,7 @@ namespace FrameWebforCS.providers
                     combineFsecCoordinator.FailLoad();
                     combineReacCoordinator.FailLoad();
                 }
+                InputNodesService.Instance.ApplyNodes(preparedNodes);
             }
             catch
             {
@@ -148,6 +162,11 @@ namespace FrameWebforCS.providers
                 combineReacCoordinator.FailLoad();
                 throw;
             }
+
+            // Unlike JS's direct fileload call, publish one successful replacement for
+            // the viewport, including a missing node section (an empty node scene).
+            DocumentRevision++;
+            FileReplaced?.Invoke(DocumentRevision);
         }
 
         private void JsonDataOpenCore(JsonElement rootElement, bool hasResult)
@@ -175,7 +194,6 @@ namespace FrameWebforCS.providers
                     ReadCameraCoordinate(cameraElement, "z"));
             }
 
-            InputNodesService.Instance.setNodeJson(rootElement);
             InputMembersService.Instance.setMemberJson(rootElement);
             InputRigidZoneService.Instance.setRigidJson(rootElement);
             InputElementsService.Instance.setElementJson(rootElement);

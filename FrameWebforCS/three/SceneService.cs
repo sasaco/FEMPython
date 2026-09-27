@@ -19,6 +19,10 @@ namespace SingleFormsDemo
         // カメラ
         private Camera camera;
 
+        // JS SceneService creates a Raycaster for ThreeService. C# keeps its existing
+        // camera/renderer ownership and exposes only the active camera for node picking.
+        internal Camera CurrentCamera => camera;
+
         public Camera PerspectiveCamera;
         public Camera OrthographicCamera;
 

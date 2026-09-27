@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using THREE;
 
 namespace FrameWebforCS.components.input
 {
@@ -49,6 +50,8 @@ namespace FrameWebforCS.components.input
 
         private Dictionary<string, clsNode> _node = new Dictionary<string, clsNode>();
 
+        internal event Action<int>? NodeEdited;
+
         // Row index + 1 is the node ID; missing IDs are represented by empty rows.
         public BindingList<clsNode> Nodes { get; } = new BindingList<clsNode>();
 
@@ -70,9 +73,17 @@ namespace FrameWebforCS.components.input
 
         public void setNodeJson(JsonElement jsonData)
         {
-            if (!jsonData.TryGetProperty("node", out JsonElement nodeJson) ||
-                nodeJson.ValueKind != JsonValueKind.Object)
-                return;
+            ApplyNodes(ParseNodeJson(jsonData));
+        }
+
+        internal static Dictionary<string, clsNode> ParseNodeJson(JsonElement jsonData)
+        {
+            if (jsonData.ValueKind != JsonValueKind.Object)
+                throw new JsonException("Input data must be an object.");
+            if (!jsonData.TryGetProperty("node", out JsonElement nodeJson))
+                return new Dictionary<string, clsNode>();
+            if (nodeJson.ValueKind != JsonValueKind.Object)
+                throw new JsonException("node must be an object.");
 
             var nodes = JsonSerializer.Deserialize<Dictionary<string, clsNode>>(nodeJson.GetRawText())
                 ?? throw new JsonException("Invalid node data.");
@@ -91,14 +102,29 @@ namespace FrameWebforCS.components.input
                     numberedNodes.Add(rowId, node);
             }
 
-            ReplaceRows(numberedNodes);
+            return numberedNodes;
         }
 
-        public Dictionary<string, object> getNodeJson()
+        internal void ApplyNodes(Dictionary<string, clsNode> nodes) => ReplaceRows(nodes);
+
+        internal Vector3? GetDisplayNode(int id)
         {
-            var nodes = new Dictionary<string, object>();
+            // JS getNodeJson(0) scans every populated row. Use one ID for C# grid edits;
+            // full file replacement still uses getNodeJson(0) in ThreeService.
+            if (!_node.TryGetValue(id.ToString(CultureInfo.InvariantCulture), out var node))
+                return null;
+            return new Vector3(node.X ?? 0, node.Y ?? 0, node.Z ?? 0);
+        }
+
+        public Dictionary<string, clsNode> getNodeJson(float? empty = null)
+        {
+            // JS getNodeJson(empty) has the same null-for-save/zero-for-display behavior.
+            // C# keeps sparse typed rows beside the fixed 100,000-row BindingList.
+            var nodes = new Dictionary<string, clsNode>(_node.Count);
             foreach (var (id, node) in _node)
-                nodes.Add(id, node);
+                nodes.Add(id, empty.HasValue
+                    ? new clsNode { X = node.X ?? empty, Y = node.Y ?? empty, Z = node.Z ?? empty }
+                    : node);
             return nodes;
         }
 
@@ -113,6 +139,8 @@ namespace FrameWebforCS.components.input
                 _node.Remove(id);
             else
                 _node[id] = node;
+
+            NodeEdited?.Invoke(e.NewIndex + 1);
 
         }
 

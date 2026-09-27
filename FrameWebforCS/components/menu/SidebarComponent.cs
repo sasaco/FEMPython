@@ -224,7 +224,9 @@ namespace FrameWebforCS.components.menu
                 var value = targetComponents[key];
                 if (value != null)
                 {
-                    routing.contentsDailogShow(value.Component, value.title, value.option);
+                    // Pass the sidebar key because C# input components do not call
+                    // JS ThreeService.ChangeMode when their view becomes active.
+                    routing.contentsDailogShow(value.Component, value.title, value.option, key);
 
                     // TreeViewの見た目をチェック状態にする
                     e.Node?.Checked = true;

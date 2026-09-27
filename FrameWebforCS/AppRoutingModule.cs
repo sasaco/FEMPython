@@ -27,13 +27,16 @@ namespace FrameWebforCS
 
         public List<UserControl> myComponents = new List<UserControl>();
 
+        internal string? ActiveModeKey { get; private set; }
+        internal event Action<string>? InputModeChanged;
+
         // コンストラクタを private にして、外部からの new を禁止する
         private AppRoutingModule()
         {
         }
 
 
-        internal void contentsDailogShow(Type _target, string title, int option = -1)
+        internal void contentsDailogShow(Type _target, string title, int option = -1, string? modeKey = null)
         {
             if (_target == null)
                 return;
@@ -41,6 +44,11 @@ namespace FrameWebforCS
             var target = GetTargetComponent(_target);
             if (target == null)
                 return;
+
+            if (modeKey != null)
+                // JS input components call ChangeMode("nodes"); C# sidebar keys use
+                // singular "node". Notify even when the same component is reused.
+                NotifyInputMode(modeKey);
 
             if (floatForm == null) {
                 floatForm = new Form();
@@ -80,6 +88,12 @@ namespace FrameWebforCS
             // 記憶
             _input.CurrentComponent = target;
 
+        }
+
+        internal void NotifyInputMode(string modeKey)
+        {
+            ActiveModeKey = modeKey;
+            InputModeChanged?.Invoke(modeKey);
         }
 
         /// <summary>
