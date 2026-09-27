@@ -400,7 +400,7 @@ def test_repository_config_declares_existing_component_paths() -> None:
         for project in component.get("projects", []):
             assert (ROOT / project).is_file()
     assert {gate["classification"] for gate in data["gates"]} == {"product"}
-    assert any(gate["optional"] for gate in data["gates"])
+    assert all(gate["component"] in {component["id"] for component in components} for gate in data["gates"])
 
 
 def test_python_product_gate_runs_from_the_declared_component_directory() -> None:

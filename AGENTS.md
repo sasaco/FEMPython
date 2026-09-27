@@ -17,7 +17,7 @@ in `.agents/STATE.md` and durable design decisions in
 |---|---|---|---|
 | FEM backend | `FrameWeb/` | Python 3.11+ / uv | Structural-analysis engine and HTTP entry points |
 | Web client | `FrameWebforJS/` | Node 18 / npm / Angular 15 | Browser and Electron client |
-| Local host and printing | `FrameWeb.sln`, `tools/FrameWeb.Startup/`, `FramePrintPDF/` | .NET 8 | Local orchestration and PDF/print services |
+| Desktop and printing | `FrameWeb.sln`, `FrameWebforCS/`, `FramePrintPDF/` | .NET / dotnet | WinForms client and PDF/print services |
 | Legacy converter | `FrameGConverter/` | .NET | Separate converter solution; change only when explicitly in scope |
 | Agent infrastructure | `.agents/`, `.codex/` | PowerShell and repository Python environment | Rules, skills, state, checks, and logs |
 
@@ -34,9 +34,9 @@ uv --directory FrameWeb run --locked --extra dev python -m pytest tests -q
 npm --prefix FrameWebforJS run test -- --watch=false --browsers=ChromeHeadless
 npm --prefix FrameWebforJS run build
 
-# .NET and local integration
+# .NET desktop
 dotnet build FrameWeb.sln
-dotnet run --project tools/FrameWeb.Startup
+dotnet run --project FrameWebforCS/FrameWebforCS.csproj
 
 # Agent-infrastructure checks
 & .agents/check.ps1

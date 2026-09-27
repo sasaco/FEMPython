@@ -34,11 +34,12 @@ The steps establish request parity and the Python call first, then connect the G
 
 #### Step 3: Establish the Python embedding lifecycle and failure boundary
 
-- [ ] Add `pythonnet` to `FrameWebforCS.csproj` and introduce one owned Python runtime service that resolves the uv Python DLL/home/source path, initializes once, imports the target module, serializes `Py.GIL()` calls, and exchanges JSON-compatible request/result values.
-- [ ] Run the blocking FEM call off the UI thread while preserving Python thread/GIL requirements. Distinguish startup/import, solver, and conversion errors. Cancellation suppresses publication while an in-process solve completes; prevent concurrent solves and shutdown races.
+- [ ] Add the probe-tested pythonnet version and x64 target to `FrameWebforCS.csproj`. One runtime owner resolves the uv-managed Python DLL, standard library, `FrameWeb/.venv/Lib/site-packages`, and `FrameWeb/src`; a missing or incompatible environment fails explicitly before import.
+- [ ] Use one JSON path: .NET serialization → Python `json.loads` → `build_analysis_result_set` → Python `json.dumps` → strict .NET v1 parser. Initialize Python once, release the initialization thread's GIL with `PythonEngine.BeginAllowThreads()`, and serialize worker calls under `Py.GIL()`.
+- [ ] Run the blocking FEM call off the UI thread. The runtime owner prevents concurrent solves and controls shutdown: admit no new call after closing begins, await the active non-interruptible solve, restore the saved thread state with `EndAllowThreads` on the initialization thread, then call `Shutdown()` there. Cancellation suppresses publication rather than interrupting Python. Distinguish startup/import, solver, and conversion errors.
 - [ ] Validate the returned root as canonical `AnalysisResultSet v1`; do not accept the former `root.result.case` response as a success fallback.
 
-**Verification**: A headless C# integration test invokes a small real FrameWeb fixture twice, asserts the ordered v1 results, and covers failure, cancel-while-solving, and shutdown without a hang. The app builds on the supported Windows environment.
+**Verification**: A headless C# integration test calls a small real fixture twice on a worker thread, asserts ordered v1 results, and covers missing venv, import failure, cancel-while-solving, and shutdown without a GIL hang. The x64 app builds on the supported Windows environment.
 
 #### Step 4: Add the two-stage development debugger handshake
 
@@ -46,23 +47,23 @@ The steps establish request parity and the Python call first, then connect the G
 - [ ] Give the app-specific launcher a PID-scoped local control channel, explicit stage acknowledgements, timeout/cancel/error handling, and a configurable Python file/line, defaulting to `FrameWeb/src/fem/analysis_result_sets.py:46`. Update both `EnsurePythonBreakpoint` and `PythonBreakpointChildren` checks to match that exact file and line. Launch the app without a pre-attached Managed debugger, resolve its current PID and x64 Python symbols, then attach the required engines. In ordinary runs bypass the handshake; never use `Console.ReadLine()`, fixed sleeps, or F11 as a readiness signal.
 - [ ] Keep the form responsive and show a cancelable waiting state through both gates. Dispose the handshake when the calculation or document lifetime ends.
 
-**Verification**: On a Debug x64 run, the launcher attaches, observes a bound breakpoint, releases gate 2, and Visual Studio stops on the requested Python line. Cancel/attach failure leaves the GUI usable and does not invoke Python.
+**Verification**: Probe or fake-call tests confirm attach → import → bound-breakpoint acknowledgement → call order. Cancel/attach failure leaves the GUI usable and does not invoke Python. Step 7 verifies an actual app calculation stops on the Python line.
 
 #### Step 5: Publish `AnalysisResultSet v1` into C# result views
 
 - [ ] Parse and semantically validate the complete v1 result, prepare the three tables, 3D scene, page selection, and derived views, then replace result state once on the UI thread. A failure must not publish partial new results. Map canonical string IDs, support reactions, topology stations, member segments, and case/state keys directly; verify member-end signs and 3D coordinates rather than feeding the old `root.result.case` parser.
 - [ ] Follow the old result screens: first/last static case, every nonlinear step, every modal mode (mode shape in displacement; no reaction/force rows), 2D/3D switching, LL parent/child grouping with signed max/min direction and source case, and DEFINE/COMBINE/PICKUP from static base results. Keep derived values outside the canonical response.
 - [ ] Read v1 `units` before formatting. Convert only when a declared, recognized unit supports the conversion; otherwise show the raw value with an unspecified-unit label instead of assuming mm, kN, or kN·m.
-- [ ] Inventory `GetSaveJson`, `JsonDataOpen`, and dimension result tests. Preserve old-file open/save behavior until successful recalculation; then clear stale legacy result fields. Do not serialize runtime v1 data as legacy `result`/`resultDimension`. Leave input-only persistence migration to separate work.
+- [ ] Inventory `GetSaveJson`, `JsonDataOpen`, and dimension result tests. Old files retain their existing result display/save behavior until a valid calculation is started. At that point clear old result state and stale legacy save fields; failure/cancellation leaves results empty. Do not serialize runtime v1 data as legacy `result`/`resultDimension`. Leave input-only persistence migration to separate work.
 
-**Verification**: C# tests compare page labels/order and table/3D numbers with Step 1 fixtures, including nonlinear/modal states, LL envelope/direction, member stations/signs, and units. Malformed v1 or failed presentation leaves no partial new state. Old-file open → recalculate → save clears stale legacy results without serializing v1 as legacy data. Manual checks exercise result tabs, pages, LL direction, and 3D.
+**Verification**: C# tests compare page labels/order and table/3D numbers with Step 1 fixtures, including nonlinear/modal states, LL envelope/direction, member stations/signs, and units. Malformed v1 or failed presentation leaves no partial new state. Old-file open/save works before recalculation; start → fail/cancel → save has no stale result; success → save does not serialize v1 as legacy data. Manual checks exercise result tabs, pages, LL direction, and 3D.
 
 #### Step 6: Wire the calculation command to document and result state
 
-- [ ] Connect the calculation menu action to request projection, validation, the Python bridge, and the Step 5 result publisher. Capture an immutable request snapshot and an input edit generation before dispatch; increment the generation on every relevant node/member/load/property/support edit as well as document replacement. Reject duplicate commands and ignore results after an edit, replacement, or cancellation.
-- [ ] Display progress and errors on the UI thread. Match the old calculation command's result-clear timing, and define one consistent state for old saved results during failure/cancellation. Keep the form responsive during preprocessing, both debug gates, and the solver call.
+- [ ] Connect the calculation menu action to request projection, validation, the Python bridge, and the Step 5 result publisher. Capture the immutable request and one `CalculationInputRevision` on the UI thread. Advance that revision for every calculation input edit, including dimension, node, member, shell/panel, rigid, element, support, joint, notice point, and load, plus document replacement. Reject duplicate commands and ignore results after an edit, replacement, cancellation, or close.
+- [ ] After a valid request is accepted and before the Python call, clear the prior result and stale legacy save fields, matching Angular's calculation-start behavior. An invalid request leaves prior results intact; failure/cancellation after start leaves them empty. Show progress/errors on the UI thread and keep the form responsive during preprocessing, debug waits, and solving.
 
-**Verification**: UI/service tests cover success, invalid input, solver failure, duplicate click, cancellation, an input cell edit during the solve, and an old calculation completing after document replacement. A manual run reaches `build_analysis_result_set` and visible results from the menu.
+**Verification**: UI/service tests cover success, invalid input retaining prior results, failure/cancellation after start clearing them, duplicate click, an edit in each calculation input section while solving, document replacement, and close. A late result cannot replace a newer document or leak into save JSON.
 
 #### Step 7: End-to-end acceptance and focused gates
 

@@ -34,13 +34,14 @@ Angular or TypeScript tools.
 
 ## .NET
 
-`FrameWeb.sln` contains the local startup and printing projects and targets
-.NET 8 through `tools/FrameWeb.Startup/FrameWeb.Startup.csproj`.
+`FrameWeb.sln` contains the .NET 10 WinForms client and its tests, rendering
+projects, and the PDF manager. The former `tools/FrameWeb.Startup` project was
+removed.
 
 ```powershell
 dotnet restore FrameWeb.sln
 dotnet build FrameWeb.sln
-dotnet run --project tools/FrameWeb.Startup
+dotnet run --project FrameWebforCS/FrameWebforCS.csproj
 ```
 
 `FrameGConverter/FrameGConverter.sln` is separate and is built only when that

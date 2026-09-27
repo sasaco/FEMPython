@@ -60,22 +60,13 @@ package_manager = "dotnet"
 manifest = "FrameWeb.sln"
 working_directory = "."
 projects = [
-  "tools/FrameWeb.Startup/FrameWeb.Startup.csproj",
+  "FrameWebforCS/FrameWebforCS.csproj",
   "FramePrintPDF/FramePrintAzure/FramePrintAzure.csproj",
   "FramePrintPDF/PDF_Manager/PDF_Manager.csproj",
 ]
 
 [components.commands]
 build = ["dotnet", "build", "FrameWeb.sln"]
-
-[[components]]
-id = "local-smoke"
-kind = "smoke"
-manifest = "scripts/smoke-local.py"
-working_directory = "."
-
-[components.commands]
-smoke = ["uv", "run", "--project", "FrameWeb", "--locked", "--extra", "dev", "python", "scripts/smoke-local.py"]
 
 [[gates]]
 id = "python-tests"
@@ -104,10 +95,3 @@ component = "dotnet"
 classification = "product"
 optional = false
 command = ["dotnet", "build", "FrameWeb.sln"]
-
-[[gates]]
-id = "local-smoke"
-component = "local-smoke"
-classification = "product"
-optional = true
-command = ["uv", "run", "--project", "FrameWeb", "--locked", "--extra", "dev", "python", "scripts/smoke-local.py"]
