@@ -246,9 +246,30 @@ namespace THREE
 
             if (mouseChange.LengthSq() > 0)
             {
-                mouseChange.MultiplyScalar(eye.Length() * PanSpeed);
-                pan.Copy(eye).Cross(camera.Up).SetLength(mouseChange.X);
-                pan.Add(objectUp.Copy(camera.Up).SetLength(mouseChange.Y));
+                float horizontal;
+                float vertical;
+                if (camera is OrthographicCamera orthographicCamera)
+                {
+                    // Orthographic screen scale depends on the frustum and zoom,
+                    // not on the camera's distance from its target.
+                    if (!float.IsFinite(orthographicCamera.Zoom) || orthographicCamera.Zoom <= 0)
+                        return;
+                    horizontal = mouseChange.X *
+                        (orthographicCamera.CameraRight - orthographicCamera.Left) /
+                        orthographicCamera.Zoom * PanSpeed;
+                    vertical = mouseChange.Y *
+                        (orthographicCamera.Top - orthographicCamera.Bottom) /
+                        orthographicCamera.Zoom * PanSpeed;
+                }
+                else
+                {
+                    mouseChange.MultiplyScalar(eye.Length() * PanSpeed);
+                    horizontal = mouseChange.X;
+                    vertical = mouseChange.Y;
+                }
+
+                pan.Copy(eye).Cross(camera.Up).SetLength(horizontal);
+                pan.Add(objectUp.Copy(camera.Up).SetLength(vertical));
 
                 camera.Position.Add(pan);
                 target.Add(pan);

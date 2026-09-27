@@ -85,7 +85,8 @@ public sealed class DimensionStateTests
             .SetValue(scene, scene.PerspectiveCamera);
         scene.controls = new TrackballControls(scene, scene.PerspectiveCamera)
         {
-            StaticMoving = true
+            StaticMoving = true,
+            PanSpeed = 3
         };
         scene.PerspectiveCamera.Position.Set(21, 34, -56);
         scene.controls.Target.Set(3, 4, 5);
@@ -153,7 +154,8 @@ public sealed class DimensionStateTests
             .SetValue(scene, scene.PerspectiveCamera);
         scene.controls = new TrackballControls(scene, scene.PerspectiveCamera)
         {
-            StaticMoving = true
+            StaticMoving = true,
+            PanSpeed = 3
         };
         input.RegisterSceneService(scene);
         try
@@ -162,6 +164,7 @@ public sealed class DimensionStateTests
             Assert.True(scene.controls.NoRotate);
             Assert.False(scene.controls.NoPan);
             Assert.False(scene.controls.NoZoom);
+            Assert.Equal(1f, scene.controls.PanSpeed);
 
             scene.OnMouseDown(MouseButton.Left, 100, 100);
             scene.OnMouseMove(MouseButton.Left, 200, 150);
@@ -173,8 +176,9 @@ public sealed class DimensionStateTests
             scene.OnMouseMove(MouseButton.Right, 200, 150);
             scene.controls.Update();
             scene.OnMouseUp(MouseButton.Right, 200, 150);
-            Assert.NotEqual(0, scene.OrthographicCamera.Position.X);
-            Assert.NotEqual(0, scene.OrthographicCamera.Position.Y);
+            // A 100x50-pixel drag should move by the visible world span at zoom 1.
+            Assert.Equal(-10f, scene.OrthographicCamera.Position.X, 3);
+            Assert.Equal(-5f, scene.OrthographicCamera.Position.Y, 3);
             Assert.Equal(scene.OrthographicCamera.Position.X, scene.controls.Target.X, 5);
             Assert.Equal(scene.OrthographicCamera.Position.Y, scene.controls.Target.Y, 5);
             Assert.Equal(-10, scene.OrthographicCamera.Position.Z, 5);
@@ -190,7 +194,18 @@ public sealed class DimensionStateTests
                 scene.OrthographicCamera.ProjectionMatrix.Elements[0]);
             AssertZParallel();
 
+            float previousX = scene.OrthographicCamera.Position.X;
+            float zoomedWorldDrag = 10f / scene.OrthographicCamera.Zoom;
+            scene.OnMouseDown(MouseButton.Right, 100, 100);
+            scene.OnMouseMove(MouseButton.Right, 200, 100);
+            scene.controls.Update();
+            scene.OnMouseUp(MouseButton.Right, 200, 100);
+            Assert.Equal(zoomedWorldDrag,
+                previousX - scene.OrthographicCamera.Position.X, 3);
+            AssertZParallel();
+
             input.SetDimension(3);
+            Assert.Equal(3f, scene.controls.PanSpeed);
             input.SetDimension(2);
             scene.controls.Update();
             Assert.Equal(scene.OrthographicCamera.Position.X, scene.controls.Target.X, 5);

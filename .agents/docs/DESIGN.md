@@ -107,7 +107,7 @@ FrameWeb3は次の境界を持つコンポーネント指向モノレポであ�
 
 - The C# desktop migration replaces frontend behavior only: Python remains the FEM implementation, successful calculations use only `AnalysisResultSet v1`, calculation and printing transports stay separate, and legacy client/print compatibility is not required.
 
-- The C# desktop first release has no login, external identity provider, account token storage, or remote authenticated calculation mode. The existing per-launch private loopback bearer and Windows Job/listener ownership validation remain mandatory local process-security boundaries.
+- The C# desktop first release has no login, external identity provider, account token storage, or remote authenticated calculation mode. `FrameWebforCS/` calculations use an in-process pythonnet runtime; private loopback bearer and Windows Job/listener checks apply only to components that continue to use HTTP.
 
 ## Key Decisions
 
@@ -143,6 +143,7 @@ FrameWeb3は次の境界を持つコンポーネント指向モノレポであ�
 | Treat FrameWebforJS screen composition as the golden acceptance target for the C# desktop UI, not merely its business semantics. | The user clarified that the original request for the same major business scenarios meant the same screen composition. The current docking-centric shell materially differs in information architecture and therefore cannot be signed off as parity even though the underlying typed workflows work. | Keep the current native WinForms docking reinterpretation and validate only field meaning, validation, and workflow semantics. | 2026-09-21 |
 | Make WorkspaceControl the sole visible viewport and OpenGL-context owner in the FrameWebforJS-parity shell; route panels and overlays consume typed state and commands but never create a second renderer, selection subscription, or result publisher. | A single owner preserves the completed renderer lifecycle, captured-revision publication, selection synchronization, cancellation, and bounded shutdown guarantees while the visible shell is replaced. It also makes resource-counter tests capable of detecting duplicated GL contexts and event subscriptions across route and overlay transitions. | Keep ProjectDocumentContent as a second visible viewport owner; allow each route screen to host its own renderer; retain the old docking document behind a compatibility shell. | 2026-09-21 |
 | Use the proven Python (native) + Native attach and Python-breakpoint binding gate for development debugging of FrameWebforCS calls into FrameWeb/src through pythonnet; C#-to-Python F11 is not required. | The isolated PythonNetDebugProbe stopped in Python without F11 when the module was imported after attach and the source breakpoint had bound (Children > 0) before the target function was invoked. A two-stage application gate makes this order deterministic. | Rely on the ordinary C# F5 debugger, cross-language F11, a fixed delay after Attach2, or the unobserved Python LoadComplete event. | 2026-09-27 |
+| Run FrameWebforCS desktop calculations in process through pythonnet, calling FrameWeb build_analysis_result_set directly; supersede the earlier private loopback HTTP desktop calculation transport for this application. | The user selected pythonnet after a working mixed-debugger attach and breakpoint-binding probe. One runtime owner supports the required attach, import, bind, and call sequence without a second calculation transport. | Retain the private loopback HTTP desktop calculation boundary or add an HTTP fallback alongside pythonnet. | 2026-09-27 |
 
 ## TODO / Open Questions
 
@@ -153,4 +154,4 @@ FrameWeb3は次の境界を持つコンポーネント指向モノレポであ�
 
 - Before any legacy print host deployment, require non-anonymous POST-only access, bounded body/decompression/page/image/time/concurrency work, cancellation, a patched PDF/image dependency graph, and removal or approved replacement of embedded CJK fonts.
 
-- Resolved 2026-09-21: the first C# desktop release does not use a production authentication provider; retain only the existing private loopback process-security boundary.
+- Resolved 2026-09-27: `FrameWebforCS/` calculation uses pythonnet rather than the earlier private loopback HTTP boundary. The first C# desktop release still has no production authentication provider.

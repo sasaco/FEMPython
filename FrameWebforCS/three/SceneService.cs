@@ -8,6 +8,9 @@ namespace SingleFormsDemo
 {
     public class SceneService : THREE.ControlsContainer
     {
+        private const float PerspectivePanSpeed = 3;
+        private const float OrthographicPanSpeed = 1;
+
         // シーン
         public Scene scene;
 
@@ -142,7 +145,10 @@ namespace SingleFormsDemo
 
                 // 2次元なら回転できないように設定する
                 if (this.controls != null)
+                {
                     this.controls.NoRotate = true;
+                    this.controls.PanSpeed = OrthographicPanSpeed;
+                }
             }
             else
             {
@@ -156,7 +162,10 @@ namespace SingleFormsDemo
 
                 // 3次元なら回転できるように設定する
                 if (this.controls != null)
+                {
                     this.controls.NoRotate = false;
+                    this.controls.PanSpeed = PerspectivePanSpeed;
+                }
             }
 
             if (this.controls != null)
@@ -171,6 +180,7 @@ namespace SingleFormsDemo
             var previousCamera = camera;
             var previousControlCamera = controls?.camera;
             bool previousNoRotate = controls?.NoRotate ?? false;
+            float previousPanSpeed = controls?.PanSpeed ?? PerspectivePanSpeed;
             var previousTarget = controls?.Target.Clone();
             var previousPerspectiveTarget = _perspectiveTarget?.Clone();
             var perspective = Capture(PerspectiveCamera);
@@ -190,6 +200,7 @@ namespace SingleFormsDemo
                 {
                     controls.camera = previousControlCamera;
                     controls.NoRotate = previousNoRotate;
+                    controls.PanSpeed = previousPanSpeed;
                     if (previousTarget != null) controls.Target.Copy(previousTarget);
                 }
                 _perspectiveTarget = previousPerspectiveTarget;
@@ -252,7 +263,7 @@ namespace SingleFormsDemo
             this.controls.StaticMoving = false;
             this.controls.RotateSpeed = 4.0f;
             this.controls.ZoomSpeed = 3;
-            this.controls.PanSpeed = 3;
+            this.controls.PanSpeed = PerspectivePanSpeed;
             this.controls.NoZoom = false;
             this.controls.NoPan = false;
             this.controls.NoRotate = false;
