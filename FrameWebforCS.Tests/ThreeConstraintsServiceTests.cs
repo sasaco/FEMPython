@@ -333,10 +333,12 @@ public sealed class ThreeConstraintsServiceTests
             var member = ((Group)scene.GetObjectByName("fix_member")!).Children.OfType<Line>()
                 .First(item => item.Name == "fix_member3y");
             float nodeBefore = node.Scale.X;
+            var memberBefore = SpringVertices(member).ToArray();
             layer.SetFixNodeScale(10);
             layer.SetFixMemberScale(2);
             Assert.Equal(nodeBefore * 2, node.Scale.X);
-            Assert.Equal(2, member.Scale.X);
+            var memberAfter = SpringVertices(member);
+            Assert.Equal(memberBefore[2] * 2, memberAfter[2], 4);
             layer.Rebuild(Nodes(), Members, "1");
             node = (Mesh)((Group)scene.GetObjectByName("fix_node")!).GetObjectByName("fix_node4tx")!;
             Assert.Equal(nodeBefore * 2, node.Scale.X);
@@ -345,6 +347,85 @@ public sealed class ThreeConstraintsServiceTests
         }
         finally { ClearInputs(); }
     }
+
+    [Fact]
+    public void MemberSpringResizeUsesLegacyAxisSpecificDimensions()
+    {
+        ClearInputs();
+        try
+        {
+            Load("""{"fix_member":{"1":[{"row":3,"m":"7","tx":2,"ty":2,"tz":2,"tr":2}]}}""");
+            var scene = new Scene();
+            using var layer = new ThreeConstraintsService(scene);
+            layer.Rebuild(Nodes(), Members, "1");
+            var root = (Group)scene.GetObjectByName("fix_member")!;
+            var springs = new[] { "x", "y", "z", "r" }.ToDictionary(axis => axis,
+                axis => root.Children.OfType<Line>().First(line => line.Name == $"fix_member3{axis}"));
+            var before = springs.ToDictionary(item => item.Key, item => SpringVertices(item.Value).ToArray());
+
+            layer.SetFixMemberScale(4);
+            foreach (var axis in new[] { "x", "y", "z", "r" })
+            {
+                var oldPoint = Point(before[axis], 10);
+                var resized = Point(SpringVertices(springs[axis]), 10);
+                var along = axis switch
+                {
+                    "x" or "r" => new Vector3(1, 0, 0),
+                    "y" => new Vector3(0, 1, 0),
+                    _ => new Vector3(0, 0, 1)
+                };
+                float axialBefore = oldPoint.Dot(along);
+                float axialAfter = resized.Dot(along);
+                float radialBefore = new Vector3(oldPoint.X - axialBefore * along.X,
+                    oldPoint.Y - axialBefore * along.Y, oldPoint.Z - axialBefore * along.Z).Length();
+                float radialAfter = new Vector3(resized.X - axialAfter * along.X,
+                    resized.Y - axialAfter * along.Y, resized.Z - axialAfter * along.Z).Length();
+                Assert.Equal(axialBefore * (axis == "x" ? 1 : 4), axialAfter, 3);
+                Assert.Equal(radialBefore * (axis is "y" or "z" ? 3 : 4), radialAfter, 3);
+            }
+
+            layer.SetFixMemberScale(1);
+            foreach (var axis in springs.Keys)
+                Assert.Equal(before[axis], SpringVertices(springs[axis]));
+        }
+        finally { ClearInputs(); }
+    }
+
+    [Fact]
+    public void MemberSpringLegacyRepeatCountBeyond32AndExplicitLongMemberBudget()
+    {
+        ClearInputs();
+        try
+        {
+            Load("""{"fix_member":{"1":[{"row":3,"m":"7","tx":2}]}}""");
+            var scene = new Scene();
+            using var layer = new ThreeConstraintsService(scene);
+            var nodes = Nodes();
+            nodes[9] = new Vector3(24, 0, 0);
+            layer.Rebuild(nodes, Members, "1");
+            var root = (Group)scene.GetObjectByName("fix_member")!;
+            var springs = root.Children.OfType<Line>().Where(line => line.Name == "fix_member3x").ToArray();
+            Assert.Equal(79, springs.Length); // floor(24 / 0.6 - 0.3) = 39, from -39 through +39.
+            layer.SetMode("fix_member");
+            layer.Select("fix_member", 3, "x");
+            Assert.All(springs, line => Assert.Equal(0x00A5FF, line.Material.Color!.Value.GetHex()));
+
+            nodes[9] = new Vector3(2_000, 0, 0);
+            var error = Assert.Throws<InvalidOperationException>(() => layer.Rebuild(nodes, Members, "1"));
+            Assert.Contains("vertex budget", error.Message);
+            Assert.Equal(79, root.Children.OfType<Line>().Count()); // failed staging preserves the scene.
+            layer.Dispose();
+            Assert.Null(scene.GetObjectByName("fix_member"));
+        }
+        finally { ClearInputs(); }
+    }
+
+    private static float[] SpringVertices(Line line) =>
+        Assert.IsType<BufferAttribute<float>>(
+            Assert.IsType<BufferGeometry>(line.Geometry).GetAttribute<float>("position")).Array;
+
+    private static Vector3 Point(float[] vertices, int index) =>
+        new(vertices[index * 3], vertices[index * 3 + 1], vertices[index * 3 + 2]);
 
     [Fact]
     public void MemberSpringUsesNearestNodeDistanceInsteadOfNodeMarkerScale()

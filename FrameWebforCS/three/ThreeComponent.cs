@@ -5,6 +5,7 @@ using OpenTK.WinForms;
 using SingleFormsDemo;
 using FrameWebforCS.providers;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
@@ -20,8 +21,11 @@ namespace FrameWebforCS.three
         private Label? _scaleLabel;
         private NumericUpDown? _scaleValue;
         private Label? _extremaLabel;
+        private ListBox? _gradientLegend;
+        private PanelGradientLegendEntry[] _legendEntries = [];
         private string? _scaleKind;
         private bool _settingScaleControl;
+        private long _lastHoverStamp;
 
         private System.Windows.Forms.Timer _timer;
         private int timeInterval = 10;
@@ -39,6 +43,7 @@ namespace FrameWebforCS.three
             this.glControl.KeyUp += glControl_KeyUp;
             this.glControl.MouseDown += glControl_MouseDown;
             this.glControl.MouseMove += glControl_MouseMove;
+            this.glControl.MouseLeave += glControl_MouseLeave;
             this.glControl.MouseUp += glControl_MouseUp;
             this.glControl.Resize += glControl_Resize;
             this.glControl.MouseWheel += glControl_MouseWheel;
@@ -66,6 +71,9 @@ namespace FrameWebforCS.three
             _threeService?.FlushPending();
             threeInstance.render();
             this.glControl.SwapBuffers();
+            if (_threeService != null)
+                ViewportTextLabels.Draw(glControl, threeInstance.CurrentCamera,
+                    _threeService.GetVisibleLabels());
             RefreshViewportControls();
         }
 
@@ -131,7 +139,16 @@ namespace FrameWebforCS.three
         private void glControl_MouseMove(object? sender, System.Windows.Forms.MouseEventArgs e)
         {
             threeInstance?.OnMouseMove(GetMouseButton(e), e.X, e.Y);
+            if (e.Button != MouseButtons.None) return;
+            long now = Stopwatch.GetTimestamp();
+            if (now - _lastHoverStamp < Stopwatch.Frequency / 20) return;
+            _lastHoverStamp = now;
+            _threeService?.HoverAt(e.X, e.Y, glControl.ClientSize.Width,
+                glControl.ClientSize.Height);
         }
+
+        private void glControl_MouseLeave(object? sender, EventArgs e) =>
+            _threeService?.ClearHover();
 
         private void glControl_MouseUp(object? sender, System.Windows.Forms.MouseEventArgs e)
         {
@@ -173,7 +190,30 @@ namespace FrameWebforCS.three
             _viewportControls.Controls.Add(_extremaLabel);
             parent.Controls.Add(_viewportControls);
             _viewportControls.BringToFront();
+            _gradientLegend = new ListBox
+            {
+                Name = "panelGradientLegend", DrawMode = DrawMode.OwnerDrawFixed,
+                ItemHeight = 20, IntegralHeight = false, Size = new Size(145, 230),
+                Location = new Point(Math.Max(0, parent.ClientSize.Width - 153), 95),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right, Visible = false
+            };
+            _gradientLegend.DrawItem += DrawGradientLegendItem;
+            parent.Controls.Add(_gradientLegend);
+            _gradientLegend.BringToFront();
             RefreshViewportControls();
+        }
+
+        private void DrawGradientLegendItem(object? sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0 || e.Index >= _legendEntries.Length) return;
+            e.DrawBackground();
+            var entry = _legendEntries[e.Index];
+            using (var brush = new SolidBrush(entry.Color))
+                e.Graphics.FillRectangle(brush, e.Bounds.Left + 3,
+                    e.Bounds.Top + 3, 14, 14);
+            TextRenderer.DrawText(e.Graphics, entry.Text, e.Font ?? Font,
+                new Point(e.Bounds.Left + 22, e.Bounds.Top + 2), e.ForeColor);
+            e.DrawFocusRectangle();
         }
 
         private void ScaleValueChanged(object? sender, EventArgs e)
@@ -186,6 +226,7 @@ namespace FrameWebforCS.three
         {
             if (_viewportControls == null || _scaleLabel == null || _scaleValue == null ||
                 _extremaLabel == null || _threeService == null) return;
+            RefreshGradientLegend();
             var option = _threeService.GetScaleControl();
             _viewportControls.Visible = option.HasValue;
             if (option is not { } scale) return;
@@ -217,6 +258,26 @@ namespace FrameWebforCS.three
             else if (_extremaLabel.Text.Length > 0) _extremaLabel.Text = "";
         }
 
+        private void RefreshGradientLegend()
+        {
+            if (_gradientLegend == null || _threeService == null) return;
+            var entries = _threeService.GetPanelGradientLegend();
+            _gradientLegend.Visible = entries.Count > 0;
+            bool unchanged = _legendEntries.Length == entries.Count;
+            for (int i = 0; unchanged && i < entries.Count; i++)
+                unchanged = _legendEntries[i].Equals(entries[i]);
+            if (unchanged) return;
+            _legendEntries = entries.ToArray();
+            _gradientLegend.BeginUpdate();
+            try
+            {
+                _gradientLegend.Items.Clear();
+                foreach (var entry in _legendEntries)
+                    _gradientLegend.Items.Add(entry.Text);
+            }
+            finally { _gradientLegend.EndUpdate(); }
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && !_disposed)
@@ -224,6 +285,8 @@ namespace FrameWebforCS.three
                 _timer?.Stop();
                 _timer?.Dispose();
                 if (_scaleValue != null) _scaleValue.ValueChanged -= ScaleValueChanged;
+                if (_gradientLegend != null) _gradientLegend.DrawItem -= DrawGradientLegendItem;
+                _gradientLegend?.Dispose();
                 _viewportControls?.Dispose();
                 _viewportControls = null;
                 glControl.Load -= glControl_Load;
@@ -233,6 +296,7 @@ namespace FrameWebforCS.three
                 glControl.KeyUp -= glControl_KeyUp;
                 glControl.MouseDown -= glControl_MouseDown;
                 glControl.MouseMove -= glControl_MouseMove;
+                glControl.MouseLeave -= glControl_MouseLeave;
                 glControl.MouseUp -= glControl_MouseUp;
                 glControl.Resize -= glControl_Resize;
                 glControl.MouseWheel -= glControl_MouseWheel;

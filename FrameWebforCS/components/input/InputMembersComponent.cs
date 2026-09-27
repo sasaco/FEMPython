@@ -22,6 +22,9 @@ namespace FrameWebforCS.components.input
         private InputDataService _input = InputDataService.Instance;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet1;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet2;
+        private MemberDetailPanel? _detailPanel;
+        internal int? DetailMemberId => _detailPanel?.MemberId;
+        internal bool DetailVisible => _detailPanel?.Visible == true;
 
         public InputMembersComponent()
         {
@@ -253,5 +256,21 @@ namespace FrameWebforCS.components.input
             return true;
         }
 
+        internal void ShowMemberDetail(int id)
+        {
+            if (IsDisposed) return;
+            EnsureDetailPanel();
+            _detailPanel!.ShowMember(id);
+        }
+
+        internal bool ApplyMemberDetail(int ni, int nj, int element, float cg) =>
+            _detailPanel?.ApplyMember(ni, nj, element, cg) == true;
+
+        private void EnsureDetailPanel()
+        {
+            if (_detailPanel != null) return;
+            _detailPanel = new MemberDetailPanel();
+            Controls.Add(_detailPanel);
+        }
     }
 }

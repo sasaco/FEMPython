@@ -352,6 +352,129 @@ public sealed class ThreeResultsServiceTests
     }
 
     [Fact]
+    public void SectionForcePanelGradientUsesVertexMaxAndTracksCaseComponentAndMode()
+    {
+        var scene = new Scene();
+        using var results = new ThreeResultsService(scene);
+        var members = new Dictionary<int, DisplayMember>
+        {
+            [10] = new(1, 3, 1, 0), [11] = new(3, 9, 1, 0), [12] = new(9, 1, 1, 0)
+        };
+        results.SetTopology(Nodes(), members, Panels(), 1);
+        results.SetBaseResults(new(), new(), new()
+        {
+            ["1"] = new()
+            {
+                ["member10"] = new() { ["P1"] = new clsFsec { L = 10, myi = 10, myj = 0, fxi = 1, fxj = 2 } },
+                ["member11"] = new() { ["P1"] = new clsFsec { L = Math.Sqrt(200), myi = -10, myj = -10, fxi = 3, fxj = 4 } },
+                ["member12"] = new() { ["P1"] = new clsFsec { L = 10, myi = -10, myj = 10, fxi = 4, fxj = 1 } }
+            },
+            ["2"] = new()
+            {
+                ["member10"] = new() { ["P1"] = new clsFsec { L = 10, myi = -10, myj = 10 } },
+                ["member11"] = new() { ["P1"] = new clsFsec { L = Math.Sqrt(200), myi = 10, myj = -10 } },
+                ["member12"] = new() { ["P1"] = new clsFsec { L = 10, myi = -10, myj = -10 } }
+            }
+        }, 1);
+
+        results.SetMode("fsec", "1", "momentY");
+        var panel = Assert.IsType<Mesh>(scene.Children[2].Children.Single(item => item.Name == "panelGradient-20"));
+        Assert.True(panel.Material.VertexColors);
+        Assert.Equal(18, Positions(panel).Length); // two sides of the triangle
+        var colors = Colors(panel);
+        Assert.Equal([1f, 0f, 0f], colors[..3]); // node 1: 10
+        Assert.Equal([229f / 255, 176f / 255, 171f / 255], colors[3..6]); // node 3: max(0, -10)
+        Assert.Equal([74f / 255, 160f / 255, 183f / 255], colors[6..9]); // node 9: -10
+        Assert.Equal(["10.00", "0.00", "-10.00"],
+            results.GetPanelGradientLegend().Select(item => item.Text));
+        Assert.Equal(System.Drawing.Color.FromArgb(255, 0, 0),
+            results.GetPanelGradientLegend()[0].Color);
+
+        results.SetMode("fsec", "1", "axialForce");
+        panel = Assert.IsType<Mesh>(scene.Children[2].Children.Single(item => item.Name == "panelGradient-20"));
+        Assert.Equal([74f / 255, 160f / 255, 183f / 255], Colors(panel)[..3]);
+        Assert.Equal(["4.00", "3.00", "1.00"],
+            results.GetPanelGradientLegend().Select(item => item.Text));
+        results.SetMode("fsec", "2", "momentY");
+        panel = Assert.IsType<Mesh>(scene.Children[2].Children.Single(item => item.Name == "panelGradient-20"));
+        Assert.Equal([74f / 255, 160f / 255, 183f / 255], Colors(panel)[..3]);
+        results.SetMode("fsec", "missing", "momentY");
+        Assert.DoesNotContain(scene.Children[2].Children, item => item.Name == "panelGradient-20");
+        Assert.Empty(results.GetPanelGradientLegend());
+        results.SetMode("disg", "1");
+        Assert.Empty(scene.Children[2].Children);
+    }
+
+    [Fact]
+    public void SectionForceValueLabelsChooseTopFifteenPercentAndLargerCoincidentValue()
+    {
+        var scene = new Scene();
+        using var results = new ThreeResultsService(scene);
+        var members = Enumerable.Range(10, 10)
+            .ToDictionary(id => id, _ => new DisplayMember(1, 3, 1, 0));
+        results.SetTopology(Nodes(), members, new Dictionary<int, DisplayPanel>(), 1);
+        var points = new Dictionary<string, Dictionary<string, clsFsec>>();
+        for (int id = 10; id < 20; id++)
+            points["member" + id] = new()
+            {
+                ["P1"] = new clsFsec { L = 10, myi = 1, myj = 1, fxi = 1, fxj = 1 }
+            };
+        points["member10"]["P1"] = new clsFsec { L = 10, myi = 10, myj = 9, fxi = 1, fxj = 2 };
+        points["member11"]["P1"] = new clsFsec { L = 10, myi = -10, myj = 8, fxi = 3, fxj = 4 };
+        results.SetBaseResults(new(), new(), new()
+        {
+            ["1"] = points,
+            ["2"] = new() { ["member10"] = new() { ["P1"] = new clsFsec { L = 10, myi = 7, myj = 6 } } }
+        }, 1);
+
+        results.SetMode("fsec", "1", "momentY");
+        var labels = results.GetVisibleLabels();
+        Assert.Equal(["10.00", "9.00"], labels.Select(item => item.Text));
+        Assert.Equal(0f, labels[0].Position.X);
+        Assert.Equal(5f, labels[0].Position.Z, 4);
+        Assert.Equal(10f, labels[1].Position.X);
+        results.SetMode("fsec", "1", "axialForce");
+        Assert.Equal(["4.00", "3.00"], results.GetVisibleLabels().Select(item => item.Text));
+        results.SetMode("fsec", "2", "momentY");
+        Assert.Equal(["7.00"], results.GetVisibleLabels().Select(item => item.Text));
+        results.SetMode("fsec", "missing", "momentY");
+        Assert.Empty(results.GetVisibleLabels());
+        results.SetMode("reac", "1");
+        Assert.Empty(results.GetVisibleLabels());
+    }
+
+    [Fact]
+    public void DerivedSectionForceGradientUsesSparsePanelIdsAndClearsOnReplacement()
+    {
+        var scene = new Scene();
+        using var results = new ThreeResultsService(scene);
+        results.SetTopology(new Dictionary<int, Vector3>
+        {
+            [1] = new(0, 0, 0), [3] = new(10, 0, 0),
+            [9] = new(10, 10, 0), [15] = new(0, 10, 0)
+        }, new Dictionary<int, DisplayMember>
+        {
+            [10] = new(1, 3, 1, 0), [11] = new(3, 9, 1, 0),
+            [12] = new(9, 15, 1, 0), [13] = new(15, 1, 1, 0)
+        }, new Dictionary<int, DisplayPanel> { [200] = new(1, [1, 3, 9, 15]) }, 1);
+        results.SetMode("comb_fsec", "C1", "my_max");
+        results.SetDerivedFsec("comb_fsec", new Dictionary<string, IReadOnlyList<SectionForceSample>>
+        {
+            ["C1"] =
+            [
+                new(10, 0, 10), new(10, 10, 0),
+                new(11, 0, -10), new(11, 10, -10),
+                new(12, 0, -10), new(12, 10, -10),
+                new(13, 0, -10), new(13, 10, 10)
+            ]
+        }, 1);
+        var panel = Assert.IsType<Mesh>(scene.Children[2].Children.Single(item => item.Name == "panelGradient-200"));
+        Assert.Equal(36, Positions(panel).Length); // two double-sided triangles
+        results.SetBaseResults(new(), new(), new(), 2);
+        Assert.DoesNotContain(scene.Children[2].Children, item => item.Name == "panelGradient-200");
+    }
+
+    [Fact]
     public void ReplacementClearsPriorResultsAndOlderDocumentIsIgnored()
     {
         var scene = new Scene();
@@ -399,6 +522,10 @@ public sealed class ThreeResultsServiceTests
     private static float[] Positions(Mesh mesh) =>
         Assert.IsType<BufferAttribute<float>>(
             Assert.IsType<BufferGeometry>(mesh.Geometry).GetAttribute<float>("position")).Array;
+
+    private static float[] Colors(Mesh mesh) =>
+        Assert.IsType<BufferAttribute<float>>(
+            Assert.IsType<BufferGeometry>(mesh.Geometry).GetAttribute<float>("color")).Array;
 }
 
 [Collection("DisplacementSingletons")]

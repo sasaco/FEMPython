@@ -12,9 +12,13 @@ namespace FrameWebforCS.components.input
 {
     public partial class InputElementsComponent : UserControl
     {
+        internal event Action<int>? GridSelectionChanged;
         private InputDataService _input = InputDataService.Instance;
         private const int type_count = InputElementsService.TypeCount;
         private List<FarPoint.Win.Spread.SheetView> fpSpread1_Sheets;
+        private MemberDetailPanel? _detailPanel;
+        internal int? DetailMemberId => _detailPanel?.MemberId;
+        internal bool DetailVisible => _detailPanel?.Visible == true;
 
 
         public InputElementsComponent()
@@ -51,6 +55,24 @@ namespace FrameWebforCS.components.input
 
             this.Width = (int)w;
 
+            fpSpread1.EnterCell += OnEnterCell;
+            Disposed += (_, _) => fpSpread1.EnterCell -= OnEnterCell;
+
+        }
+
+        private void OnEnterCell(object? sender, EnterCellEventArgs e)
+        {
+            if (IsDisposed || e.Row < 0 || e.Column < 0) return;
+            // JS selectEnd passes the one-based row number as the element ID.
+            GridSelectionChanged?.Invoke(e.Row + 1);
+        }
+
+        internal void ShowMemberDetail(int id)
+        {
+            if (IsDisposed) return;
+            _detailPanel ??= new MemberDetailPanel();
+            if (_detailPanel.Parent == null) Controls.Add(_detailPanel);
+            _detailPanel.ShowMember(id);
         }
 
         private void setColumn(FarPoint.Win.Spread.SheetView fpSpread1_Sheet1)

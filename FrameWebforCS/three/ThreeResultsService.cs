@@ -10,7 +10,10 @@ namespace FrameWebforCS.three;
 internal enum SectionForceEnvelope { Single, Max, Min }
 
 internal readonly record struct SectionForceSample(int MemberId, float Location, float Value,
-    SectionForceEnvelope Envelope = SectionForceEnvelope.Single);
+    SectionForceEnvelope Envelope = SectionForceEnvelope.Single, bool Dummy = false);
+
+internal readonly record struct PanelGradientLegendEntry(int NodeId, float Value, string Text,
+    System.Drawing.Color Color);
 
 internal readonly record struct ResultValueRange(double Min, double Max,
     string MinEntityId, string MaxEntityId);
@@ -37,6 +40,8 @@ internal sealed class ThreeResultsService : IDisposable
     private readonly Group _disgRoot = new() { Name = "disg" };
     private readonly Group _reacRoot = new() { Name = "reac" };
     private readonly Group _fsecRoot = new() { Name = "fsec" };
+    private readonly List<ViewportTextLabel> _visibleLabels = new();
+    private readonly List<PanelGradientLegendEntry> _panelGradientLegend = new();
     private IReadOnlyDictionary<int, Vector3> _nodeData = new Dictionary<int, Vector3>();
     private IReadOnlyDictionary<int, DisplayMember> _memberData = new Dictionary<int, DisplayMember>();
     private IReadOnlyDictionary<int, DisplayPanel> _panelData = new Dictionary<int, DisplayPanel>();
@@ -79,6 +84,8 @@ internal sealed class ThreeResultsService : IDisposable
     internal float DisplacementScale => _displacementScale;
     internal float ReactionScale => _reactionScale;
     internal float SectionForceScale => _sectionForceScale;
+    internal IReadOnlyList<ViewportTextLabel> GetVisibleLabels() => _visibleLabels;
+    internal IReadOnlyList<PanelGradientLegendEntry> GetPanelGradientLegend() => _panelGradientLegend;
 
     internal void SetTopology(IReadOnlyDictionary<int, Vector3> nodes,
         IReadOnlyDictionary<int, DisplayMember> members,
@@ -262,6 +269,8 @@ internal sealed class ThreeResultsService : IDisposable
     private void Redraw()
     {
         CurrentExtrema = null;
+        _visibleLabels.Clear();
+        _panelGradientLegend.Clear();
         RemoveChildren(_disgRoot);
         RemoveChildren(_reacRoot);
         RemoveChildren(_fsecRoot);
@@ -548,8 +557,15 @@ internal sealed class ThreeResultsService : IDisposable
         CurrentExtrema = new ResultViewportExtrema(_mode, _currentIndex!,
             ValueRange(samples.Select(item => ($"member{item.MemberId}", (double?)item.Value))) ?? ZeroRange(),
             null);
+        DrawGradientPanel(samples);
         float max = samples.Max(item => Math.Abs(item.Value));
         if (max <= 0) return;
+        var textValues = samples.Where(item => !item.Dummy && float.IsFinite(item.Value))
+            .Select(item => item.Value).ToArray();
+        var targetValues = textValues.Distinct().OrderByDescending(MathF.Abs).ToArray();
+        int textCount = Math.Max(1, (int)Math.Floor(textValues.Length * 0.15));
+        var targetList = targetValues.Take(Math.Min(textCount, targetValues.Length)).ToHashSet();
+        var labelCandidates = new Dictionary<(double X, double Y, double Z), (Vector3 Position, float Value)>();
         float scale = _sectionForceScale / 100 * _nodeBaseScale * 5 / max;
         string component = _currentRadio.EndsWith("_max", StringComparison.Ordinal) ||
             _currentRadio.EndsWith("_min", StringComparison.Ordinal)
@@ -586,6 +602,10 @@ internal sealed class ThreeResultsService : IDisposable
                 var base2 = SectionStation(start, axis, length, last.Location);
                 var value1 = base1.Clone().AddScaledVector(normal, first.Value * scale);
                 var value2 = base2.Clone().AddScaledVector(normal, last.Value * scale);
+                if (!first.Dummy && targetList.Contains(first.Value))
+                    AddLabelCandidate(labelCandidates, base1, value1, first.Value);
+                if (!last.Dummy && targetList.Contains(last.Value))
+                    AddLabelCandidate(labelCandidates, base2, value2, last.Value);
                 var triangles = new List<Vector3>();
                 if (Math.Sign(first.Value) != Math.Sign(last.Value) &&
                     first.Value != 0 && last.Value != 0)
@@ -609,6 +629,126 @@ internal sealed class ThreeResultsService : IDisposable
                 AddLine(diagram, "line", [base1, value1, value2, base2], 0x0000FF);
             }
             if (diagram.Children.Count > 0) _fsecRoot.Add(diagram);
+        }
+        foreach (var candidate in labelCandidates.Values
+            .OrderByDescending(item => MathF.Abs(item.Value))
+            .Take(ViewportTextLabels.MaximumVisibleLabels))
+        {
+            float rounded = MathF.Floor(candidate.Value * 100 + 0.5f) / 100;
+            if (rounded == 0) continue;
+            _visibleLabels.Add(new ViewportTextLabel(
+                rounded.ToString("F2", CultureInfo.InvariantCulture), candidate.Position));
+        }
+    }
+
+    private static void AddLabelCandidate(
+        Dictionary<(double X, double Y, double Z), (Vector3 Position, float Value)> candidates,
+        Vector3 basePosition, Vector3 labelPosition, float value)
+    {
+        // JS compares baseline positions, then keeps the larger absolute value.
+        var key = (Math.Round((double)basePosition.X, 4), Math.Round((double)basePosition.Y, 4),
+            Math.Round((double)basePosition.Z, 4));
+        if (!candidates.TryGetValue(key, out var current) || MathF.Abs(value) > MathF.Abs(current.Value))
+            candidates[key] = (labelPosition, value);
+    }
+
+    // JS drawGradientPanel/GetValueTable chooses the greatest signed value at
+    // each panel vertex when several member ends meet there.
+    private void DrawGradientPanel(IReadOnlyList<SectionForceSample> samples)
+    {
+        if (_panelData.Count == 0) return;
+        var valueTable = GetValueTable(samples);
+        var panels = _panelData.Where(item => item.Value.Nodes is { Length: 3 or 4 } &&
+            item.Value.Nodes.All(id => _nodeData.ContainsKey(id) && valueTable.ContainsKey(id))).ToArray();
+        if (panels.Length == 0) return;
+        var values = panels.SelectMany(item => item.Value.Nodes).Select(id => valueTable[id]).ToArray();
+        float max = values.Max(), min = values.Min();
+        foreach (var (key, panel) in panels)
+            CreatePanel(key, panel, valueTable, min, max);
+        // JS colorList keeps the first entry for either a repeated node or
+        // repeated two-decimal value, then publishes descending values.
+        var usedValues = new HashSet<string>();
+        foreach (int nodeId in panels.SelectMany(item => item.Value.Nodes).Distinct())
+        {
+            float value = valueTable[nodeId];
+            string text = value.ToString("F2", CultureInfo.InvariantCulture);
+            if (!usedValues.Add(text)) continue;
+            var rgb = PanelColor(value, min, max);
+            _panelGradientLegend.Add(new PanelGradientLegendEntry(nodeId, value, text,
+                System.Drawing.Color.FromArgb((int)rgb.R, (int)rgb.G, (int)rgb.B)));
+        }
+        _panelGradientLegend.Sort((a, b) => b.Value.CompareTo(a.Value));
+        if (_panelGradientLegend.Count > ViewportTextLabels.MaximumVisibleLabels)
+            _panelGradientLegend.RemoveRange(ViewportTextLabels.MaximumVisibleLabels,
+                _panelGradientLegend.Count - ViewportTextLabels.MaximumVisibleLabels);
+    }
+
+    private Dictionary<int, float> GetValueTable(IReadOnlyList<SectionForceSample> samples)
+    {
+        var valueTable = new Dictionary<int, float>();
+        foreach (var sample in samples)
+        {
+            if (!_memberData.TryGetValue(sample.MemberId, out var member) ||
+                !_nodeData.TryGetValue(member.Ni, out var ni) ||
+                !_nodeData.TryGetValue(member.Nj, out var nj) ||
+                !float.IsFinite(sample.Value)) continue;
+            float length = new Vector3().SubVectors(nj, ni).Length();
+            int nodeId;
+            if (MathF.Abs(sample.Location) <= 1e-4f) nodeId = member.Ni;
+            else if (MathF.Abs(sample.Location - length) <= 1e-4f) nodeId = member.Nj;
+            else continue;
+            if (!valueTable.TryGetValue(nodeId, out float current) || sample.Value > current)
+                valueTable[nodeId] = sample.Value;
+        }
+        return valueTable;
+    }
+
+    private void CreatePanel(int key, DisplayPanel panel, IReadOnlyDictionary<int, float> valueTable,
+        float min, float max)
+    {
+        var vertices = panel.Nodes.Select(id => _nodeData[id]).ToArray();
+        var colors = panel.Nodes.Select(id => PanelColor(valueTable[id], min, max)).ToArray();
+        int[] indices = panel.Nodes.Length == 3 ? [0, 1, 2, 0, 2, 1] :
+            [0, 1, 2, 0, 2, 3, 2, 1, 0, 3, 2, 0];
+        var positions = new float[indices.Length * 3];
+        var vertexColors = new float[indices.Length * 3];
+        for (int i = 0; i < indices.Length; i++)
+        {
+            int source = indices[i];
+            positions[i * 3] = vertices[source].X;
+            positions[i * 3 + 1] = vertices[source].Y;
+            positions[i * 3 + 2] = vertices[source].Z;
+            vertexColors[i * 3] = colors[source].R / 255f;
+            vertexColors[i * 3 + 1] = colors[source].G / 255f;
+            vertexColors[i * 3 + 2] = colors[source].B / 255f;
+        }
+        var geometry = new BufferGeometry();
+        geometry.SetAttribute("position", new BufferAttribute<float>(positions, 3));
+        geometry.SetAttribute("color", new BufferAttribute<float>(vertexColors, 3));
+        geometry.ComputeVertexNormals();
+        _fsecRoot.Add(new Mesh(geometry, new MeshPhongMaterial
+        {
+            VertexColors = true, Side = Constants.DoubleSide, FlatShading = true,
+            PolygonOffset = true, PolygonOffsetFactor = -1, PolygonOffsetUnits = -1
+        }) { Name = "panelGradient-" + key });
+    }
+
+    private static (float R, float G, float B) PanelColor(float value, float min, float max)
+    {
+        // JS arrColors and its max/min/midpoint branches. Avoid a zero divisor
+        // in the middle branches when one endpoint of the range is zero.
+        if (value == max) return (255, 0, 0);
+        if (value == min) return (74, 160, 183);
+        float mid = (min + max) / 2;
+        if (mid < value)
+        {
+            float step = max == 0 ? 0 : MathF.Floor(MathF.Abs((max - value) / max) * 50 + 0.5f);
+            return (228, Math.Clamp(100 + step, 0, 255), 97);
+        }
+        else
+        {
+            float step = min == 0 ? 0 : MathF.Floor((MathF.Abs(value) - MathF.Abs(min)) / MathF.Abs(min) * 50 + 0.5f);
+            return (229, Math.Clamp(226 + step, 0, 255), 171);
         }
     }
 
@@ -644,9 +784,11 @@ internal sealed class ThreeResultsService : IDisposable
             foreach (var point in points.OrderBy(item => ParseStation(item.Key)))
             {
                 var value = point.Value;
-                result.Add(new SectionForceSample(memberId, station, PickComponent(value, true)));
+                result.Add(new SectionForceSample(memberId, station, PickComponent(value, true),
+                    Dummy: value.dummyi == true));
                 station += (float)(value.L ?? 0);
-                result.Add(new SectionForceSample(memberId, station, PickComponent(value, false)));
+                result.Add(new SectionForceSample(memberId, station, PickComponent(value, false),
+                    Dummy: value.dummyj == true));
             }
         }
         return result;

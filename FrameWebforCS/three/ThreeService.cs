@@ -102,6 +102,17 @@ internal sealed class ThreeService : IDisposable
     internal ResultViewportExtrema? CurrentResultExtrema => _results.CurrentExtrema;
     internal string? SelectedKind { get; private set; }
 
+    internal IEnumerable<ViewportTextLabel> GetVisibleLabels()
+    {
+        // Other scene owners can contribute their labels here without creating
+        // another overlay or another renderer.
+        return _results.GetVisibleLabels().Concat(_loads.GetVisibleLabels())
+            .Concat(_members.GetVisibleLabels());
+    }
+
+    internal IReadOnlyList<PanelGradientLegendEntry> GetPanelGradientLegend() =>
+        _results.GetPanelGradientLegend();
+
     internal (string Kind, string Label, float Value, float Minimum, float Maximum, float Step)?
         GetScaleControl() => EffectiveMode(_routing.ActiveModeKey) switch
         {
@@ -233,6 +244,9 @@ internal sealed class ThreeService : IDisposable
             component.Disposed += OnGridComponentDisposed;
             switch (component)
             {
+                case InputElementsComponent elements:
+                    elements.GridSelectionChanged += OnElementGridSelection;
+                    break;
                 case InputMembersComponent members:
                     members.GridSelectionChanged += OnMemberGridSelection;
                     members.ActiveMemberDisplayModeChanged += OnMemberDisplayModeChanged;
@@ -275,6 +289,9 @@ internal sealed class ThreeService : IDisposable
         component.Disposed -= OnGridComponentDisposed;
         switch (component)
         {
+            case InputElementsComponent elements:
+                elements.GridSelectionChanged -= OnElementGridSelection;
+                break;
             case InputMembersComponent members:
                 members.GridSelectionChanged -= OnMemberGridSelection;
                 members.ActiveMemberDisplayModeChanged -= OnMemberDisplayModeChanged;
@@ -309,6 +326,7 @@ internal sealed class ThreeService : IDisposable
 
     private void OnMemberGridSelection(string kind, int row, string axis) =>
         QueueSelection(kind == "rigid_zone" ? "rigid" : "member", row, axis);
+    private void OnElementGridSelection(int row) => QueueSelection("element", row, null);
     private void OnMemberDisplayModeChanged(string mode)
     {
         lock (_pendingLock)
@@ -543,6 +561,7 @@ internal sealed class ThreeService : IDisposable
         {
             case "node": _nodes.Select(id); break;
             case "member": _members.Select(id); break;
+            case "element": _members.Select(null, id); break;
             case "shell": _panels.Select(id); break;
             case "load": _loads.Select(id, axis); break;
             case "fix_node":
@@ -585,8 +604,7 @@ internal sealed class ThreeService : IDisposable
                 {
                     _members.Select(id);
                     SelectedKind = "member";
-                    foreach (var members in _routing.myComponents.OfType<InputMembersComponent>())
-                        if (!members.IsDisposed) members.SelectGridRow("members", id.Value);
+                    ShowMemberSelectionDetail(mode, id.Value);
                 }
                 break;
             case "shell":
@@ -643,6 +661,43 @@ internal sealed class ThreeService : IDisposable
         // JS detectObject returns on a ray miss; retain the previous highlight.
         return id;
     }
+
+    internal void ShowMemberSelectionDetail(string mode, int memberId)
+    {
+        // The element route can be opened before the member grid is constructed.
+        // Keep its detail in the active element component without changing routes.
+        if (mode == "element")
+        {
+            foreach (var elements in _routing.myComponents.OfType<InputElementsComponent>())
+                if (!elements.IsDisposed) elements.ShowMemberDetail(memberId);
+            return;
+        }
+        foreach (var members in _routing.myComponents.OfType<InputMembersComponent>())
+            if (!members.IsDisposed)
+            {
+                members.SelectGridRow("members", memberId);
+                members.ShowMemberDetail(memberId);
+            }
+    }
+
+    internal void HoverAt(int x, int y, int width, int height)
+    {
+        if (width <= 0 || height <= 0 ||
+            EffectiveMode(_routing.ActiveModeKey) is not ("member" or "element"))
+        {
+            _members.Hover(null);
+            return;
+        }
+        _scene.scene.UpdateMatrixWorld(true);
+        var camera = _scene.CurrentCamera;
+        camera.UpdateMatrixWorld(true);
+        var raycaster = new Raycaster();
+        raycaster.SetFromCamera(new Vector2(2f * x / width - 1f,
+            1f - 2f * y / height), camera);
+        _members.Hover(_members.Pick(raycaster));
+    }
+
+    internal void ClearHover() => _members.Hover(null);
 
     public void Dispose()
     {

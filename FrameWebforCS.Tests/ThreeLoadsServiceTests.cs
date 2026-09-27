@@ -80,9 +80,34 @@ public sealed class ThreeLoadsServiceTests
         Assert.Equal(1, loads.VisibleGlyphCount);
         loads.Select(1, "P1"); // JS maps member cells to `m`.
         Assert.Equal((1, "m"), loads.Selection);
+        var root = Assert.IsType<Group>(Assert.Single(scene.Children));
+        var member = Assert.IsType<Group>(Assert.Single(
+            Assert.IsType<Group>(root.Children.Single(g => g.Name ==
+                "load-case-2")).Children));
+        Assert.Contains(member.Children, child => child.Name == "load-dimension" &&
+            child.Visible);
+        Assert.Contains(loads.GetVisibleLabels(), label => label.Text == "1.00 kN/m");
         loads.SetVisible(false);
         Assert.Equal(0, loads.VisibleGlyphCount);
         Assert.Null(loads.Selection);
+    }
+
+    [Fact]
+    public void NodeNumberSelectionShowsAllNodeValuesOnTheRow()
+    {
+        using var loads = new ThreeLoadsService(new Scene());
+        loads.ReplaceAll(new Dictionary<string, LoadCaseDisplay>
+        {
+            ["1"] = new("", [
+                new LoadNodeDisplay(1, 1, false, 2, 3, 0, 0, 0, 0)
+            ], [])
+        }, Nodes, Members);
+        loads.SetVisible(true);
+        loads.Select(1, "n");
+        Assert.Equal(["2.00 kN", "3.00 kN"],
+            loads.GetVisibleLabels().Select(x => x.Text));
+        loads.Select(1, "tx");
+        Assert.Equal("2.00 kN", Assert.Single(loads.GetVisibleLabels()).Text);
     }
 
     [Fact]
@@ -130,6 +155,201 @@ public sealed class ThreeLoadsServiceTests
         loads.SetVisible(false);
         loads.AdvanceAnimation(1);
         Assert.Equal(paused, loads.DisplayCaseId);
+    }
+
+    [Fact]
+    public void OverlappingNodeForcesUseSeparateLanesWithinEachCase()
+    {
+        var scene = new Scene();
+        using var loads = new ThreeLoadsService(scene);
+        loads.ReplaceAll(new Dictionary<string, LoadCaseDisplay>
+        {
+            ["1"] = new("", [
+                new LoadNodeDisplay(1, 1, false, 5, 0, 0, 0, 0, 0),
+                new LoadNodeDisplay(2, 1, false, 3, 0, 0, 0, 0, 0),
+                new LoadNodeDisplay(3, 2, false, 4, 0, 0, 0, 0, 0)
+            ], []),
+            ["2"] = new("", [
+                new LoadNodeDisplay(1, 1, false, 5, 0, 0, 0, 0, 0)
+            ], [])
+        }, Nodes, Members);
+
+        var root = Assert.IsType<Group>(Assert.Single(scene.Children));
+        var caseOne = Assert.IsType<Group>(root.Children.Single(g => g.Name ==
+            "load-case-1"));
+        // The first arrow points at its node; the next arrow starts behind it.
+        var first = Assert.IsType<Group>(caseOne.Children.Single(g => g.Name ==
+            "load-node-force-1-tx-1"));
+        var second = Assert.IsType<Group>(caseOne.Children.Single(g => g.Name ==
+            "load-node-force-2-tx-1"));
+        var otherNode = Assert.IsType<Group>(caseOne.Children.Single(g => g.Name ==
+            "load-node-force-3-tx-2"));
+        Assert.True(second.Position.X < first.Position.X);
+        Assert.Equal(10, otherNode.Position.X);
+        loads.SetVisible(true);
+        loads.Select(2, "tx");
+        var valueLabel = Assert.Single(loads.GetVisibleLabels());
+        Assert.Equal("3.00 kN", valueLabel.Text);
+        Assert.True(valueLabel.Position.X < 0);
+    }
+
+    [Fact]
+    public void OffsetDictReusesLanesForDisjointMemberSections()
+    {
+        var dict = new LoadOffsetDict();
+        var first = new ConflictSection(0, 2);
+        dict.Update("gy-", 3, false, first);
+        Assert.Equal(3, dict.Get("gy-", new ConflictSection(1, 3)).Offset);
+        Assert.Equal(0, dict.Get("gy-", new ConflictSection(2, 4)).Offset);
+        Assert.Equal(0, dict.Get("gy+", first).Offset);
+    }
+
+    [Fact]
+    public void LocalAndGlobalMemberLoadsShareProjectedLane()
+    {
+        var scene = new Scene();
+        using var loads = new ThreeLoadsService(scene);
+        loads.ReplaceAll(new Dictionary<string, LoadCaseDisplay>
+        {
+            ["1"] = new("", [], [
+                new LoadMemberDisplay(1, 7, 7, "y", 1, 2, 2, 5, 0),
+                new LoadMemberDisplay(2, 7, 7, "gy", 1, 2, 2, 3, 0)
+            ])
+        }, Nodes, Members);
+
+        var root = Assert.IsType<Group>(Assert.Single(scene.Children));
+        var caseRoot = Assert.IsType<Group>(Assert.Single(root.Children));
+        var local = caseRoot.Children.Single(g => g.Name ==
+            "load-member-point-1-m-7");
+        var global = caseRoot.Children.Single(g => g.Name ==
+            "load-member-point-2-m-7");
+        Assert.Equal(0, local.Position.Y);
+        Assert.True(global.Position.Y < local.Position.Y);
+    }
+
+    [Fact]
+    public void OffsetDictProjectsObliqueLocalClearanceIntoGlobalLane()
+    {
+        float diagonal = MathF.Sqrt(0.5f);
+        var dict = new LoadOffsetDict(new LoadLocalAxis(
+            new Vector3(diagonal, diagonal, 0),
+            new Vector3(-diagonal, diagonal, 0),
+            new Vector3(0, 0, 1)));
+        var section = new ConflictSection(1, 3);
+        dict.Update("ly-", 2, false, section);
+
+        Assert.Equal(2 / diagonal, dict.Get("gy-", section).Offset, 4);
+        Assert.Equal(0, dict.Get("gy+", section).Offset);
+    }
+
+    [Fact]
+    public void GlobalMomentReservesBothLocalTransverseLanes()
+    {
+        var dict = new LoadOffsetDict(new LoadLocalAxis(
+            new Vector3(1, 0, 0), new Vector3(0, 1, 0),
+            new Vector3(0, 0, 1)));
+        dict.Update("rgx", 2, true, ConflictSection.EndToEnd);
+
+        Assert.Equal(2, dict.Get("ly+", ConflictSection.EndToEnd).Offset);
+        Assert.Equal(2, dict.Get("lz-", ConflictSection.EndToEnd).Offset);
+    }
+
+    [Fact]
+    public void TemperatureSelectionShowsMidpointValueAndFullMemberDimension()
+    {
+        var scene = new Scene();
+        using var loads = new ThreeLoadsService(scene);
+        loads.ReplaceAll(new Dictionary<string, LoadCaseDisplay>
+        {
+            ["1"] = new("", [], [
+                new LoadMemberDisplay(1, 7, 7, "", 9, 0, 0, 20, 0)
+            ])
+        }, Nodes, Members);
+        loads.SetVisible(true);
+        loads.Select(1, "P1");
+
+        var value = Assert.Single(loads.GetVisibleLabels(), x => x.Text == "20.00 °C");
+        Assert.Equal(5, value.Position.X);
+        Assert.Contains(loads.GetVisibleLabels(), x => x.Text == "10.000");
+        var root = Assert.IsType<Group>(Assert.Single(scene.Children));
+        var caseRoot = Assert.IsType<Group>(Assert.Single(root.Children));
+        var glyph = Assert.IsType<Group>(Assert.Single(caseRoot.Children));
+        Assert.Contains(glyph.Children, x => x.Name == "load-dimension" && x.Visible);
+    }
+
+    [Fact]
+    public void MemberLoadsOnlyShiftWhenTheirStationRangesOverlap()
+    {
+        var scene = new Scene();
+        using var loads = new ThreeLoadsService(scene);
+        loads.ReplaceAll(new Dictionary<string, LoadCaseDisplay>
+        {
+            ["1"] = new("", [], [
+                new LoadMemberDisplay(1, 7, 7, "gy", 2, 0, 8, 5, 5),
+                new LoadMemberDisplay(2, 7, 7, "gy", 2, 4, 4, 3, 3),
+                new LoadMemberDisplay(3, 7, 7, "gy", 2, 1, 7, 4, 4)
+            ])
+        }, Nodes, Members);
+        var root = Assert.IsType<Group>(Assert.Single(scene.Children));
+        var caseRoot = Assert.IsType<Group>(Assert.Single(root.Children));
+        var first = caseRoot.Children.Single(g => g.Name ==
+            "load-member-distributed-1-m-7");
+        var second = caseRoot.Children.Single(g => g.Name ==
+            "load-member-distributed-2-m-7");
+        var overlapping = caseRoot.Children.Single(g => g.Name ==
+            "load-member-distributed-3-m-7");
+        Assert.Equal(first.Position.Y, second.Position.Y);
+        Assert.True(overlapping.Position.Y < first.Position.Y);
+    }
+
+    [Fact]
+    public void SignChangingDistributionReservesBothDirectionalLanes()
+    {
+        var scene = new Scene();
+        using var loads = new ThreeLoadsService(scene);
+        loads.ReplaceAll(new Dictionary<string, LoadCaseDisplay>
+        {
+            ["1"] = new("", [], [
+                new LoadMemberDisplay(1, 7, 7, "gy", 2, 1, 1, 5, -5),
+                new LoadMemberDisplay(2, 7, 7, "gy", 2, 1, 1, -3, -3)
+            ])
+        }, Nodes, Members);
+        var root = Assert.IsType<Group>(Assert.Single(scene.Children));
+        var caseRoot = Assert.IsType<Group>(Assert.Single(root.Children));
+        var mixed = caseRoot.Children.Single(g => g.Name ==
+            "load-member-distributed-1-m-7");
+        var negative = caseRoot.Children.Single(g => g.Name ==
+            "load-member-distributed-2-m-7");
+        Assert.Equal(0, mixed.Position.Y);
+        Assert.True(negative.Position.Y > mixed.Position.Y);
+    }
+
+    [Fact]
+    public void AnimationDurationStopAndRestartFollowLegacyControls()
+    {
+        using var loads = new ThreeLoadsService(new Scene());
+        loads.ReplaceAll(new Dictionary<string, LoadCaseDisplay>
+        {
+            ["1"] = new("LL", [],
+                [new LoadMemberDisplay(1, 7, 8, "y", 1, 0, 0, 5, 0)], 2)
+        }, Nodes, Members);
+        loads.SetVisible(true);
+        loads.SetAnimationDuration(0.2f);
+        var initial = loads.DisplayCaseId;
+        Assert.True(loads.AnimationStatus.IsActive);
+        loads.AdvanceAnimation(0.19f);
+        Assert.Equal(initial, loads.DisplayCaseId);
+        loads.AdvanceAnimation(0.02f);
+        Assert.NotEqual(initial, loads.DisplayCaseId);
+        loads.StopAnimation();
+        Assert.False(loads.AnimationStatus.IsActive);
+        var stopped = loads.DisplayCaseId;
+        loads.AdvanceAnimation(1);
+        Assert.Equal(stopped, loads.DisplayCaseId);
+        loads.RestartAnimation();
+        Assert.Equal(initial, loads.DisplayCaseId);
+        Assert.True(loads.AnimationStatus.IsActive);
+        Assert.Throws<ArgumentOutOfRangeException>(() => loads.SetAnimationDuration(0));
     }
 
     [Fact]

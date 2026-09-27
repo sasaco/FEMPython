@@ -15,6 +15,8 @@ internal sealed class ThreeMembersService : IDisposable
     private bool _disposed;
     private bool _gui;
     private int? _relatedMemberId;
+    private int? _selectedElementId;
+    private int? _hoverMemberId;
     private float _nodeBaseScale = 1;
     private float _memberScale = 100;
 
@@ -29,6 +31,15 @@ internal sealed class ThreeMembersService : IDisposable
     internal bool LabelsVisible { get; private set; }
     internal bool GuiEnabled => _gui;
     internal float MemberScale => _memberScale;
+
+    internal IEnumerable<ViewportTextLabel> GetVisibleLabels()
+    {
+        ThrowIfDisposed();
+        if (!_root.Visible || !LabelsVisible) yield break;
+        foreach (var (id, mesh) in _memberList)
+            yield return new ViewportTextLabel($"({id})",
+                new Vector3(mesh.Position.X, mesh.Position.Y, mesh.Position.Z));
+    }
 
     internal void HighlightRelated(int? memberId)
     {
@@ -87,8 +98,8 @@ internal sealed class ThreeMembersService : IDisposable
         _gui = gui;
         if (!gui) Select(null);
         if (!visible || !text) HighlightRelated(null);
-        // JS visibleChange(text, gui) also toggles CSS2D numbers, local-axis arrows,
-        // and a dat.gui radius slider. Native label/GUI controls are still pending.
+        if (!gui) _hoverMemberId = null;
+        UpdateColors();
     }
 
     internal void Select(int? id, int? elementId = null)
@@ -96,17 +107,27 @@ internal sealed class ThreeMembersService : IDisposable
         ThrowIfDisposed();
         // JS selectChange(index, "elements") colors every member of that element.
         SelectedMemberId = _gui && id.HasValue && _memberList.ContainsKey(id.Value) ? id : null;
+        _selectedElementId = _gui && elementId.HasValue ? elementId : null;
         foreach (var (memberId, mesh) in _memberList)
         {
-            bool selected = elementId.HasValue
-                ? _elementById[memberId] == elementId.Value
+            bool selected = _selectedElementId.HasValue
+                ? _elementById[memberId] == _selectedElementId.Value
                 : memberId == SelectedMemberId;
-            mesh.Material.Color = Color.Hex(selected || memberId == _relatedMemberId
-                ? 0xFF0000 : 0x000000);
             var axes = _axisList[memberId];
             if (_gui && selected && axes.Parent != _root) _root.Add(axes);
             else if ((!_gui || !selected) && axes.Parent == _root) _root.Remove(axes);
         }
+        UpdateColors();
+    }
+
+    internal void Hover(int? id)
+    {
+        ThrowIfDisposed();
+        int? next = _gui && _root.Visible && id.HasValue && _memberList.ContainsKey(id.Value)
+            ? id : null;
+        if (_hoverMemberId == next) return;
+        _hoverMemberId = next;
+        UpdateColors();
     }
 
     internal int? Pick(Raycaster raycaster)
@@ -141,6 +162,8 @@ internal sealed class ThreeMembersService : IDisposable
         foreach (var id in _memberList.Keys.ToArray()) RemoveMember(id);
         SelectedMemberId = null;
         _relatedMemberId = null;
+        _selectedElementId = null;
+        _hoverMemberId = null;
     }
 
     private void RemoveMember(int id)
@@ -171,6 +194,7 @@ internal sealed class ThreeMembersService : IDisposable
         _elementById.Remove(id);
         if (SelectedMemberId == id) SelectedMemberId = null;
         if (_relatedMemberId == id) _relatedMemberId = null;
+        if (_hoverMemberId == id) _hoverMemberId = null;
         _root.Remove(mesh);
         mesh.Geometry.Dispose();
         mesh.Material.Dispose();
@@ -223,8 +247,14 @@ internal sealed class ThreeMembersService : IDisposable
     private void UpdateColors()
     {
         foreach (var (id, mesh) in _memberList)
-            mesh.Material.Color = Color.Hex(id == SelectedMemberId || id == _relatedMemberId
-                ? 0xFF0000 : 0x000000);
+        {
+            bool selected = id == SelectedMemberId || id == _relatedMemberId ||
+                (_selectedElementId.HasValue && _elementById[id] == _selectedElementId.Value);
+            bool hovered = id == _hoverMemberId && !selected;
+            mesh.Material.Color = Color.Hex(selected || hovered ? 0xFF0000 : 0x000000);
+            mesh.Material.Opacity = hovered ? 0.25f : 1f;
+            mesh.Material.Transparent = hovered;
+        }
     }
 
     private static void Validate(int id, DisplayMember member)

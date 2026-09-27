@@ -1,8 +1,13 @@
 using FarPoint.Win.Spread;
 using FrameWebforCS.components.input;
 using FrameWebforCS.providers;
+using FrameWebforCS.three;
+using SingleFormsDemo;
+using System.Globalization;
 using System.Runtime.ExceptionServices;
 using System.Reflection;
+using System.Text.Json;
+using THREE;
 using Xunit;
 
 namespace FrameWebforCS.Tests;
@@ -10,6 +15,109 @@ namespace FrameWebforCS.Tests;
 [Collection("DisplacementSingletons")]
 public sealed class InputViewportSelectionTests
 {
+    [Fact]
+    public void ColdElementRouteOpensMemberDetailWithoutConstructingMemberGrid()
+    {
+        RunSta(() =>
+        {
+            var input = InputDataService.Instance;
+            var routing = AppRoutingModule.Instance;
+            var priorMembers = routing.myComponents.OfType<InputMembersComponent>().ToArray();
+            foreach (var member in priorMembers) routing.myComponents.Remove(member);
+            using var elements = new InputElementsComponent();
+            routing.myComponents.Add(elements);
+            try
+            {
+                routing.NotifyInputMode("element");
+                using var viewport = new ThreeService(new SceneService());
+                using (var document = JsonDocument.Parse("""
+                    {"node":{"1":{"x":0},"2":{"x":10}},
+                     "member":{"7":{"ni":"1","nj":"2","e":"4"}}}
+                    """)) input.JsonDataOpen(document.RootElement);
+                viewport.FlushPending();
+                viewport.ShowMemberSelectionDetail("element", 7);
+
+                Assert.True(elements.DetailVisible);
+                Assert.Equal(7, elements.DetailMemberId);
+                Assert.Equal("element", routing.ActiveModeKey);
+                Assert.Empty(routing.myComponents.OfType<InputMembersComponent>());
+                var detail = Assert.Single(elements.Controls.OfType<MemberDetailPanel>());
+                Assert.Contains("長さ 10", string.Join(" ", detail.Controls
+                    .OfType<TableLayoutPanel>().SelectMany(layout => layout.Controls.OfType<Label>())
+                    .Select(label => label.Text)));
+            }
+            finally
+            {
+                routing.myComponents.Remove(elements);
+                routing.myComponents.AddRange(priorMembers);
+                using var empty = JsonDocument.Parse("{}");
+                input.JsonDataOpen(empty.RootElement);
+                routing.NotifyInputMode("node");
+            }
+        });
+    }
+
+    [Fact]
+    public void ElementGridSelectionHighlightsEveryMemberWithThatElementAndShowsLocalAxes()
+    {
+        RunSta(() =>
+        {
+            var input = InputDataService.Instance;
+            var routing = AppRoutingModule.Instance;
+            using var elements = new InputElementsComponent();
+            var spread = elements.Controls.OfType<FpSpread>().Single();
+            var scene = new SceneService();
+            routing.myComponents.Add(elements);
+            try
+            {
+                routing.NotifyInputMode("element");
+                using var viewport = new ThreeService(scene);
+                using (var document = JsonDocument.Parse("""
+                    {"node":{"1":{"x":0},"2":{"x":10},"3":{"y":10},"4":{"x":10,"y":10}},
+                     "member":{"11":{"ni":"1","nj":"2","e":"5"},
+                               "42":{"ni":"3","nj":"4","e":"5"},
+                               "90":{"ni":"1","nj":"3","e":"9"}}}
+                    """)) input.JsonDataOpen(document.RootElement);
+                viewport.FlushPending();
+                Assert.Equal(3, viewport.MemberCount);
+
+                var memberRoot = scene.scene.Children.Single(child => child.Name == "members");
+                RaiseEnterCell(spread, 4, 1);
+                viewport.FlushPending();
+
+                Assert.Equal("element", viewport.SelectedKind);
+                Assert.Equal(["member11", "member42"], memberRoot.Children.OfType<Mesh>()
+                    .Where(mesh => mesh.Material.Color!.Value.GetHex() == 0xFF0000)
+                    .Select(mesh => mesh.Name).Order().ToArray());
+                Assert.Equal(["member11axis", "member42axis"], memberRoot.Children.OfType<Group>()
+                    .Select(group => group.Name).Order().ToArray());
+                Assert.Equal(0x000000, memberRoot.Children.OfType<Mesh>()
+                    .Single(mesh => mesh.Name == "member90").Material.Color!.Value.GetHex());
+
+                spread.ActiveSheetIndex = 1;
+                RaiseEnterCell(spread, 8, 1);
+                viewport.FlushPending();
+                Assert.Equal(["member90"], memberRoot.Children.OfType<Mesh>()
+                    .Where(mesh => mesh.Material.Color!.Value.GetHex() == 0xFF0000)
+                    .Select(mesh => mesh.Name).ToArray());
+                Assert.Equal(["member90axis"], memberRoot.Children.OfType<Group>()
+                    .Select(group => group.Name).ToArray());
+
+                routing.NotifyInputMode("node");
+                viewport.FlushPending();
+                Assert.Null(viewport.SelectedKind);
+                Assert.Empty(memberRoot.Children.OfType<Group>());
+            }
+            finally
+            {
+                routing.myComponents.Remove(elements);
+                using var empty = JsonDocument.Parse("{}");
+                input.JsonDataOpen(empty.RootElement);
+                routing.NotifyInputMode("node");
+            }
+        });
+    }
+
     [Fact]
     public void MemberAndRigidGridSelectionsKeepStableRowsAndDoNotEchoViewportSelection()
     {
@@ -37,6 +145,74 @@ public sealed class InputViewportSelectionTests
             RaiseEnterCell(spread, 12, 3);
             Assert.Contains(("rigid_zone", 13, "i"), selected);
             Assert.Equal(2, selected.Count);
+        });
+    }
+
+    [Fact]
+    public void ViewportMemberDetailShowsTypedDataAndAppliesValidatedEdits()
+    {
+        RunSta(() =>
+        {
+            var input = InputDataService.Instance;
+            using var component = new InputMembersComponent();
+            try
+            {
+                using (var document = JsonDocument.Parse("""
+                    {"node":{"1":{"x":0},"2":{"x":10},"3":{"x":20}},
+                     "member":{"7":{"ni":"1","nj":"2","e":"4","cg":15},
+                               "8":{"ni":"2","nj":"3","e":"5"}}}
+                    """)) input.JsonDataOpen(document.RootElement);
+                var material = InputElementsService.Instance.GetRows(1)[3];
+                material.ElasticModulus = 210;
+                material.ShearModulus = 81;
+                material.Expansion = 0.000012f;
+                material.Area = 0.5f;
+                material.Torsion = 0.02f;
+                material.InertiaY = 0.03f;
+                material.InertiaZ = 0.04f;
+                material.Name = "Steel";
+                component.ShowMemberDetail(7);
+                Assert.True(component.DetailVisible);
+                Assert.Equal(7, component.DetailMemberId);
+                var panel = Assert.Single(component.Controls.OfType<Panel>());
+                Assert.Contains("長さ 10", string.Join(" ", panel.Controls
+                    .OfType<TableLayoutPanel>().SelectMany(layout => layout.Controls.OfType<Label>())
+                    .Select(label => label.Text)));
+                var fields = panel.Controls.OfType<TableLayoutPanel>()
+                    .SelectMany(layout => layout.Controls.OfType<TextBox>())
+                    .ToDictionary(field => field.Name);
+                Assert.Equal("210", fields["memberDetail_E"].Text);
+                Assert.Equal("81", fields["memberDetail_G"].Text);
+                Assert.Equal(0.000012f, float.Parse(fields["memberDetail_Xp"].Text,
+                    CultureInfo.InvariantCulture));
+                Assert.Equal("0.5", fields["memberDetail_A"].Text);
+                Assert.Equal("0.02", fields["memberDetail_J"].Text);
+                Assert.Equal("0.03", fields["memberDetail_Iy"].Text);
+                Assert.Equal("0.04", fields["memberDetail_Iz"].Text);
+                Assert.Equal("Steel", fields["memberDetail_n"].Text);
+                Assert.All(new[] { "E", "G", "Xp", "A", "J", "Iy", "Iz", "n" },
+                    key => Assert.True(fields["memberDetail_" + key].ReadOnly));
+
+                component.ShowMemberDetail(8);
+                Assert.Equal(8, component.DetailMemberId);
+                Assert.All(new[] { "E", "G", "Xp", "A", "J", "Iy", "Iz", "n" },
+                    key => Assert.Equal("", fields["memberDetail_" + key].Text));
+                component.ShowMemberDetail(7);
+
+                Assert.False(component.ApplyMemberDetail(0, 3, 4, 15));
+                Assert.Equal(1, InputMembersService.Instance.GetDisplayMember(7)!.Value.Ni);
+                Assert.True(component.ApplyMemberDetail(2, 3, 5, 30));
+                Assert.Equal(new DisplayMember(2, 3, 5, 30),
+                    InputMembersService.Instance.GetDisplayMember(7));
+                Assert.Equal("", fields["memberDetail_E"].Text);
+            }
+            finally
+            {
+                using var empty = JsonDocument.Parse("{}");
+                input.JsonDataOpen(empty.RootElement);
+                Assert.False(component.DetailVisible);
+                Assert.Null(component.DetailMemberId);
+            }
         });
     }
 

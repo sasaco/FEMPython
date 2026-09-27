@@ -134,6 +134,61 @@ public sealed class ThreeMembersServiceTests
     }
 
     [Fact]
+    public void MidpointLabelsFollowTextModeAndMemberReplacement()
+    {
+        var scene = new Scene();
+        using var members = new ThreeMembersService(scene);
+        var nodes = new Dictionary<int, Vector3>
+        {
+            [1] = new(0, 0, 0), [2] = new(10, 0, 0)
+        };
+        members.ReplaceAll(nodes, new Dictionary<int, DisplayMember>
+        {
+            [42] = new(1, 2, 7, 0)
+        }, 1);
+        Assert.Empty(members.GetVisibleLabels());
+        members.SetMode(true, true, true);
+        var label = Assert.Single(members.GetVisibleLabels());
+        Assert.Equal("(42)", label.Text);
+        Assert.Equal(5, label.Position.X);
+        members.UpdateMember(42, null, nodes, 1);
+        Assert.Empty(members.GetVisibleLabels());
+    }
+
+    [Fact]
+    public void HoverIsTranslucentAndDoesNotOverrideSelectionOrElementSelection()
+    {
+        var scene = new Scene();
+        using var members = new ThreeMembersService(scene);
+        members.ReplaceAll(new Dictionary<int, Vector3>
+        {
+            [1] = new(0, 0, 0), [2] = new(10, 0, 0), [3] = new(20, 0, 0)
+        }, new Dictionary<int, DisplayMember>
+        {
+            [7] = new(1, 2, 4, 0), [8] = new(2, 3, 9, 0)
+        }, 1);
+        members.SetMode(true, true, true);
+        var meshes = scene.Children.Single().Children.OfType<Mesh>()
+            .ToDictionary(mesh => mesh.Name);
+
+        members.Hover(8);
+        Assert.Equal(0xFF0000, meshes["member8"].Material.Color!.Value.GetHex());
+        Assert.Equal(0.25f, meshes["member8"].Material.Opacity);
+        Assert.True(meshes["member8"].Material.Transparent);
+
+        members.Select(8);
+        Assert.Equal(1f, meshes["member8"].Material.Opacity);
+        members.Select(null, 4);
+        members.Hover(7);
+        Assert.Equal(1f, meshes["member7"].Material.Opacity);
+        Assert.Equal(0xFF0000, meshes["member7"].Material.Color!.Value.GetHex());
+        members.Hover(null);
+        Assert.Equal(0x000000, meshes["member8"].Material.Color!.Value.GetHex());
+        members.SetMode(true, false, false);
+        Assert.Equal(0x000000, meshes["member7"].Material.Color!.Value.GetHex());
+    }
+
+    [Fact]
     public void DisposeRemovesRootAndRejectsChanges()
     {
         var scene = new Scene();

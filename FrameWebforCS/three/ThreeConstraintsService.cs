@@ -19,6 +19,8 @@ internal readonly record struct ConstraintCases(string FixNode, string FixMember
 internal sealed class ThreeConstraintsService : IDisposable
 {
     private const float LegacyPointRadius = 0.018895766721676047f * 3;
+    // Bound a single rebuild explicitly; the legacy repeat formula is otherwise unbounded.
+    private const int MemberSpringVertexBudget = 250_000;
     private readonly Scene _scene;
     private readonly Dictionary<string, Group> _roots = new(StringComparer.Ordinal)
     {
@@ -33,6 +35,7 @@ internal sealed class ThreeConstraintsService : IDisposable
     private readonly Dictionary<ConstraintSelection, int> _relatedMembers = new();
     private readonly Dictionary<Object3D, int> _baseColors = new();
     private readonly Dictionary<Object3D, Vector3> _initialScales = new();
+    private readonly Dictionary<Line, (float[] Points, Vector3 Axis, string Direction)> _memberSpringGeometry = new();
     private readonly List<MeshBasicMaterial> _meshMaterials = new();
     private readonly List<LineBasicMaterial> _lineMaterials = new();
     private readonly List<BufferGeometry> _lineGeometries = new();
@@ -84,6 +87,7 @@ internal sealed class ThreeConstraintsService : IDisposable
             throw new ArgumentOutOfRangeException(nameof(baseScale));
         if (dimension is not (2 or 3)) throw new ArgumentOutOfRangeException(nameof(dimension));
         var specs = new List<Glyph>();
+        int memberSpringVerticesRemaining = MemberSpringVertexBudget;
         // JS geometry services read nodeThree.baseScale; the coordinator passes that value.
         var size = Math.Max(baseScale, 0.001f);
         float springSize = memberSpringScale is double distance && double.IsFinite(distance) && distance > 0
@@ -120,10 +124,10 @@ internal sealed class ThreeConstraintsService : IDisposable
             var display = InputMembersService.Instance.GetDisplayMember(int.Parse(item.m!, CultureInfo.InvariantCulture));
             float cg = display is { } data && data.Ni == topology.Ni && data.Nj == topology.Nj ? data.Cg : 0;
             var localAxis = ConstraintMemberLocalAxis.Get(i, j, cg);
-            AddFixMember(specs, item.row, center, "x", item.tx, springSize, 0xff8888, localAxis, length, modelCenter);
-            AddFixMember(specs, item.row, center, "y", item.ty, springSize, 0x88ff88, localAxis, length, modelCenter);
-            AddFixMember(specs, item.row, center, "z", item.tz, springSize, 0x8888ff, localAxis, length, modelCenter);
-            AddFixMember(specs, item.row, center, "r", item.tr, springSize, 0x808080, localAxis, length, modelCenter);
+            AddFixMember(specs, item.row, center, "x", item.tx, springSize, 0xff8888, localAxis, length, modelCenter, ref memberSpringVerticesRemaining);
+            AddFixMember(specs, item.row, center, "y", item.ty, springSize, 0x88ff88, localAxis, length, modelCenter, ref memberSpringVerticesRemaining);
+            AddFixMember(specs, item.row, center, "z", item.tz, springSize, 0x8888ff, localAxis, length, modelCenter, ref memberSpringVerticesRemaining);
+            AddFixMember(specs, item.row, center, "r", item.tr, springSize, 0x808080, localAxis, length, modelCenter, ref memberSpringVerticesRemaining);
         }
 
         foreach (var item in InputJointService.Instance.GetDisplaySnapshot(cases.Joint))
@@ -208,8 +212,24 @@ internal sealed class ThreeConstraintsService : IDisposable
         foreach (var (item, initial) in _initialScales)
         {
             float factor = ReferenceEquals(_roots["fix_node"], item.Parent) ? _fixNodeScale / 5 :
-                ReferenceEquals(_roots["fix_member"], item.Parent) ? Math.Max(_fixMemberScale, 0.001f) : 1;
+                ReferenceEquals(_roots["fix_member"], item.Parent) && item is not Line ? _fixMemberScale : 1;
             item.Scale.Set(initial.X * factor, initial.Y * factor, initial.Z * factor);
+        }
+        foreach (var (line, (points, axis, direction)) in _memberSpringGeometry)
+        {
+            float radialScale = direction is "y" or "z"
+                ? _fixMemberScale == 0 ? 0 : 1 + MathF.Log2(_fixMemberScale)
+                : _fixMemberScale;
+            float axialScale = direction == "x" ? 1 : _fixMemberScale;
+            var attribute = (BufferAttribute<float>)((BufferGeometry)line.Geometry).GetAttribute<float>("position");
+            for (int offset = 0; offset < points.Length; offset += 3)
+            {
+                float axial = points[offset] * axis.X + points[offset + 1] * axis.Y + points[offset + 2] * axis.Z;
+                attribute.Array[offset] = (points[offset] - axis.X * axial) * radialScale + axis.X * axial * axialScale;
+                attribute.Array[offset + 1] = (points[offset + 1] - axis.Y * axial) * radialScale + axis.Y * axial * axialScale;
+                attribute.Array[offset + 2] = (points[offset + 2] - axis.Z * axial) * radialScale + axis.Z * axial * axialScale;
+            }
+            attribute.NeedsUpdate = true;
         }
     }
 
@@ -297,7 +317,11 @@ internal sealed class ThreeConstraintsService : IDisposable
             var material = new LineBasicMaterial { Color = Color.Hex(spec.Color) };
             _lineGeometries.Add(geometry);
             _lineMaterials.Add(material);
-            item = new Line(geometry, material) { Name = $"{spec.Kind}{spec.Row}{spec.Axis}" };
+            var line = new Line(geometry, material) { Name = $"{spec.Kind}{spec.Row}{spec.Axis}" };
+            if (spec.Kind == "fix_member")
+                _memberSpringGeometry.Add(line, ((float[])((BufferAttribute<float>)geometry.GetAttribute<float>("position")).Array.Clone(),
+                    spec.Direction!, spec.Axis));
+            item = line;
         }
         else
         {
@@ -378,6 +402,7 @@ internal sealed class ThreeConstraintsService : IDisposable
         _relatedMembers.Clear();
         _baseColors.Clear();
         _initialScales.Clear();
+        _memberSpringGeometry.Clear();
         foreach (var material in _meshMaterials) material.Dispose();
         foreach (var material in _lineMaterials) material.Dispose();
         foreach (var geometry in _lineGeometries) geometry.Dispose();
@@ -512,11 +537,28 @@ internal sealed class ThreeConstraintsService : IDisposable
 
     private static void AddFixMember(List<Glyph> specs, int row, Vector3 position,
         string axis, float? value, float size, int color,
-        (Vector3 X, Vector3 Y, Vector3 Z) localAxis, float length, Vector3 modelCenter)
+        (Vector3 X, Vector3 Y, Vector3 Z) localAxis, float length, Vector3 modelCenter,
+        ref int verticesRemaining)
     {
         if (value is not float v || v == 0) return;
         const float interval = 0.3f;
-        int count = Math.Clamp((int)MathF.Floor(length / (2 * interval) - interval), 0, 32);
+        double legacyCount = Math.Floor(length / (2 * interval) - interval);
+        if (legacyCount > MemberSpringVertexBudget)
+            throw new InvalidOperationException("Member spring geometry exceeds the vertex budget.");
+        int count = Math.Max(0, (int)legacyCount);
+        int turns = axis == "r" ? 3 : axis == "x" && count == 0
+            ? (int)Math.Floor(length / 0.003 / 36) : 4;
+        int pointsPerSpring = turns * 36 + (axis == "r" ? 9 : 0) + 1;
+        long requestedVertices = (2L * count + 1) * pointsPerSpring;
+        if (requestedVertices > verticesRemaining)
+            throw new InvalidOperationException("Member spring geometry exceeds the vertex budget.");
+        verticesRemaining -= (int)requestedVertices;
+        var direction = axis switch
+        {
+            "x" or "r" => localAxis.X,
+            "y" => localAxis.Y,
+            _ => localAxis.Z
+        };
         for (int k = -count; k <= count; k++)
         {
             var anchor = new Vector3(position.X + localAxis.X.X * k * interval,
@@ -530,7 +572,7 @@ internal sealed class ThreeConstraintsService : IDisposable
             };
             var points = MemberSpringPoints(axis, size, localAxis, length, count, small);
             specs.Add(new Glyph("fix_member", row, axis, anchor, size, color, Shape.Line,
-                Points: points, SelectionPosition: position));
+                Direction: direction, Points: points, SelectionPosition: position));
         }
     }
 
@@ -538,7 +580,7 @@ internal sealed class ThreeConstraintsService : IDisposable
         (Vector3 X, Vector3 Y, Vector3 Z) localAxis, float length, int count, bool small)
     {
         int turns = axis == "r" ? 3 : axis == "x" && count == 0
-            ? Math.Clamp((int)MathF.Floor(length / 0.003f / 36), 1, 16) : 4;
+            ? (int)Math.Floor(length / 0.003 / 36) : 4;
         int samples = turns * 36 + (axis == "r" ? 9 : 0);
         var result = new Vector3[samples + 1];
         var along = axis switch
