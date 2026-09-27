@@ -29,7 +29,7 @@ internal static class LoadCaseExpansion
             source.Length > 0 && int.TryParse(caseId, out numericCase);
         if (!moving)
         {
-            var projected = MemberLoadExpansion.Convert(source, roundedLengths, null);
+            var projected = LoadMemberExpansion.Convert(source, roundedLengths, null);
             if (projected.Count > 0) result[caseId] = projected;
             return result;
         }
@@ -58,7 +58,7 @@ internal static class LoadCaseExpansion
         for (int step = 0; step <= count; step++)
         {
             float shift = RoundMm(-negativeDistances + RoundMm(step * llPitch.Value));
-            var projected = MemberLoadExpansion.Convert(source, roundedLengths, shift);
+            var projected = LoadMemberExpansion.Convert(source, roundedLengths, shift);
             if (projected.Count == 0) continue;
             string key = step == 0 ? caseId : (numericCase + step / divisor)
                 .ToString(System.Globalization.CultureInfo.InvariantCulture);

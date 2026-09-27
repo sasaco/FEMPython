@@ -7,7 +7,7 @@ namespace FrameWebforCS.three;
 /// checkIntoMember stages from JS InputLoadService.getMemberLoadJson(0).
 /// Raw row distance carry and physical member/local carry are independent.
 /// </summary>
-internal static class MemberLoadExpansion
+internal static class LoadMemberExpansion
 {
     private const int MaximumExpandedRows = 100_000;
 
