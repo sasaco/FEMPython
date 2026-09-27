@@ -1,8 +1,17 @@
 using Python.Runtime;
 
 const string pythonDllVariable = "PYTHONNET_PYDLL";
-string pythonDll = Environment.GetEnvironmentVariable(pythonDllVariable)
-    ?? throw new InvalidOperationException($"Set {pythonDllVariable} to the full path of python312.dll.");
+string? pythonDll = Environment.GetEnvironmentVariable(pythonDllVariable);
+if (string.IsNullOrWhiteSpace(pythonDll))
+{
+    string repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
+    string configPath = Path.Combine(repositoryRoot, "FrameWeb", ".venv", "pyvenv.cfg");
+    string? homeLine = File.ReadLines(configPath)
+        .FirstOrDefault(line => line.StartsWith("home = ", StringComparison.OrdinalIgnoreCase));
+    string pythonHomeFromVenv = homeLine?[7..].Trim()
+        ?? throw new InvalidOperationException($"The uv environment has no home entry: {configPath}");
+    pythonDll = Path.Combine(pythonHomeFromVenv, "python312.dll");
+}
 
 if (!File.Exists(pythonDll))
 {
