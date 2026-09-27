@@ -15,16 +15,12 @@ namespace FrameWebforCS.components.input
     {
         internal event Action<int, string>? GridSelectionChanged;
         internal event Action<string>? ActiveLoadDisplayModeChanged;
-        internal event Action<float>? LoadScaleChanged;
         internal string ActiveLoadDisplayMode =>
             ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2) ? "load_values" : "load_names";
-        internal float LoadScale => (float)_loadScale.Value;
         private bool _syncingSelection;
         private bool _rowHeaderSelection;
         private readonly InputLoadService _service = InputLoadService.Instance;
         private readonly ComboBox _caseSelector = new();
-        private readonly NumericUpDown _loadScale = new();
-        private readonly Panel _loadScalePanel = new();
         private InputDataService _input = InputDataService.Instance;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet1;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet2;
@@ -50,22 +46,6 @@ namespace FrameWebforCS.components.input
                     _service.SelectCase(id);
             };
             Controls.Add(_caseSelector);
-            // JS ThreeLoadService.guiEnable exposes LoadScale (0..400, default 100)
-            // only on the load-values sheet. WinForms keeps it beside the input grid.
-            _loadScale.Minimum = 0;
-            _loadScale.Maximum = 400;
-            _loadScale.Value = 100;
-            _loadScale.Width = 75;
-            _loadScale.Dock = DockStyle.Right;
-            _loadScale.AccessibleName = "荷重表示倍率";
-            _loadScale.ValueChanged += (_, _) => LoadScaleChanged?.Invoke(LoadScale);
-            _loadScalePanel.Dock = DockStyle.Top;
-            _loadScalePanel.Height = 28;
-            _loadScalePanel.Controls.Add(new Label { Text = "荷重表示倍率 (%)", Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft });
-            _loadScalePanel.Controls.Add(_loadScale);
-            _loadScalePanel.Visible = ActiveLoadDisplayMode == "load_values";
-            Controls.Add(_loadScalePanel);
             _service.CasesChanged += RefreshCaseSelector;
             _service.IntensityRowMoved += OnIntensityRowMoved;
             RefreshCaseSelector(this, EventArgs.Empty);
@@ -103,7 +83,6 @@ namespace FrameWebforCS.components.input
         private void OnActiveSheetChanged(object? sender, EventArgs e)
         {
             _rowHeaderSelection = false;
-            _loadScalePanel.Visible = ActiveLoadDisplayMode == "load_values";
             ActiveLoadDisplayModeChanged?.Invoke(ActiveLoadDisplayMode);
         }
 

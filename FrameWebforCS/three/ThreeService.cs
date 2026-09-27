@@ -122,6 +122,7 @@ internal sealed class ThreeService : IDisposable
             "member" or "element" => ("member", "部材倍率", _members.MemberScale, 0, 1000, 1),
             "fix_node" => ("fix_node", "節点拘束倍率", _constraints.FixNodeScale, 5, 100, 1),
             "fix_member" => ("fix_member", "部材拘束倍率", _constraints.FixMemberScale, 0, 5, 0.1f),
+            "load_values" => ("load", "荷重倍率 (%)", _loads.LoadScale, 0, 400, 1),
             _ => ResultMode(_routing.ActiveModeKey) switch
             {
                 "disg" or "comb_disg" or "pik_disg" =>
@@ -287,9 +288,7 @@ internal sealed class ThreeService : IDisposable
                 case InputLoadComponent load:
                     load.GridSelectionChanged += OnLoadGridSelection;
                     load.ActiveLoadDisplayModeChanged += OnLoadDisplayModeChanged;
-                    load.LoadScaleChanged += OnLoadScaleChanged;
                     _loadDisplayMode = load.ActiveLoadDisplayMode;
-                    _loads.SetLoadScale(load.LoadScale);
                     break;
             }
         }
@@ -331,7 +330,6 @@ internal sealed class ThreeService : IDisposable
             case InputLoadComponent load:
                 load.GridSelectionChanged -= OnLoadGridSelection;
                 load.ActiveLoadDisplayModeChanged -= OnLoadDisplayModeChanged;
-                load.LoadScaleChanged -= OnLoadScaleChanged;
                 break;
         }
     }
@@ -359,14 +357,6 @@ internal sealed class ThreeService : IDisposable
     private void OnJointGridSelection(int row, string axis) => QueueSelection("joint", row, axis);
     private void OnNoticeGridSelection(int row, string axis) => QueueSelection("notice_points", row, axis);
     private void OnLoadGridSelection(int row, string column) => QueueSelection("load", row, column);
-    private void OnLoadScaleChanged(float value)
-    {
-        lock (_pendingLock)
-        {
-            _loads.SetLoadScale(value);
-            _pendingEntities |= PendingEntity.Loads;
-        }
-    }
     private void OnLoadDisplayModeChanged(string mode)
     {
         lock (_pendingLock)
@@ -421,6 +411,13 @@ internal sealed class ThreeService : IDisposable
         {
             replace = true;
             entities = PendingEntity.All;
+        }
+
+        // Load glyphs bake their display scale into geometry, so apply it before rebuilding.
+        if (scale is { Kind: "load" } loadScale)
+        {
+            _loads.SetLoadScale(loadScale.Value);
+            entities |= PendingEntity.Loads;
         }
 
         Dictionary<int, Vector3>? displayNodes = null;
@@ -492,7 +489,7 @@ internal sealed class ThreeService : IDisposable
             _results.SetMode(page.Mode, page.CaseId, page.Component);
         if (selection is { } selected)
             ApplyGridSelection(selected.Kind, selected.Id, selected.Axis);
-        if (scale is { } requestedScale)
+        if (scale is { } requestedScale && requestedScale.Kind != "load")
             ApplyScale(requestedScale.Kind, requestedScale.Value);
         long frameStamp = Stopwatch.GetTimestamp();
         _loads.AdvanceAnimation(Math.Clamp((frameStamp - _lastFrameStamp) /

@@ -49,6 +49,7 @@ internal sealed class ThreeLoadsService : IDisposable
     }
 
     internal int GlyphCount => _glyphs.Count;
+    internal float LoadScale => _loadScale;
     internal int VisibleGlyphCount => _glyphs.Count(g => g.CaseId == _displayCaseId && _visible);
     internal string? CurrentCaseId => _currentCaseId;
     internal string? DisplayCaseId => _displayCaseId;
