@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
+using FrameWebforCS.calculation;
 
 namespace FrameWebforCS.providers
 {
@@ -29,6 +30,23 @@ namespace FrameWebforCS.providers
             ResultDisgService.Instance.Changed += OnDirectResultChanged;
             ResultReacService.Instance.Changed += OnDirectResultChanged;
             ResultFsecService.Instance.Changed += OnDirectResultChanged;
+            InputNodesService.Instance.NodeEdited += _ => CalculationInputRevision++;
+            InputMembersService.Instance.MemberEdited += _ => CalculationInputRevision++;
+            InputPanelService.Instance.PanelEdited += _ => CalculationInputRevision++;
+            InputRigidZoneService.Instance.Changed += (_, _) => CalculationInputRevision++;
+            for (int sheet = 1; sheet <= 6; sheet++)
+            {
+                string id = sheet.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                InputFixNodeService.Instance.GetRows(id).ListChanged += (_, _) => CalculationInputRevision++;
+                InputFixMemberService.Instance.GetRows(id).ListChanged += (_, _) => CalculationInputRevision++;
+                InputJointService.Instance.GetRows(id).ListChanged += (_, _) => CalculationInputRevision++;
+            }
+            InputNoticePointsService.Instance.Changed += (_, _) => CalculationInputRevision++;
+            InputLoadService.Instance.LoadsEdited += () => CalculationInputRevision++;
+            InputCombineService.Instance.RowsChanged += (_, _) => CalculationInputRevision++;
+            for (int type = 1; type <= InputElementsService.TypeCount; type++)
+                InputElementsService.Instance.GetRows(type).ListChanged += (_, _) =>
+                    CalculationInputRevision++;
 
         }
 
@@ -86,6 +104,7 @@ namespace FrameWebforCS.providers
                 _dimension = previous;
                 throw;
             }
+            CalculationInputRevision++;
             DimensionChanged?.Invoke(value);
         }
 
@@ -93,7 +112,42 @@ namespace FrameWebforCS.providers
         private (float X, float Y, float Z)? _cameraPosition;
 
         internal long DocumentRevision { get; private set; }
+        internal long CalculationInputRevision { get; private set; }
         internal event Action<long>? FileReplaced;
+
+        // Call on the UI thread. Serialization detaches every mutable input row before
+        // projection, so the worker never reads WinForms-bound service state.
+        internal CalculationRequest CreateCalculationRequest() =>
+            CalculationRequestBuilder.FromSavedJson(CaptureCalculationSnapshotJson());
+
+        // Capture on the UI thread. Projection and moving-load expansion can then run
+        // on a worker without reading mutable controls or service collections.
+        internal string CaptureCalculationSnapshotJson()
+        {
+            var snapshot = new Dictionary<string, object?>
+            {
+                ["dimension"] = dimension,
+                ["node"] = InputNodesService.Instance.getNodeJson(),
+                ["member"] = InputMembersService.Instance.getMemberJson(),
+                ["shell"] = InputPanelService.Instance.getPanelJson(),
+                ["element"] = InputElementsService.Instance.getElementJson(),
+                ["rigid"] = InputRigidZoneService.Instance.getRigidJson(),
+                ["joint"] = InputJointService.Instance.getJointJson(),
+                ["fix_node"] = InputFixNodeService.Instance.getFixNodeJson(),
+                ["fix_member"] = InputFixMemberService.Instance.getFixMemberJson(),
+                ["notice_points"] = InputNoticePointsService.Instance.getNoticePointsJson(),
+                ["load"] = InputLoadService.Instance.getLoadJson(),
+            };
+            return JsonSerializer.Serialize(snapshot);
+        }
+
+        internal void ClearLegacyResultsForCalculation()
+        {
+            ResultDisgService.Instance.ApplyDisg(new());
+            ResultReacService.Instance.ApplyReac(new());
+            ResultFsecService.Instance.ApplyFsec(new());
+            ResultDimension = null;
+        }
 
         internal void RegisterSceneService(SceneService sceneService)
         {
@@ -287,6 +341,7 @@ namespace FrameWebforCS.providers
             // Publish the committed revision to the viewport first. A failing observer
             // is reported after every queued observer has had a chance to update.
             DocumentRevision++;
+            CalculationInputRevision++;
             if (previousDimension != loadedDimension)
                 notifications.PublishFirst(DimensionChanged, loadedDimension);
             notifications.PublishFirst(FileReplaced, DocumentRevision);

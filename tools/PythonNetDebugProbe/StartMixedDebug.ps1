@@ -5,7 +5,10 @@ param(
     [ValidateSet('Observe', 'A', 'B', 'PythonBreakpoint')]
     [string]$Experiment = 'Observe',
     [switch]$BreakpointGate,
-    [switch]$PythonNativeOnly
+    [switch]$PythonNativeOnly,
+    [switch]$CalculationApp,
+    [string]$BreakpointFile,
+    [int]$PythonLine = 46
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,6 +23,19 @@ $executable = Join-Path $outputDirectory 'PythonNetDebugProbe.exe'
 $pythonFile = Join-Path $projectDirectory 'probe_calculation.py'
 $csharpFile = Join-Path $projectDirectory 'Program.cs'
 
+if ($CalculationApp) {
+    $repoRoot = (Resolve-Path (Join-Path $projectDirectory '..\..')).Path
+    $projectFile = Join-Path $repoRoot 'FrameWebforCS\FrameWebforCS.csproj'
+    $executable = Join-Path $repoRoot 'FrameWebforCS\bin\Debug\net10.0-windows\FrameWebforCS.exe'
+    $pythonFile = if ($PSBoundParameters.ContainsKey('BreakpointFile')) {
+        (Resolve-Path $BreakpointFile).Path
+    } else {
+        Join-Path $repoRoot 'FrameWeb\src\fem\analysis_result_sets.py'
+    }
+    $csharpFile = ''
+    if ($PythonLine -lt 1) { throw 'PythonLine must be positive.' }
+}
+
 if ($Experiment -eq 'PythonBreakpoint') {
     $BreakpointGate = $true
     $PythonNativeOnly = $true
@@ -27,7 +43,7 @@ if ($Experiment -eq 'PythonBreakpoint') {
 
 if ($VisualStudioProcessId -eq 0) {
     $candidates = @(Get-Process -Name devenv -ErrorAction Stop |
-        Where-Object { $_.MainWindowTitle -like '*PythonNetDebugProbe*' })
+        Where-Object { $_.MainWindowTitle -like $(if ($CalculationApp) { '*FrameWebforCS*' } else { '*PythonNetDebugProbe*' }) })
     if ($candidates.Count -ne 1) {
         throw "Expected one Visual Studio window for PythonNetDebugProbe; found $($candidates.Count). Pass -VisualStudioProcessId explicitly."
     }
@@ -95,7 +111,7 @@ public static class PythonNetMixedDebugger
         throw new InvalidOperationException("The requested Visual Studio DTE instance was not found.");
     }
 
-    public static void EnsurePythonBreakpoint(int visualStudioProcessId, string pythonFile, string csharpFile)
+    public static void EnsurePythonBreakpoint(int visualStudioProcessId, string pythonFile, string csharpFile, int pythonLine)
     {
         Debugger2 debugger = (Debugger2)GetDte(visualStudioProcessId).Debugger;
         bool found = false;
@@ -110,7 +126,7 @@ public static class PythonNetMixedDebugger
                 }
             }
             else if (string.Equals(breakpoint.File, pythonFile, StringComparison.OrdinalIgnoreCase)
-                && breakpoint.FileLine == 2)
+                && breakpoint.FileLine == pythonLine)
             {
                 breakpoint.Enabled = true;
                 found = true;
@@ -119,7 +135,7 @@ public static class PythonNetMixedDebugger
 
         if (!found)
         {
-            debugger.Breakpoints.Add("", pythonFile, 2, 1, "",
+            debugger.Breakpoints.Add("", pythonFile, pythonLine, 1, "",
                 EnvDTE.dbgBreakpointConditionType.dbgBreakpointConditionTypeWhenTrue,
                 "", "", 0, "", 0, EnvDTE.dbgHitCountType.dbgHitCountTypeNone);
         }
@@ -155,19 +171,19 @@ public static class PythonNetMixedDebugger
         }
     }
 
-    public static int PythonBreakpointChildren(int visualStudioProcessId, string pythonFile)
+    public static int PythonBreakpointChildren(int visualStudioProcessId, string pythonFile, int pythonLine)
     {
         Debugger2 debugger = (Debugger2)GetDte(visualStudioProcessId).Debugger;
         foreach (EnvDTE.Breakpoint breakpoint in debugger.Breakpoints)
         {
             if (string.Equals(breakpoint.File, pythonFile, StringComparison.OrdinalIgnoreCase)
-                && breakpoint.FileLine == 2 && breakpoint.Enabled)
+                && breakpoint.FileLine == pythonLine && breakpoint.Enabled)
             {
                 return breakpoint.Children.Count;
             }
         }
 
-        throw new InvalidOperationException("The enabled Python breakpoint at line 2 was not found.");
+        throw new InvalidOperationException("The enabled Python breakpoint at the requested line was not found.");
     }
 
     public static string DebuggerPosition(int visualStudioProcessId)
@@ -233,6 +249,84 @@ public static class PythonNetMixedDebugger
 '@
 Add-Type -TypeDefinition $source -ReferencedAssemblies $references
 
+if ($CalculationApp) {
+    & dotnet build $projectFile -c Debug --nologo -v:q
+    if ($LASTEXITCODE -ne 0) { throw "The desktop build failed with exit code $LASTEXITCODE." }
+
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $executable
+    $startInfo.WorkingDirectory = $repoRoot
+    $startInfo.UseShellExecute = $false
+    $startInfo.EnvironmentVariables['FRAMEWEB_PYTHON_DEBUG_GATE'] = '1'
+    $app = [System.Diagnostics.Process]::Start($startInfo)
+    if ($null -eq $app) { throw 'Could not start FrameWebforCS.' }
+
+    function Connect-DebugGate([int]$targetProcessId, [string]$stage) {
+        $name = "FrameWebCalculationDebug-$targetProcessId"
+        $client = [System.IO.Pipes.NamedPipeClientStream]::new('.', $name,
+            [System.IO.Pipes.PipeDirection]::InOut,
+            [System.IO.Pipes.PipeOptions]::Asynchronous)
+        try {
+            $client.Connect(300000)
+            $reader = [System.IO.StreamReader]::new($client, [System.Text.Encoding]::UTF8, $false, 1024, $true)
+            $writer = [System.IO.StreamWriter]::new($client, [System.Text.UTF8Encoding]::new($false), 1024, $true)
+            $writer.AutoFlush = $true
+            $ready = $reader.ReadLine()
+            if ($ready -ne "READY $stage $targetProcessId") { throw "Unexpected debugger gate: $ready" }
+            return @{ Client = $client; Reader = $reader; Writer = $writer }
+        }
+        catch { $client.Dispose(); throw }
+    }
+
+    function Release-DebugGate($gate, [int]$targetProcessId, [string]$stage) {
+        $gate.Writer.WriteLine("RELEASE $stage $targetProcessId")
+        $ack = $gate.Reader.ReadLine()
+        if ($ack -ne "ACK $stage $targetProcessId") { throw "Missing $stage acknowledgement: $ack" }
+        $gate.Writer.Dispose()
+        $gate.Reader.Dispose()
+        $gate.Client.Dispose()
+    }
+
+    try {
+        Write-Output "FrameWebforCS PID=$($app.Id). Start one calculation in the app to expose the attach gate."
+        $attachGate = Connect-DebugGate $app.Id 'ATTACH'
+        Write-Output "Attach gate ready for PID=$($app.Id)."
+        $configFile = Join-Path $repoRoot 'FrameWeb\.venv\pyvenv.cfg'
+        $homeLine = Get-Content $configFile | Where-Object { $_ -match '^home\s*=' } | Select-Object -First 1
+        if (-not $homeLine) { throw "Missing Python home in $configFile" }
+        $pythonHome = ($homeLine -split '=', 2)[1].Trim()
+        $versionLine = Get-Content $configFile | Where-Object { $_ -match '^version_info\s*=' } | Select-Object -First 1
+        if (-not $versionLine) { throw "Missing Python version_info in $configFile" }
+        $pythonVersion = [Version](($versionLine -split '=', 2)[1].Trim())
+        $pythonName = "python$($pythonVersion.Major)$($pythonVersion.Minor)"
+        $pythonDll = Join-Path $pythonHome "$pythonName.dll"
+        $pythonSymbols = Join-Path $pythonHome "$pythonName.pdb"
+        if (-not (Test-Path $pythonDll) -or -not (Test-Path $pythonSymbols)) {
+            throw "Matching x64 CPython DLL and PDB are required: $pythonDll / $pythonSymbols"
+        }
+        [PythonNetMixedDebugger]::EnsurePythonBreakpoint($VisualStudioProcessId, $pythonFile, $csharpFile, $PythonLine)
+        [PythonNetMixedDebugger]::Attach($VisualStudioProcessId, $app.Id, $true)
+        Write-Output "Python (native) + Native Attach2 returned for PID=$($app.Id)."
+        Release-DebugGate $attachGate $app.Id 'ATTACH'
+
+        $breakpointGate = Connect-DebugGate $app.Id 'BREAKPOINT'
+        Write-Output "Import acknowledged for PID=$($app.Id); checking ${pythonFile}:$PythonLine."
+        $deadline = [DateTime]::UtcNow.AddSeconds(30)
+        do {
+            $children = [PythonNetMixedDebugger]::PythonBreakpointChildren($VisualStudioProcessId, $pythonFile, $PythonLine)
+            if ($children -gt 0) { break }
+            if ($app.HasExited) { throw 'FrameWebforCS exited before Python breakpoint binding.' }
+            Start-Sleep -Milliseconds 100
+        } while ([DateTime]::UtcNow -lt $deadline)
+        if ($children -le 0) { throw "Python breakpoint did not bind at ${pythonFile}:$PythonLine." }
+        Write-Output "Python breakpoint bound (Children=$children). Releasing calculation."
+        Release-DebugGate $breakpointGate $app.Id 'BREAKPOINT'
+        Write-Output "Calculation released for PID=$($app.Id). Visual Studio should stop at the Python breakpoint."
+    }
+    finally { $app.Dispose() }
+    return
+}
+
 if ($Experiment -eq 'PythonBreakpoint') {
     & dotnet build $projectFile -c Debug --nologo "-p:OutputPath=$outputDirectory"
 }
@@ -259,7 +353,7 @@ $probe = [System.Diagnostics.Process]::Start($startInfo)
 
 try {
     if ($Experiment -eq 'PythonBreakpoint') {
-        [PythonNetMixedDebugger]::EnsurePythonBreakpoint($VisualStudioProcessId, $pythonFile, $csharpFile)
+        [PythonNetMixedDebugger]::EnsurePythonBreakpoint($VisualStudioProcessId, $pythonFile, $csharpFile, 2)
         Write-Output "Python breakpoint prepared: ${pythonFile}:2"
     }
 
@@ -326,7 +420,7 @@ try {
         if ($Experiment -eq 'PythonBreakpoint') {
             $deadline = [DateTime]::UtcNow.AddSeconds(30)
             do {
-                $children = [PythonNetMixedDebugger]::PythonBreakpointChildren($VisualStudioProcessId, $pythonFile)
+                $children = [PythonNetMixedDebugger]::PythonBreakpointChildren($VisualStudioProcessId, $pythonFile, 2)
                 if ($children -gt 0) { break }
                 if ($probe.HasExited) { throw 'Probe exited before Python breakpoint binding.' }
                 Start-Sleep -Milliseconds 100

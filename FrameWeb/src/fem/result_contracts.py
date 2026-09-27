@@ -7,13 +7,10 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Literal, TypedDict, cast
 
 
-MAX_RESULT_CASES = 256
-# Synchronous API guardrails. The limits retain the largest checked-in
-# nonlinear example (100 steps, 1,000 iterations) while bounding case fan-out.
+# Per-case nonlinear guardrails retain the largest checked-in example
+# (100 steps, 1,000 iterations).
 MAX_NONLINEAR_STEPS_PER_CASE = 1_000
 MAX_ITERATIONS_PER_STEP = 1_000
-MAX_PROJECTED_STATES_PER_REQUEST = 10_000
-MAX_NONLINEAR_ITERATIONS_PER_REQUEST = 500_000
 DEGENERACY_RELATIVE_TOLERANCE = 1e-8
 _FRAME_TOLERANCE = 1e-8
 _LENGTH_TOLERANCE = 1e-9
@@ -280,8 +277,8 @@ def _validate_topology(value: Any) -> dict[str, Any]:
 
 def _validate_cases(value: Any, node_ids: list[str]) -> list[dict[str, Any]]:
     cases = _array(value, "$.cases")
-    if not 1 <= len(cases) <= MAX_RESULT_CASES:
-        _fail("$.cases", f"must contain 1..{MAX_RESULT_CASES} cases")
+    if not cases:
+        _fail("$.cases", "must contain at least one case")
     parsed: list[dict[str, Any]] = []
     case_ids: list[str] = []
     node_order = {node_id: index for index, node_id in enumerate(node_ids)}

@@ -1,6 +1,7 @@
 ﻿using FarPoint.Win.Spread;
 using FrameWebforCS.components.input;
 using FrameWebforCS.providers;
+using FrameWebforCS.calculation;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,7 +28,12 @@ namespace FrameWebforCS.components.result
             fpSpread1.ActiveSheetChanged += (_, _) => { MaterializeSelectedSheet(); PublishCurrentPage(); };
             VisibleChanged += (_, _) => { if (Visible) PublishCurrentPage(); };
             _input.Changed += OnResultsChanged;
-            Disposed += (_, _) => _input.Changed -= OnResultsChanged;
+            CalculationResultStore.Instance.Changed += OnResultsChanged;
+            Disposed += (_, _) =>
+            {
+                _input.Changed -= OnResultsChanged;
+                CalculationResultStore.Instance.Changed -= OnResultsChanged;
+            };
             HandleCreated += (_, _) => RefreshResults();
             RefreshResults();
 
@@ -44,6 +50,15 @@ namespace FrameWebforCS.components.result
         private void PublishCurrentPage()
         {
             int index = fpSpread1.ActiveSheetIndex;
+            var canonical = CalculationResultStore.Instance.Current;
+            if (canonical is not null)
+            {
+                if (Visible && index >= 0 && index < canonical.Pages.Count)
+                    FrameWebforCS.three.ThreeResultsService.PublishPage("fsec", canonical.Pages[index].Key,
+                        FrameWebforCS.three.ThreeResultsService.DefaultSectionForceComponent(
+                            InputDataService.Instance.dimension));
+                return;
+            }
             var cases = _input.getFsec();
             if (Visible && index >= 0 && index < cases.Count)
                 FrameWebforCS.three.ThreeResultsService.PublishPage("fsec", cases.Keys.ElementAt(index),
@@ -69,23 +84,38 @@ namespace FrameWebforCS.components.result
             {
                 fpSpread1.Sheets.Clear();
                 _materializedSheet = -1;
-                foreach (var result in _input.getFsec())
+                var canonical = CalculationResultStore.Instance.Current;
+                if (canonical is not null)
                 {
-                    SheetView sheet = fpSpread1.AddNewSheetView();
-                    sheet.SheetName = result.Key.Replace("Case", "", StringComparison.Ordinal);
-                    SetSheet1(sheet);
-                    sheet.RowCount = 0;
-                    for (int column = 0; column < sheet.ColumnCount; column++)
-                        sheet.Columns[column].CellType = new FarPoint.Win.Spread.CellType.TextCellType();
-                    sheet.Protect = true;
+                    for (int index = 0; index < canonical.Pages.Count; index++)
+                    {
+                        SheetView sheet = fpSpread1.AddNewSheetView();
+                        sheet.SheetName = CalculationResultTableWriter.SheetName(canonical.Pages[index], index);
+                        SetSheet1(sheet);
+                        sheet.RowCount = 0;
+                    }
+                    if (fpSpread1.Sheets.Count > 0) fpSpread1.ActiveSheetIndex = 0;
                 }
-                if (fpSpread1.Sheets.Count > 0)
+                else
                 {
-                    fpSpread1.ActiveSheetIndex = 0;
-                    float width = 100;
-                    var columns = fpSpread1.Sheets[0].Columns;
-                    for (int column = 0; column < columns.Count; column++) width += columns[column].Width;
-                    Width = (int)width;
+                    foreach (var result in _input.getFsec())
+                    {
+                        SheetView sheet = fpSpread1.AddNewSheetView();
+                        sheet.SheetName = result.Key.Replace("Case", "", StringComparison.Ordinal);
+                        SetSheet1(sheet);
+                        sheet.RowCount = 0;
+                        for (int column = 0; column < sheet.ColumnCount; column++)
+                            sheet.Columns[column].CellType = new FarPoint.Win.Spread.CellType.TextCellType();
+                        sheet.Protect = true;
+                    }
+                    if (fpSpread1.Sheets.Count > 0)
+                    {
+                        fpSpread1.ActiveSheetIndex = 0;
+                        float width = 100;
+                        var columns = fpSpread1.Sheets[0].Columns;
+                        for (int column = 0; column < columns.Count; column++) width += columns[column].Width;
+                        Width = (int)width;
+                    }
                 }
             }
             finally { _rebuilding = false; }
@@ -95,6 +125,18 @@ namespace FrameWebforCS.components.result
         private void MaterializeSelectedSheet()
         {
             if (_rebuilding) return;
+            if (CalculationResultStore.Instance.Current is { } canonical)
+            {
+                int selectedCanonical = fpSpread1.ActiveSheetIndex;
+                if (selectedCanonical < 0 || selectedCanonical >= canonical.Pages.Count ||
+                    selectedCanonical >= fpSpread1.Sheets.Count || selectedCanonical == _materializedSheet) return;
+                if (_materializedSheet >= 0 && _materializedSheet < fpSpread1.Sheets.Count)
+                    fpSpread1.Sheets[_materializedSheet].RowCount = 0;
+                CalculationResultTableWriter.FillSectionForces(fpSpread1.Sheets[selectedCanonical],
+                    canonical, canonical.Pages[selectedCanonical], canonical.Dimension);
+                _materializedSheet = selectedCanonical;
+                return;
+            }
             int selected = fpSpread1.ActiveSheetIndex;
             var cases = _input.getFsec();
             if (selected < 0 || selected >= cases.Count || selected >= fpSpread1.Sheets.Count) return;

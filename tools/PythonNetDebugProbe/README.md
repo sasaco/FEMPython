@@ -4,6 +4,34 @@ This isolated console program checks Visual Studio 2026 debugging of Python
 code hosted by a C# pythonnet process. The preferred workflow stops at a Python
 breakpoint without stepping from C#.
 
+## FrameWebforCS calculation debugger
+
+Open `FrameWebforCS/FrameWebforCS.csproj` in Visual Studio, then run from the
+repository root:
+
+```powershell
+& tools/PythonNetDebugProbe/StartMixedDebug.ps1 -CalculationApp -VisualStudioProcessId <VS_PID>
+```
+
+The script builds and launches the desktop app with the development gate enabled.
+Start a calculation in the app. The app holds after CPython initialization and
+exposes `FrameWebCalculationDebug-<app PID>` to the launcher. The launcher sets
+the Python breakpoint at `FrameWeb/src/fem/analysis_result_sets.py:46`, checks
+for the local matching `python312.dll` and `python312.pdb`, then attaches
+**Python (native) + Native** to this app PID. The app imports
+`fem.analysis_result_sets` only after the attach acknowledgement. The launcher
+then waits for the breakpoint's `Children > 0` and acknowledges the second
+gate before the solver is invoked. `-BreakpointFile` and `-PythonLine` select a
+different source location. Attach, import, breakpoint binding, and call are
+independently acknowledged by the PID-scoped local pipe.
+
+Normal app launches bypass both gates. The app keeps its UI thread responsive
+while waiting. Cancel a calculation in the app to stop waiting; an active FEM
+solve itself remains non-interruptible, so cancellation discards its result.
+If attach or binding fails, the gate times out and reports an error. This
+launcher has not yet demonstrated an actual stop in the desktop app; the
+existing probe result below is separate evidence.
+
 ## One-command Python breakpoint run
 
 Open the probe project in Visual Studio, then run this from the repository root

@@ -185,7 +185,7 @@
       "required": ["kind", "schema_version", "units", "coordinate_system", "cases", "topology", "results"],
       "properties": {
         "kind": {"const": "analysis_result_set"}, "schema_version": {"const": "1.0"}, "units": {"$ref": "#/$defs/units"}, "coordinate_system": {"$ref": "#/$defs/coordinateSystem"},
-        "cases": {"type": "array", "minItems": 1, "maxItems": 256, "items": {"$ref": "#/$defs/resultCase"}}, "topology": {"$ref": "#/$defs/topology"},
+        "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/resultCase"}}, "topology": {"$ref": "#/$defs/topology"},
         "results": {"type": "array", "minItems": 1, "items": {"oneOf": [{"$ref": "#/$defs/staticResult"}, {"$ref": "#/$defs/loadStepResult"}, {"$ref": "#/$defs/modalResult"}]}}
       }
     }

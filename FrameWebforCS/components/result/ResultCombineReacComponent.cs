@@ -1,5 +1,6 @@
 using FarPoint.Win.Spread;
 using FrameWebforCS.providers;
+using FrameWebforCS.calculation;
 using System.Globalization;
 
 namespace FrameWebforCS.components.result;
@@ -36,6 +37,7 @@ public partial class ResultCombineReacComponent : UserControl
     private int _materializedSheet = -1;
     private bool _rebuilding;
     private bool _disposed;
+    private CalculationDerivedViewRenderer? _canonical;
 
     public ResultCombineReacComponent() : this(ResultCombineReacAggregator.Calculate) { }
 
@@ -50,6 +52,9 @@ public partial class ResultCombineReacComponent : UserControl
         // on the UI thread even while WinForms recreates the view handle.
         _uiDispatcher = new Control();
         _ = _uiDispatcher.Handle;
+        _canonical = new(CalculationDerivedStage.Combine, CalculationDerivedQuantity.Reaction,
+            fpSpread1, modeSelector, statusLabel, Modes3D, Modes2D, ConfigureSheet);
+        CalculationResultStore.Instance.Changed += OnCanonicalChanged;
 
         modeSelector.SelectedIndexChanged += (_, _) => MaterializeSelectedSheet();
         fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
@@ -88,9 +93,19 @@ public partial class ResultCombineReacComponent : UserControl
         RefreshFromCoordinator();
     }
 
+    private void OnCanonicalChanged(object? sender, EventArgs e) => OnCoordinatorChanged(sender, e);
+
     private void RefreshFromCoordinator()
     {
         if (_disposed) return;
+        if (_canonical?.ShowCurrent() == true)
+        {
+            ++_generation;
+            CancelRunning();
+            _pending = null;
+            _output = null;
+            return;
+        }
         long generation = ++_generation;
         CancelRunning();
         _pending = null;
@@ -230,6 +245,7 @@ public partial class ResultCombineReacComponent : UserControl
 
     private void MaterializeSelectedSheet()
     {
+        if (_canonical?.IsShowing == true) { _canonical.Materialize(); return; }
         if (_rebuilding || _output == null || modeSelector.SelectedItem is not ModeChoice mode)
             return;
         int sheetIndex = fpSpread1.ActiveSheetIndex;
@@ -332,6 +348,7 @@ public partial class ResultCombineReacComponent : UserControl
     private void DisposeCombineResources()
     {
         _disposed = true;
+        CalculationResultStore.Instance.Changed -= OnCanonicalChanged;
         _coordinator.Changed -= OnCoordinatorChanged;
         CancelRunning();
         _runningCancellation?.Dispose();

@@ -10,12 +10,10 @@ from flask import Response
 from main import app
 
 from fem import analysis_result_sets
+from fem.diagnostics import InputValidationError
 from fem.result_contracts import (
     MAX_ITERATIONS_PER_STEP,
-    MAX_NONLINEAR_ITERATIONS_PER_REQUEST,
     MAX_NONLINEAR_STEPS_PER_CASE,
-    MAX_PROJECTED_STATES_PER_REQUEST,
-    MAX_RESULT_CASES,
     validate_analysis_result_set,
 )
 from tests.support.builders.input_routes import axial_json
@@ -157,22 +155,26 @@ def test_isolated_case_topology_mismatch_is_an_atomic_internal_failure(
     assert "results" not in body
 
 
-def test_case_count_guard_rejects_before_model_creation(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    data = _with_case_count(_legacy_two_case_beam(), MAX_RESULT_CASES + 1)
-    model_created = False
+def test_more_than_256_legacy_cases_enumerate_in_order_without_solving() -> None:
+    case_inputs = analysis_result_sets._enumerate_cases(
+        _with_case_count(_legacy_two_case_beam(), 257)
+    )
+    assert [case.case_id for case in case_inputs] == [
+        f"case-{index}" for index in range(257)
+    ]
+    analysis_result_sets._validate_request_work_budget(case_inputs)
 
-    class UnexpectedFemModel:
-        def __init__(self) -> None:
-            nonlocal model_created
-            model_created = True
 
-    monkeypatch.setattr(analysis_result_sets, "FemModel", UnexpectedFemModel)
-    response = _post(data)
-    assert response.status_code == 400
-    assert str(MAX_RESULT_CASES) in response.get_json()["error"]
-    assert model_created is False
+def test_large_case_collection_still_rejects_malformed_case() -> None:
+    data = _with_case_count(_legacy_two_case_beam(), 257)
+    data["load"]["case-256"].update(
+        analysis_type="material_nonlinear", max_iterations=0
+    )
+    with pytest.raises(InputValidationError, match="max_iterations must be a positive integer") as error:
+        analysis_result_sets._validate_request_work_budget(
+            analysis_result_sets._enumerate_cases(data)
+        )
+    assert error.value.details["case_id"] == "case-256"
 
 
 def _assert_work_budget_rejected_before_model_creation(
@@ -256,41 +258,22 @@ def test_explicit_nonlinear_schedule_limit_rejects_before_model_creation(
     assert body["details"]["budget"] == "nonlinear_steps"
 
 
-def test_multi_case_iteration_budget_rejects_at_crossing_case_before_model_creation(
-    monkeypatch: pytest.MonkeyPatch,
+@pytest.mark.parametrize(
+    "analysis_type, settings",
+    [
+        ("material_nonlinear", {"n_load_steps": 2, "max_iterations": MAX_ITERATIONS_PER_STEP}),
+        ("modal", {"n_modes": 40}),
+    ],
+)
+def test_request_work_has_no_aggregate_ceiling(
+    analysis_type: str, settings: dict[str, int]
 ) -> None:
-    data = _legacy_two_case_beam()
+    data = _with_case_count(_legacy_two_case_beam(), 257)
     for case in data["load"].values():
-        case.update(
-            analysis_type="material_nonlinear",
-            n_load_steps=251,
-            max_iterations=MAX_ITERATIONS_PER_STEP,
-        )
-    body = _assert_work_budget_rejected_before_model_creation(monkeypatch, data)
-    assert body["details"] == {
-        "case_id": "negative-scaled",
-        "budget": "projected_nonlinear_iterations",
-        "requested": 502_000,
-        "limit": MAX_NONLINEAR_ITERATIONS_PER_REQUEST,
-    }
-
-
-def test_multi_case_state_budget_rejects_at_crossing_case_before_model_creation(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    data = _legacy_two_case_beam()
-    for case in data["load"].values():
-        case.update(
-            analysis_type="modal",
-            n_modes=(MAX_PROJECTED_STATES_PER_REQUEST // 2) + 1,
-        )
-    body = _assert_work_budget_rejected_before_model_creation(monkeypatch, data)
-    assert body["details"] == {
-        "case_id": "negative-scaled",
-        "budget": "projected_states",
-        "requested": MAX_PROJECTED_STATES_PER_REQUEST + 2,
-        "limit": MAX_PROJECTED_STATES_PER_REQUEST,
-    }
+        case.update(analysis_type=analysis_type, **settings)
+    analysis_result_sets._validate_request_work_budget(
+        analysis_result_sets._enumerate_cases(data)
+    )
 
 
 def test_work_budget_boundaries_are_inclusive() -> None:
@@ -301,12 +284,7 @@ def test_work_budget_boundaries_are_inclusive() -> None:
         load_factors=[1.0] * MAX_NONLINEAR_STEPS_PER_CASE,
         max_iterations=MAX_ITERATIONS_PER_STEP + 1,
     )
-    nonlinear["analysis_params"] = {
-        "max_iterations": (
-            MAX_NONLINEAR_ITERATIONS_PER_REQUEST
-            // MAX_NONLINEAR_STEPS_PER_CASE
-        )
-    }
+    nonlinear["analysis_params"] = {"max_iterations": MAX_ITERATIONS_PER_STEP}
     analysis_result_sets._validate_request_work_budget(
         analysis_result_sets._enumerate_cases(nonlinear)
     )
@@ -324,13 +302,6 @@ def test_work_budget_boundaries_are_inclusive() -> None:
         analysis_result_sets._enumerate_cases(max_iterations)
     )
 
-    modal = _with_case_count(_legacy_two_case_beam(), 10)
-    for case in modal["load"].values():
-        case["analysis_type"] = "modal"
-        case["n_modes"] = MAX_PROJECTED_STATES_PER_REQUEST // 10
-    analysis_result_sets._validate_request_work_budget(
-        analysis_result_sets._enumerate_cases(modal)
-    )
 
 
 def test_modern_input_remains_exactly_one_case_named_one() -> None:

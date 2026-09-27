@@ -15,10 +15,7 @@ from .model import FemModel
 from .result_contracts import (
     COORDINATE_SYSTEM,
     MAX_ITERATIONS_PER_STEP,
-    MAX_NONLINEAR_ITERATIONS_PER_REQUEST,
     MAX_NONLINEAR_STEPS_PER_CASE,
-    MAX_PROJECTED_STATES_PER_REQUEST,
-    MAX_RESULT_CASES,
     AnalysisResultSet,
     ResultCase,
     ResultContractError,
@@ -211,10 +208,6 @@ def _enumerate_cases(data: Any) -> list[_CaseInput]:
         load_cases = data.get("load")
         if not isinstance(load_cases, Mapping) or not load_cases:
             raise InputValidationError("Legacy analysis requires at least one load case")
-        if len(load_cases) > MAX_RESULT_CASES:
-            raise InputValidationError(
-                f"Analysis supports at most {MAX_RESULT_CASES} load cases"
-            )
         normalized_ids: set[str] = set()
         result: list[_CaseInput] = []
         for original_id, case_value in load_cases.items():
@@ -267,30 +260,10 @@ _ANALYSIS_PARAMETER_DEFAULTS: dict[str, Any] = {
 
 
 def _validate_request_work_budget(case_inputs: list[_CaseInput]) -> None:
-    """Reject excessive solver/result work before constructing any FemModel."""
+    """Validate each case's analysis parameters before constructing any FemModel."""
 
-    projected_states = 0
-    projected_iterations = 0
     for case_input in case_inputs:
-        states, iterations = _projected_case_work(case_input)
-        projected_states += states
-        projected_iterations += iterations
-        if projected_states > MAX_PROJECTED_STATES_PER_REQUEST:
-            raise _budget_error(
-                case_input.case_id,
-                "projected_states",
-                projected_states,
-                MAX_PROJECTED_STATES_PER_REQUEST,
-                request_wide=True,
-            )
-        if projected_iterations > MAX_NONLINEAR_ITERATIONS_PER_REQUEST:
-            raise _budget_error(
-                case_input.case_id,
-                "projected_nonlinear_iterations",
-                projected_iterations,
-                MAX_NONLINEAR_ITERATIONS_PER_REQUEST,
-                request_wide=True,
-            )
+        _projected_case_work(case_input)
 
 
 def _projected_case_work(case_input: _CaseInput) -> tuple[int, int]:
@@ -402,12 +375,9 @@ def _budget_error(
     budget: str,
     requested: int,
     limit: int,
-    *,
-    request_wide: bool = False,
 ) -> InputValidationError:
-    scope = "request" if request_wide else "case"
     return InputValidationError(
-        f"Analysis {scope} work budget exceeded at case {case_id}: "
+        f"Analysis case work budget exceeded at case {case_id}: "
         f"{budget} {requested} exceeds limit {limit}",
         case_id=case_id,
         budget=budget,

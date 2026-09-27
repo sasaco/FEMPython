@@ -1,5 +1,6 @@
 using FrameWebforCS.components.input;
 using FrameWebforCS.components.result;
+using FrameWebforCS.calculation;
 using FrameWebforCS.providers;
 using System.Globalization;
 using THREE;
@@ -51,6 +52,7 @@ internal sealed class ThreeResultsService : IDisposable
     private readonly Dictionary<string, IReadOnlyDictionary<string, IReadOnlyList<SectionForceSample>>> _derivedFsec = new();
     private readonly Dictionary<string, long> _derivedRevision = new();
     private readonly Dictionary<string, string[]> _movingDisgCases = new(StringComparer.Ordinal);
+    private CalculationResultPresentation? _canonical;
     private string _mode = "";
     private string? _currentIndex;
     private string? _renderedDisgCase;
@@ -133,6 +135,19 @@ internal sealed class ThreeResultsService : IDisposable
         Redraw();
     }
 
+    internal void SetCanonicalPresentation(CalculationResultPresentation? presentation)
+    {
+        ThrowIfDisposed();
+        _canonical = presentation;
+        if (presentation is not null && _mode is ("disg" or "reac" or "fsec") &&
+            !presentation.Pages.Any(page => page.Key == _currentIndex &&
+                (_mode == "disg" || page.Result is ForceAnalysisResult)))
+            _currentIndex = presentation.Pages.FirstOrDefault(page =>
+                _mode == "disg" || page.Result is ForceAnalysisResult)?.Key;
+        ResetDisplacementAnimation();
+        Redraw();
+    }
+
     internal void SetDerivedFsec(string mode,
         IReadOnlyDictionary<string, IReadOnlyList<SectionForceSample>> cases, long sourceRevision)
     {
@@ -161,6 +176,17 @@ internal sealed class ThreeResultsService : IDisposable
     internal void AdvanceDisplacementAnimation()
     {
         ThrowIfDisposed();
+        if (_canonical is not null)
+        {
+            CalculationResultPage? page = _canonical.Pages.FirstOrDefault(item => item.Key == _currentIndex);
+            if (_mode != "disg" || page is null || page.MovingChildren.Count == 0) return;
+            if (++_disgAnimationFrame < 10) return;
+            _disgAnimationFrame = 0;
+            _disgAnimationIndex = (_disgAnimationIndex + 1) % page.MovingChildren.Count;
+            _renderedDisgCase = page.MovingChildren[_disgAnimationIndex].CaseId;
+            Redraw();
+            return;
+        }
         if (_mode != "disg" || _currentIndex is null ||
             !_movingDisgCases.TryGetValue(_currentIndex, out var cases) ||
             cases.Length < 2) return;
@@ -176,7 +202,7 @@ internal sealed class ThreeResultsService : IDisposable
         ThrowIfDisposed();
         CheckScale(value, 2, nameof(value));
         _displacementScale = value;
-        if (_mode == "disg") Redraw();
+        if (_mode is "disg" or "comb_disg" or "pik_disg") Redraw();
     }
 
     internal void SetReactionScale(float value)
@@ -184,7 +210,7 @@ internal sealed class ThreeResultsService : IDisposable
         ThrowIfDisposed();
         CheckScale(value, 10, nameof(value));
         _reactionScale = value;
-        if (_mode == "reac") Redraw();
+        if (_mode is "reac" or "comb_reac" or "pik_reac") Redraw();
     }
 
     internal void SetSectionForceScale(float value)
@@ -228,7 +254,10 @@ internal sealed class ThreeResultsService : IDisposable
 
     private void ResetDisplacementAnimation()
     {
-        _renderedDisgCase = _mode == "disg" ? _currentIndex : null;
+        _renderedDisgCase = _mode == "disg"
+            ? _canonical?.Pages.FirstOrDefault(page => page.Key == _currentIndex)?.Result.CaseId
+                ?? _currentIndex
+            : null;
         _disgAnimationFrame = 0;
         _disgAnimationIndex = 0;
     }
@@ -239,6 +268,7 @@ internal sealed class ThreeResultsService : IDisposable
         _disgData = new();
         _reacData = new();
         _fsecData = new();
+        _canonical = null;
         _derivedFsec.Clear();
         _movingDisgCases.Clear();
         _renderedDisgCase = null;
@@ -276,6 +306,11 @@ internal sealed class ThreeResultsService : IDisposable
         RemoveChildren(_fsecRoot);
         ApplyVisibility();
         if (_currentIndex is null) return;
+        if (_canonical is not null)
+        {
+            DrawCanonical();
+            return;
+        }
         if (_mode == "disg") DrawDisplacement();
         else if (_mode == "reac") DrawReaction();
         else if (_mode is "fsec" or "comb_fsec" or "pick_fsec") DrawSectionForce();
@@ -285,10 +320,333 @@ internal sealed class ThreeResultsService : IDisposable
 
     private void ApplyVisibility()
     {
-        _disgRoot.Visible = _mode == "disg";
-        _reacRoot.Visible = _mode == "reac";
+        _disgRoot.Visible = _mode == "disg" || (_canonical is not null &&
+            _mode is "comb_disg" or "pik_disg");
+        _reacRoot.Visible = _mode == "reac" || (_canonical is not null &&
+            _mode is "comb_reac" or "pik_reac");
         _fsecRoot.Visible = _mode is "fsec" or "comb_fsec" or "pick_fsec";
     }
+
+    private void DrawCanonical()
+    {
+        if (_mode is "comb_disg" or "pik_disg" or "comb_reac" or "pik_reac" or
+            "comb_fsec" or "pick_fsec")
+        {
+            DrawCanonicalDerived();
+            return;
+        }
+        CalculationResultPage? page = _canonical!.Pages.FirstOrDefault(item => item.Key == _currentIndex);
+        if (page is null) return;
+        switch (_mode)
+        {
+            case "disg": DrawCanonicalDisplacement(page); break;
+            case "reac" when page.Result is ForceAnalysisResult force:
+                DrawCanonicalReaction(page, force); break;
+            case "fsec" when page.Result is ForceAnalysisResult force:
+                DrawCanonicalSectionForce(page, force); break;
+        }
+    }
+
+    private void DrawCanonicalDerived()
+    {
+        CalculationDerivedPresentation? derived = _canonical!.Derived;
+        if (derived is null || _currentIndex is null) return;
+        IReadOnlyList<CalculationDerivedCase> cases = _mode.StartsWith("comb_", StringComparison.Ordinal)
+            ? derived.Combines : derived.Pickups;
+        CalculationDerivedCase? selected = cases.FirstOrDefault(item => item.Id == _currentIndex);
+        if (selected is null) return;
+        IReadOnlyDictionary<string, IReadOnlyList<CalculationDerivedRow>> modes = _mode switch
+        {
+            "comb_disg" or "pik_disg" => selected.Displacements,
+            "comb_reac" or "pik_reac" => selected.Reactions,
+            _ => selected.SectionForces
+        };
+        if (!modes.TryGetValue(_currentRadio, out IReadOnlyList<CalculationDerivedRow>? rows)) return;
+        var displacements = new List<NodeDisplacement>();
+        var reactions = new List<SupportReaction>();
+        var sections = new List<MemberSectionForces>();
+        if (_mode is "comb_disg" or "pik_disg")
+            displacements.AddRange(rows.Select(row => new NodeDisplacement(row.EntityId,
+                new DisplacementComponents(Component(row, "dx"), Component(row, "dy"),
+                    Component(row, "dz"), Component(row, "rx"), Component(row, "ry"),
+                    Component(row, "rz")))));
+        else if (_mode is "comb_reac" or "pik_reac")
+            reactions.AddRange(rows.Select(row => new SupportReaction(row.EntityId,
+                DerivedForce(row))));
+        else
+        {
+            foreach (TopologyMember member in _canonical.ResultSet.Topology.Members)
+            {
+                var stationRows = rows.Where(row => row.EntityId == member.MemberId &&
+                    row.StationId is not null).ToDictionary(row => row.StationId!, StringComparer.Ordinal);
+                var segments = new List<MemberSegmentResult>();
+                for (int index = 1; index < member.Stations.Count; index++)
+                {
+                    MemberStation first = member.Stations[index - 1];
+                    MemberStation last = member.Stations[index];
+                    if (!stationRows.TryGetValue(first.StationId, out CalculationDerivedRow? rowI) ||
+                        !stationRows.TryGetValue(last.StationId, out CalculationDerivedRow? rowJ)) continue;
+                    segments.Add(new MemberSegmentResult($"{first.StationId}-{last.StationId}",
+                        first.StationId, last.StationId, last.Position - first.Position,
+                        DerivedForce(rowI), DerivedForce(rowJ)));
+                }
+                sections.Add(new MemberSectionForces(member.MemberId, segments));
+            }
+        }
+        var synthetic = new StaticAnalysisResult(selected.Id, displacements, reactions,
+            sections, [], [], new WarningDiagnostics([]));
+        var page = new CalculationResultPage(selected.Id, selected.Name ?? selected.Id,
+            _canonical.ResultSet.Cases[0], synthetic, []);
+        switch (_mode)
+        {
+            case "comb_disg" or "pik_disg": DrawCanonicalDisplacement(page); break;
+            case "comb_reac" or "pik_reac": DrawCanonicalReaction(page, synthetic); break;
+            case "comb_fsec" or "pick_fsec": DrawCanonicalSectionForce(page, synthetic); break;
+        }
+    }
+
+    private static double Component(CalculationDerivedRow row, string name) =>
+        row.Components.TryGetValue(name, out double value) ? value : 0;
+
+    private static ForceComponents DerivedForce(CalculationDerivedRow row) => new(
+        Component(row, "fx"), Component(row, "fy"), Component(row, "fz"),
+        Component(row, "mx"), Component(row, "my"), Component(row, "mz"));
+
+    private Dictionary<string, Vector3> CanonicalNodes() => _canonical!.ResultSet.Topology.Nodes
+        .ToDictionary(node => node.NodeId, node => new Vector3(
+            (float)node.Coordinates.X, (float)node.Coordinates.Y,
+            (float)node.Coordinates.Z), StringComparer.Ordinal);
+
+    private void DrawCanonicalDisplacement(CalculationResultPage page)
+    {
+        IReadOnlyList<NodeDisplacement> rows = page.Result switch
+        {
+            ForceAnalysisResult force => force.NodeDisplacements,
+            ModalAnalysisResult modal => modal.NodeModeShapes,
+            _ => []
+        };
+        if (page.MovingChildren.Count > 0 && _renderedDisgCase is not null)
+        {
+            StaticAnalysisResult? child = page.MovingChildren.FirstOrDefault(
+                item => item.CaseId == _renderedDisgCase);
+            if (child is not null) rows = child.NodeDisplacements;
+        }
+        var displacement = rows.ToDictionary(row => row.NodeId, row => row.Components,
+            StringComparer.Ordinal);
+        var nodes = CanonicalNodes();
+        CurrentExtrema = new ResultViewportExtrema("disg", _renderedDisgCase ?? page.Result.CaseId,
+            ValueRange(rows.SelectMany(row => new[]
+            {
+                (row.NodeId, (double?)row.Components.Dx),
+                (row.NodeId, (double?)row.Components.Dy),
+                (row.NodeId, (double?)row.Components.Dz)
+            })) ?? ZeroRange(),
+            ValueRange(rows.SelectMany(row => new[]
+            {
+                (row.NodeId, (double?)row.Components.Rx),
+                (row.NodeId, (double?)row.Components.Ry),
+                (row.NodeId, (double?)row.Components.Rz)
+            })));
+        float maxDistance = (float)NodeDistanceExtrema.Find(nodes.Values.ToArray()).MaxDistance;
+        double maxValue = rows.SelectMany(row => new[] { Math.Abs(row.Components.Dx),
+            Math.Abs(row.Components.Dy), Math.Abs(row.Components.Dz) }).DefaultIfEmpty().Max();
+        float scale = maxValue > 0
+            ? (float)(maxDistance * 0.01 / maxValue) * (_displacementScale / 0.5f)
+            : _displacementScale * 0.2f;
+        var drawnEdges = new HashSet<(string, string)>();
+        foreach (TopologyMember member in _canonical.ResultSet.Topology.Members)
+        {
+            drawnEdges.Add(OrderedEdge(member.NodeI, member.NodeJ));
+            AddCanonicalDisplacedMember(member, nodes, displacement, scale);
+        }
+        foreach (TopologyShellElement shell in _canonical.ResultSet.Topology.ShellElements)
+            for (int index = 0; index < shell.NodeIds.Count; index++)
+            {
+                string first = shell.NodeIds[index];
+                string last = shell.NodeIds[(index + 1) % shell.NodeIds.Count];
+                if (drawnEdges.Add(OrderedEdge(first, last)))
+                    AddCanonicalDisplacedEdge($"shell{shell.ElementId}-{index}", first, last,
+                        nodes, displacement, scale);
+            }
+    }
+
+    private static (string, string) OrderedEdge(string first, string last) =>
+        StringComparer.Ordinal.Compare(first, last) <= 0 ? (first, last) : (last, first);
+
+    private void AddCanonicalDisplacedMember(TopologyMember member,
+        IReadOnlyDictionary<string, Vector3> nodes,
+        IReadOnlyDictionary<string, DisplacementComponents> displacement, float scale)
+    {
+        if (!nodes.TryGetValue(member.NodeI, out Vector3? start) ||
+            !nodes.TryGetValue(member.NodeJ, out Vector3? end) ||
+            !displacement.TryGetValue(member.NodeI, out DisplacementComponents? di) ||
+            !displacement.TryGetValue(member.NodeJ, out DisplacementComponents? dj)) return;
+        Vector3 axis = new Vector3().SubVectors(end, start);
+        float length = axis.Length();
+        if (length <= 0) return;
+        Vector3Value[] basis = [member.LocalFrame.XAxis, member.LocalFrame.YAxis,
+            member.LocalFrame.ZAxis];
+        float[] global = [(float)di.Dx, (float)di.Dy, (float)di.Dz,
+            (float)di.Rx, (float)di.Ry, (float)di.Rz,
+            (float)dj.Dx, (float)dj.Dy, (float)dj.Dz,
+            (float)dj.Rx, (float)dj.Ry, (float)dj.Rz];
+        var local = new float[12];
+        for (int block = 0; block < 4; block++)
+            for (int row = 0; row < 3; row++)
+                local[block * 3 + row] = (float)(basis[row].X * global[block * 3] +
+                    basis[row].Y * global[block * 3 + 1] +
+                    basis[row].Z * global[block * 3 + 2]);
+        int divisions = di.Rx == dj.Rx && di.Ry == dj.Ry && di.Rz == dj.Rz ? 1 : 20;
+        var positions = new Vector3[divisions + 1];
+        for (int index = 0; index <= divisions; index++)
+        {
+            float n = (float)index / divisions;
+            float n2 = n * n, n3 = n2 * n;
+            float x = (1 - n) * local[0] + n * local[6];
+            float y = (1 - 3 * n2 + 2 * n3) * local[1] +
+                length * (n - 2 * n2 + n3) * local[5] +
+                (3 * n2 - 2 * n3) * local[7] + length * (-n2 + n3) * local[11];
+            float z = (1 - 3 * n2 + 2 * n3) * local[2] -
+                length * (n - 2 * n2 + n3) * local[4] +
+                (3 * n2 - 2 * n3) * local[8] - length * (n3 - n2) * local[10];
+            positions[index] = new Vector3(
+                (1 - n) * start.X + n * end.X +
+                (float)(basis[0].X * x + basis[1].X * y + basis[2].X * z) * scale,
+                (1 - n) * start.Y + n * end.Y +
+                (float)(basis[0].Y * x + basis[1].Y * y + basis[2].Y * z) * scale,
+                (1 - n) * start.Z + n * end.Z +
+                (float)(basis[0].Z * x + basis[1].Z * y + basis[2].Z * z) * scale);
+        }
+        AddLine(_disgRoot, $"member{member.MemberId}", positions, 0xFF0000);
+    }
+
+    private void AddCanonicalDisplacedEdge(string name, string nodeI, string nodeJ,
+        IReadOnlyDictionary<string, Vector3> nodes,
+        IReadOnlyDictionary<string, DisplacementComponents> displacement, float scale)
+    {
+        if (!nodes.TryGetValue(nodeI, out Vector3? start) ||
+            !nodes.TryGetValue(nodeJ, out Vector3? end) ||
+            !displacement.TryGetValue(nodeI, out DisplacementComponents? di) ||
+            !displacement.TryGetValue(nodeJ, out DisplacementComponents? dj)) return;
+        AddLine(_disgRoot, name,
+        [
+            new Vector3(start.X + (float)di.Dx * scale,
+                start.Y + (float)di.Dy * scale, start.Z + (float)di.Dz * scale),
+            new Vector3(end.X + (float)dj.Dx * scale,
+                end.Y + (float)dj.Dy * scale, end.Z + (float)dj.Dz * scale)
+        ], 0xFF0000);
+    }
+
+    private void DrawCanonicalReaction(CalculationResultPage page, ForceAnalysisResult force)
+    {
+        // Moving-load table envelopes use signed extrema. The 3D arrows use
+        // each child's greatest absolute component, excluding the parent.
+        IEnumerable<SupportReaction> source = page.MovingChildren.Count > 0
+            ? page.MovingChildren.SelectMany(child => child.SupportReactions)
+            : force.SupportReactions;
+        SupportReaction[] reactions = source.GroupBy(row => row.NodeId, StringComparer.Ordinal)
+            .Select(group => new SupportReaction(group.Key, new ForceComponents(
+                MaxAbsolute(group.Select(row => row.Components.Fx)),
+                MaxAbsolute(group.Select(row => row.Components.Fy)),
+                MaxAbsolute(group.Select(row => row.Components.Fz)),
+                MaxAbsolute(group.Select(row => row.Components.Mx)),
+                MaxAbsolute(group.Select(row => row.Components.My)),
+                MaxAbsolute(group.Select(row => row.Components.Mz)))))
+            .ToArray();
+        var nodes = CanonicalNodes();
+        CurrentExtrema = new ResultViewportExtrema("reac", page.Result.CaseId,
+            ValueRange(reactions.SelectMany(row => new[]
+            {
+                (row.NodeId, (double?)row.Components.Fx),
+                (row.NodeId, (double?)row.Components.Fy),
+                (row.NodeId, (double?)row.Components.Fz)
+            })) ?? ZeroRange(),
+            ValueRange(reactions.SelectMany(row => new[]
+            {
+                (row.NodeId, (double?)row.Components.Mx),
+                (row.NodeId, (double?)row.Components.My),
+                (row.NodeId, (double?)row.Components.Mz)
+            })));
+        float maxForce = (float)reactions.SelectMany(row => new[] {
+            Math.Abs(row.Components.Fx), Math.Abs(row.Components.Fy), Math.Abs(row.Components.Fz)
+        }).DefaultIfEmpty().Max();
+        float maxMoment = (float)reactions.SelectMany(row => new[] {
+            Math.Abs(row.Components.Mx), Math.Abs(row.Components.My), Math.Abs(row.Components.Mz)
+        }).DefaultIfEmpty().Max();
+        float extent = _nodeBaseScale * 80 * 0.2f;
+        foreach (SupportReaction row in reactions)
+        {
+            if (!nodes.TryGetValue(row.NodeId, out Vector3? node)) continue;
+            ForceComponents value = row.Components;
+            AddReactionArrow(row.NodeId, "tx", node, new Vector3(1, 0, 0), value.Fx, maxForce, extent, 0xFF0000);
+            AddReactionArrow(row.NodeId, "ty", node, new Vector3(0, 1, 0), value.Fy, maxForce, extent, 0x00FF00);
+            AddReactionArrow(row.NodeId, "tz", node, new Vector3(0, 0, 1), value.Fz, maxForce, extent, 0x0000FF);
+            AddReactionArrow(row.NodeId, "mx", node, new Vector3(1, 0, 0), value.Mx, maxMoment, extent, 0xFF0000);
+            AddReactionArrow(row.NodeId, "my", node, new Vector3(0, 1, 0), value.My, maxMoment, extent, 0x00FF00);
+            AddReactionArrow(row.NodeId, "mz", node, new Vector3(0, 0, 1), value.Mz, maxMoment, extent, 0x0000FF);
+        }
+    }
+
+    private static double MaxAbsolute(IEnumerable<double> values) => values
+        .OrderByDescending(Math.Abs).FirstOrDefault();
+
+    private void DrawCanonicalSectionForce(CalculationResultPage page, ForceAnalysisResult force)
+    {
+        var nodes = CanonicalNodes();
+        var members = _canonical!.ResultSet.Topology.Members.ToDictionary(
+            item => item.MemberId, StringComparer.Ordinal);
+        var values = force.MemberSectionForces.SelectMany(member => member.Segments.Select(segment =>
+            (member.MemberId, Segment: segment,
+                I: CanonicalComponent(segment.IEnd), J: CanonicalComponent(segment.JEnd)))).ToArray();
+        CurrentExtrema = new ResultViewportExtrema("fsec", page.Result.CaseId,
+            ValueRange(values.SelectMany(item => new[]
+            {
+                (item.MemberId, (double?)item.I), (item.MemberId, (double?)item.J)
+            })) ?? ZeroRange(), null);
+        double max = values.SelectMany(item => new[] { Math.Abs(item.I), Math.Abs(item.J) })
+            .DefaultIfEmpty().Max();
+        if (max <= 0) return;
+        float scale = (float)(_sectionForceScale / 100 * _nodeBaseScale * 5 / max);
+        foreach (var item in values)
+        {
+            if (!members.TryGetValue(item.MemberId, out TopologyMember? member) ||
+                !nodes.TryGetValue(member.NodeI, out Vector3? start) ||
+                !nodes.TryGetValue(member.NodeJ, out Vector3? end)) continue;
+            var stations = member.Stations.ToDictionary(station => station.StationId,
+                StringComparer.Ordinal);
+            if (!stations.TryGetValue(item.Segment.StationI, out MemberStation? stationI) ||
+                !stations.TryGetValue(item.Segment.StationJ, out MemberStation? stationJ)) continue;
+            Vector3 axis = new Vector3().SubVectors(end, start);
+            float length = axis.Length();
+            if (length <= 0) continue;
+            Vector3 first = SectionStation(start, axis, length, (float)stationI.Position);
+            Vector3 last = SectionStation(start, axis, length, (float)stationJ.Position);
+            string selectedComponent = _currentRadio.EndsWith("_max", StringComparison.Ordinal) ||
+                _currentRadio.EndsWith("_min", StringComparison.Ordinal)
+                ? _currentRadio[..^4] : _currentRadio;
+            Vector3Value direction = selectedComponent is "axialForce" or "fx" or
+                "torsionalMoment" or "mx" or "momentY" or "my" or "shearForceZ" or "fz"
+                ? member.LocalFrame.ZAxis : member.LocalFrame.YAxis;
+            Vector3 normal = new((float)direction.X, (float)direction.Y, (float)direction.Z);
+            Vector3 firstValue = first.Clone().AddScaledVector(normal, (float)item.I * scale);
+            Vector3 lastValue = last.Clone().AddScaledVector(normal, (float)item.J * scale);
+            AddLine(_fsecRoot, $"fsec{item.MemberId}-{item.Segment.SegmentId}",
+                [first, firstValue, lastValue, last], 0x0000FF);
+        }
+    }
+
+    private double CanonicalComponent(ForceComponents value) =>
+        (_currentRadio.EndsWith("_max", StringComparison.Ordinal) ||
+         _currentRadio.EndsWith("_min", StringComparison.Ordinal)
+            ? _currentRadio[..^4] : _currentRadio) switch
+    {
+        "axialForce" or "fx" => value.Fx,
+        "shearForceY" or "fy" => value.Fy,
+        "shearForceZ" or "fz" => value.Fz,
+        "torsionalMoment" or "mx" => value.Mx,
+        "momentZ" or "mz" => value.Mz,
+        _ => value.My
+    };
 
     private void DrawDisplacement()
     {
@@ -449,16 +807,17 @@ internal sealed class ThreeResultsService : IDisposable
         foreach (var (id, value) in caseData)
         {
             if (!TryId(id, "node", out int nodeId) || !_nodeData.TryGetValue(nodeId, out var node)) continue;
-            AddReactionArrow(nodeId, "tx", node, new Vector3(1, 0, 0), value.tx, maxForce, extent, 0xFF0000);
-            AddReactionArrow(nodeId, "ty", node, new Vector3(0, 1, 0), value.ty, maxForce, extent, 0x00FF00);
-            AddReactionArrow(nodeId, "tz", node, new Vector3(0, 0, 1), value.tz, maxForce, extent, 0x0000FF);
-            AddReactionArrow(nodeId, "mx", node, new Vector3(1, 0, 0), value.mx, maxMoment, extent, 0xFF0000);
-            AddReactionArrow(nodeId, "my", node, new Vector3(0, 1, 0), value.my, maxMoment, extent, 0x00FF00);
-            AddReactionArrow(nodeId, "mz", node, new Vector3(0, 0, 1), value.mz, maxMoment, extent, 0x0000FF);
+            string nodeKey = nodeId.ToString(CultureInfo.InvariantCulture);
+            AddReactionArrow(nodeKey, "tx", node, new Vector3(1, 0, 0), value.tx, maxForce, extent, 0xFF0000);
+            AddReactionArrow(nodeKey, "ty", node, new Vector3(0, 1, 0), value.ty, maxForce, extent, 0x00FF00);
+            AddReactionArrow(nodeKey, "tz", node, new Vector3(0, 0, 1), value.tz, maxForce, extent, 0x0000FF);
+            AddReactionArrow(nodeKey, "mx", node, new Vector3(1, 0, 0), value.mx, maxMoment, extent, 0xFF0000);
+            AddReactionArrow(nodeKey, "my", node, new Vector3(0, 1, 0), value.my, maxMoment, extent, 0x00FF00);
+            AddReactionArrow(nodeKey, "mz", node, new Vector3(0, 0, 1), value.mz, maxMoment, extent, 0x0000FF);
         }
     }
 
-    private void AddReactionArrow(int nodeId, string component, Vector3 node,
+    private void AddReactionArrow(string nodeId, string component, Vector3 node,
         Vector3 axis, double? value, float max, float extent, int color)
     {
         if (!value.HasValue || value == 0 || max <= 0) return;
@@ -501,7 +860,7 @@ internal sealed class ThreeResultsService : IDisposable
         _reacRoot.Add(group);
     }
 
-    private void AddMomentReaction(int nodeId, string component, Vector3 node,
+    private void AddMomentReaction(string nodeId, string component, Vector3 node,
         double value, float max, int color)
     {
         // JS ThreeReactService.setMomentReact: a 270-degree radius-4 arc,

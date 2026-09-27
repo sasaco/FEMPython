@@ -1,5 +1,6 @@
 """Shared AnalysisResultSet v1 schema and semantic fixture contract."""
 
+import copy
 import json
 from pathlib import Path
 
@@ -23,6 +24,28 @@ def test_schema_is_draft_2020_12_and_defines_the_sole_root() -> None:
     assert root["additionalProperties"] is False
     assert root["properties"]["kind"] == {"const": "analysis_result_set"}
     assert root["properties"]["schema_version"] == {"const": "1.0"}
+    assert "maxItems" not in root["properties"]["cases"]
+
+
+def test_more_than_256_cases_validate_without_a_count_ceiling() -> None:
+    single = _load(CONTRACTS / "positive" / "single-static.json")
+    result_set = copy.deepcopy(single)
+    result_set["cases"] = []
+    result_set["results"] = []
+    for index in range(257):
+        case_id = f"case-{index}"
+        case = copy.deepcopy(single["cases"][0])
+        result = copy.deepcopy(single["results"][0])
+        case["case_id"] = case_id
+        result["case_id"] = case_id
+        result_set["cases"].append(case)
+        result_set["results"].append(result)
+
+    validate_analysis_result_set(result_set)
+
+    result_set["results"][-1]["case_id"] = "unknown"
+    with pytest.raises(ResultContractError, match="case_id"):
+        validate_analysis_result_set(result_set)
 
 
 @pytest.mark.parametrize(

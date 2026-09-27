@@ -1,5 +1,6 @@
 using FarPoint.Win.Spread;
 using FrameWebforCS.components.input;
+using FrameWebforCS.calculation;
 using System.Collections.Immutable;
 using System.Drawing;
 using System.Globalization;
@@ -27,6 +28,7 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
     private long _generation, _publishedRevision = -1;
     private int _materializedSheet = -1;
     private bool _rebuilding, _disposed;
+    private readonly CalculationDerivedViewRenderer _canonical;
 
     protected ResultPickupTableComponent(Func<TSnapshot?> snapshot, Func<long> revision,
         Action<EventHandler> attach, Action<EventHandler> detach,
@@ -57,6 +59,12 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
         // AppRoutingModule calls setActiveSheet before showing the floating form.
         VisibleChanged += (_, _) => { if (Visible) MaterializeSelectedSheet(); };
         _ = _dispatcher.Handle;
+        _canonical = new(CalculationDerivedStage.Pickup,
+            this is ResultPickupFsecComponent ? CalculationDerivedQuantity.SectionForce :
+            this is ResultPickupReacComponent ? CalculationDerivedQuantity.Reaction :
+                CalculationDerivedQuantity.Displacement,
+            fpSpread1, modeSelector, statusLabel, modes3D, modes2D);
+        CalculationResultStore.Instance.Changed += OnCanonicalChanged;
         attach(OnSourceChanged);
         HandleCreated += (_, _) => Refresh();
         HandleDestroyed += (_, _) => CancelRunning();
@@ -79,9 +87,19 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
         else Refresh();
     }
 
+    private void OnCanonicalChanged(object? sender, EventArgs e) => OnSourceChanged(sender, e);
+
     private void Refresh()
     {
         if (_disposed) return;
+        if (_canonical.ShowCurrent())
+        {
+            ++_generation;
+            CancelRunning();
+            _pending = null;
+            _output = null;
+            return;
+        }
         ++_generation;
         CancelRunning();
         _pending = null;
@@ -238,6 +256,7 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
 
     private void MaterializeSelectedSheet()
     {
+        if (_canonical.IsShowing) { _canonical.Materialize(); return; }
         if (_rebuilding || _output is null || modeSelector.SelectedItem is not ModeChoice mode) return;
         int index = fpSpread1.ActiveSheetIndex;
         if (index < 0 || index >= _output.Cases.Count) return;
@@ -257,6 +276,7 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
 
     private void PublishViewportPage(string component, int index)
     {
+        if (_canonical.IsShowing) { _canonical.PublishPage(); return; }
         if (!Visible || _output is null || index < 0 || index >= _output.Cases.Count) return;
         var selected = _output.Cases[index];
         string viewportMode = this switch
@@ -325,6 +345,7 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
         if (disposing && !_disposed)
         {
             _disposed = true;
+            CalculationResultStore.Instance.Changed -= OnCanonicalChanged;
             _detach(OnSourceChanged);
             CancelRunning();
             _running?.Dispose();

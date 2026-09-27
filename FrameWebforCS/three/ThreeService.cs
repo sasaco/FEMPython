@@ -1,5 +1,6 @@
 using FrameWebforCS.components.input;
 using FrameWebforCS.components.result;
+using FrameWebforCS.calculation;
 using FrameWebforCS.providers;
 using SingleFormsDemo;
 using System.Diagnostics;
@@ -81,6 +82,7 @@ internal sealed class ThreeService : IDisposable
         ResultDisgService.Instance.Changed += OnResultEdited;
         ResultReacService.Instance.Changed += OnResultEdited;
         ResultFsecService.Instance.Changed += OnResultEdited;
+        CalculationResultStore.Instance.Changed += OnResultEdited;
         ThreeResultsService.ResultPageChanged += OnResultPageChanged;
         ThreeResultsService.DerivedFsecChanged += OnDerivedFsecChanged;
         _inputData.FileReplaced += OnFileReplaced;
@@ -463,6 +465,7 @@ internal sealed class ThreeService : IDisposable
                 _results.SetTopology(displayNodes, displayMembers,
                     _inputPanels.GetDisplayPanels(), _nodes.BaseScale);
             if (entities.HasFlag(PendingEntity.Results))
+            {
                 _results.SetBaseResults(ResultsMatchDimension ? ResultDisgService.Instance.getDisg() : new(),
                     ResultsMatchDimension ? ResultReacService.Instance.getReac() : new(),
                     ResultsMatchDimension ? ResultFsecService.Instance.getFsec() : new(),
@@ -470,6 +473,9 @@ internal sealed class ThreeService : IDisposable
                     _inputLoads.GetDisplaySnapshot()
                         .Where(item => item.Value.Symbol == "LL")
                         .Select(item => item.Key).ToArray());
+                _results.SetCanonicalPresentation(ResultsMatchDimension
+                    ? CalculationResultStore.Instance.Current : null);
+            }
         }
 
         if (caseId != null)
@@ -541,6 +547,10 @@ internal sealed class ThreeService : IDisposable
             "fsec" => ResultFsecService.Instance.getFsec().Keys.FirstOrDefault(),
             _ => null
         };
+        if (resultMode is "disg" or "reac" or "fsec" &&
+            CalculationResultStore.Instance.Current is { } canonical && ResultsMatchDimension)
+            defaultCase = canonical.Pages.FirstOrDefault(page => resultMode == "disg" ||
+                page.Result is ForceAnalysisResult)?.Key;
         _results.SetMode(resultMode, defaultCase);
         SelectedKind = null;
         // JS mode branches also set number labels and dat.gui controls. Native controls
@@ -562,6 +572,7 @@ internal sealed class ThreeService : IDisposable
     };
 
     private bool ResultsMatchDimension =>
+        CalculationResultStore.Instance.Current is not null ||
         _inputData.ResultDimension is not int resultDimension ||
         resultDimension == _inputData.dimension;
 
@@ -742,6 +753,7 @@ internal sealed class ThreeService : IDisposable
         ResultDisgService.Instance.Changed -= OnResultEdited;
         ResultReacService.Instance.Changed -= OnResultEdited;
         ResultFsecService.Instance.Changed -= OnResultEdited;
+        CalculationResultStore.Instance.Changed -= OnResultEdited;
         ThreeResultsService.ResultPageChanged -= OnResultPageChanged;
         ThreeResultsService.DerivedFsecChanged -= OnDerivedFsecChanged;
         _inputData.FileReplaced -= OnFileReplaced;

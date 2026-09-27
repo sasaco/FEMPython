@@ -496,7 +496,7 @@ function validateTopology(value: unknown): ResultTopology {
 
 function validateCases(value: unknown, nodeIds: readonly string[]): ResultCase[] {
   const cases = arrayAt(value, "cases");
-  if (cases.length < 1 || cases.length > 256) fail("cases", "one to 256 cases required");
+  if (cases.length < 1) fail("cases", "at least one case required");
   const nodeSet = new Set(nodeIds);
   const caseIds = cases.map((item, index) => {
     const path = `cases[${index}]`;

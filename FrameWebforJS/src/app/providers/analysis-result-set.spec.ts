@@ -37,6 +37,26 @@ describe("AnalysisResultSet v1", () => {
     });
   });
 
+  it("accepts more than 256 ordered cases and still checks result references", () => {
+    const fixture = JSON.parse(JSON.stringify(singleStatic));
+    fixture.cases = [];
+    fixture.results = [];
+    for (let index = 0; index < 257; index++) {
+      const caseId = `case-${index}`;
+      fixture.cases.push({ ...singleStatic.cases[0], case_id: caseId });
+      fixture.results.push({ ...singleStatic.results[0], case_id: caseId });
+    }
+
+    const result = validateAndIndexAnalysisResultSet(fixture);
+    expect(result.caseOrder.length).toBe(257);
+    expect(result.caseOrder[256]).toBe("case-256");
+
+    fixture.results[256].case_id = "unknown";
+    expect(() => validateAndIndexAnalysisResultSet(fixture)).toThrowError(
+      AnalysisResultSetValidationError
+    );
+  });
+
   const negativeFixtures: [string, unknown][] = [
     ["duplicate IDs", duplicateIds],
     ["duplicate coordinates", duplicateCoordinates],
