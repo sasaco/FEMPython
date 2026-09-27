@@ -20,6 +20,141 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "THREE.OpenGL", "THREE\THREE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrameWebforCS.Tests", "FrameWebforCS.Tests\FrameWebforCS.Tests.csproj", "{541C6FC2-7220-44E0-84B2-475299A87B23}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9202335E-DE60-4A21-9AE9-AD181C69D1D4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "app", "app", "{07CAB94E-D36A-44D7-AA07-396A5B1A4C6B}"
+	ProjectSection(SolutionItems) = preProject
+		FrameWeb\src\app\error_handling.py = FrameWeb\src\app\error_handling.py
+		FrameWeb\src\app\helper.py = FrameWeb\src\app\helper.py
+		FrameWeb\src\app\inputData.py = FrameWeb\src\app\inputData.py
+		FrameWeb\src\app\inputDataUtils.py = FrameWeb\src\app\inputDataUtils.py
+		FrameWeb\src\app\result.py = FrameWeb\src\app\result.py
+		FrameWeb\src\app\utils.py = FrameWeb\src\app\utils.py
+		FrameWeb\src\app\__init__.py = FrameWeb\src\app\__init__.py
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "fem", "fem", "{A49EDE5D-FE79-414E-B513-DA300206E4E5}"
+	ProjectSection(SolutionItems) = preProject
+		FrameWeb\src\fem\analysis_result_sets.py = FrameWeb\src\fem\analysis_result_sets.py
+		FrameWeb\src\fem\axial_interpolation.py = FrameWeb\src\fem\axial_interpolation.py
+		FrameWeb\src\fem\beam_equilibrium.py = FrameWeb\src\fem\beam_equilibrium.py
+		FrameWeb\src\fem\boundary_condition.py = FrameWeb\src\fem\boundary_condition.py
+		FrameWeb\src\fem\boundary_dofs.py = FrameWeb\src\fem\boundary_dofs.py
+		FrameWeb\src\fem\capabilities.json = FrameWeb\src\fem\capabilities.json
+		FrameWeb\src\fem\capabilities.py = FrameWeb\src\fem\capabilities.py
+		FrameWeb\src\fem\convergence.py = FrameWeb\src\fem\convergence.py
+		FrameWeb\src\fem\decimal_bvp.py = FrameWeb\src\fem\decimal_bvp.py
+		FrameWeb\src\fem\diagnostics.py = FrameWeb\src\fem\diagnostics.py
+		FrameWeb\src\fem\dof.py = FrameWeb\src\fem\dof.py
+		FrameWeb\src\fem\equilibrium.py = FrameWeb\src\fem\equilibrium.py
+		FrameWeb\src\fem\error_log.py = FrameWeb\src\fem\error_log.py
+		FrameWeb\src\fem\file_io.py = FrameWeb\src\fem\file_io.py
+		FrameWeb\src\fem\legacy_beam.py = FrameWeb\src\fem\legacy_beam.py
+		FrameWeb\src\fem\linear_precision.py = FrameWeb\src\fem\linear_precision.py
+		FrameWeb\src\fem\material.py = FrameWeb\src\fem\material.py
+		FrameWeb\src\fem\mesh.py = FrameWeb\src\fem\mesh.py
+		FrameWeb\src\fem\model.py = FrameWeb\src\fem\model.py
+		FrameWeb\src\fem\precision.py = FrameWeb\src\fem\precision.py
+		FrameWeb\src\fem\result_contracts.py = FrameWeb\src\fem\result_contracts.py
+		FrameWeb\src\fem\result_processor.py = FrameWeb\src\fem\result_processor.py
+		FrameWeb\src\fem\result_projection.py = FrameWeb\src\fem\result_projection.py
+		FrameWeb\src\fem\result_topology.py = FrameWeb\src\fem\result_topology.py
+		FrameWeb\src\fem\section.py = FrameWeb\src\fem\section.py
+		FrameWeb\src\fem\shape_functions.py = FrameWeb\src\fem\shape_functions.py
+		FrameWeb\src\fem\solver.py = FrameWeb\src\fem\solver.py
+		FrameWeb\src\fem\solver_results.py = FrameWeb\src\fem\solver_results.py
+		FrameWeb\src\fem\stiffness_matrix.py = FrameWeb\src\fem\stiffness_matrix.py
+		FrameWeb\src\fem\strain_stress.py = FrameWeb\src\fem\strain_stress.py
+		FrameWeb\src\fem\v0_io.py = FrameWeb\src\fem\v0_io.py
+		FrameWeb\src\fem\vtk_writer.py = FrameWeb\src\fem\vtk_writer.py
+		FrameWeb\src\fem\_version.py = FrameWeb\src\fem\_version.py
+		FrameWeb\src\fem\__init__.py = FrameWeb\src\fem\__init__.py
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "components", "components", "{47D919F1-C995-4B69-8545-237EEA3FA0C9}"
+	ProjectSection(SolutionItems) = preProject
+		FrameWeb\src\app\components\joint.py = FrameWeb\src\app\components\joint.py
+		FrameWeb\src\app\components\load.py = FrameWeb\src\app\components\load.py
+		FrameWeb\src\app\components\member.py = FrameWeb\src\app\components\member.py
+		FrameWeb\src\app\components\node.py = FrameWeb\src\app\components\node.py
+		FrameWeb\src\app\components\section_material.py = FrameWeb\src\app\components\section_material.py
+		FrameWeb\src\app\components\shell.py = FrameWeb\src\app\components\shell.py
+		FrameWeb\src\app\components\solid.py = FrameWeb\src\app\components\solid.py
+		FrameWeb\src\app\components\spring.py = FrameWeb\src\app\components\spring.py
+		FrameWeb\src\app\components\support.py = FrameWeb\src\app\components\support.py
+		FrameWeb\src\app\components\__init__.py = FrameWeb\src\app\components\__init__.py
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "elements", "elements", "{25063C53-65C1-4B5A-B32A-C86F22071729}"
+	ProjectSection(SolutionItems) = preProject
+		FrameWeb\src\fem\elements\advanced_element.py = FrameWeb\src\fem\elements\advanced_element.py
+		FrameWeb\src\fem\elements\bar_element.py = FrameWeb\src\fem\elements\bar_element.py
+		FrameWeb\src\fem\elements\base_element.py = FrameWeb\src\fem\elements\base_element.py
+		FrameWeb\src\fem\elements\dkt.py = FrameWeb\src\fem\elements\dkt.py
+		FrameWeb\src\fem\elements\dkt_precision.py = FrameWeb\src\fem\elements\dkt_precision.py
+		FrameWeb\src\fem\elements\loaded_bar_element.py = FrameWeb\src\fem\elements\loaded_bar_element.py
+		FrameWeb\src\fem\elements\nonlinear_bar_element.py = FrameWeb\src\fem\elements\nonlinear_bar_element.py
+		FrameWeb\src\fem\elements\quadratic_solid.py = FrameWeb\src\fem\elements\quadratic_solid.py
+		FrameWeb\src\fem\elements\quad_precision.py = FrameWeb\src\fem\elements\quad_precision.py
+		FrameWeb\src\fem\elements\shell_element.py = FrameWeb\src\fem\elements\shell_element.py
+		FrameWeb\src\fem\elements\shell_postprocess.py = FrameWeb\src\fem\elements\shell_postprocess.py
+		FrameWeb\src\fem\elements\solid_element.py = FrameWeb\src\fem\elements\solid_element.py
+		FrameWeb\src\fem\elements\solid_postprocess.py = FrameWeb\src\fem\elements\solid_postprocess.py
+		FrameWeb\src\fem\elements\solid_precision.py = FrameWeb\src\fem\elements\solid_precision.py
+		FrameWeb\src\fem\elements\__init__.py = FrameWeb\src\fem\elements\__init__.py
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "models", "models", "{F9B37FAF-4992-4EBF-914C-7F7BEF18B52E}"
+	ProjectSection(SolutionItems) = preProject
+		FrameWeb\src\fem\models\fa_beam.py = FrameWeb\src\fem\models\fa_beam.py
+		FrameWeb\src\fem\models\fa_joint.py = FrameWeb\src\fem\models\fa_joint.py
+		FrameWeb\src\fem\models\fa_load.py = FrameWeb\src\fem\models\fa_load.py
+		FrameWeb\src\fem\models\fa_material.py = FrameWeb\src\fem\models\fa_material.py
+		FrameWeb\src\fem\models\fa_node.py = FrameWeb\src\fem\models\fa_node.py
+		FrameWeb\src\fem\models\fa_section.py = FrameWeb\src\fem\models\fa_section.py
+		FrameWeb\src\fem\models\fa_shell.py = FrameWeb\src\fem\models\fa_shell.py
+		FrameWeb\src\fem\models\fa_solid.py = FrameWeb\src\fem\models\fa_solid.py
+		FrameWeb\src\fem\models\fa_spring.py = FrameWeb\src\fem\models\fa_spring.py
+		FrameWeb\src\fem\models\fa_support.py = FrameWeb\src\fem\models\fa_support.py
+		FrameWeb\src\fem\models\fa_thickness.py = FrameWeb\src\fem\models\fa_thickness.py
+		FrameWeb\src\fem\models\__init__.py = FrameWeb\src\fem\models\__init__.py
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nonlinear", "nonlinear", "{C42B88F2-ABB6-461F-B2FD-46845CAE00DD}"
+	ProjectSection(SolutionItems) = preProject
+		FrameWeb\src\fem\nonlinear\axial_bending_response.py = FrameWeb\src\fem\nonlinear\axial_bending_response.py
+		FrameWeb\src\fem\nonlinear\axial_force_history.py = FrameWeb\src\fem\nonlinear\axial_force_history.py
+		FrameWeb\src\fem\nonlinear\axial_force_path.py = FrameWeb\src\fem\nonlinear\axial_force_path.py
+		FrameWeb\src\fem\nonlinear\axial_force_reload_hold.py = FrameWeb\src\fem\nonlinear\axial_force_reload_hold.py
+		FrameWeb\src\fem\nonlinear\axial_force_table.py = FrameWeb\src\fem\nonlinear\axial_force_table.py
+		FrameWeb\src\fem\nonlinear\axial_force_targets.py = FrameWeb\src\fem\nonlinear\axial_force_targets.py
+		FrameWeb\src\fem\nonlinear\beam_section_response.py = FrameWeb\src\fem\nonlinear\beam_section_response.py
+		FrameWeb\src\fem\nonlinear\component_laws.py = FrameWeb\src\fem\nonlinear\component_laws.py
+		FrameWeb\src\fem\nonlinear\nonlinear_solver.py = FrameWeb\src\fem\nonlinear\nonlinear_solver.py
+		FrameWeb\src\fem\nonlinear\support_springs.py = FrameWeb\src\fem\nonlinear\support_springs.py
+		FrameWeb\src\fem\nonlinear\__init__.py = FrameWeb\src\fem\nonlinear\__init__.py
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hysteresis", "hysteresis", "{8D29516B-9EF8-4906-B777-D95ED4D8C59C}"
+	ProjectSection(SolutionItems) = preProject
+		FrameWeb\src\fem\nonlinear\hysteresis\base_hysteresis.py = FrameWeb\src\fem\nonlinear\hysteresis\base_hysteresis.py
+		FrameWeb\src\fem\nonlinear\hysteresis\jr_stiffness_reduction.py = FrameWeb\src\fem\nonlinear\hysteresis\jr_stiffness_reduction.py
+		FrameWeb\src\fem\nonlinear\hysteresis\slip.py = FrameWeb\src\fem\nonlinear\hysteresis\slip.py
+		FrameWeb\src\fem\nonlinear\hysteresis\__init__.py = FrameWeb\src\fem\nonlinear\hysteresis\__init__.py
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "spatial_loads", "spatial_loads", "{F1F50033-876D-46F9-A1B9-951CB529FA8B}"
+	ProjectSection(SolutionItems) = preProject
+		FrameWeb\src\fem\spatial_loads\assembler.py = FrameWeb\src\fem\spatial_loads\assembler.py
+		FrameWeb\src\fem\spatial_loads\definitions.py = FrameWeb\src\fem\spatial_loads\definitions.py
+		FrameWeb\src\fem\spatial_loads\geometry.py = FrameWeb\src\fem\spatial_loads\geometry.py
+		FrameWeb\src\fem\spatial_loads\interpolation.py = FrameWeb\src\fem\spatial_loads\interpolation.py
+		FrameWeb\src\fem\spatial_loads\quadrature.py = FrameWeb\src\fem\spatial_loads\quadrature.py
+		FrameWeb\src\fem\spatial_loads\serialization.py = FrameWeb\src\fem\spatial_loads\serialization.py
+		FrameWeb\src\fem\spatial_loads\validation.py = FrameWeb\src\fem\spatial_loads\validation.py
+		FrameWeb\src\fem\spatial_loads\__init__.py = FrameWeb\src\fem\spatial_loads\__init__.py
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +216,17 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9202335E-DE60-4A21-9AE9-AD181C69D1D4} = {E9B45591-894B-43FC-890F-8C9BD81F9571}
+		{07CAB94E-D36A-44D7-AA07-396A5B1A4C6B} = {9202335E-DE60-4A21-9AE9-AD181C69D1D4}
+		{A49EDE5D-FE79-414E-B513-DA300206E4E5} = {9202335E-DE60-4A21-9AE9-AD181C69D1D4}
+		{47D919F1-C995-4B69-8545-237EEA3FA0C9} = {07CAB94E-D36A-44D7-AA07-396A5B1A4C6B}
+		{25063C53-65C1-4B5A-B32A-C86F22071729} = {A49EDE5D-FE79-414E-B513-DA300206E4E5}
+		{F9B37FAF-4992-4EBF-914C-7F7BEF18B52E} = {A49EDE5D-FE79-414E-B513-DA300206E4E5}
+		{C42B88F2-ABB6-461F-B2FD-46845CAE00DD} = {A49EDE5D-FE79-414E-B513-DA300206E4E5}
+		{8D29516B-9EF8-4906-B777-D95ED4D8C59C} = {C42B88F2-ABB6-461F-B2FD-46845CAE00DD}
+		{F1F50033-876D-46F9-A1B9-951CB529FA8B} = {A49EDE5D-FE79-414E-B513-DA300206E4E5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {68A3B702-87F2-4DAB-B659-8FC92FBD6473}
