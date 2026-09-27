@@ -12,6 +12,8 @@ namespace FrameWebforCS.components.input
 {
     public partial class InputNoticePointsComponent : UserControl
     {
+        internal event Action<int, string>? GridSelectionChanged;
+        private bool _syncingSelection;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet1;
 
         public InputNoticePointsComponent()
@@ -62,6 +64,33 @@ namespace FrameWebforCS.components.input
             column[1].Locked = true;
             column[1].BackColor = SystemColors.Control;
             fpSpread1_Sheet1.Protect = true;
+
+            fpSpread1.EnterCell += OnEnterCell;
+            Disposed += (_, _) => fpSpread1.EnterCell -= OnEnterCell;
+        }
+
+        private void OnEnterCell(object? sender, EnterCellEventArgs e)
+        {
+            if (_syncingSelection || e.Row < 0 || e.Column < 0) return;
+            // JS notice-point selection identifies the row and L1..L20 point.
+            string axis = e.Column >= 2 ? $"L{e.Column - 1}" : "";
+            GridSelectionChanged?.Invoke(e.Row + 1, axis);
+        }
+
+        internal bool SelectGridRow(int row, string? axis = null)
+        {
+            if (IsDisposed || row < 1 || row > fpSpread1_Sheet1.RowCount) return false;
+            int column = 0;
+            if (axis != null && axis.StartsWith("L", StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(axis.AsSpan(1), out int point) && point is >= 1 and <= 20)
+                column = point + 1;
+            _syncingSelection = true;
+            try
+            {
+                fpSpread1_Sheet1.SetActiveCell(row - 1, column);
+            }
+            finally { _syncingSelection = false; }
+            return true;
         }
 
 

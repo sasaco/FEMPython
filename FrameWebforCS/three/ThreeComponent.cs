@@ -5,6 +5,7 @@ using OpenTK.WinForms;
 using SingleFormsDemo;
 using FrameWebforCS.providers;
 using System.ComponentModel;
+using System.Globalization;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
 namespace FrameWebforCS.three
@@ -15,6 +16,12 @@ namespace FrameWebforCS.three
         private ThreeService? _threeService;
         private bool _disposed;
         private Point? _mouseDownPosition;
+        private Panel? _viewportControls;
+        private Label? _scaleLabel;
+        private NumericUpDown? _scaleValue;
+        private Label? _extremaLabel;
+        private string? _scaleKind;
+        private bool _settingScaleControl;
 
         private System.Windows.Forms.Timer _timer;
         private int timeInterval = 10;
@@ -59,6 +66,7 @@ namespace FrameWebforCS.three
             _threeService?.FlushPending();
             threeInstance.render();
             this.glControl.SwapBuffers();
+            RefreshViewportControls();
         }
 
         private void glControl_MouseWheel(object? sender, System.Windows.Forms.MouseEventArgs e)
@@ -75,6 +83,7 @@ namespace FrameWebforCS.three
             threeInstance.OnResize(new ResizeEventArgs(glControl.ClientSize.Width, glControl.ClientSize.Height));
 
             _threeService = new ThreeService(threeInstance);
+            CreateViewportControls();
 
             Run();
         }
@@ -135,12 +144,88 @@ namespace FrameWebforCS.three
             _mouseDownPosition = null;
         }
 
+        private void CreateViewportControls()
+        {
+            if (glControl.Parent is not Control parent) return;
+            _viewportControls = new Panel
+            {
+                Name = "viewportControls",
+                Size = new Size(330, 83),
+                Location = new Point(Math.Max(0, parent.ClientSize.Width - 338), 8),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = System.Drawing.Color.WhiteSmoke,
+                Visible = false
+            };
+            _scaleLabel = new Label { Location = new Point(7, 8), Size = new Size(105, 22) };
+            _scaleValue = new NumericUpDown
+            {
+                Location = new Point(115, 5), Size = new Size(205, 23),
+                ThousandsSeparator = true
+            };
+            _scaleValue.ValueChanged += ScaleValueChanged;
+            _extremaLabel = new Label
+            {
+                Location = new Point(7, 34), Size = new Size(315, 45),
+                AutoEllipsis = true
+            };
+            _viewportControls.Controls.Add(_scaleLabel);
+            _viewportControls.Controls.Add(_scaleValue);
+            _viewportControls.Controls.Add(_extremaLabel);
+            parent.Controls.Add(_viewportControls);
+            _viewportControls.BringToFront();
+            RefreshViewportControls();
+        }
+
+        private void ScaleValueChanged(object? sender, EventArgs e)
+        {
+            if (!_settingScaleControl && _scaleKind != null && _scaleValue != null)
+                _threeService?.QueueScale(_scaleKind, (float)_scaleValue.Value);
+        }
+
+        private void RefreshViewportControls()
+        {
+            if (_viewportControls == null || _scaleLabel == null || _scaleValue == null ||
+                _extremaLabel == null || _threeService == null) return;
+            var option = _threeService.GetScaleControl();
+            _viewportControls.Visible = option.HasValue;
+            if (option is not { } scale) return;
+            _settingScaleControl = true;
+            try
+            {
+                _scaleKind = scale.Kind;
+                _scaleLabel.Text = scale.Label;
+                _scaleValue.DecimalPlaces = scale.Step < 1 ? 1 : 0;
+                _scaleValue.Increment = (decimal)scale.Step;
+                _scaleValue.Minimum = (decimal)scale.Minimum;
+                _scaleValue.Maximum = (decimal)scale.Maximum;
+                decimal value = Math.Clamp((decimal)scale.Value,
+                    _scaleValue.Minimum, _scaleValue.Maximum);
+                if (_scaleValue.Value != value) _scaleValue.Value = value;
+            }
+            finally { _settingScaleControl = false; }
+            var extrema = _threeService.CurrentResultExtrema;
+            if (extrema is { } current)
+            {
+                var primary = current.Primary;
+                string text = string.Create(CultureInfo.InvariantCulture,
+                    $"{current.CaseId}  Max {primary.Max:0.###} ({primary.MaxEntityId})  Min {primary.Min:0.###} ({primary.MinEntityId})");
+                if (current.Secondary is { } secondary)
+                    text += string.Create(CultureInfo.InvariantCulture,
+                        $"\nMax {secondary.Max:0.###} ({secondary.MaxEntityId})  Min {secondary.Min:0.###} ({secondary.MinEntityId})");
+                if (_extremaLabel.Text != text) _extremaLabel.Text = text;
+            }
+            else if (_extremaLabel.Text.Length > 0) _extremaLabel.Text = "";
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && !_disposed)
             {
                 _timer?.Stop();
                 _timer?.Dispose();
+                if (_scaleValue != null) _scaleValue.ValueChanged -= ScaleValueChanged;
+                _viewportControls?.Dispose();
+                _viewportControls = null;
                 glControl.Load -= glControl_Load;
                 glControl.Paint -= glControl_Paint;
                 glControl.KeyDown -= glControl_KeyDown;

@@ -52,6 +52,8 @@ public partial class ResultCombineFsecComponent : UserControl
 
         modeSelector.SelectedIndexChanged += (_, _) => MaterializeSelectedSheet();
         fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
+        // AppRoutingModule calls setActiveSheet before showing the floating form.
+        VisibleChanged += (_, _) => { if (Visible) PublishViewportPage(); };
         HandleCreated += (_, _) => RefreshFromCoordinator();
         HandleDestroyed += (_, _) =>
         {
@@ -67,6 +69,7 @@ public partial class ResultCombineFsecComponent : UserControl
         if (fpSpread1.Sheets.Count > 0 && fpSpread1.ActiveSheetIndex < 0)
             fpSpread1.ActiveSheetIndex = 0;
         RefreshFromCoordinator();
+        PublishViewportPage();
     }
 
     public virtual Dictionary<string, object> getCombineFsec() =>
@@ -266,6 +269,53 @@ public partial class ResultCombineFsecComponent : UserControl
             }
         }
         _materializedSheet = sheetIndex;
+        PublishViewportPage();
+    }
+
+    private void PublishViewportPage()
+    {
+        if (!Visible || _output == null || modeSelector.SelectedItem is not ModeChoice mode) return;
+        int index = fpSpread1.ActiveSheetIndex;
+        if (index < 0 || index >= _output.Cases.Count) return;
+        var selected = _output.Cases[index];
+        var samples = ProjectViewportSamples(selected, mode.Key);
+        FrameWebforCS.three.ThreeResultsService.PublishDerivedFsec("comb_fsec",
+            new Dictionary<string, IReadOnlyList<FrameWebforCS.three.SectionForceSample>>
+            { [selected.Id] = samples }, _coordinator.Revision);
+        FrameWebforCS.three.ThreeResultsService.PublishPage("comb_fsec", selected.Id, mode.Key);
+    }
+
+    internal static IReadOnlyList<FrameWebforCS.three.SectionForceSample> ProjectViewportSamples(
+        CombineFsecCaseResult selected, string modeKey)
+    {
+        ArgumentNullException.ThrowIfNull(selected);
+        ArgumentException.ThrowIfNullOrWhiteSpace(modeKey);
+        string component = modeKey.Split('_')[0];
+        var samples = new List<FrameWebforCS.three.SectionForceSample>();
+        foreach (var (key, envelope) in new[]
+        {
+            ($"{component}_max", FrameWebforCS.three.SectionForceEnvelope.Max),
+            ($"{component}_min", FrameWebforCS.three.SectionForceEnvelope.Min)
+        })
+        {
+            if (!selected.Rows.TryGetValue(key, out var rows)) continue;
+            foreach (var row in rows)
+            {
+                string memberText = row.MemberId.StartsWith("member", StringComparison.Ordinal)
+                    ? row.MemberId[6..] : row.MemberId;
+                if (!int.TryParse(memberText, NumberStyles.None, CultureInfo.InvariantCulture, out int memberId) || memberId <= 0)
+                    continue;
+                double value = component switch
+                {
+                    "fx" => row.Fx, "fy" => row.Fy, "fz" => row.Fz,
+                    "mx" => row.Mx, "my" => row.My, "mz" => row.Mz,
+                    _ => 0
+                };
+                if (double.IsFinite(value) && double.IsFinite(row.Location))
+                    samples.Add(new(memberId, (float)row.Location, (float)value, envelope));
+            }
+        }
+        return samples;
     }
 
     private static string Format(double value) => ResultPickupFsecAggregator.Format(value);
@@ -280,6 +330,12 @@ public partial class ResultCombineFsecComponent : UserControl
             _materializedSheet = -1;
         }
         finally { _rebuilding = false; }
+        if (Visible)
+        {
+            FrameWebforCS.three.ThreeResultsService.PublishDerivedFsec("comb_fsec",
+                new Dictionary<string, IReadOnlyList<FrameWebforCS.three.SectionForceSample>>(), _coordinator.Revision);
+            FrameWebforCS.three.ThreeResultsService.PublishPage("comb_fsec", null);
+        }
     }
 
     private static void ConfigureSheet(SheetView sheet, int dimension)

@@ -127,50 +127,25 @@ namespace FrameWebforCS.providers
 
         internal void JsonDataOpen(JsonElement rootElement)
         {
-            // JS loadInputData clears inputs first and the menu then calls three.fileload().
-            // Validate/stage nodes first so a failed load leaves the current node scene intact.
-            // TODO: other input services still need rollback for whole-document atomic loading.
+            // JS loadInputData mutates one service at a time before three.fileload(). Stage every
+            // section first so a late invalid result cannot leave mixed old/new input behind.
+            // UI/GL publication still happens once through FileReplaced after the commit.
             var preparedNodes = InputNodesService.ParseNodeJson(rootElement);
-            var combineCoordinator = ResultCombineDisgCoordinator.Instance;
-            var combineFsecCoordinator = ResultCombineFsecCoordinator.Instance;
-            var combineReacCoordinator = ResultCombineReacCoordinator.Instance;
-            combineCoordinator.BeginLoad();
-            combineFsecCoordinator.BeginLoad();
-            combineReacCoordinator.BeginLoad();
-            try
-            {
-                bool hasResult = rootElement.TryGetProperty("result", out _);
-                JsonDataOpenCore(rootElement, hasResult);
-                if (hasResult)
-                {
-                    combineCoordinator.CompleteLoad(dimension);
-                    combineFsecCoordinator.CompleteLoad(dimension);
-                    combineReacCoordinator.CompleteLoad(dimension);
-                }
-                else
-                {
-                    combineCoordinator.FailLoad();
-                    combineFsecCoordinator.FailLoad();
-                    combineReacCoordinator.FailLoad();
-                }
-                InputNodesService.Instance.ApplyNodes(preparedNodes);
-            }
-            catch
-            {
-                combineCoordinator.FailLoad();
-                combineFsecCoordinator.FailLoad();
-                combineReacCoordinator.FailLoad();
-                throw;
-            }
+            var preparedMembers = InputMembersService.ParseMemberJson(rootElement);
+            var preparedPanels = InputPanelService.ParsePanelJson(rootElement);
+            var preparedRigid = InputRigidZoneService.ParseRigidJson(rootElement);
+            var preparedElements = InputElementsService.ParseElementJson(rootElement);
+            var preparedFixNodes = InputFixNodeService.ParseFixNodeJson(rootElement);
+            var preparedFixMembers = InputFixMemberService.ParseFixMemberJson(rootElement);
+            var preparedJoints = InputJointService.ParseJointJson(rootElement);
+            var preparedLoads = InputLoadService.ParseLoadJson(rootElement);
+            var preparedNoticePoints = InputNoticePointsService.ParseNoticePointsJson(rootElement);
+            var preparedCombine = InputCombineService.ParseCombineJson(rootElement);
+            bool hasResult = rootElement.TryGetProperty("result", out _);
+            var preparedDisg = hasResult ? ResultDisgService.ParseDisgJson(rootElement) : new();
+            var preparedFsec = hasResult ? ResultFsecService.ParseFsecJson(rootElement) : new();
+            var preparedReac = hasResult ? ResultReacService.ParseReacJson(rootElement) : new();
 
-            // Unlike JS's direct fileload call, publish one successful replacement for
-            // the viewport, including a missing node section (an empty node scene).
-            DocumentRevision++;
-            FileReplaced?.Invoke(DocumentRevision);
-        }
-
-        private void JsonDataOpenCore(JsonElement rootElement, bool hasResult)
-        {
             int loadedDimension = 3;
             if (rootElement.TryGetProperty("dimension", out var dimensionElement))
             {
@@ -194,36 +169,63 @@ namespace FrameWebforCS.providers
                     ReadCameraCoordinate(cameraElement, "z"));
             }
 
-            InputMembersService.Instance.setMemberJson(rootElement);
-            InputRigidZoneService.Instance.setRigidJson(rootElement);
-            InputElementsService.Instance.setElementJson(rootElement);
-            InputFixNodeService.Instance.setFixNodeJson(rootElement);
-            InputFixMemberService.Instance.setFixMemberJson(rootElement);
-            InputJointService.Instance.setJointJson(rootElement);
-            InputLoadService.Instance.setLoadJson(rootElement);
-            InputNoticePointsService.Instance.setNoticePointsJson(rootElement);
-            InputCombineService.Instance.setCombineJson(rootElement);
-            if (hasResult)
+            using var notifications = DocumentReplacementNotifications.Begin();
+            int previousDimension = dimension;
+            dimension = loadedDimension;
+            try
             {
-                ResultDisgService.Instance.setDisgJson(rootElement);
-                ResultFsecService.Instance.setFsecJson(rootElement);
-                ResultReacService.Instance.setReacJson(rootElement);
+                _sceneService?.ApplyDocumentCamera(loadedCameraPosition);
             }
-            else
+            catch
             {
-                ResultDisgService.Instance.clear();
-                ResultFsecService.Instance.clear();
-                ResultReacService.Instance.clear();
+                dimension = previousDimension;
+                throw;
+            }
+            _cameraPosition = loadedCameraPosition;
+
+            var combineCoordinator = ResultCombineDisgCoordinator.Instance;
+            var combineFsecCoordinator = ResultCombineFsecCoordinator.Instance;
+            var combineReacCoordinator = ResultCombineReacCoordinator.Instance;
+            combineCoordinator.BeginLoad();
+            combineFsecCoordinator.BeginLoad();
+            combineReacCoordinator.BeginLoad();
+            // Apply-path notifications, including BindingList resets, are deferred until
+            // all sections and derived snapshots have been installed.
+            {
+                InputMembersService.Instance.ApplyMembers(preparedMembers);
+                InputPanelService.Instance.ApplyPanels(preparedPanels);
+                InputRigidZoneService.Instance.ApplyRigid(preparedRigid);
+                InputElementsService.Instance.ApplyElements(preparedElements);
+                InputFixNodeService.Instance.ApplyFixNode(preparedFixNodes);
+                InputFixMemberService.Instance.ApplyFixMember(preparedFixMembers);
+                InputJointService.Instance.ApplyJoint(preparedJoints);
+                InputLoadService.Instance.ApplyLoads(preparedLoads ?? new Dictionary<string, clsLoad>());
+                InputNoticePointsService.Instance.ApplyNoticePoints(preparedNoticePoints);
+                InputCombineService.Instance.ApplyCombine(preparedCombine.Combine,
+                    preparedCombine.Define, preparedCombine.Pickup);
+                ResultDisgService.Instance.ApplyDisg(preparedDisg);
+                ResultFsecService.Instance.ApplyFsec(preparedFsec);
+                ResultReacService.Instance.ApplyReac(preparedReac);
+                InputNodesService.Instance.ApplyNodes(preparedNodes);
+                if (hasResult)
+                {
+                    combineCoordinator.CompleteLoad(dimension);
+                    combineFsecCoordinator.CompleteLoad(dimension);
+                    combineReacCoordinator.CompleteLoad(dimension);
+                }
+                else
+                {
+                    combineCoordinator.FailLoad();
+                    combineFsecCoordinator.FailLoad();
+                    combineReacCoordinator.FailLoad();
+                }
             }
 
-            dimension = loadedDimension;
-            _cameraPosition = loadedCameraPosition;
-            if (_sceneService != null)
-            {
-                _sceneService.changeCamera();
-                if (loadedCameraPosition is { } position)
-                    _sceneService.SetCameraPosition(position.X, position.Y, position.Z);
-            }
+            // Publish the committed revision to the viewport first. A failing observer
+            // is reported after every queued observer has had a chance to update.
+            DocumentRevision++;
+            notifications.PublishFirst(FileReplaced, DocumentRevision);
+            notifications.Complete();
         }
 
         private static float ReadCameraCoordinate(JsonElement camera, string name)
@@ -253,6 +255,7 @@ namespace FrameWebforCS.providers
                 },
                 ["node"] = InputNodesService.Instance.getNodeJson(),
                 ["member"] = InputMembersService.Instance.getMemberJson(),
+                ["shell"] = InputPanelService.Instance.getPanelJson(),
                 ["rigid"] = InputRigidZoneService.Instance.getRigidJson(),
                 ["element"] = InputElementsService.Instance.getElementJson(),
                 ["fix_node"] = InputFixNodeService.Instance.getFixNodeJson(),

@@ -14,6 +14,11 @@ namespace FrameWebforCS.components.input
 {
     public partial class InputMembersComponent : UserControl
     {
+        internal event Action<string, int, string>? GridSelectionChanged;
+        internal event Action<string>? ActiveMemberDisplayModeChanged;
+        internal string ActiveMemberDisplayMode =>
+            ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2) ? "rigid" : "member";
+        private bool _syncingSelection;
         private InputDataService _input = InputDataService.Instance;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet1;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet2;
@@ -46,6 +51,18 @@ namespace FrameWebforCS.components.input
             fpSpread1_Sheet2.DataSource = InputRigidZoneService.Instance.Rows;
 
             SetSheet2();
+
+            fpSpread1.EnterCell += OnEnterCell;
+            fpSpread1.ActiveSheetChanged += OnActiveSheetChanged;
+            HandleCreated += OnDisplayActivated;
+            VisibleChanged += OnDisplayActivated;
+            Disposed += (_, _) =>
+            {
+                fpSpread1.EnterCell -= OnEnterCell;
+                fpSpread1.ActiveSheetChanged -= OnActiveSheetChanged;
+                HandleCreated -= OnDisplayActivated;
+                VisibleChanged -= OnDisplayActivated;
+            };
 
         }
 
@@ -194,6 +211,46 @@ namespace FrameWebforCS.components.input
         public void setActiveSheet(int index)
         {
             this.fpSpread1.ActiveSheetIndex = index;　
+        }
+
+        private void OnActiveSheetChanged(object? sender, EventArgs e) =>
+            ActiveMemberDisplayModeChanged?.Invoke(ActiveMemberDisplayMode);
+
+        private void OnDisplayActivated(object? sender, EventArgs e)
+        {
+            if (Visible && !IsDisposed)
+                ActiveMemberDisplayModeChanged?.Invoke(ActiveMemberDisplayMode);
+        }
+
+        private void OnEnterCell(object? sender, EnterCellEventArgs e)
+        {
+            if (_syncingSelection || e.Row < 0 || e.Column < 0) return;
+            var sheet = fpSpread1.ActiveSheet;
+            string kind = ReferenceEquals(sheet, fpSpread1_Sheet2) ? "rigid_zone" : "members";
+            string axis = kind == "rigid_zone" ? e.Column switch
+            {
+                3 => "i", 4 => "j", _ => ""
+            } : "";
+            // JS InputMembersComponent.selectEnd uses 1-based row identity; the
+            // rigid zone editor is a second C# sheet under the same component.
+            GridSelectionChanged?.Invoke(kind, e.Row + 1, axis);
+        }
+
+        internal bool SelectGridRow(string kind, int row, string? axis = null)
+        {
+            if (IsDisposed || row < 1) return false;
+            var sheet = kind == "rigid_zone" ? fpSpread1_Sheet2 :
+                kind == "members" ? fpSpread1_Sheet1 : null;
+            if (sheet == null || row > sheet.RowCount) return false;
+            int column = kind == "rigid_zone" ? axis == "j" ? 4 : 3 : 0;
+            _syncingSelection = true;
+            try
+            {
+                fpSpread1.ActiveSheetIndex = ReferenceEquals(sheet, fpSpread1_Sheet2) ? 1 : 0;
+                sheet.SetActiveCell(row - 1, column);
+            }
+            finally { _syncingSelection = false; }
+            return true;
         }
 
     }

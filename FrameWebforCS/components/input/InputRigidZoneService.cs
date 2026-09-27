@@ -1,3 +1,4 @@
+using FrameWebforCS.providers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,7 +27,7 @@ namespace FrameWebforCS.components.input
 
         public void NotifyMemberChanged() => Changed(nameof(E));
 
-        private void Changed(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        private void Changed(string name) => DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(name));
     }
 
     internal class InputRigidZoneService
@@ -37,6 +38,11 @@ namespace FrameWebforCS.components.input
 
         private HashSet<int> _activeRows = new();
         public BindingList<clsRigit> Rows { get; } = new();
+        internal event EventHandler? Changed;
+
+        internal IReadOnlyList<(int Row, float ILength, float JLength)> GetDisplaySnapshot() =>
+            _activeRows.OrderBy(row => row).Select(row =>
+                (row, Rows[row - 1].Ilength ?? 0, Rows[row - 1].Jlength ?? 0)).ToArray();
 
         private InputRigidZoneService()
         {
@@ -53,6 +59,11 @@ namespace FrameWebforCS.components.input
         public void clear() => ReplaceRows(new Dictionary<int, (float? ILength, float? JLength, int? Material)>());
 
         public void setRigidJson(JsonElement jsonData)
+        {
+            ApplyRigid(ParseRigidJson(jsonData));
+        }
+
+        internal static Dictionary<int, (float? ILength, float? JLength, int? Material)> ParseRigidJson(JsonElement jsonData)
         {
             var next = new Dictionary<int, (float? ILength, float? JLength, int? Material)>();
             if (jsonData.TryGetProperty("rigid", out JsonElement rigidJson))
@@ -73,8 +84,11 @@ namespace FrameWebforCS.components.input
                         ReadRigidMaterial(entry)));
                 }
             }
-            ReplaceRows(next);
+            return next;
         }
+
+        internal void ApplyRigid(Dictionary<int, (float? ILength, float? JLength, int? Material)> prepared) =>
+            ReplaceRows(prepared);
 
         public List<object> getRigidJson()
         {
@@ -137,8 +151,9 @@ namespace FrameWebforCS.components.input
             finally
             {
                 Rows.RaiseListChangedEvents = true;
-                Rows.ResetBindings();
+                DocumentReplacementNotifications.Defer(() => Rows.ResetBindings());
             }
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         private void Rows_ListChanged(object? sender, ListChangedEventArgs e)
@@ -150,6 +165,7 @@ namespace FrameWebforCS.components.input
                 _activeRows.Remove(row);
             else
                 _activeRows.Add(row);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         private void Members_ListChanged(object? sender, ListChangedEventArgs e)
@@ -157,7 +173,7 @@ namespace FrameWebforCS.components.input
             if (e.ListChangedType == ListChangedType.ItemChanged && e.NewIndex >= 0)
                 Rows[e.NewIndex].NotifyMemberChanged();
             else if (e.ListChangedType == ListChangedType.Reset)
-                Rows.ResetBindings();
+                DocumentReplacementNotifications.Defer(() => Rows.ResetBindings());
         }
     }
 }

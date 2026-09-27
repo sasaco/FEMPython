@@ -18,6 +18,8 @@ namespace FrameWebforCS.components.result
         public ResultReacComponent()
         {
             InitializeComponent();
+            fpSpread1.ActiveSheetChanged += (_, _) => PublishCurrentPage();
+            VisibleChanged += (_, _) => { if (Visible) PublishCurrentPage(); };
             fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
 
             _input.Changed += OnResultsChanged;
@@ -31,6 +33,15 @@ namespace FrameWebforCS.components.result
         {
             if (fpSpread1.Sheets.Count > 0 && index >= 0 && index < fpSpread1.Sheets.Count)
                 fpSpread1.ActiveSheetIndex = index;
+            PublishCurrentPage();
+        }
+
+        private void PublishCurrentPage()
+        {
+            int index = fpSpread1.ActiveSheetIndex;
+            var cases = _input.getReac();
+            if (Visible && index >= 0 && index < cases.Count)
+                FrameWebforCS.three.ThreeResultsService.PublishPage("reac", cases.Keys.ElementAt(index));
         }
 
         private void OnResultsChanged(object? sender, EventArgs e)

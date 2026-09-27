@@ -7,6 +7,8 @@ using System.Text.Json;
 
 namespace FrameWebforCS.components.input
 {
+    internal readonly record struct DisplayMember(int Ni, int Nj, int Element, float Cg);
+
     internal class clsMember : INotifyPropertyChanged
     {
         public string? ni = null;
@@ -24,7 +26,7 @@ namespace FrameWebforCS.components.input
         public bool IsEmpty => string.IsNullOrWhiteSpace(ni) && string.IsNullOrWhiteSpace(nj)
             && string.IsNullOrWhiteSpace(e) && cg == null;
 
-        private void Changed(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        private void Changed(string name) => DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(name));
     }
 
     internal class InputMembersService
@@ -35,6 +37,7 @@ namespace FrameWebforCS.components.input
 
         private Dictionary<string, clsMember> _member = new();
         public BindingList<clsMember> Members { get; } = new();
+        internal event Action<int>? MemberEdited;
 
         private InputMembersService()
         {
@@ -51,9 +54,17 @@ namespace FrameWebforCS.components.input
 
         public void setMemberJson(JsonElement jsonData)
         {
-            if (!jsonData.TryGetProperty("member", out JsonElement memberJson) ||
-                memberJson.ValueKind != JsonValueKind.Object)
-                return;
+            ApplyMembers(ParseMemberJson(jsonData));
+        }
+
+        internal static Dictionary<string, clsMember> ParseMemberJson(JsonElement jsonData)
+        {
+            if (jsonData.ValueKind != JsonValueKind.Object)
+                throw new JsonException("Input data must be an object.");
+            if (!jsonData.TryGetProperty("member", out JsonElement memberJson))
+                return new Dictionary<string, clsMember>();
+            if (memberJson.ValueKind != JsonValueKind.Object)
+                throw new JsonException("member must be an object.");
 
             var next = new Dictionary<string, clsMember>();
             var seenIds = new HashSet<string>();
@@ -65,11 +76,39 @@ namespace FrameWebforCS.components.input
                 string id = row.ToString(CultureInfo.InvariantCulture);
                 if (!seenIds.Add(id))
                     throw new JsonException($"Duplicate member: {entry.Name}");
+                if (entry.Value.ValueKind != JsonValueKind.Object)
+                    throw new JsonException($"Invalid member: {entry.Name}");
                 clsMember? member = DataHelperModule.JsonToClass<clsMember>(entry.Value);
                 if (member != null && !member.IsEmpty)
                     next.Add(id, member);
             }
-            ReplaceRows(next);
+            return next;
+        }
+
+        internal void ApplyMembers(Dictionary<string, clsMember> members) => ReplaceRows(members);
+
+        internal IReadOnlyDictionary<int, DisplayMember> GetDisplayMembers()
+        {
+            var result = new Dictionary<int, DisplayMember>();
+            foreach (var (id, member) in _member)
+                if (ToDisplayMember(member) is { } display)
+                    result.Add(int.Parse(id, CultureInfo.InvariantCulture), display);
+            return result;
+        }
+
+        internal DisplayMember? GetDisplayMember(int id) =>
+            _member.TryGetValue(id.ToString(CultureInfo.InvariantCulture), out var member)
+                ? ToDisplayMember(member) : null;
+
+        private static DisplayMember? ToDisplayMember(clsMember member)
+        {
+            // JS getMemberJson(0) projects blank endpoints and cg to zero. A member
+            // with no valid positive endpoint cannot produce geometry, so omit it here.
+            if (!int.TryParse(member.Ni, NumberStyles.None, CultureInfo.InvariantCulture, out int ni) || ni <= 0 ||
+                !int.TryParse(member.Nj, NumberStyles.None, CultureInfo.InvariantCulture, out int nj) || nj <= 0)
+                return null;
+            int.TryParse(member.E, NumberStyles.None, CultureInfo.InvariantCulture, out int element);
+            return new DisplayMember(ni, nj, element, member.Cg ?? 0);
         }
 
         public Dictionary<string, object> getMemberJson()
@@ -91,6 +130,7 @@ namespace FrameWebforCS.components.input
                 _member.Remove(id);
             else
                 _member[id] = member;
+            DocumentReplacementNotifications.Publish(MemberEdited, e.NewIndex + 1);
         }
 
         private void ReplaceRows(Dictionary<string, clsMember> next)
@@ -108,7 +148,7 @@ namespace FrameWebforCS.components.input
             finally
             {
                 Members.RaiseListChangedEvents = true;
-                Members.ResetBindings();
+                DocumentReplacementNotifications.Defer(() => Members.ResetBindings());
             }
         }
     }

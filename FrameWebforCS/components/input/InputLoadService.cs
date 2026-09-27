@@ -45,6 +45,17 @@ namespace FrameWebforCS.components.input
         public List<clsLoadMember>? load_member = null;
     }
 
+    // Display values are detached from the editable rows and save JSON. In particular,
+    // JS InputLoadService.getNodeLoadJson(0) projects a negative node number as an
+    // imposed displacement and divides its six components by 1000.
+    internal sealed record LoadNodeDisplay(int Row, int NodeId, bool IsDisplacement,
+        float Tx, float Ty, float Tz, float Rx, float Ry, float Rz);
+    internal sealed record LoadMemberDisplay(int Row, int MemberStart, int MemberEnd,
+        string Direction, int Mark, float L1, float L2, float P1, float P2);
+    internal sealed record LoadCaseDisplay(string Symbol,
+        IReadOnlyList<LoadNodeDisplay> NodeLoads, IReadOnlyList<LoadMemberDisplay> MemberLoads,
+        float? LLPitch = null);
+
     internal sealed class clsLoadNameRow : INotifyPropertyChanged
     {
         public clsLoad Value { get; set; } = new();
@@ -53,7 +64,7 @@ namespace FrameWebforCS.components.input
             Value.element == null && Value.joint == null && string.IsNullOrWhiteSpace(Value.symbol) &&
             Value.LL_pitch == null && string.IsNullOrWhiteSpace(Value.name);
         private void Changed(string property) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(property));
         public int? fix_node { get => Value.fix_node; set { Value.fix_node = value; Changed(nameof(fix_node)); } }
         public int? fix_member { get => Value.fix_member; set { Value.fix_member = value; Changed(nameof(fix_member)); } }
         public int? element { get => Value.element; set { Value.element = value; Changed(nameof(element)); } }
@@ -82,7 +93,7 @@ namespace FrameWebforCS.components.input
         private clsLoadMember EnsureMember() => Member ??= new clsLoadMember { row = Row };
         private clsLoadNode EnsureNode() => Node ??= new clsLoadNode { row = Row };
         private void Changed(string property) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+            DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(property));
         public string? m1 { get => Member?.m1; set { EnsureMember().m1 = value; Changed(nameof(m1)); } }
         public string? m2 { get => Member?.m2; set { EnsureMember().m2 = value; Changed(nameof(m2)); } }
         public string? direction { get => Member?.direction; set { EnsureMember().direction = value; Changed(nameof(direction)); } }
@@ -116,6 +127,8 @@ namespace FrameWebforCS.components.input
         public BindingList<clsLoadNameRow> LoadNames { get; } = new();
         public BindingList<clsLoadIntensityRow> IntensityRows { get; } = new();
         public event EventHandler? CasesChanged;
+        internal event Action? LoadsEdited;
+        internal event Action<string>? SelectedCaseChanged;
         public string SelectedCaseId => _selectedCaseId;
         public IEnumerable<string> CaseIds => _load.Keys;
         internal int MaximumEffectiveCaseId
@@ -166,8 +179,31 @@ namespace FrameWebforCS.components.input
         /// <param name="jsonData"></param>
         public void setLoadJson(JsonElement jsonData)
         {
+            ApplyLoads(ParseLoadJson(jsonData));
+        }
+
+        // Parse before mutating live rows so InputDataService can stage the whole file.
+        internal static Dictionary<string, clsLoad> ParseLoadJson(JsonElement jsonData)
+        {
+            if (jsonData.ValueKind != JsonValueKind.Object)
+                throw new JsonException("Input root must be an object.");
+            // JS loadInputData clears the previous load before setLoadJson. An omitted
+            // `load` section therefore means an empty committed load set on file open.
+            if (!jsonData.TryGetProperty("load", out JsonElement loadJson))
+                return new Dictionary<string, clsLoad>();
+            if (loadJson.ValueKind != JsonValueKind.Object)
+                throw new JsonException("load must be an object.");
+            foreach (JsonProperty caseJson in loadJson.EnumerateObject())
+            {
+                if (caseJson.Value.ValueKind != JsonValueKind.Object)
+                    throw new JsonException($"Invalid load case: {caseJson.Name}");
+                foreach (string rowName in new[] { "load_node", "load_member" })
+                    if (caseJson.Value.TryGetProperty(rowName, out var rows) &&
+                        rows.ValueKind is not (JsonValueKind.Array or JsonValueKind.Null))
+                        throw new JsonException($"Invalid {rowName} in load case {caseJson.Name}");
+            }
             var load = DataHelperModule.JsonToDict(jsonData, "load", ReadLoad);
-            if (load == null) return;
+            if (load == null) throw new JsonException("Invalid load section.");
             var normalized = new Dictionary<string, clsLoad>();
             foreach (var (id, item) in load)
             {
@@ -179,8 +215,10 @@ namespace FrameWebforCS.components.input
                 if (!normalized.TryAdd(number.ToString(CultureInfo.InvariantCulture), item))
                     throw new JsonException($"Duplicate load case ID: {id}");
             }
-            ReplaceLoad(normalized);
+            return normalized;
         }
+
+        internal void ApplyLoads(Dictionary<string, clsLoad> prepared) => ReplaceLoad(prepared);
 
         /// <summary>
         /// ファイルに保存するとき
@@ -196,6 +234,50 @@ namespace FrameWebforCS.components.input
             return load;
         }
 
+        internal IReadOnlyDictionary<string, LoadCaseDisplay> GetDisplaySnapshot()
+        {
+            var result = new Dictionary<string, LoadCaseDisplay>();
+            foreach (var (id, item) in _load)
+            {
+                var nodeLoads = new List<LoadNodeDisplay>();
+                foreach (var row in item.load_node ?? new List<clsLoadNode>())
+                {
+                    if (!int.TryParse(row.n, NumberStyles.Integer, CultureInfo.InvariantCulture,
+                            out int signedId) || signedId is 0 or int.MinValue) continue;
+                    if (row.tx == null && row.ty == null && row.tz == null &&
+                        row.rx == null && row.ry == null && row.rz == null) continue;
+                    bool displacement = signedId < 0;
+                    float divisor = displacement ? 1000f : 1f;
+                    nodeLoads.Add(new LoadNodeDisplay(row.row, Math.Abs(signedId), displacement,
+                        (row.tx ?? 0) / divisor, (row.ty ?? 0) / divisor,
+                        (row.tz ?? 0) / divisor, (row.rx ?? 0) / divisor,
+                        (row.ry ?? 0) / divisor, (row.rz ?? 0) / divisor));
+                }
+                var memberLoads = new List<LoadMemberDisplay>();
+                foreach (var row in item.load_member ?? new List<clsLoadMember>())
+                {
+                    if (!int.TryParse(row.m1, NumberStyles.Integer, CultureInfo.InvariantCulture,
+                            out int start)) start = 0;
+                    if (!int.TryParse(row.m2, NumberStyles.Integer, CultureInfo.InvariantCulture,
+                            out int end)) end = 0;
+                    if (start == 0) start = end;
+                    if (end == 0) end = start;
+                    if (start == 0 || !int.TryParse(row.mark, NumberStyles.Integer,
+                            CultureInfo.InvariantCulture, out int mark)) continue;
+                    if (!float.TryParse(row.L1, NumberStyles.Float, CultureInfo.InvariantCulture,
+                            out float l1)) l1 = 0;
+                    if (!float.TryParse(row.L2, NumberStyles.Float, CultureInfo.InvariantCulture,
+                            out float l2)) l2 = 0;
+                    memberLoads.Add(new LoadMemberDisplay(row.row, start, end,
+                        row.direction?.Trim().ToLowerInvariant() ?? "", mark, l1, l2,
+                        row.P1 ?? 0, row.P2 ?? 0));
+                }
+                result.Add(id, new LoadCaseDisplay(item.symbol ?? "", nodeLoads, memberLoads,
+                    item.LL_pitch));
+            }
+            return result;
+        }
+
         public void SelectCase(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -203,6 +285,7 @@ namespace FrameWebforCS.components.input
             if (_selectedCaseId == id) return;
             _selectedCaseId = id;
             ReplaceIntensityRows();
+            DocumentReplacementNotifications.Publish(SelectedCaseChanged, id);
         }
 
         private static void ValidateRows<T>(List<T>? rows, string id) where T : class
@@ -274,7 +357,8 @@ namespace FrameWebforCS.components.input
                 _load.Remove(id);
             else
                 _load[id] = row.Value;
-            CasesChanged?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(CasesChanged, this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(LoadsEdited);
         }
 
         private void IntensityRows_ListChanged(object? sender, ListChangedEventArgs change)
@@ -299,7 +383,8 @@ namespace FrameWebforCS.components.input
             else
                 _visibleIntensityRows.Remove(row.Row);
             if (!HasData(load)) _load.Remove(_selectedCaseId);
-            CasesChanged?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(CasesChanged, this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(LoadsEdited);
         }
 
         private static void UpdateNestedRow<T>(List<T> list, int row, T? value,
@@ -318,6 +403,7 @@ namespace FrameWebforCS.components.input
 
         private void ReplaceLoad(Dictionary<string, clsLoad> next)
         {
+            string previousCaseId = _selectedCaseId;
             LoadNames.RaiseListChangedEvents = false;
             try
             {
@@ -327,6 +413,11 @@ namespace FrameWebforCS.components.input
                         id == number.ToString(CultureInfo.InvariantCulture))
                         LoadNames[number - 1] = new clsLoadNameRow();
                 _load = next;
+                // JS fileload clears load state before changeCase(1). Keep the C#
+                // selected case inside the replacement (or editable case 1 when empty)
+                // so the coordinator does not restore a stale, now missing case.
+                if (!_load.ContainsKey(_selectedCaseId))
+                    _selectedCaseId = _load.Keys.FirstOrDefault() ?? "1";
                 foreach (var (id, item) in _load)
                     if (int.TryParse(id, NumberStyles.None, CultureInfo.InvariantCulture, out int number) &&
                         number >= 1 && number <= MaxNodeId &&
@@ -336,10 +427,13 @@ namespace FrameWebforCS.components.input
             finally
             {
                 LoadNames.RaiseListChangedEvents = true;
-                LoadNames.ResetBindings();
+                DocumentReplacementNotifications.Defer(() => LoadNames.ResetBindings());
             }
             ReplaceIntensityRows();
-            CasesChanged?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(CasesChanged, this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(LoadsEdited);
+            if (previousCaseId != _selectedCaseId)
+                DocumentReplacementNotifications.Publish(SelectedCaseChanged, _selectedCaseId);
         }
 
         private void ReplaceIntensityRows()
@@ -367,7 +461,7 @@ namespace FrameWebforCS.components.input
             finally
             {
                 IntensityRows.RaiseListChangedEvents = true;
-                IntensityRows.ResetBindings();
+                DocumentReplacementNotifications.Defer(() => IntensityRows.ResetBindings());
             }
         }
 

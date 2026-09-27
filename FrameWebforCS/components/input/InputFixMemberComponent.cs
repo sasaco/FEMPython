@@ -13,6 +13,8 @@ namespace FrameWebforCS.components.input
 {
     public partial class InputFixMemberComponent : UserControl
     {
+        internal event Action<int, string>? GridSelectionChanged;
+        private bool _syncingSelection;
         private InputDataService _input = InputDataService.Instance;
         private const int type_count = 6;
 
@@ -46,6 +48,50 @@ namespace FrameWebforCS.components.input
 
             this.Width = (int)w;
 
+            fpSpread1.EnterCell += OnEnterCell;
+            fpSpread1.ActiveSheetChanged += OnActiveSheetChanged;
+            Disposed += (_, _) =>
+            {
+                fpSpread1.EnterCell -= OnEnterCell;
+                fpSpread1.ActiveSheetChanged -= OnActiveSheetChanged;
+            };
+            InputFixMemberService.Instance.SelectCase(fpSpread1.ActiveSheet.SheetName);
+
+        }
+
+        private void OnActiveSheetChanged(object? sender, EventArgs e) =>
+            InputFixMemberService.Instance.SelectCase(fpSpread1.ActiveSheet.SheetName);
+
+        private void OnEnterCell(object? sender, EnterCellEventArgs e)
+        {
+            if (_syncingSelection || e.Row < 0 || e.Column < 0) return;
+            var sheet = fpSpread1.ActiveSheet;
+            string axis = sheet.Columns[e.Column].DataField?.ToLowerInvariant() ?? "";
+            // JS InputFixMemberComponent.selectEnd passes the 1-based row and field key.
+            GridSelectionChanged?.Invoke(e.Row + 1, axis);
+        }
+
+        internal bool SelectGridRow(int row, string? axis = null, string? caseId = null)
+        {
+            if (IsDisposed || row < 1) return false;
+            int sheetIndex = caseId == null ? fpSpread1.ActiveSheetIndex :
+                fpSpread1.Sheets.Cast<SheetView>().ToList().FindIndex(s => s.SheetName == caseId);
+            if (sheetIndex < 0) return false;
+            var sheet = fpSpread1.Sheets[sheetIndex];
+            if (row > sheet.RowCount) return false;
+            int column = 0;
+            if (axis != null)
+                for (int i = 0; i < sheet.ColumnCount; i++)
+                    if (string.Equals(sheet.Columns[i].DataField, axis,
+                            StringComparison.OrdinalIgnoreCase)) { column = i; break; }
+            _syncingSelection = true;
+            try
+            {
+                fpSpread1.ActiveSheetIndex = sheetIndex;
+                sheet.SetActiveCell(row - 1, column);
+            }
+            finally { _syncingSelection = false; }
+            return true;
         }
 
         private void setColumn(FarPoint.Win.Spread.SheetView fpSpread1_Sheet1)

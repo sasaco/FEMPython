@@ -3,10 +3,6 @@
     "PythonNetDebugProbe": {
       "commandName": "Project",
       "debugEngines": "managed-dotnet,native"
-    },
-    "PythonNetDebugProbe Python native test": {
-      "commandName": "Project",
-      "debugEngines": "managed-dotnet,native,{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}"
     }
   }
 }

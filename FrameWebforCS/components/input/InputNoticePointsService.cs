@@ -14,7 +14,7 @@ namespace FrameWebforCS.components.input
         private HashSet<int>? _enteredPoints;
 
         public event PropertyChangedEventHandler? PropertyChanged;
-        public string? M { get => m; set { m = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(M))); } }
+        public string? M { get => m; set { m = value; DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(nameof(M))); } }
         public float? P1 { get => PointAt(0); set => SetPoint(0, value, nameof(P1)); }
         public float? P2 { get => PointAt(1); set => SetPoint(1, value, nameof(P2)); }
         public float? P3 { get => PointAt(2); set => SetPoint(2, value, nameof(P3)); }
@@ -62,7 +62,7 @@ namespace FrameWebforCS.components.input
                     Points.RemoveAt(Points.Count - 1);
                 if (Points.Count == 0) Points = null;
             }
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(name));
         }
     }
 
@@ -74,6 +74,12 @@ namespace FrameWebforCS.components.input
 
         private Dictionary<int, clsNoticePoints> _noticePoints = new();
         public BindingList<clsNoticePoints> NoticePoints { get; } = new();
+        internal event EventHandler? Changed;
+
+        internal IReadOnlyList<(int Row, string? Member, float[] Points)> GetDisplaySnapshot() =>
+            _noticePoints.OrderBy(entry => entry.Key)
+                .Select(entry => (entry.Key, entry.Value.m, entry.Value.Points?.ToArray() ?? Array.Empty<float>()))
+                .ToArray();
 
         private InputNoticePointsService()
         {
@@ -89,17 +95,43 @@ namespace FrameWebforCS.components.input
 
         public void setNoticePointsJson(JsonElement jsonData)
         {
-            if (!jsonData.TryGetProperty("notice_points", out JsonElement json)) return;
+            var loaded = ParseNoticePointsJson(jsonData);
+            if (loaded != null) ApplyNoticePoints(loaded);
+        }
+
+        internal static Dictionary<int, clsNoticePoints>? ParseNoticePointsJson(JsonElement jsonData)
+        {
+            if (!jsonData.TryGetProperty("notice_points", out JsonElement json)) return null;
+            if (json.ValueKind != JsonValueKind.Array)
+                throw new JsonException("notice_points must be an array.");
+            foreach (var row in json.EnumerateArray())
+            {
+                if (row.ValueKind != JsonValueKind.Object)
+                    throw new JsonException("notice_points row must be an object.");
+                if (row.TryGetProperty("Points", out var points))
+                {
+                    if (points.ValueKind != JsonValueKind.Array)
+                        throw new JsonException("notice_points Points must be an array.");
+                    foreach (var point in points.EnumerateArray())
+                        if (point.ValueKind != JsonValueKind.Number ||
+                            !point.TryGetSingle(out float value) || !float.IsFinite(value))
+                            throw new JsonException("Invalid notice_points point.");
+                }
+            }
             var loaded = DataHelperModule.JsonToList<clsNoticePoints>(json);
-            if (loaded == null) return;
+            if (loaded == null || loaded.Count != json.GetArrayLength())
+                throw new JsonException("Invalid notice_points row.");
             var next = new Dictionary<int, clsNoticePoints>();
             foreach (var value in loaded)
             {
                 if (value.row < 1 || value.row > MaxNodeId || !next.TryAdd(value.row, value))
                     throw new JsonException($"Invalid notice_points row: {value.row}");
             }
-            ReplaceRows(next);
+            return next;
         }
+
+        internal void ApplyNoticePoints(Dictionary<int, clsNoticePoints>? prepared) =>
+            ReplaceRows(prepared ?? new Dictionary<int, clsNoticePoints>());
 
         public List<Dictionary<string, object?>> getNoticePointsJson()
         {
@@ -119,6 +151,7 @@ namespace FrameWebforCS.components.input
             value.row = e.NewIndex + 1;
             if (value.IsEmpty) _noticePoints.Remove(value.row);
             else _noticePoints[value.row] = value;
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         private void ReplaceRows(Dictionary<int, clsNoticePoints> next)
@@ -132,7 +165,8 @@ namespace FrameWebforCS.components.input
                     NoticePoints[row - 1] = value;
                 _noticePoints = next;
             }
-            finally { NoticePoints.RaiseListChangedEvents = true; NoticePoints.ResetBindings(); }
+            finally { NoticePoints.RaiseListChangedEvents = true; DocumentReplacementNotifications.Defer(() => NoticePoints.ResetBindings()); }
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
     }
 }

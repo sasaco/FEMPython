@@ -1,4 +1,4 @@
-﻿using FrameWebforCS.components.input;
+using FrameWebforCS.components.input;
 using FrameWebforCS.providers;
 using System;
 using System.Collections.Generic;
@@ -50,7 +50,7 @@ namespace FrameWebforCS.components.result
         public void clear()
         {
             this._fsec = new Dictionary<string, Dictionary<string, Dictionary<string, clsFsec>>>();
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
         public Dictionary<string, Dictionary<string, Dictionary<string, clsFsec>>> getFsec()
         {
@@ -64,6 +64,13 @@ namespace FrameWebforCS.components.result
         public void setFsecJson(JsonElement jsonData)
         {
             if (!jsonData.TryGetProperty("result", out JsonElement results)) return;
+            ApplyFsec(ParseFsecJson(jsonData));
+        }
+
+        internal static Dictionary<string, Dictionary<string, Dictionary<string, clsFsec>>> ParseFsecJson(JsonElement jsonData)
+        {
+            if (!jsonData.TryGetProperty("result", out JsonElement results))
+                return new();
             if (results.ValueKind != JsonValueKind.Object)
                 throw new JsonException("result must be a JSON object.");
 
@@ -112,8 +119,13 @@ namespace FrameWebforCS.components.result
                 if (!candidate.TryAdd(result.Name, parsedMembers))
                     throw new JsonException($"Duplicate result case '{result.Name}'.");
             }
+            return candidate;
+        }
+
+        internal void ApplyFsec(Dictionary<string, Dictionary<string, Dictionary<string, clsFsec>>> candidate)
+        {
             _fsec = candidate;
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         private static double? ReadComponent(JsonElement source, string name)

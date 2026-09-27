@@ -1,4 +1,5 @@
-﻿using System;
+using FrameWebforCS.providers;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -35,7 +36,7 @@ namespace FrameWebforCS.components.input
             if (field == value)
                 return;
             field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(name));
         }
     }
 
@@ -140,7 +141,7 @@ namespace FrameWebforCS.components.input
             else
                 _node[id] = node;
 
-            NodeEdited?.Invoke(e.NewIndex + 1);
+            DocumentReplacementNotifications.Publish(NodeEdited, e.NewIndex + 1);
 
         }
 
@@ -159,7 +160,7 @@ namespace FrameWebforCS.components.input
             finally
             {
                 Nodes.RaiseListChangedEvents = true;
-                Nodes.ResetBindings();
+                DocumentReplacementNotifications.Defer(() => Nodes.ResetBindings());
             }
         }
     }

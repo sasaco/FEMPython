@@ -1,3 +1,4 @@
+using FrameWebforCS.providers;
 using FrameWebforCS.components.input;
 using System.Collections.Immutable;
 using System.Globalization;
@@ -42,7 +43,7 @@ internal sealed class ResultCombineFsecCoordinator
             _snapshot = null;
             _error = null;
         }
-        Changed?.Invoke(this, EventArgs.Empty);
+        DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
     }
 
     public void CompleteLoad(int dimension)
@@ -70,7 +71,7 @@ internal sealed class ResultCombineFsecCoordinator
             _hasCompletedLoad = false;
             _error = null;
         }
-        Changed?.Invoke(this, EventArgs.Empty);
+        DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
     }
 
     public void Refresh() => RefreshCore(allowFromInvalid: false);
@@ -96,7 +97,7 @@ internal sealed class ResultCombineFsecCoordinator
             _state = CombineFsecState.Invalid;
             _error = null;
         }
-        Changed?.Invoke(this, EventArgs.Empty);
+        DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
 
         ResultCombineFsecSnapshot candidate;
         try { candidate = Capture(revision, dimension); }
@@ -107,7 +108,7 @@ internal sealed class ResultCombineFsecCoordinator
                 if (_revision != revision || _state == CombineFsecState.Loading) return;
                 _error = exception.Message;
             }
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
             return;
         }
         lock (_sync)
@@ -116,7 +117,7 @@ internal sealed class ResultCombineFsecCoordinator
             _snapshot = candidate;
             _state = CombineFsecState.Valid;
         }
-        Changed?.Invoke(this, EventArgs.Empty);
+        DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
     }
 
     private static ResultCombineFsecSnapshot Capture(long revision, int dimension)

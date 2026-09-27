@@ -10,7 +10,7 @@ namespace FrameWebforCS.Tests;
 public sealed class ResultCombineDisgIntegrationTests
 {
     [Fact]
-    public void FileLoadPublishesOnlyCompleteResultAndFailedLoadsStayInvalidAfterEdits()
+    public void FileLoadPublishesOnlyCompleteResultAndRejectedReplacementRetainsPreviousResult()
     {
         var coordinator = ResultCombineDisgCoordinator.Instance;
         try
@@ -41,16 +41,21 @@ public sealed class ResultCombineDisgIntegrationTests
                 """);
             Assert.Equal(CombineDisgState.Valid, coordinator.State);
             Assert.NotNull(coordinator.Snapshot);
+            var previousSnapshot = coordinator.Snapshot;
 
             Assert.Throws<JsonException>(() => Open("""
                 {"dimension":2,"load":{"1":{"name":"bad"}},
                  "combine":{"1":{"row":1,"C1":8}},
                  "result":{"1":{"disg":{"1":{"dx":"invalid"}}}}}
                 """));
-            Assert.Equal(CombineDisgState.Invalid, coordinator.State);
-            Assert.Null(coordinator.Snapshot);
+            // The viewport replacement path now parses the entire file before BeginLoad.
+            // Rejecting B leaves the committed result, combine row, and derived snapshot A.
+            Assert.Equal(CombineDisgState.Valid, coordinator.State);
+            Assert.Same(previousSnapshot, coordinator.Snapshot);
+            Assert.Equal(6, InputCombineService.Instance.CombineRows[1].Coefficients[1]);
             InputCombineService.Instance.SetCombineCoefficient(1, 1, 9);
-            Assert.Equal(CombineDisgState.Invalid, coordinator.State);
+            Assert.Equal(CombineDisgState.Valid, coordinator.State);
+            Assert.NotNull(coordinator.Snapshot);
         }
         finally
         {

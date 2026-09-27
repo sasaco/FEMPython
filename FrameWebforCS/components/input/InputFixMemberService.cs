@@ -24,7 +24,7 @@ namespace FrameWebforCS.components.input
         public float? Tz { get => tz; set { tz = value; Changed(nameof(Tz)); } }
         public float? Tr { get => tr; set { tr = value; Changed(nameof(Tr)); } }
         public bool IsEmpty => string.IsNullOrWhiteSpace(m) && tx == null && ty == null && tz == null && tr == null;
-        private void Changed(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        private void Changed(string name) => DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(name));
     }
 
     internal class InputFixMemberService
@@ -36,6 +36,22 @@ namespace FrameWebforCS.components.input
 
         private Dictionary<string, List<clsFixMember>> _fixMember = new();
         private readonly Dictionary<string, BindingList<clsFixMember>> _sheets = new();
+        internal event EventHandler? Changed;
+        internal string SelectedCaseId { get; private set; } = "1";
+
+        internal void SelectCase(string caseId)
+        {
+            if (!_sheets.ContainsKey(caseId)) throw new ArgumentOutOfRangeException(nameof(caseId));
+            if (SelectedCaseId == caseId) return;
+            SelectedCaseId = caseId;
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
+        }
+
+        internal IReadOnlyList<clsFixMember> GetDisplaySnapshot(string caseId) =>
+            _fixMember.TryGetValue(caseId, out var rows)
+                ? rows.Select(value => new clsFixMember { row = value.row, m = value.m,
+                    tx = value.tx, ty = value.ty, tz = value.tz, tr = value.tr }).ToArray()
+                : Array.Empty<clsFixMember>();
 
         private InputFixMemberService()
         {
@@ -56,12 +72,45 @@ namespace FrameWebforCS.components.input
 
         public void setFixMemberJson(JsonElement jsonData)
         {
+            var loaded = ParseFixMemberJson(jsonData);
+            if (loaded != null) ApplyFixMember(loaded);
+        }
+
+        internal static Dictionary<string, List<clsFixMember>>? ParseFixMemberJson(JsonElement jsonData)
+        {
+            if (!jsonData.TryGetProperty("fix_member", out var source)) return null;
+            ValidateSource(source);
             var loaded = DataHelperModule.JsonToDict(jsonData, "fix_member",
                 static json => DataHelperModule.JsonToList<clsFixMember>(json));
-            if (loaded == null) return;
+            if (loaded == null) throw new JsonException("Invalid fix_member data.");
+            foreach (var sheet in source.EnumerateObject())
+                if (!loaded.TryGetValue(sheet.Name, out var rows) || rows.Count != sheet.Value.GetArrayLength())
+                    throw new JsonException($"Invalid fix_member sheet: {sheet.Name}");
             ValidateRows(loaded);
-            ReplaceRows(loaded);
+            return loaded;
         }
+
+        private static void ValidateSource(JsonElement source)
+        {
+            if (source.ValueKind != JsonValueKind.Object) throw new JsonException("fix_member must be an object.");
+            foreach (var sheet in source.EnumerateObject())
+            {
+                if (sheet.Value.ValueKind != JsonValueKind.Array) throw new JsonException("fix_member sheet must be an array.");
+                foreach (var row in sheet.Value.EnumerateArray())
+                {
+                    if (row.ValueKind != JsonValueKind.Object) throw new JsonException("fix_member row must be an object.");
+                    foreach (var field in row.EnumerateObject())
+                        if (field.Name is "tx" or "ty" or "tz" or "tr" &&
+                            field.Value.ValueKind != JsonValueKind.Null &&
+                            (field.Value.ValueKind != JsonValueKind.Number ||
+                             !field.Value.TryGetSingle(out float value) || !float.IsFinite(value)))
+                            throw new JsonException($"Invalid fix_member {field.Name}.");
+                }
+            }
+        }
+
+        internal void ApplyFixMember(Dictionary<string, List<clsFixMember>>? prepared) =>
+            ReplaceRows(prepared ?? new Dictionary<string, List<clsFixMember>>());
 
         public Dictionary<string, object> getFixMemberJson()
         {
@@ -100,6 +149,7 @@ namespace FrameWebforCS.components.input
             active.RemoveAll(item => item.row == value.row);
             if (!value.IsEmpty) active.Add(value);
             if (active.Count == 0) _fixMember.Remove(sheet);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         private void ReplaceRows(Dictionary<string, List<clsFixMember>> next)
@@ -114,9 +164,10 @@ namespace FrameWebforCS.components.input
                     if (next.TryGetValue(sheet, out var current))
                         foreach (var item in current) rows[item.row - 1] = item;
                 }
-                finally { rows.RaiseListChangedEvents = true; rows.ResetBindings(); }
+                finally { rows.RaiseListChangedEvents = true; DocumentReplacementNotifications.Defer(() => rows.ResetBindings()); }
             }
             _fixMember = next;
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
     }
 }

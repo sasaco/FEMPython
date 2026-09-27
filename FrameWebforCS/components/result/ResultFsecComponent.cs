@@ -23,7 +23,8 @@ namespace FrameWebforCS.components.result
             InitializeComponent();
             fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
 
-            fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
+            fpSpread1.ActiveSheetChanged += (_, _) => { MaterializeSelectedSheet(); PublishCurrentPage(); };
+            VisibleChanged += (_, _) => { if (Visible) PublishCurrentPage(); };
             _input.Changed += OnResultsChanged;
             Disposed += (_, _) => _input.Changed -= OnResultsChanged;
             HandleCreated += (_, _) => RefreshResults();
@@ -36,6 +37,17 @@ namespace FrameWebforCS.components.result
             if (fpSpread1.Sheets.Count > 0 && index >= 0 && index < fpSpread1.Sheets.Count)
                 fpSpread1.ActiveSheetIndex = index;
             MaterializeSelectedSheet();
+            PublishCurrentPage();
+        }
+
+        private void PublishCurrentPage()
+        {
+            int index = fpSpread1.ActiveSheetIndex;
+            var cases = _input.getFsec();
+            if (Visible && index >= 0 && index < cases.Count)
+                FrameWebforCS.three.ThreeResultsService.PublishPage("fsec", cases.Keys.ElementAt(index),
+                    FrameWebforCS.three.ThreeResultsService.DefaultSectionForceComponent(
+                        InputDataService.Instance.dimension));
         }
 
         private void OnResultsChanged(object? sender, EventArgs e)

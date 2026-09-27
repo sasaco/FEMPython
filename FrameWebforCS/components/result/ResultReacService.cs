@@ -1,4 +1,4 @@
-﻿using FrameWebforCS.providers;
+using FrameWebforCS.providers;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -40,7 +40,7 @@ namespace FrameWebforCS.components.result
         public void clear()
         {
             this._reac = new Dictionary<string, Dictionary<string, clsReac>>();
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
         public Dictionary<string, Dictionary<string, clsReac>> getReac()
         {
@@ -54,6 +54,13 @@ namespace FrameWebforCS.components.result
         public void setReacJson(JsonElement jsonData)
         {
             if (!jsonData.TryGetProperty("result", out JsonElement results)) return;
+            ApplyReac(ParseReacJson(jsonData));
+        }
+
+        internal static Dictionary<string, Dictionary<string, clsReac>> ParseReacJson(JsonElement jsonData)
+        {
+            if (!jsonData.TryGetProperty("result", out JsonElement results))
+                return new();
             if (results.ValueKind != JsonValueKind.Object)
                 throw new JsonException("result must be a JSON object.");
 
@@ -85,8 +92,13 @@ namespace FrameWebforCS.components.result
                 if (!candidate.TryAdd(result.Name, parsedNodes))
                     throw new JsonException($"Duplicate result case '{result.Name}'.");
             }
+            return candidate;
+        }
+
+        internal void ApplyReac(Dictionary<string, Dictionary<string, clsReac>> candidate)
+        {
             _reac = candidate;
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         private static double? ReadComponent(JsonElement source, string name)

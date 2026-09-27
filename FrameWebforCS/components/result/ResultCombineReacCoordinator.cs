@@ -1,3 +1,4 @@
+using FrameWebforCS.providers;
 using FrameWebforCS.components.input;
 using System;
 using System.Collections.Generic;
@@ -45,7 +46,7 @@ namespace FrameWebforCS.components.result
                 _snapshot = null;
                 _error = null;
             }
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         public void CompleteLoad(int dimension)
@@ -73,7 +74,7 @@ namespace FrameWebforCS.components.result
                 _hasCompletedLoad = false;
                 _error = null;
             }
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         public void Refresh() => RefreshCore(allowFromInvalid: false);
@@ -102,7 +103,7 @@ namespace FrameWebforCS.components.result
                 _state = CombineReacState.Invalid;
                 _error = null;
             }
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
             try
             {
                 candidate = Capture(targetRevision, dimension);
@@ -115,7 +116,7 @@ namespace FrameWebforCS.components.result
                     if (_revision != targetRevision || _state == CombineReacState.Loading) return;
                     _error = exception.Message;
                 }
-                Changed?.Invoke(this, EventArgs.Empty);
+                DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
                 return;
             }
             lock (_sync)
@@ -124,7 +125,7 @@ namespace FrameWebforCS.components.result
                 _snapshot = candidate;
                 _state = CombineReacState.Valid;
             }
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         private static ResultCombineReacSnapshot Capture(long revision, int dimension)

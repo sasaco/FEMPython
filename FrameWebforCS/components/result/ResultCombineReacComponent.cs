@@ -52,6 +52,8 @@ public partial class ResultCombineReacComponent : UserControl
 
         modeSelector.SelectedIndexChanged += (_, _) => MaterializeSelectedSheet();
         fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
+        // AppRoutingModule calls setActiveSheet before showing the floating form.
+        VisibleChanged += (_, _) => { if (Visible) MaterializeSelectedSheet(); };
         HandleCreated += (_, _) => RefreshFromCoordinator();
         HandleDestroyed += (_, _) =>
         {
@@ -263,6 +265,9 @@ public partial class ResultCombineReacComponent : UserControl
             }
         }
         _materializedSheet = sheetIndex;
+        if (Visible && _output != null && modeSelector.SelectedItem is ModeChoice selectedMode)
+            FrameWebforCS.three.ThreeResultsService.PublishPage(
+                "comb_reac", _output.Cases[sheetIndex].Id, selectedMode.Key);
     }
 
     private static string Format(double value) =>

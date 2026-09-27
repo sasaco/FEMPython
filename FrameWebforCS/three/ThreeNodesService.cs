@@ -29,6 +29,7 @@ internal sealed class ThreeNodesService : IDisposable
     private bool _nodeMode;
     private bool _disposed;
     private float _baseScale = 1;
+    private double _minDistance = double.PositiveInfinity;
 
     internal ThreeNodesService(Scene scene)
     {
@@ -54,6 +55,7 @@ internal sealed class ThreeNodesService : IDisposable
     internal int NodeCount => _ids.Count;
     internal int? SelectedNodeId { get; private set; }
     internal float BaseScale => _baseScale;
+    internal double MinDistance => _minDistance;
 
     internal void ReplaceAll(IReadOnlyDictionary<int, Vector3> nodes)
     {
@@ -70,7 +72,9 @@ internal sealed class ThreeNodesService : IDisposable
         _indexById.Clear();
         _ids.Clear();
         _positions.Clear();
-        _baseScale = GetBaseScale(nodes.Values);
+        var extrema = NodeDistanceExtrema.Find(nodes.Values.ToArray());
+        _minDistance = extrema.MinDistance;
+        _baseScale = GetBaseScale(extrema);
 
         foreach (var (id, position) in nodes)
         {
@@ -231,7 +235,9 @@ internal sealed class ThreeNodesService : IDisposable
 
     private void RefreshBaseScale()
     {
-        float nextScale = GetBaseScale(_positions);
+        var extrema = NodeDistanceExtrema.Find(_positions);
+        _minDistance = extrema.MinDistance;
+        float nextScale = GetBaseScale(extrema);
         if (nextScale == _baseScale)
         {
             if (SelectedNodeId.HasValue) UpdateSelectionPosition();
@@ -244,33 +250,15 @@ internal sealed class ThreeNodesService : IDisposable
         if (SelectedNodeId.HasValue) UpdateSelectionPosition();
     }
 
-    private static float GetBaseScale(IEnumerable<Vector3> positions)
+    private static float GetBaseScale(NodeDistanceExtrema extrema)
     {
         // Match JS setBaseScale(): ignore zero-distance pairs, then use
         // max(maxDistance / 500, minDistance / 50), or 1 without a distinct pair.
         // A single unordered pair has the same distances as JS's ordered double loop.
         // JS also updates center, sizeNode, and scene helpers; those consumers are not ported.
-        // TODO: retain exact extrema with a faster search before fully populated 100,000-node
-        // inputs are supported; this source-aligned pair scan is quadratic.
-        var points = positions as IList<Vector3> ?? positions.ToArray();
-        double minDistance = double.PositiveInfinity;
-        double maxDistance = 0;
-        for (int i = 0; i < points.Count; i++)
-        {
-            for (int j = i + 1; j < points.Count; j++)
-            {
-                double dx = (double)points[i].X - points[j].X;
-                double dy = (double)points[i].Y - points[j].Y;
-                double dz = (double)points[i].Z - points[j].Z;
-                double distance = Math.Sqrt(dx * dx + dy * dy + dz * dz);
-                if (distance == 0) continue;
-                minDistance = Math.Min(minDistance, distance);
-                maxDistance = Math.Max(maxDistance, distance);
-            }
-        }
-        return double.IsPositiveInfinity(minDistance)
+        return double.IsPositiveInfinity(extrema.MinDistance)
             ? 1
-            : (float)Math.Max(maxDistance / 500, minDistance / 50);
+            : (float)Math.Max(extrema.MaxDistance / 500, extrema.MinDistance / 50);
     }
 
     private static void Validate(int id, Vector3 position)

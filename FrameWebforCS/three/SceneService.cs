@@ -159,6 +159,51 @@ namespace SingleFormsDemo
 
         }
 
+        // The input document is not changed if camera application fails. Keep both
+        // reusable camera objects intact, since changeCamera can switch between them.
+        internal virtual void ApplyDocumentCamera((float X, float Y, float Z)? position)
+        {
+            var previousCamera = camera;
+            var previousControlCamera = controls?.camera;
+            bool previousNoRotate = controls?.NoRotate ?? false;
+            var perspective = Capture(PerspectiveCamera);
+            var orthographic = Capture(OrthographicCamera);
+            try
+            {
+                changeCamera();
+                if (position is { } value)
+                    SetCameraPosition(value.X, value.Y, value.Z);
+            }
+            catch
+            {
+                Restore(PerspectiveCamera, perspective);
+                Restore(OrthographicCamera, orthographic);
+                camera = previousCamera;
+                if (controls != null)
+                {
+                    controls.camera = previousControlCamera;
+                    controls.NoRotate = previousNoRotate;
+                }
+                throw;
+            }
+        }
+
+        private static (float X, float Y, float Z, float RX, float RY, float RZ,
+            float UX, float UY, float UZ) Capture(Camera source) =>
+            (source.Position.X, source.Position.Y, source.Position.Z,
+             source.Rotation.X, source.Rotation.Y, source.Rotation.Z,
+             source.Up.X, source.Up.Y, source.Up.Z);
+
+        private static void Restore(Camera target, (float X, float Y, float Z,
+            float RX, float RY, float RZ, float UX, float UY, float UZ) value)
+        {
+            target.Position.Set(value.X, value.Y, value.Z);
+            target.Rotation.X = value.RX;
+            target.Rotation.Y = value.RY;
+            target.Rotation.Z = value.RZ;
+            target.Up.Set(value.UX, value.UY, value.UZ);
+        }
+
         internal (float X, float Y, float Z) GetCameraPosition()
         {
             return (camera.Position.X, camera.Position.Y, camera.Position.Z);

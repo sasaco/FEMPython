@@ -32,7 +32,7 @@ namespace FrameWebforCS.components.input
         public bool IsEmpty => E == null && G == null && Xp == null && A == null && J == null &&
             Iy == null && Iz == null && string.IsNullOrWhiteSpace(n);
 
-        private void Changed(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        private void Changed(string name) => DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(name));
     }
 
     internal class InputElementsService
@@ -65,9 +65,15 @@ namespace FrameWebforCS.components.input
 
         public void setElementJson(JsonElement jsonData)
         {
+            var parsed = ParseElementJson(jsonData);
+            if (parsed != null) ApplyElements(parsed);
+        }
+
+        internal static Dictionary<string, Dictionary<string, clsElement>>? ParseElementJson(JsonElement jsonData)
+        {
             if (!jsonData.TryGetProperty("element", out JsonElement elementJson) ||
                 elementJson.ValueKind != JsonValueKind.Object)
-                return;
+                return null;
 
             var next = new Dictionary<string, Dictionary<string, clsElement>>();
             var seenSheets = new HashSet<string>();
@@ -96,8 +102,11 @@ namespace FrameWebforCS.components.input
                 if (sheet.Count > 0)
                     next.Add(sheetId, sheet);
             }
-            ReplaceRows(next);
+            return next;
         }
+
+        internal void ApplyElements(Dictionary<string, Dictionary<string, clsElement>>? parsed) =>
+            ReplaceRows(parsed ?? new Dictionary<string, Dictionary<string, clsElement>>());
 
         public Dictionary<string, object> getElementJson()
         {
@@ -157,7 +166,7 @@ namespace FrameWebforCS.components.input
                 finally
                 {
                     rows.RaiseListChangedEvents = true;
-                    rows.ResetBindings();
+                    DocumentReplacementNotifications.Defer(() => rows.ResetBindings());
                 }
             }
             _element = next;

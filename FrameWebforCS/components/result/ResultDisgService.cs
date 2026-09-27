@@ -1,3 +1,4 @@
+using FrameWebforCS.providers;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -26,7 +27,7 @@ namespace FrameWebforCS.components.result
         public void clear()
         {
             _disg = new();
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         public Dictionary<string, Dictionary<string, clsDisg>> getDisg() => _disg;
@@ -34,6 +35,13 @@ namespace FrameWebforCS.components.result
         public void setDisgJson(JsonElement jsonData)
         {
             if (!jsonData.TryGetProperty("result", out JsonElement result)) return;
+            ApplyDisg(ParseDisgJson(jsonData));
+        }
+
+        internal static Dictionary<string, Dictionary<string, clsDisg>> ParseDisgJson(JsonElement jsonData)
+        {
+            if (!jsonData.TryGetProperty("result", out JsonElement result))
+                return new();
             if (result.ValueKind != JsonValueKind.Object)
                 throw new JsonException("result must be a JSON object.");
 
@@ -64,8 +72,13 @@ namespace FrameWebforCS.components.result
                 if (!candidate.TryAdd(caseProperty.Name, nodeValues))
                     throw new JsonException($"Duplicate result case '{caseProperty.Name}'.");
             }
+            return candidate;
+        }
+
+        internal void ApplyDisg(Dictionary<string, Dictionary<string, clsDisg>> candidate)
+        {
             _disg = candidate;
-            Changed?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(Changed, this, EventArgs.Empty);
         }
 
         private static double? ReadComponent(JsonElement node, string name)

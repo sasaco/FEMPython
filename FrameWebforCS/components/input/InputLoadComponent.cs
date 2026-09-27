@@ -12,8 +12,17 @@ namespace FrameWebforCS.components.input
 {
     public partial class InputLoadComponent : UserControl
     {
+        internal event Action<int, string>? GridSelectionChanged;
+        internal event Action<string>? ActiveLoadDisplayModeChanged;
+        internal event Action<float>? LoadScaleChanged;
+        internal string ActiveLoadDisplayMode =>
+            ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2) ? "load_values" : "load_names";
+        internal float LoadScale => (float)_loadScale.Value;
+        private bool _syncingSelection;
         private readonly InputLoadService _service = InputLoadService.Instance;
         private readonly ComboBox _caseSelector = new();
+        private readonly NumericUpDown _loadScale = new();
+        private readonly Panel _loadScalePanel = new();
         private InputDataService _input = InputDataService.Instance;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet1;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet2;
@@ -42,6 +51,22 @@ namespace FrameWebforCS.components.input
                 }
             };
             Controls.Add(_caseSelector);
+            // JS ThreeLoadService.guiEnable exposes LoadScale (0..400, default 100)
+            // only on the load-values sheet. WinForms keeps it beside the input grid.
+            _loadScale.Minimum = 0;
+            _loadScale.Maximum = 400;
+            _loadScale.Value = 100;
+            _loadScale.Width = 75;
+            _loadScale.Dock = DockStyle.Right;
+            _loadScale.AccessibleName = "荷重表示倍率";
+            _loadScale.ValueChanged += (_, _) => LoadScaleChanged?.Invoke(LoadScale);
+            _loadScalePanel.Dock = DockStyle.Top;
+            _loadScalePanel.Height = 28;
+            _loadScalePanel.Controls.Add(new Label { Text = "荷重表示倍率 (%)", Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft });
+            _loadScalePanel.Controls.Add(_loadScale);
+            _loadScalePanel.Visible = ActiveLoadDisplayMode == "load_values";
+            Controls.Add(_loadScalePanel);
             _service.CasesChanged += RefreshCaseSelector;
             RefreshCaseSelector(this, EventArgs.Empty);
 
@@ -54,6 +79,58 @@ namespace FrameWebforCS.components.input
             w += 100;
 
             this.Width = (int)w;
+            fpSpread1.EnterCell += OnEnterCell;
+            fpSpread1.ActiveSheetChanged += OnActiveSheetChanged;
+            HandleCreated += OnDisplayActivated;
+            VisibleChanged += OnDisplayActivated;
+            Disposed += (_, _) =>
+            {
+                fpSpread1.EnterCell -= OnEnterCell;
+                fpSpread1.ActiveSheetChanged -= OnActiveSheetChanged;
+                HandleCreated -= OnDisplayActivated;
+                VisibleChanged -= OnDisplayActivated;
+            };
+        }
+
+        private void OnActiveSheetChanged(object? sender, EventArgs e)
+        {
+            _loadScalePanel.Visible = ActiveLoadDisplayMode == "load_values";
+            ActiveLoadDisplayModeChanged?.Invoke(ActiveLoadDisplayMode);
+        }
+
+        private void OnDisplayActivated(object? sender, EventArgs e)
+        {
+            if (Visible && !IsDisposed)
+                ActiveLoadDisplayModeChanged?.Invoke(ActiveLoadDisplayMode);
+        }
+
+        private void OnEnterCell(object? sender, EnterCellEventArgs e)
+        {
+            if (_syncingSelection || e.Row < 0 || e.Column < 0 ||
+                !ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2)) return;
+            string column = fpSpread1_Sheet2.Columns[e.Column].DataField?.ToLowerInvariant() ?? "";
+            // JS InputLoadComponent.selectEnd sends its 1-based row and field key.
+            GridSelectionChanged?.Invoke(e.Row + 1, column);
+        }
+
+        internal bool SelectGridRow(int row, string? column = null, string? caseId = null)
+        {
+            if (IsDisposed || row < 1 || row > fpSpread1_Sheet2.RowCount) return false;
+            if (caseId != null && !_caseSelector.Items.Contains(caseId)) return false;
+            int columnIndex = 1;
+            if (column != null)
+                for (int i = 0; i < fpSpread1_Sheet2.ColumnCount; i++)
+                    if (string.Equals(fpSpread1_Sheet2.Columns[i].DataField, column,
+                            StringComparison.OrdinalIgnoreCase)) { columnIndex = i; break; }
+            _syncingSelection = true;
+            try
+            {
+                if (caseId != null) _caseSelector.SelectedItem = caseId;
+                fpSpread1.ActiveSheetIndex = 1;
+                fpSpread1_Sheet2.SetActiveCell(row - 1, columnIndex);
+            }
+            finally { _syncingSelection = false; }
+            return true;
         }
 
         private void SetSheet1()

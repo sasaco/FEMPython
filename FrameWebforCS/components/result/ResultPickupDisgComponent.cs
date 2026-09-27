@@ -2,6 +2,7 @@ using FarPoint.Win.Spread;
 using FrameWebforCS.components.input;
 using System.Collections.Immutable;
 using System.Drawing;
+using System.Globalization;
 using System.Windows.Forms;
 
 namespace FrameWebforCS.components.result;
@@ -52,6 +53,8 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
         fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
         modeSelector.SelectedIndexChanged += (_, _) => MaterializeSelectedSheet();
         fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
+        // AppRoutingModule calls setActiveSheet before showing the floating form.
+        VisibleChanged += (_, _) => { if (Visible) MaterializeSelectedSheet(); };
         _ = _dispatcher.Handle;
         attach(OnSourceChanged);
         HandleCreated += (_, _) => Refresh();
@@ -248,6 +251,46 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
             for (int col = 0; col < sheet.ColumnCount && col < rows[row].Length; col++)
                 sheet.Cells[row, col].Text = rows[row][col];
         _materializedSheet = index;
+        PublishViewportPage(mode.Key, index);
+    }
+
+    private void PublishViewportPage(string component, int index)
+    {
+        if (!Visible || _output is null || index < 0 || index >= _output.Cases.Count) return;
+        var selected = _output.Cases[index];
+        string viewportMode = this switch
+        {
+            ResultPickupFsecComponent => "pick_fsec",
+            ResultPickupReacComponent => "pik_reac",
+            _ => "pik_disg"
+        };
+        if (this is ResultPickupFsecComponent)
+        {
+            var samples = new List<FrameWebforCS.three.SectionForceSample>();
+            if (selected.Rows.TryGetValue(component, out var rows))
+                foreach (var row in rows)
+                {
+                    if (row.Length < 6 ||
+                        !int.TryParse(row[0].Replace("member", "", StringComparison.Ordinal),
+                            NumberStyles.None, CultureInfo.InvariantCulture, out int memberId) || memberId <= 0 ||
+                        !float.TryParse(row[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float location))
+                        continue;
+                    int field = component[..2] switch
+                    {
+                        "fx" => 3, "fy" => 4, "fz" => 5,
+                        "mx" => 6, "my" => 7,
+                        "mz" => _output.Dimension == 3 ? 8 : 5,
+                        _ => -1
+                    };
+                    if (field >= 0 && field < row.Length &&
+                        float.TryParse(row[field], NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
+                        samples.Add(new(memberId, location, value));
+                }
+            FrameWebforCS.three.ThreeResultsService.PublishDerivedFsec(viewportMode,
+                new Dictionary<string, IReadOnlyList<FrameWebforCS.three.SectionForceSample>>
+                { [selected.Id] = samples }, _revision());
+        }
+        FrameWebforCS.three.ThreeResultsService.PublishPage(viewportMode, selected.Id, component);
     }
 
     private void ClearDisplay()
@@ -255,6 +298,19 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
         _rebuilding = true;
         try { fpSpread1.Sheets.Clear(); modeSelector.Items.Clear(); _materializedSheet = -1; }
         finally { _rebuilding = false; }
+        if (Visible)
+        {
+            string mode = this switch
+            {
+                ResultPickupFsecComponent => "pick_fsec",
+                ResultPickupReacComponent => "pik_reac",
+                _ => "pik_disg"
+            };
+            if (this is ResultPickupFsecComponent)
+                FrameWebforCS.three.ThreeResultsService.PublishDerivedFsec(mode,
+                    new Dictionary<string, IReadOnlyList<FrameWebforCS.three.SectionForceSample>>(), _revision());
+            FrameWebforCS.three.ThreeResultsService.PublishPage(mode, null);
+        }
     }
 
     private void CancelRunning()

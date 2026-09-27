@@ -146,6 +146,25 @@ public sealed class ResultCombineFsecTests
     }
 
     [Fact]
+    public void ViewportProjectionRetainsBothEnvelopeSidesForSelectedComponent()
+    {
+        var selected = new CombineFsecCaseResult("C1", null,
+            new Dictionary<string, IReadOnlyList<CombineFsecRowResult>>
+            {
+                ["my_max"] = [new("member7", "7", "1", 2, 0, 0, 0, 0, 11, 0, "+1")],
+                ["my_min"] = [new("member7", "7", "1", 2, 0, 0, 0, 0, -4, 0, "+2")]
+            });
+
+        var samples = ResultCombineFsecComponent.ProjectViewportSamples(selected, "my_min");
+
+        Assert.Equal(2, samples.Count);
+        Assert.Contains(samples, sample => sample.MemberId == 7 && sample.Value == 11 &&
+            sample.Envelope == FrameWebforCS.three.SectionForceEnvelope.Max);
+        Assert.Contains(samples, sample => sample.MemberId == 7 && sample.Value == -4 &&
+            sample.Envelope == FrameWebforCS.three.SectionForceEnvelope.Min);
+    }
+
+    [Fact]
     public void BackgroundViewDropsStaleResultAndDisplaysSelectedMode()
     {
         RunSta(() =>

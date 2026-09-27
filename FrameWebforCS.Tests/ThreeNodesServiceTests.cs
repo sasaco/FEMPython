@@ -13,6 +13,7 @@ public sealed class ThreeNodesServiceTests
         using var nodes = new ThreeNodesService(scene);
         nodes.ReplaceAll(new Dictionary<int, Vector3>());
         Assert.Equal(1f, nodes.BaseScale);
+        Assert.Equal(double.PositiveInfinity, nodes.MinDistance);
 
         nodes.ReplaceAll(new Dictionary<int, Vector3> { [1] = new(0, 0, 0) });
         Assert.Equal(1f, nodes.BaseScale);
@@ -24,6 +25,7 @@ public sealed class ThreeNodesServiceTests
             [3] = new(10, 0, 0)
         });
         Assert.Equal(0.2f, nodes.BaseScale, 5);
+        Assert.Equal(10, nodes.MinDistance);
         Assert.Equal(0.2f, MatrixScale(scene, 0), 5);
 
         nodes.ReplaceAll(new Dictionary<int, Vector3>
@@ -33,6 +35,27 @@ public sealed class ThreeNodesServiceTests
             [3] = new(100_000, 0, 0)
         });
         Assert.Equal(200f, nodes.BaseScale, 5); // No old 100-unit clamp.
+        Assert.Equal(1, nodes.MinDistance);
+    }
+
+    [Fact]
+    public void LargeTopologyUsesBoundedDistanceWorkAndRetainsLineScale()
+    {
+        const int count = 100_000;
+        var positions = Enumerable.Range(0, count)
+            .Select(i => new Vector3(i, 0, 0)).ToArray();
+        var extrema = NodeDistanceExtrema.Find(positions);
+        Assert.Equal(1, extrema.MinDistance);
+        Assert.Equal(count - 1, extrema.MaxDistance);
+        Assert.True(extrema.DistanceEvaluations <= 14L * count);
+
+        using var nodes = new ThreeNodesService(new Scene());
+        nodes.ReplaceAll(Enumerable.Range(0, count)
+            .ToDictionary(i => i + 1, i => positions[i]));
+        Assert.Equal((count - 1) / 500f, nodes.BaseScale, 5);
+        Assert.Equal(1, nodes.MinDistance);
+        nodes.UpdateNode(count, new Vector3(count, 0, 0));
+        Assert.Equal(count / 500f, nodes.BaseScale, 5);
     }
 
     [Fact]

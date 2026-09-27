@@ -1,4 +1,5 @@
-﻿using System;
+using FrameWebforCS.providers;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -45,8 +46,8 @@ namespace FrameWebforCS.components.input
             _combine = new();
             _define = new();
             _pickup = new();
-            RowsReplaced?.Invoke(this, EventArgs.Empty);
-            RowsChanged?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(RowsReplaced, this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -55,6 +56,14 @@ namespace FrameWebforCS.components.input
         /// <param name="jsonData"></param>
         public void setCombineJson(JsonElement jsonData)
         {
+            var parsed = ParseCombineJson(jsonData);
+            ApplyCombine(parsed.Combine, parsed.Define, parsed.Pickup);
+        }
+
+        internal static (Dictionary<int, clsCombine<double>> Combine,
+            Dictionary<int, clsCombine<int>> Define,
+            Dictionary<int, clsCombine<int>> Pickup) ParseCombineJson(JsonElement jsonData)
+        {
             Dictionary<int, clsCombine<double>> combine =
                 JsonToDict(jsonData, "combine", ReadDouble);
             Dictionary<int, clsCombine<int>> define =
@@ -62,12 +71,19 @@ namespace FrameWebforCS.components.input
             Dictionary<int, clsCombine<int>> pickup =
                 JsonToDict(jsonData, "pickup", ReadInt32);
 
+            return (combine, define, pickup);
+        }
+
+        internal void ApplyCombine(Dictionary<int, clsCombine<double>> combine,
+            Dictionary<int, clsCombine<int>> define,
+            Dictionary<int, clsCombine<int>> pickup)
+        {
             // 3 種類をすべて検証してから置き換え、読込失敗時は現在値を保持する。
             _combine = combine;
             _define = define;
             _pickup = pickup;
-            RowsReplaced?.Invoke(this, EventArgs.Empty);
-            RowsChanged?.Invoke(this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(RowsReplaced, this, EventArgs.Empty);
+            DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
         private static Dictionary<int, clsCombine<T>> JsonToDict<T>(
@@ -170,7 +186,7 @@ namespace FrameWebforCS.components.input
         public void SetDefineCoefficient(int row, int column, int? value)
         {
             if (SetCoefficient(_define, row, column, value))
-                RowsChanged?.Invoke(this, EventArgs.Empty);
+                DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
         public void SetCombineCoefficient(int row, int column, double? value)
@@ -178,25 +194,25 @@ namespace FrameWebforCS.components.input
             if (value.HasValue && !double.IsFinite(value.Value))
                 throw new ArgumentOutOfRangeException(nameof(value));
             if (SetCoefficient(_combine, row, column, value))
-                RowsChanged?.Invoke(this, EventArgs.Empty);
+                DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
         public void SetPickupCoefficient(int row, int column, int? value)
         {
             if (SetCoefficient(_pickup, row, column, value))
-                RowsChanged?.Invoke(this, EventArgs.Empty);
+                DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
         public void SetCombineName(int row, string? name)
         {
             if (SetName(_combine, row, name))
-                RowsChanged?.Invoke(this, EventArgs.Empty);
+                DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
         public void SetPickupName(int row, string? name)
         {
             if (SetName(_pickup, row, name))
-                RowsChanged?.Invoke(this, EventArgs.Empty);
+                DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
         private static bool SetCoefficient<T>(Dictionary<int, clsCombine<T>> rows,
