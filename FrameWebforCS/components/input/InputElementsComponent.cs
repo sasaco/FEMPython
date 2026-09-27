@@ -78,6 +78,8 @@ namespace FrameWebforCS.components.input
         private void setColumn(FarPoint.Win.Spread.SheetView fpSpread1_Sheet1)
         {
             var header = fpSpread1_Sheet1.ColumnHeader;
+            if (fpSpread1_Sheet1.ColumnCount > 5)
+                header.Cells[0, 5].ColumnSpan = 1;
             header.RowCount = 2;
 
             if (_input.dimension == 3)
@@ -151,6 +153,15 @@ namespace FrameWebforCS.components.input
                 column[4].Width = 150;
 
             }
+        }
+
+        internal void RefreshDimension()
+        {
+            if (fpSpread1.EditMode) fpSpread1.StopCellEditing();
+            foreach (var sheet in fpSpread1_Sheets) setColumn(sheet);
+            float width = 100;
+            foreach (Column column in fpSpread1_Sheets[0].Columns) width += column.Width;
+            Width = (int)width;
         }
 
     }

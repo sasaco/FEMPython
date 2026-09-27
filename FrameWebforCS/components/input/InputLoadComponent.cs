@@ -85,6 +85,7 @@ namespace FrameWebforCS.components.input
             VisibleChanged += OnDisplayActivated;
             Disposed += (_, _) =>
             {
+                _service.CasesChanged -= RefreshCaseSelector;
                 fpSpread1.EnterCell -= OnEnterCell;
                 fpSpread1.ActiveSheetChanged -= OnActiveSheetChanged;
                 HandleCreated -= OnDisplayActivated;
@@ -170,6 +171,8 @@ namespace FrameWebforCS.components.input
             var column = fpSpread1_Sheet2.Columns;
 
             var header = fpSpread1_Sheet2.ColumnHeader;
+            if (fpSpread1_Sheet2.ColumnCount > 1) header.Cells[0, 1].ColumnSpan = 1;
+            if (fpSpread1_Sheet2.ColumnCount > 9) header.Cells[0, 9].ColumnSpan = 1;
             header.RowCount = 3;
 
             fpSpread1_Sheet2.ColumnCount = 16;
@@ -235,6 +238,27 @@ namespace FrameWebforCS.components.input
 
             column[9].Width = 50;
             fpSpread1_Sheet2.DataSource = _service.IntensityRows;
+
+            if (_input.dimension == 2)
+            {
+                header.Cells[0, 9].ColumnSpan = 1;
+                fpSpread1_Sheet2.ColumnCount = 13;
+                column[12].DataField = "rz";
+                header.Cells[0, 9].ColumnSpan = 4;
+                header.Cells[1, 12].Text = "RZ";
+                header.Cells[2, 12].Text = "(kN・m)";
+            }
+        }
+
+        internal void RefreshDimension()
+        {
+            if (fpSpread1.EditMode) fpSpread1.StopCellEditing();
+            string selectedCase = _service.SelectedCaseId;
+            SetSheet2();
+            fpSpread1_Sheet2.SheetName = selectedCase;
+            float width = 100;
+            foreach (Column column in fpSpread1_Sheet2.Columns) width += column.Width;
+            Width = (int)width;
         }
 
         private static void ConfigureRows(SheetView sheet)

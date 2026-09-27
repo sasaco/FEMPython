@@ -21,6 +21,7 @@ namespace FrameWebforCS.components.result
         public ResultFsecComponent()
         {
             InitializeComponent();
+            ResultDimensionNotice.Attach(this);
             fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
 
             fpSpread1.ActiveSheetChanged += (_, _) => { MaterializeSelectedSheet(); PublishCurrentPage(); };
@@ -47,7 +48,7 @@ namespace FrameWebforCS.components.result
             if (Visible && index >= 0 && index < cases.Count)
                 FrameWebforCS.three.ThreeResultsService.PublishPage("fsec", cases.Keys.ElementAt(index),
                     FrameWebforCS.three.ThreeResultsService.DefaultSectionForceComponent(
-                        InputDataService.Instance.dimension));
+                        InputDataService.Instance.ResultDimension ?? InputDataService.Instance.dimension));
         }
 
         private void OnResultsChanged(object? sender, EventArgs e)
@@ -162,7 +163,7 @@ namespace FrameWebforCS.components.result
             var header = _Sheet.ColumnHeader;
             header.RowCount = 2;
 
-            if (InputDataService.Instance.dimension == 3)
+            if ((InputDataService.Instance.ResultDimension ?? InputDataService.Instance.dimension) == 3)
             {
                 _Sheet.ColumnCount = 9;
 

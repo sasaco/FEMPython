@@ -122,7 +122,6 @@
             // 
             // toolStripMenuItem1
             // 
-            toolStripMenuItem1.CheckOnClick = true;
             toolStripMenuItem1.DropDownItems.AddRange(new ToolStripItem[] { dToolStripMenuItem2, dToolStripMenuItem3 });
             toolStripMenuItem1.Name = "toolStripMenuItem1";
             toolStripMenuItem1.Size = new Size(33, 20);
@@ -130,17 +129,17 @@
             // 
             // dToolStripMenuItem2
             // 
-            dToolStripMenuItem2.CheckOnClick = true;
             dToolStripMenuItem2.Name = "dToolStripMenuItem2";
             dToolStripMenuItem2.Size = new Size(88, 22);
             dToolStripMenuItem2.Text = "2D";
+            dToolStripMenuItem2.Click += Dimension2DToolStripMenuItem_Click;
             // 
             // dToolStripMenuItem3
             // 
-            dToolStripMenuItem3.CheckOnClick = true;
             dToolStripMenuItem3.Name = "dToolStripMenuItem3";
             dToolStripMenuItem3.Size = new Size(88, 22);
             dToolStripMenuItem3.Text = "3D";
+            dToolStripMenuItem3.Click += Dimension3DToolStripMenuItem_Click;
             // 
             // button1
             // 

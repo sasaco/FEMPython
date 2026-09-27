@@ -18,6 +18,7 @@ namespace FrameWebforCS.components.result
         public ResultReacComponent()
         {
             InitializeComponent();
+            ResultDimensionNotice.Attach(this);
             fpSpread1.ActiveSheetChanged += (_, _) => PublishCurrentPage();
             VisibleChanged += (_, _) => { if (Visible) PublishCurrentPage(); };
             fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
@@ -105,7 +106,7 @@ namespace FrameWebforCS.components.result
             var header = _Sheet.ColumnHeader;
             header.RowCount = 2;
 
-            if (InputDataService.Instance.dimension == 3)
+            if ((InputDataService.Instance.ResultDimension ?? InputDataService.Instance.dimension) == 3)
             {
                 _Sheet.ColumnCount = 7;
 

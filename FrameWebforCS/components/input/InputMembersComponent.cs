@@ -82,15 +82,24 @@ namespace FrameWebforCS.components.input
         {
             fpSpread1_Sheet1.SheetName = "部材";
 
+            var header = fpSpread1_Sheet1.ColumnHeader;
+            if (fpSpread1_Sheet1.ColumnCount > 0)
+                header.Cells[0, 0].ColumnSpan = 1;
+            fpSpread1_Sheet1.ColumnCount = _input.dimension == 3 ? 6 : 5;
+
             var column = fpSpread1_Sheet1.Columns;
 
             column[0].DataField = nameof(clsMember.Ni);
             column[1].DataField = nameof(clsMember.Nj);
             column[3].DataField = nameof(clsMember.E);
             if (_input.dimension == 3)
+            {
                 column[4].DataField = nameof(clsMember.Cg);
+                column[5].DataField = string.Empty;
+            }
+            else
+                column[4].DataField = string.Empty;
 
-            var header = fpSpread1_Sheet1.ColumnHeader;
             header.RowCount = 2;
 
             if (_input.dimension == 3)
@@ -150,9 +159,14 @@ namespace FrameWebforCS.components.input
             }
 
             for (int i = 0; i < column.Count; i++)
+            {
                 column[i].Locked = false;
+                column[i].BackColor = SystemColors.Window;
+            }
             column[2].Locked = true;
             column[_input.dimension == 3 ? 5 : 4].Locked = true;
+            column[2].BackColor = SystemColors.Control;
+            column[_input.dimension == 3 ? 5 : 4].BackColor = SystemColors.Control;
             fpSpread1_Sheet1.Protect = true;
 
         }
@@ -214,6 +228,15 @@ namespace FrameWebforCS.components.input
         public void setActiveSheet(int index)
         {
             this.fpSpread1.ActiveSheetIndex = index;　
+        }
+
+        internal void RefreshDimension()
+        {
+            if (fpSpread1.EditMode) fpSpread1.StopCellEditing();
+            SetSheet1();
+            float width = 100;
+            foreach (Column column in fpSpread1_Sheet1.Columns) width += column.Width;
+            Width = (int)width;
         }
 
         private void OnActiveSheetChanged(object? sender, EventArgs e) =>

@@ -84,6 +84,7 @@ internal sealed class ThreeService : IDisposable
         ThreeResultsService.ResultPageChanged += OnResultPageChanged;
         ThreeResultsService.DerivedFsecChanged += OnDerivedFsecChanged;
         _inputData.FileReplaced += OnFileReplaced;
+        _inputData.DimensionChanged += OnDimensionChanged;
         _routing.InputModeChanged += OnInputModeChanged;
         BindGridComponents();
     }
@@ -226,6 +227,20 @@ internal sealed class ThreeService : IDisposable
             _replacePending = true;
         }
         SelectedKind = null;
+    }
+
+    private void OnDimensionChanged(int _)
+    {
+        // GL objects are only rebuilt by FlushPending on the viewport owner thread.
+        lock (_pendingLock)
+        {
+            if (_disposed) return;
+            _pendingEntities |= PendingEntity.Constraints | PendingEntity.Loads |
+                PendingEntity.Results;
+            _pendingMode = _routing.ActiveModeKey;
+            _pendingResultPage = null;
+            _pendingDerivedFsec.Clear();
+        }
     }
 
     private void OnInputModeChanged(string modeKey)
@@ -448,8 +463,9 @@ internal sealed class ThreeService : IDisposable
                 _results.SetTopology(displayNodes, displayMembers,
                     _inputPanels.GetDisplayPanels(), _nodes.BaseScale);
             if (entities.HasFlag(PendingEntity.Results))
-                _results.SetBaseResults(ResultDisgService.Instance.getDisg(),
-                    ResultReacService.Instance.getReac(), ResultFsecService.Instance.getFsec(),
+                _results.SetBaseResults(ResultsMatchDimension ? ResultDisgService.Instance.getDisg() : new(),
+                    ResultsMatchDimension ? ResultReacService.Instance.getReac() : new(),
+                    ResultsMatchDimension ? ResultFsecService.Instance.getFsec() : new(),
                     _inputData.DocumentRevision,
                     _inputLoads.GetDisplaySnapshot()
                         .Where(item => item.Value.Symbol == "LL")
@@ -462,9 +478,10 @@ internal sealed class ThreeService : IDisposable
             _loads.SetCase(_inputLoads.SelectedCaseId);
         if (mode != null)
             ApplyMode(mode);
-        foreach (var derived in derivedFsec)
-            _results.SetDerivedFsec(derived.Mode, derived.Cases, derived.SourceRevision);
-        if (resultPage is { } page &&
+        if (ResultsMatchDimension)
+            foreach (var derived in derivedFsec)
+                _results.SetDerivedFsec(derived.Mode, derived.Cases, derived.SourceRevision);
+        if (ResultsMatchDimension && resultPage is { } page &&
             page.Mode == ResultMode(_routing.ActiveModeKey))
             _results.SetMode(page.Mode, page.CaseId, page.Component);
         if (selection is { } selected)
@@ -516,7 +533,7 @@ internal sealed class ThreeService : IDisposable
         _constraints.SetMode(displayMode);
         _members.HighlightRelated(null);
         _loads.SetVisible(mode == "load");
-        string resultMode = ResultMode(mode);
+        string resultMode = ResultsMatchDimension ? ResultMode(mode) : "";
         string? defaultCase = resultMode switch
         {
             "disg" => ResultDisgService.Instance.getDisg().Keys.FirstOrDefault(),
@@ -543,6 +560,10 @@ internal sealed class ThreeService : IDisposable
         "pickfsec" => "pick_fsec",
         _ => ""
     };
+
+    private bool ResultsMatchDimension =>
+        _inputData.ResultDimension is not int resultDimension ||
+        resultDimension == _inputData.dimension;
 
     private string? EffectiveMode(string? routeKey) => routeKey switch
     {
@@ -724,6 +745,7 @@ internal sealed class ThreeService : IDisposable
         ThreeResultsService.ResultPageChanged -= OnResultPageChanged;
         ThreeResultsService.DerivedFsecChanged -= OnDerivedFsecChanged;
         _inputData.FileReplaced -= OnFileReplaced;
+        _inputData.DimensionChanged -= OnDimensionChanged;
         _routing.InputModeChanged -= OnInputModeChanged;
         foreach (var component in _boundGridComponents.ToArray())
             UnbindGridComponent(component);

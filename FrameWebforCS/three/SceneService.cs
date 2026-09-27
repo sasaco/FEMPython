@@ -138,16 +138,10 @@ namespace SingleFormsDemo
             else
             {
                 // 3次元の場合は、ポジションと回転角は引き継ぐ
-                var pos = this.camera.Position;
-                var rot = this.camera.Rotation;
+                // The perspective camera is reused across round trips. Its position and
+                // rotation are the last 3D view, not the flattened 2D camera pose.
                 this.camera = this.PerspectiveCamera;
                 this.camera.Up = new THREE.Vector3(0, 0, -1);
-                this.camera.Position.X = pos.X;
-                this.camera.Position.Y = pos.Y;
-                this.camera.Position.Z = pos.Z;
-                this.camera.Rotation.X = rot.X;
-                this.camera.Rotation.Y = rot.Y;
-                this.camera.Rotation.Z = rot.Z;
 
                 // 3次元なら回転できるように設定する
                 if (this.controls != null)

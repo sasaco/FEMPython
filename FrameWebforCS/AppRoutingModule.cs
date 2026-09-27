@@ -5,6 +5,7 @@ using FrameWebforCS.components.result;
 using FrameWebforCS.providers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using THREE;
 using static FrameWebforCS.components.menu.SidebarComponent;
@@ -33,6 +34,45 @@ namespace FrameWebforCS
         // コンストラクタを private にして、外部からの new を禁止する
         private AppRoutingModule()
         {
+            _input.DimensionChanged += OnDimensionChanged;
+        }
+
+        internal void PrepareDimensionChange()
+        {
+            foreach (var component in myComponents)
+            {
+                if (component.IsDisposed) continue;
+                foreach (var spread in component.Controls.OfType<components.myFpSpread>())
+                    if (spread.EditMode) spread.StopCellEditing();
+            }
+        }
+
+        private void OnDimensionChanged(int _)
+        {
+            if (_input.dimension == 2 && _input.CurrentComponent is InputPanelComponent &&
+                floatForm is { IsDisposed: false })
+            {
+                floatForm.Close();
+                _input.CurrentComponent = null;
+            }
+
+            foreach (var component in myComponents.ToArray())
+            {
+                if (component.IsDisposed) continue;
+                switch (component)
+                {
+                    case InputNodesComponent nodes: nodes.RefreshDimension(); break;
+                    case InputMembersComponent members: members.RefreshDimension(); break;
+                    case InputElementsComponent elements: elements.RefreshDimension(); break;
+                    case InputFixNodeComponent fixNode: fixNode.RefreshDimension(); break;
+                    case InputFixMemberComponent fixMember: fixMember.RefreshDimension(); break;
+                    case InputJointComponent joint: joint.RefreshDimension(); break;
+                    case InputLoadComponent load: load.RefreshDimension(); break;
+                }
+            }
+
+            if (floatForm is { IsDisposed: false } && _input.CurrentComponent is { IsDisposed: false } active)
+                floatForm.Width = active.Width;
         }
 
 

@@ -25,7 +25,10 @@ namespace FrameWebforCS.providers
             CurrentComponent = null;
 
 
-            dimension = 3;
+            _dimension = 3;
+            ResultDisgService.Instance.Changed += OnDirectResultChanged;
+            ResultReacService.Instance.Changed += OnDirectResultChanged;
+            ResultFsecService.Instance.Changed += OnDirectResultChanged;
 
         }
 
@@ -37,7 +40,54 @@ namespace FrameWebforCS.providers
         public UserControl? CurrentComponent { get; set; }
 
         // ３次元解析=3, ２次元解析=2
-        public int dimension { get; set; }
+        private int _dimension;
+        public int dimension
+        {
+            get => _dimension;
+            set => SetDimension(value);
+        }
+
+        internal event Action<int>? DimensionChanged;
+        internal int? ResultDimension { get; private set; }
+        private bool _publishingDocumentReplacement;
+
+        private void OnDirectResultChanged(object? sender, EventArgs args)
+        {
+            if (_publishingDocumentReplacement) return;
+            bool changedSectionHasResults = sender switch
+            {
+                ResultDisgService => ResultDisgService.Instance.getDisg().Count != 0,
+                ResultReacService => ResultReacService.Instance.getReac().Count != 0,
+                ResultFsecService => ResultFsecService.Instance.getFsec().Count != 0,
+                _ => false
+            };
+            if (changedSectionHasResults)
+                ResultDimension = dimension;
+            else if (ResultDisgService.Instance.getDisg().Count == 0 &&
+                     ResultReacService.Instance.getReac().Count == 0 &&
+                     ResultFsecService.Instance.getFsec().Count == 0)
+                ResultDimension = null;
+        }
+
+        public void SetDimension(int value)
+        {
+            if (value is not (2 or 3))
+                throw new ArgumentOutOfRangeException(nameof(value), "Dimension must be 2 or 3.");
+            if (_dimension == value) return;
+
+            int previous = _dimension;
+            _dimension = value;
+            try
+            {
+                _sceneService?.ApplyDocumentCamera(null);
+            }
+            catch
+            {
+                _dimension = previous;
+                throw;
+            }
+            DimensionChanged?.Invoke(value);
+        }
 
         private SceneService? _sceneService;
         private (float X, float Y, float Z)? _cameraPosition;
@@ -141,7 +191,7 @@ namespace FrameWebforCS.providers
             var preparedLoads = InputLoadService.ParseLoadJson(rootElement);
             var preparedNoticePoints = InputNoticePointsService.ParseNoticePointsJson(rootElement);
             var preparedCombine = InputCombineService.ParseCombineJson(rootElement);
-            bool hasResult = rootElement.TryGetProperty("result", out _);
+            bool hasResult = rootElement.TryGetProperty("result", out var resultElement);
             var preparedDisg = hasResult ? ResultDisgService.ParseDisgJson(rootElement) : new();
             var preparedFsec = hasResult ? ResultFsecService.ParseFsecJson(rootElement) : new();
             var preparedReac = hasResult ? ResultReacService.ParseReacJson(rootElement) : new();
@@ -153,6 +203,18 @@ namespace FrameWebforCS.providers
                     !dimensionElement.TryGetInt32(out loadedDimension) ||
                     loadedDimension is not (2 or 3))
                     throw new JsonException("dimension must be 2 or 3.");
+            }
+
+            bool hasResultCases = hasResult && resultElement.ValueKind == JsonValueKind.Object &&
+                resultElement.EnumerateObject().Any();
+            int? loadedResultDimension = hasResultCases ? loadedDimension : null;
+            if (rootElement.TryGetProperty("resultDimension", out var resultDimensionElement))
+            {
+                if (!hasResultCases || resultDimensionElement.ValueKind != JsonValueKind.Number ||
+                    !resultDimensionElement.TryGetInt32(out int parsedResultDimension) ||
+                    parsedResultDimension is not (2 or 3))
+                    throw new JsonException("resultDimension requires results and must be 2 or 3.");
+                loadedResultDimension = parsedResultDimension;
             }
 
             (float X, float Y, float Z)? loadedCameraPosition = null;
@@ -170,18 +232,19 @@ namespace FrameWebforCS.providers
             }
 
             using var notifications = DocumentReplacementNotifications.Begin();
-            int previousDimension = dimension;
-            dimension = loadedDimension;
+            int previousDimension = _dimension;
+            _dimension = loadedDimension;
             try
             {
                 _sceneService?.ApplyDocumentCamera(loadedCameraPosition);
             }
             catch
             {
-                dimension = previousDimension;
+                _dimension = previousDimension;
                 throw;
             }
             _cameraPosition = loadedCameraPosition;
+            ResultDimension = loadedResultDimension;
 
             var combineCoordinator = ResultCombineDisgCoordinator.Instance;
             var combineFsecCoordinator = ResultCombineFsecCoordinator.Instance;
@@ -209,9 +272,9 @@ namespace FrameWebforCS.providers
                 InputNodesService.Instance.ApplyNodes(preparedNodes);
                 if (hasResult)
                 {
-                    combineCoordinator.CompleteLoad(dimension);
-                    combineFsecCoordinator.CompleteLoad(dimension);
-                    combineReacCoordinator.CompleteLoad(dimension);
+                    combineCoordinator.CompleteLoad(loadedResultDimension ?? loadedDimension);
+                    combineFsecCoordinator.CompleteLoad(loadedResultDimension ?? loadedDimension);
+                    combineReacCoordinator.CompleteLoad(loadedResultDimension ?? loadedDimension);
                 }
                 else
                 {
@@ -224,8 +287,12 @@ namespace FrameWebforCS.providers
             // Publish the committed revision to the viewport first. A failing observer
             // is reported after every queued observer has had a chance to update.
             DocumentRevision++;
+            if (previousDimension != loadedDimension)
+                notifications.PublishFirst(DimensionChanged, loadedDimension);
             notifications.PublishFirst(FileReplaced, DocumentRevision);
-            notifications.Complete();
+            _publishingDocumentReplacement = true;
+            try { notifications.Complete(); }
+            finally { _publishingDocumentReplacement = false; }
         }
 
         private static float ReadCameraCoordinate(JsonElement camera, string name)
@@ -244,7 +311,7 @@ namespace FrameWebforCS.providers
             var cameraPosition = _sceneService?.GetCameraPosition() ??
                 _cameraPosition ?? (50.0f, 50.0f, -50.0f);
 
-            return new Dictionary<string, object> {
+            var saved = new Dictionary<string, object> {
                 ["dimension"] = dimension,
                 ["three"] = new Dictionary<string, object> {
                     ["camera"] = new Dictionary<string, float> {
@@ -267,6 +334,38 @@ namespace FrameWebforCS.providers
                 ["combine"] = InputCombineService.Instance.getCombineJson(),
                 ["pickup"] = InputCombineService.Instance.getPickupJson(),
             };
+
+            var results = MergeResults(
+                ResultDisgService.Instance.getDisgJson(),
+                ResultReacService.Instance.getReacJson(),
+                ResultFsecService.Instance.getFsecJson());
+            if (results.Count != 0)
+            {
+                // Legacy result readers require every case to have a displacement
+                // section, even when this document only contains reactions/forces.
+                foreach (var value in results.Values)
+                    ((Dictionary<string, object>)value).TryAdd("disg", new Dictionary<string, object>());
+                saved["result"] = results;
+                saved["resultDimension"] = ResultDimension ?? dimension;
+            }
+            return saved;
+        }
+
+        private static Dictionary<string, object> MergeResults(params Dictionary<string, object>[] sections)
+        {
+            var merged = new Dictionary<string, object>();
+            foreach (var section in sections)
+                foreach (var (caseId, value) in section)
+                {
+                    if (value is not Dictionary<string, object> fields)
+                        throw new InvalidOperationException($"Invalid result case '{caseId}'.");
+                    if (!merged.TryGetValue(caseId, out var existing))
+                        merged.Add(caseId, new Dictionary<string, object>(fields));
+                    else
+                        foreach (var (name, data) in fields)
+                            ((Dictionary<string, object>)existing).Add(name, data);
+                }
+            return merged;
         }
     }
 }

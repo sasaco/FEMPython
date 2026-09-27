@@ -46,6 +46,7 @@ public partial class ResultCombineDisgComponent : UserControl
     {
         _calculate = calculate ?? throw new ArgumentNullException(nameof(calculate));
         InitializeComponent();
+        ResultDimensionNotice.Attach(this);
         fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
         if (UsesLegacyPickup)
         {
@@ -97,10 +98,10 @@ public partial class ResultCombineDisgComponent : UserControl
         {
             SheetView sheet = fpSpread1.AddNewSheetView();
             sheet.SheetName = item.Key;
-            ConfigureSheet(sheet, InputDataService.Instance.dimension);
+            ConfigureSheet(sheet, InputDataService.Instance.ResultDimension ?? InputDataService.Instance.dimension);
         }
         if (fpSpread1.Sheets.Count > 0) fpSpread1.ActiveSheetIndex = 0;
-        Width = InputDataService.Instance.dimension == 3 ? 900 : 650;
+        Width = (InputDataService.Instance.ResultDimension ?? InputDataService.Instance.dimension) == 3 ? 900 : 650;
     }
 
     private void OnCoordinatorChanged(object? sender, EventArgs e)

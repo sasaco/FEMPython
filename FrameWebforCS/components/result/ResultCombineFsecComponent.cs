@@ -44,6 +44,7 @@ public partial class ResultCombineFsecComponent : UserControl
     {
         _calculate = calculate ?? throw new ArgumentNullException(nameof(calculate));
         InitializeComponent();
+        ResultDimensionNotice.Attach(this);
         fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
         // This handle outlives the view handle, so in-flight work can complete
         // on the UI thread even while WinForms recreates the view handle.

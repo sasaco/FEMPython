@@ -1,6 +1,7 @@
 ﻿using FastDeepCloner;
 using FrameWebforCS.components.input;
 using FrameWebforCS.components.result;
+using FrameWebforCS.providers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,6 +19,10 @@ namespace FrameWebforCS.components.menu
     public partial class SidebarComponent : UserControl
     {
         private AppRoutingModule routing = AppRoutingModule.Instance;
+        private readonly InputDataService _input = InputDataService.Instance;
+        private readonly TreeNode _panelNode;
+        private readonly TreeNode _solidNode;
+        private readonly TreeNode _inputNode;
 
         internal class targetComponent
         {
@@ -178,7 +183,36 @@ namespace FrameWebforCS.components.menu
         {
             InitializeComponent();
             setTreeView(targetComponents.Clone());
+            _panelNode = treeView1.Nodes.Find("shell", true).Single();
+            _solidNode = treeView1.Nodes.Find("solid", true).Single();
+            _inputNode = treeView1.Nodes.Find("input", true).Single();
             treeView1.ExpandAll();
+            _input.DimensionChanged += OnDimensionChanged;
+            _input.FileReplaced += OnFileReplaced;
+            Disposed += (_, _) =>
+            {
+                _input.DimensionChanged -= OnDimensionChanged;
+                _input.FileReplaced -= OnFileReplaced;
+            };
+            RefreshDimensionEntries();
+        }
+
+        private void OnDimensionChanged(int _) => RefreshDimensionEntries();
+
+        private void OnFileReplaced(long _) => RefreshDimensionEntries();
+
+        private void RefreshDimensionEntries()
+        {
+            if (_input.dimension == 3)
+            {
+                if (_panelNode.Parent == null) _inputNode.Nodes.Insert(3, _panelNode);
+                if (_solidNode.Parent == null) _inputNode.Nodes.Insert(4, _solidNode);
+            }
+            else
+            {
+                if (_panelNode.Parent != null) _panelNode.Remove();
+                if (_solidNode.Parent != null) _solidNode.Remove();
+            }
         }
 
         private void setTreeView(Dictionary<string, targetComponent> List)

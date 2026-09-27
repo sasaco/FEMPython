@@ -19,6 +19,51 @@ namespace FrameWebforCS
         public MenuComponent()
         {
             InitializeComponent();
+            _input.DimensionChanged += OnDimensionChanged;
+            _input.FileReplaced += OnFileReplaced;
+            Disposed += (_, _) =>
+            {
+                _input.DimensionChanged -= OnDimensionChanged;
+                _input.FileReplaced -= OnFileReplaced;
+            };
+            SyncDimensionMenu();
+        }
+
+        private void Dimension2DToolStripMenuItem_Click(object sender, EventArgs e) => SelectDimension(2);
+
+        private void Dimension3DToolStripMenuItem_Click(object sender, EventArgs e) => SelectDimension(3);
+
+        private void SelectDimension(int dimension)
+        {
+            if (_input.dimension == dimension)
+            {
+                SyncDimensionMenu();
+                return;
+            }
+
+            try
+            {
+                AppRoutingModule.Instance.PrepareDimensionChange();
+                _input.SetDimension(dimension);
+            }
+            catch (Exception ex)
+            {
+                SyncDimensionMenu();
+                MessageBox.Show(this, "解析次元を変更できませんでした。\n" + ex.Message,
+                    "解析次元の変更エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void OnDimensionChanged(int _) => SyncDimensionMenu();
+
+        private void OnFileReplaced(long _) => SyncDimensionMenu();
+
+        private void SyncDimensionMenu()
+        {
+            bool is3D = _input.dimension == 3;
+            toolStripMenuItem1.Text = is3D ? "3D" : "2D";
+            dToolStripMenuItem2.Checked = !is3D;
+            dToolStripMenuItem3.Checked = is3D;
         }
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)

@@ -22,8 +22,15 @@ namespace FrameWebforCS.components.input
             fpSpread1_Sheet1.DataAutoHeadings = false;
             fpSpread1_Sheet1.RowHeaderAutoText = HeaderAutoText.Numbers;
             fpSpread1_Sheet1.StartingRowNumber = 1;
-            fpSpread1_Sheet1.ColumnCount = _input.dimension == 3 ? 3 : 2;
             fpSpread1_Sheet1.DataSource = InputNodesService.Instance.Nodes;
+
+            RefreshDimension();
+        }
+
+        internal void RefreshDimension()
+        {
+            if (fpSpread1.EditMode) fpSpread1.StopCellEditing();
+            fpSpread1_Sheet1.ColumnCount = _input.dimension == 3 ? 3 : 2;
 
             var header = fpSpread1_Sheet1.ColumnHeader;
             var columns = fpSpread1_Sheet1.Columns;

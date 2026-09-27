@@ -50,6 +50,7 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
         Controls.Add(fpSpread1);
         Controls.Add(statusLabel);
         Controls.Add(panel);
+        ResultDimensionNotice.Attach(this);
         fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
         modeSelector.SelectedIndexChanged += (_, _) => MaterializeSelectedSheet();
         fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
