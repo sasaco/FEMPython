@@ -12,6 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="tests\**" />
+    <EmbeddedResource Remove="tests\**" />
+    <None Remove="tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="GrapeCity.Spread.WinForms.ja" Version="15.4.0" />
     <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
     <PackageReference Include="OpenTK" Version="4.8.0" />
