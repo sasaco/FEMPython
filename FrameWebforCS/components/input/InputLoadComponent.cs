@@ -20,7 +20,6 @@ namespace FrameWebforCS.components.input
         private bool _syncingSelection;
         private bool _rowHeaderSelection;
         private readonly InputLoadService _service = InputLoadService.Instance;
-        private readonly ComboBox _caseSelector = new();
         private InputDataService _input = InputDataService.Instance;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet1;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet2;
@@ -37,18 +36,8 @@ namespace FrameWebforCS.components.input
 
             SetSheet2();
 
-            _caseSelector.Dock = DockStyle.Top;
-            _caseSelector.DropDownStyle = ComboBoxStyle.DropDownList;
-            _caseSelector.AccessibleName = "荷重ケース";
-            _caseSelector.SelectedIndexChanged += (_, _) =>
-            {
-                if (_caseSelector.SelectedItem is string id)
-                    _service.SelectCase(id);
-            };
-            Controls.Add(_caseSelector);
-            _service.CasesChanged += RefreshCaseSelector;
             _service.IntensityRowMoved += OnIntensityRowMoved;
-            RefreshCaseSelector(this, EventArgs.Empty);
+            _service.IntensityRows.ListChanged += OnIntensityRowsChanged;
 
             float w = 0;
             var col = fpSpread1_Sheet2.Columns;
@@ -68,8 +57,8 @@ namespace FrameWebforCS.components.input
             VisibleChanged += OnDisplayActivated;
             Disposed += (_, _) =>
             {
-                _service.CasesChanged -= RefreshCaseSelector;
                 _service.IntensityRowMoved -= OnIntensityRowMoved;
+                _service.IntensityRows.ListChanged -= OnIntensityRowsChanged;
                 fpSpread1.EnterCell -= OnEnterCell;
                 fpSpread1.MouseDown -= OnSpreadMouseDown;
                 fpSpread1.KeyDown -= OnSpreadKeyDown;
@@ -83,6 +72,7 @@ namespace FrameWebforCS.components.input
         private void OnActiveSheetChanged(object? sender, EventArgs e)
         {
             _rowHeaderSelection = false;
+            SelectFocusedCase();
             ActiveLoadDisplayModeChanged?.Invoke(ActiveLoadDisplayMode);
         }
 
@@ -162,7 +152,19 @@ namespace FrameWebforCS.components.input
         private void OnDisplayActivated(object? sender, EventArgs e)
         {
             if (Visible && !IsDisposed)
+            {
+                SelectFocusedCase();
                 ActiveLoadDisplayModeChanged?.Invoke(ActiveLoadDisplayMode);
+                RefreshIntensityRowColors();
+            }
+        }
+
+        private void SelectFocusedCase()
+        {
+            if (_syncingSelection || !ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2))
+                return;
+            clsLoadIntensityRow? row = _service.GetIntensityRowAt(fpSpread1_Sheet2.ActiveRowIndex);
+            if (row != null) _service.SelectCase(row.CaseId);
         }
 
         private void OnEnterCell(object? sender, EnterCellEventArgs e)
@@ -171,10 +173,7 @@ namespace FrameWebforCS.components.input
                 !ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2)) return;
             clsLoadIntensityRow? row = _service.GetIntensityRowAt(e.Row);
             if (row == null) return;
-            if (_caseSelector.Items.Contains(row.CaseId))
-                _caseSelector.SelectedItem = row.CaseId;
-            else
-                _service.SelectCase(row.CaseId);
+            _service.SelectCase(row.CaseId);
             string column = fpSpread1_Sheet2.Columns[e.Column].DataField?.ToLowerInvariant() ?? "";
             GridSelectionChanged?.Invoke(row.Row, column);
         }
@@ -194,10 +193,7 @@ namespace FrameWebforCS.components.input
             try
             {
                 _rowHeaderSelection = false;
-                if (_caseSelector.Items.Contains(targetCase))
-                    _caseSelector.SelectedItem = targetCase;
-                else
-                    _service.SelectCase(targetCase);
+                _service.SelectCase(targetCase);
                 fpSpread1.ActiveSheetIndex = 1;
                 fpSpread1_Sheet2.SetActiveCell(displayIndex, columnIndex);
             }
@@ -239,18 +235,26 @@ namespace FrameWebforCS.components.input
         {
             fpSpread1_Sheet2.SheetName = "荷重強度";
             ConfigureRows(fpSpread1_Sheet2);
+
+            // データソースを割り付け
             var column = fpSpread1_Sheet2.Columns;
-
-            var header = fpSpread1_Sheet2.ColumnHeader;
-            if (fpSpread1_Sheet2.ColumnCount > 1) header.Cells[0, 1].ColumnSpan = 1;
-            if (fpSpread1_Sheet2.ColumnCount > 9) header.Cells[0, 9].ColumnSpan = 1;
-            header.RowCount = 3;
-
             fpSpread1_Sheet2.ColumnCount = 16;
             string[] fields = { "LoadId", "m1", "m2", "direction", "mark", "L1", "L2",
                 "P1", "P2", "n", "tx", "ty", "tz", "rx", "ry", "rz" };
             for (int i = 0; i < fields.Length; i++)
                 column[i].DataField = fields[i];
+            if (_input.dimension == 2)
+            {
+                fpSpread1_Sheet2.ColumnCount = 13;
+                column[12].DataField = "rz";
+            }
+            fpSpread1_Sheet2.DataSource = _service.IntensityRows;
+
+            // 見た目の制御
+            var header = fpSpread1_Sheet2.ColumnHeader;
+            if (fpSpread1_Sheet2.ColumnCount > 1) header.Cells[0, 1].ColumnSpan = 1;
+            if (fpSpread1_Sheet2.ColumnCount > 9) header.Cells[0, 9].ColumnSpan = 1;
+            header.RowCount = 3;
 
             for (int i = 0; i < column.Count; i++)
                 column[i].Locked = false;
@@ -308,17 +312,15 @@ namespace FrameWebforCS.components.input
             header.Cells[0, 9].ColumnSpan = 6;
 
             column[9].Width = 50;
-            fpSpread1_Sheet2.DataSource = _service.IntensityRows;
 
             if (_input.dimension == 2)
             {
-                header.Cells[0, 9].ColumnSpan = 1;
-                fpSpread1_Sheet2.ColumnCount = 13;
-                column[12].DataField = "rz";
                 header.Cells[0, 9].ColumnSpan = 4;
                 header.Cells[1, 12].Text = "RZ";
                 header.Cells[2, 12].Text = "(kN・m)";
             }
+
+            RefreshIntensityRowColors();
         }
 
         internal void RefreshDimension()
@@ -339,26 +341,41 @@ namespace FrameWebforCS.components.input
             sheet.StartingRowNumber = 1;
         }
 
-        private void RefreshCaseSelector(object? sender, EventArgs e)
+        /// <summary>
+        /// 各行のCaseId（実荷重番号）が偶数なら、その行全体を薄い青にする
+        /// 奇数の行も通常色に戻すことで、番号変更後に色が残るのを防ぎます。
+        /// </summary>
+        private void RefreshIntensityRowColors()
         {
-            string selected = _service.SelectedCaseId;
-            var caseIds = new List<string> { selected };
-            foreach (string id in _service.CaseIds)
-                if (!caseIds.Contains(id)) caseIds.Add(id);
-            _caseSelector.BeginUpdate();
-            try
+            for (int i = 0; i < fpSpread1_Sheet2.RowCount; i++)
             {
-                _caseSelector.Items.Clear();
-                foreach (string id in caseIds)
-                    _caseSelector.Items.Add(id);
-                _caseSelector.SelectedItem = selected;
-            }
-            finally
-            {
-                _caseSelector.EndUpdate();
+                var row = _service.GetIntensityRowAt(i);
+                bool isEven = int.TryParse(row?.CaseId, out int caseId)
+                    && caseId % 2 == 0;
+
+                fpSpread1_Sheet2.Rows[i].BackColor =
+                    isEven ? Color.AliceBlue : SystemColors.Window;
             }
         }
 
+        /// <summary>
+        /// JSON読込・実荷重番号変更・行の挿入削除
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnIntensityRowsChanged(object? sender, ListChangedEventArgs e)
+        {
+            if (e.ListChangedType != ListChangedType.Reset ||
+                IsDisposed || !IsHandleCreated)
+                return;
+
+            // Spreadの再バインドが終わってから色を更新します。
+            BeginInvoke((System.Action)(() =>
+            {
+                if (!IsDisposed)
+                    RefreshIntensityRowColors();
+            }));
+        }
 
     }
 }

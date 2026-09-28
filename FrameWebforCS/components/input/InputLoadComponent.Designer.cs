@@ -13,10 +13,6 @@
         /// <param name="disposing">マネージド リソースを破棄する場合は true を指定し、その他の場合は false を指定します。</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                _service.CasesChanged -= RefreshCaseSelector;
-            }
             if (disposing && (components != null))
             {
                 components.Dispose();

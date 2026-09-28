@@ -204,6 +204,7 @@ public sealed class UnifiedLoadIntensitySheetTests
                          "2":{"load_node":[{"row":1,"n":"21","tx":2}]}}}
                 """);
             using var component = new InputLoadComponent();
+            Assert.Empty(component.Controls.OfType<ComboBox>());
             var spread = component.Controls.OfType<FpSpread>().Single();
             component.CreateControl();
             spread.ActiveSheetIndex = 1;
@@ -223,10 +224,26 @@ public sealed class UnifiedLoadIntensitySheetTests
 
             var selected = new List<(int Row, string Column)>();
             component.GridSelectionChanged += (row, column) => selected.Add((row, column));
-            typeof(FpSpread).GetMethod("OnEnterCell", BindingFlags.Instance | BindingFlags.NonPublic)!
-                .Invoke(spread, [new EnterCellEventArgs(new SpreadView(spread), second, 10)]);
-            Assert.Contains((1, "tx"), selected);
-            Assert.Equal("2", service.SelectedCaseId);
+            service.SelectCase("1");
+            var cases = new List<string>();
+            void OnCaseChanged(string caseId) => cases.Add(caseId);
+            service.SelectedCaseChanged += OnCaseChanged;
+            try
+            {
+                typeof(FpSpread).GetMethod("OnEnterCell", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .Invoke(spread, [new EnterCellEventArgs(new SpreadView(spread), second, 10)]);
+                Assert.Contains((1, "tx"), selected);
+                Assert.Equal("2", service.SelectedCaseId);
+                Assert.Equal(new[] { "2" }, cases);
+
+                spread.ActiveSheetIndex = 0;
+                service.SelectCase("1");
+                cases.Clear();
+                spread.ActiveSheetIndex = 1;
+                Assert.Equal("2", service.SelectedCaseId);
+                Assert.Equal(new[] { "2" }, cases);
+            }
+            finally { service.SelectedCaseChanged -= OnCaseChanged; }
         }));
     }
 
@@ -347,7 +364,7 @@ public sealed class UnifiedLoadIntensitySheetTests
     }
 
     [Fact]
-    public void DeletingTheFinalCaseRowUpdatesSelectedCaseAndCaseSelector()
+    public void DeletingTheFinalCaseRowUpdatesSelectedCaseAndIntensitySheet()
     {
         RunSta(() => WithLoads(service =>
         {
@@ -357,15 +374,16 @@ public sealed class UnifiedLoadIntensitySheetTests
                 """);
             service.SelectCase("2");
             using var component = new InputLoadComponent();
-            var selector = component.Controls.OfType<ComboBox>()
-                .Single(control => control.AccessibleName == "荷重ケース");
-            Assert.Equal("2", selector.SelectedItem);
+            var spread = component.Controls.OfType<FpSpread>().Single();
+            Assert.True(component.SelectGridRow(1, caseId: "2"));
+            var sheet = spread.ActiveSheet;
+            Assert.Equal("2", sheet.Cells[sheet.ActiveRowIndex, 0].Text);
 
             Assert.True(service.DeleteIntensityRows([("2", 1)]));
             Assert.Equal("1", service.SelectedCaseId);
-            Assert.Equal("1", selector.SelectedItem);
             Assert.DoesNotContain("2", service.CaseIds);
-            Assert.DoesNotContain("2", selector.Items.Cast<string>());
+            Assert.True(component.SelectGridRow(1, caseId: "1"));
+            Assert.Equal("1", sheet.Cells[sheet.ActiveRowIndex, 0].Text);
             AssertRow(service, "1", 1, node: "11");
             using (var document = JsonDocument.Parse(Save(service)))
                 Assert.False(document.RootElement.GetProperty("load").TryGetProperty("2", out _));
@@ -373,8 +391,8 @@ public sealed class UnifiedLoadIntensitySheetTests
             Assert.True(service.DeleteIntensityRows([("1", 1)]));
             Assert.Empty(service.CaseIds);
             Assert.Equal("1", service.SelectedCaseId);
-            Assert.Equal("1", selector.SelectedItem); // Editable empty-project Case 1.
-            Assert.Equal(new[] { "1" }, selector.Items.Cast<string>().ToArray());
+            Assert.True(component.SelectGridRow(1, caseId: "1"));
+            Assert.Equal("1", sheet.Cells[sheet.ActiveRowIndex, 0].Text);
             AssertRow(service, "1", 1);
             using (var document = JsonDocument.Parse(Save(service)))
                 Assert.Empty(document.RootElement.GetProperty("load").EnumerateObject());
