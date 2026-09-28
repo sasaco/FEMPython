@@ -29,7 +29,10 @@ public sealed class UnifiedLoadIntensitySheetTests
             AssertRow(service, "1", 1, node: "7");
             AssertRow(service, "2", 1, node: "9");
 
-            Assert.True(service.InsertIntensityRow("2", 2));
+            int secondIndex = service.FindIntensityRowIndex("2", 1);
+            Assert.True(service.InsertIntensityRowAt(secondIndex));
+            Assert.Equal("", service.IntensityRows[secondIndex].LoadId);
+            service.IntensityRows[secondIndex].LoadId = "2";
             AssertRow(service, "2", 2);
             string saved = Save(service);
             using (var document = JsonDocument.Parse(saved))
@@ -67,7 +70,7 @@ public sealed class UnifiedLoadIntensitySheetTests
             Assert.True(service.MoveIntensityRow(source, "2"));
 
             AssertRow(service, "1", 3, node: "14");
-            AssertRow(service, "1", 4); // Input starter, not the former row-four load.
+            Assert.Equal(-1, service.FindIntensityRowIndex("1", 4));
             AssertRow(service, "2", 3, node: "13", member: "23");
             AssertRow(service, "2", 4, node: "33");
             AssertRow(service, "2", 5, node: "34");
@@ -95,23 +98,23 @@ public sealed class UnifiedLoadIntensitySheetTests
                                             {"row":3,"n":"23","tx":3}]}}}
                 """);
 
-            Assert.True(service.InsertIntensityRow("1", 2));
-            AssertRow(service, "1", 2);
-            AssertRow(service, "1", 3, node: "12");
-            AssertRow(service, "1", 5, node: "14");
+            Assert.True(service.InsertIntensityRowAt(1));
+            Assert.Equal("", service.IntensityRows[1].LoadId);
+            AssertRow(service, "1", 2, node: "12");
+            AssertRow(service, "1", 4, node: "14");
             AssertRow(service, "2", 2, node: "22");
 
-            Assert.True(service.DeleteIntensityRows([
-                ("1", 4), ("2", 1), ("1", 2), ("1", 4)
-            ]));
+            Assert.True(service.DeleteIntensityRowsAt([3, 5, 1, 3]));
 
             AssertRow(service, "1", 1, node: "11");
             AssertRow(service, "1", 2, node: "12");
             AssertRow(service, "1", 3, node: "14");
-            AssertRow(service, "1", 4); // Unsaved input starter.
+            Assert.Equal(-1, service.FindIntensityRowIndex("1", 4));
             AssertRow(service, "2", 1, node: "22");
             AssertRow(service, "2", 2, node: "23");
-            AssertRow(service, "2", 3); // Unsaved input starter.
+            Assert.Equal(-1, service.FindIntensityRowIndex("2", 3));
+            Assert.False(service.IntensityRows[5].IsAssigned);
+            Assert.Equal(100000, service.IntensityRows.Count);
         });
     }
 
@@ -182,10 +185,9 @@ public sealed class UnifiedLoadIntensitySheetTests
             source.LoadId = "2"; // Destination row 100000 cannot be shifted.
             Assert.Equal("1", source.CaseId);
             Assert.Equal("1", source.LoadId);
-            Assert.False(service.InsertIntensityRow("1", 1));
-            Assert.False(service.InsertIntensityRow("1", 0));
-            Assert.False(service.InsertIntensityRow("0", 1));
-            Assert.False(service.DeleteIntensityRows([("1", 1), ("2", 99999)]));
+            Assert.False(service.InsertIntensityRowAt(-1));
+            Assert.False(service.InsertIntensityRowAt(100000));
+            Assert.False(service.DeleteIntensityRowsAt([0, 100000]));
             Assert.False(service.MoveIntensityRow(AssertRow(service, "1", 100000, node: "12"), "2"));
             Assert.Equal(before, Save(service));
             AssertRow(service, "1", 1, node: "11");
@@ -328,7 +330,7 @@ public sealed class UnifiedLoadIntensitySheetTests
     }
 
     [Fact]
-    public void BackslashInsertsAtActiveCaseRowAndCellDeleteClearsOnlyTheValue()
+    public void BackslashInsertsAnAnonymousDisplayRowAndCellDeleteClearsOnlyTheValue()
     {
         RunSta(() => WithLoads(service =>
         {
@@ -341,24 +343,26 @@ public sealed class UnifiedLoadIntensitySheetTests
             component.CreateControl();
             spread.ActiveSheetIndex = 1;
             var sheet = spread.ActiveSheet;
-            sheet.SetActiveCell(service.FindIntensityRowIndex("2", 1), 10);
+            int insertIndex = service.FindIntensityRowIndex("2", 1);
+            sheet.SetActiveCell(insertIndex, 10);
             var insert = new KeyEventArgs(Keys.Oem5);
             typeof(InputLoadComponent).GetMethod("OnSpreadKeyDown",
                 BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(component, [spread, insert]);
             Assert.True(insert.SuppressKeyPress);
-            AssertRow(service, "2", 1);
-            AssertRow(service, "2", 2, node: "21");
+            Assert.False(service.IntensityRows[insertIndex].IsAssigned);
+            Assert.Equal("", sheet.Cells[insertIndex, 0].Text);
+            AssertRow(service, "2", 1, node: "21");
             AssertRow(service, "1", 1, node: "11");
 
             int count = service.IntensityRows.Count;
-            sheet.SetActiveCell(service.FindIntensityRowIndex("2", 2), 10);
+            sheet.SetActiveCell(service.FindIntensityRowIndex("2", 1), 10);
             var delete = new KeyEventArgs(Keys.Delete);
             typeof(myFpSpread).GetMethod("myFpSpread_KeyDown",
                 BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(spread, [spread, delete]);
             Assert.True(delete.SuppressKeyPress);
             Assert.Equal(count, service.IntensityRows.Count);
-            Assert.Equal("21", AssertRow(service, "2", 2, node: "21").n);
-            Assert.Null(AssertRow(service, "2", 2, node: "21").tx);
+            Assert.Equal("21", AssertRow(service, "2", 1, node: "21").n);
+            Assert.Null(AssertRow(service, "2", 1, node: "21").tx);
             Assert.Equal(1, AssertRow(service, "1", 1, node: "11").tx);
         }));
     }
@@ -391,9 +395,10 @@ public sealed class UnifiedLoadIntensitySheetTests
             Assert.True(service.DeleteIntensityRows([("1", 1)]));
             Assert.Empty(service.CaseIds);
             Assert.Equal("1", service.SelectedCaseId);
-            Assert.True(component.SelectGridRow(1, caseId: "1"));
-            Assert.Equal("1", sheet.Cells[sheet.ActiveRowIndex, 0].Text);
-            AssertRow(service, "1", 1);
+            Assert.False(component.SelectGridRow(1, caseId: "1"));
+            Assert.Equal(100000, sheet.RowCount);
+            Assert.False(service.IntensityRows[0].IsAssigned);
+            Assert.Equal("", sheet.Cells[0, 0].Text);
             using (var document = JsonDocument.Parse(Save(service)))
                 Assert.Empty(document.RootElement.GetProperty("load").EnumerateObject());
         }));
@@ -428,7 +433,8 @@ public sealed class UnifiedLoadIntensitySheetTests
     }
 
     private static string Save(InputLoadService service) =>
-        JsonSerializer.Serialize(new { load = service.getLoadJson() });
+        JsonSerializer.Serialize(new { load = service.getLoadJson(),
+            load_intensity_layout = service.GetIntensityLayoutJson() });
 
     private static void WithLoads(System.Action<InputLoadService> test)
     {

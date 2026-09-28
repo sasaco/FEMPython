@@ -495,7 +495,9 @@ public sealed class ThreeLoadsServiceTests
             Assert.Equal("1", service.SelectedCaseId);
             Assert.Equal(["1"], selected);
             Assert.Equal("C", service.GetDisplaySnapshot()["1"].Symbol);
-            Assert.Equal("1", service.IntensityRows[0].LoadId);
+            Assert.Equal("", service.IntensityRows[0].LoadId);
+            Assert.False(service.IntensityRows[0].IsAssigned);
+            Assert.Equal(100000, service.IntensityRows.Count);
 
             selected.Clear();
             service.ApplyLoads(InputLoadService.ParseLoadJson(newFile.RootElement));

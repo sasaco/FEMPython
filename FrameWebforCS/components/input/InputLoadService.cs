@@ -78,8 +78,19 @@ namespace FrameWebforCS.components.input
 
     internal sealed class clsLoadIntensityRow : INotifyPropertyChanged
     {
-        public int Row { get; init; }
-        public string CaseId { get; set; } = "1";
+        private int _row;
+        public int Row
+        {
+            get => _row;
+            set
+            {
+                _row = value;
+                if (Member != null) Member.row = value;
+                if (Node != null) Node.row = value;
+            }
+        }
+        public string CaseId { get; set; } = "";
+        public bool IsAssigned => CaseId.Length > 0;
         public clsLoadMember? Member { get; set; }
         public clsLoadNode? Node { get; set; }
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -101,30 +112,42 @@ namespace FrameWebforCS.components.input
         public bool HasNode => Node != null &&
             (!string.IsNullOrWhiteSpace(Node.n) || Node.tx != null || Node.ty != null ||
              Node.tz != null || Node.rx != null || Node.ry != null || Node.rz != null);
-        private clsLoadMember EnsureMember() => Member ??= new clsLoadMember { row = Row };
-        private clsLoadNode EnsureNode() => Node ??= new clsLoadNode { row = Row };
+        private void SetMember<T>(T value, Action<clsLoadMember, T> set, string property)
+        {
+            if (!IsAssigned && (value == null || value is string text && string.IsNullOrWhiteSpace(text))) return;
+            if (!InputLoadService.Instance.EnsureIntensityAssignment(this)) return;
+            set(Member ??= new clsLoadMember { row = Row }, value);
+            Changed(property);
+        }
+        private void SetNode<T>(T value, Action<clsLoadNode, T> set, string property)
+        {
+            if (!IsAssigned && (value == null || value is string text && string.IsNullOrWhiteSpace(text))) return;
+            if (!InputLoadService.Instance.EnsureIntensityAssignment(this)) return;
+            set(Node ??= new clsLoadNode { row = Row }, value);
+            Changed(property);
+        }
         private void Changed(string property) =>
             DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(property));
-        public string? m1 { get => Member?.m1; set { EnsureMember().m1 = value; Changed(nameof(m1)); } }
-        public string? m2 { get => Member?.m2; set { EnsureMember().m2 = value; Changed(nameof(m2)); } }
-        public string? direction { get => Member?.direction; set { EnsureMember().direction = value; Changed(nameof(direction)); } }
-        public string? mark { get => Member?.mark; set { EnsureMember().mark = value; Changed(nameof(mark)); } }
-        public string? L1 { get => Member?.L1; set { EnsureMember().L1 = value; Changed(nameof(L1)); } }
-        public string? L2 { get => Member?.L2; set { EnsureMember().L2 = value; Changed(nameof(L2)); } }
-        public float? P1 { get => Member?.P1; set { EnsureMember().P1 = value; Changed(nameof(P1)); } }
-        public float? P2 { get => Member?.P2; set { EnsureMember().P2 = value; Changed(nameof(P2)); } }
-        public string? n { get => Node?.n; set { EnsureNode().n = value; Changed(nameof(n)); } }
-        public float? tx { get => Node?.tx; set { EnsureNode().tx = value; Changed(nameof(tx)); } }
-        public float? ty { get => Node?.ty; set { EnsureNode().ty = value; Changed(nameof(ty)); } }
-        public float? tz { get => Node?.tz; set { EnsureNode().tz = value; Changed(nameof(tz)); } }
-        public float? rx { get => Node?.rx; set { EnsureNode().rx = value; Changed(nameof(rx)); } }
-        public float? ry { get => Node?.ry; set { EnsureNode().ry = value; Changed(nameof(ry)); } }
-        public float? rz { get => Node?.rz; set { EnsureNode().rz = value; Changed(nameof(rz)); } }
+        public string? m1 { get => Member?.m1; set { SetMember(value, (row, item) => row.m1 = item, nameof(m1)); } }
+        public string? m2 { get => Member?.m2; set { SetMember(value, (row, item) => row.m2 = item, nameof(m2)); } }
+        public string? direction { get => Member?.direction; set { SetMember(value, (row, item) => row.direction = item, nameof(direction)); } }
+        public string? mark { get => Member?.mark; set { SetMember(value, (row, item) => row.mark = item, nameof(mark)); } }
+        public string? L1 { get => Member?.L1; set { SetMember(value, (row, item) => row.L1 = item, nameof(L1)); } }
+        public string? L2 { get => Member?.L2; set { SetMember(value, (row, item) => row.L2 = item, nameof(L2)); } }
+        public float? P1 { get => Member?.P1; set { SetMember(value, (row, item) => row.P1 = item, nameof(P1)); } }
+        public float? P2 { get => Member?.P2; set { SetMember(value, (row, item) => row.P2 = item, nameof(P2)); } }
+        public string? n { get => Node?.n; set { SetNode(value, (row, item) => row.n = item, nameof(n)); } }
+        public float? tx { get => Node?.tx; set { SetNode(value, (row, item) => row.tx = item, nameof(tx)); } }
+        public float? ty { get => Node?.ty; set { SetNode(value, (row, item) => row.ty = item, nameof(ty)); } }
+        public float? tz { get => Node?.tz; set { SetNode(value, (row, item) => row.tz = item, nameof(tz)); } }
+        public float? rx { get => Node?.rx; set { SetNode(value, (row, item) => row.rx = item, nameof(rx)); } }
+        public float? ry { get => Node?.ry; set { SetNode(value, (row, item) => row.ry = item, nameof(ry)); } }
+        public float? rz { get => Node?.rz; set { SetNode(value, (row, item) => row.rz = item, nameof(rz)); } }
     }
 
     internal class InputLoadService
     {
-        private const int MaxNodeId = 100_000;
+        internal const int MaxNodeId = 100_000;
         // Lazy<T> を使ってスレッドセーフかつ遅延評価のシングルトンを実装
         private static readonly Lazy<InputLoadService> _instance =
             new Lazy<InputLoadService>(() => new InputLoadService());
@@ -133,6 +156,10 @@ namespace FrameWebforCS.components.input
         public static InputLoadService Instance => _instance.Value;
 
         private Dictionary<string, clsLoad> _load;
+        private readonly SortedSet<int> _assignedIndices = new();
+        private readonly Dictionary<(string CaseId, int Row), int> _rowIndices = new();
+        private readonly Dictionary<clsLoadIntensityRow, int> _displayIndices = new();
+        public IEnumerable<int> AssignedIntensityRowIndices => _assignedIndices;
         private string _selectedCaseId = "1";
         public BindingList<clsLoadNameRow> LoadNames { get; } = new();
         public BindingList<clsLoadIntensityRow> IntensityRows { get; } = new();
@@ -169,8 +196,12 @@ namespace FrameWebforCS.components.input
             IntensityRows.AllowRemove = false;
             IntensityRows.RaiseListChangedEvents = false;
             for (int index = 0; index < MaxNodeId; index++)
+            {
                 LoadNames.Add(new clsLoadNameRow());
-            IntensityRows.Add(new clsLoadIntensityRow { Row = 1 });
+                var row = new clsLoadIntensityRow();
+                IntensityRows.Add(row);
+                _displayIndices.Add(row, index);
+            }
             LoadNames.RaiseListChangedEvents = true;
             IntensityRows.RaiseListChangedEvents = true;
             LoadNames.ListChanged += LoadNames_ListChanged;
@@ -188,7 +219,7 @@ namespace FrameWebforCS.components.input
         /// <param name="jsonData"></param>
         public void setLoadJson(JsonElement jsonData)
         {
-            ApplyLoads(ParseLoadJson(jsonData));
+            ApplyLoads(ParseLoadData(jsonData));
         }
 
         // Parse before mutating live rows so InputDataService can stage the whole file.
@@ -202,8 +233,11 @@ namespace FrameWebforCS.components.input
                 return new Dictionary<string, clsLoad>();
             if (loadJson.ValueKind != JsonValueKind.Object)
                 throw new JsonException("load must be an object.");
+            var caseIds = new HashSet<string>();
             foreach (JsonProperty caseJson in loadJson.EnumerateObject())
             {
+                if (!caseIds.Add(caseJson.Name))
+                    throw new JsonException($"Duplicate load case ID: {caseJson.Name}");
                 if (caseJson.Value.ValueKind != JsonValueKind.Object)
                     throw new JsonException($"Invalid load case: {caseJson.Name}");
                 foreach (string rowName in new[] { "load_node", "load_member", "input_rows" })
@@ -250,10 +284,65 @@ namespace FrameWebforCS.components.input
                 if (!normalized.TryAdd(number.ToString(CultureInfo.InvariantCulture), item))
                     throw new JsonException($"Duplicate load case ID: {id}");
             }
+            if (normalized.Values.Sum(item => (long)(item.input_rows?.Count ?? 0)) > MaxNodeId)
+                throw new JsonException("Load intensity rows exceed display capacity.");
             return normalized;
         }
 
+        internal sealed record PreparedLoadData(Dictionary<string, clsLoad> Loads,
+            Dictionary<int, (string CaseId, int Row)> Layout);
+
+        internal static PreparedLoadData ParseLoadData(JsonElement root)
+        {
+            var loads = ParseLoadJson(root);
+            var layout = new Dictionary<int, (string CaseId, int Row)>();
+            if (!root.TryGetProperty("load_intensity_layout", out var metadata))
+            {
+                int index = 0;
+                foreach (var (id, load) in loads)
+                    foreach (int row in load.input_rows ?? new List<int>())
+                        layout.Add(index++, (id, row));
+                return new PreparedLoadData(loads, layout);
+            }
+            if (metadata.ValueKind != JsonValueKind.Object ||
+                !metadata.TryGetProperty("version", out var version) ||
+                version.ValueKind != JsonValueKind.Number || !version.TryGetInt32(out int value) || value != 1 ||
+                !metadata.TryGetProperty("rows", out var rows) || rows.ValueKind != JsonValueKind.Array)
+                throw new JsonException("Invalid load_intensity_layout format or version.");
+            var expected = loads.SelectMany(item => (item.Value.input_rows ?? new List<int>())
+                .Select(row => (CaseId: item.Key, Row: row))).ToHashSet();
+            var seen = new HashSet<(string CaseId, int Row)>();
+            foreach (var item in rows.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object ||
+                    !item.TryGetProperty("slot", out var slotJson) || slotJson.ValueKind != JsonValueKind.Number ||
+                    !slotJson.TryGetInt32(out int slot) || slot < 1 || slot > MaxNodeId ||
+                    !item.TryGetProperty("case_id", out var caseJson) || caseJson.ValueKind != JsonValueKind.String ||
+                    !item.TryGetProperty("row", out var rowJson) || rowJson.ValueKind != JsonValueKind.Number ||
+                    !rowJson.TryGetInt32(out int row))
+                    throw new JsonException("Invalid load intensity layout row.");
+                string id = caseJson.GetString()!;
+                if (!ValidCaseId(id) || !expected.Contains((id, row)) || !seen.Add((id, row)) ||
+                    !layout.TryAdd(slot - 1, (id, row)))
+                    throw new JsonException("Duplicate or unknown load intensity layout reference.");
+            }
+            if (!expected.SetEquals(seen))
+                throw new JsonException("Load intensity layout omits assigned rows.");
+            return new PreparedLoadData(loads, layout);
+        }
+
+        internal void ApplyLoads(PreparedLoadData prepared) => ReplaceLoad(prepared.Loads, prepared.Layout);
         internal void ApplyLoads(Dictionary<string, clsLoad> prepared) => ReplaceLoad(prepared);
+
+        internal Dictionary<string, object> GetIntensityLayoutJson() => new()
+        {
+            ["version"] = 1,
+            ["rows"] = _assignedIndices.Select(index => new Dictionary<string, object>
+            {
+                ["slot"] = index + 1, ["case_id"] = IntensityRows[index].CaseId,
+                ["row"] = IntensityRows[index].Row
+            }).ToArray()
+        };
 
         /// <summary>
         /// ファイルに保存するとき
@@ -343,76 +432,99 @@ namespace FrameWebforCS.components.input
                 _selectedCaseId = selectCase;
             else if (normalizeSelection && !_load.ContainsKey(_selectedCaseId))
                 _selectedCaseId = _load.Keys.FirstOrDefault() ?? "1";
-            ReplaceIntensityRows();
             DocumentReplacementNotifications.Publish(CasesChanged, this, EventArgs.Empty);
             DocumentReplacementNotifications.Publish(LoadsEdited);
             if (previousCaseId != _selectedCaseId)
                 DocumentReplacementNotifications.Publish(SelectedCaseChanged, _selectedCaseId);
         }
 
-        public int FindIntensityRowIndex(string caseId, int rowNumber)
-        {
-            for (int index = 0; index < IntensityRows.Count; index++)
-                if (IntensityRows[index].CaseId == caseId && IntensityRows[index].Row == rowNumber)
-                    return index;
-            return -1;
-        }
+        public int FindIntensityRowIndex(string caseId, int rowNumber) =>
+            _rowIndices.TryGetValue((caseId, rowNumber), out int index) ? index : -1;
 
         public clsLoadIntensityRow? GetIntensityRowAt(int displayIndex) =>
-            displayIndex >= 0 && displayIndex < IntensityRows.Count ?
-                IntensityRows[displayIndex] : null;
+            displayIndex >= 0 && displayIndex < MaxNodeId ? IntensityRows[displayIndex] : null;
 
-        public bool InsertIntensityRow(string caseId, int rowNumber)
+        internal bool EnsureIntensityAssignment(clsLoadIntensityRow row)
         {
-            if (!ValidCaseId(caseId) || rowNumber < 1 || rowNumber > MaxNodeId ||
-                FindIntensityRowIndex(caseId, rowNumber) < 0)
-                return false;
-            _load.TryGetValue(caseId, out clsLoad? load);
-            if (load?.input_rows?.Count > 0 && load.input_rows[^1] == MaxNodeId)
-                return false;
+            if (!_displayIndices.TryGetValue(row, out int index)) return false;
+            if (row.IsAssigned) return true;
+            return AssignIntensityRow(row, index, _selectedCaseId);
+        }
+
+        private bool AssignIntensityRow(clsLoadIntensityRow row, int index, string caseId)
+        {
+            if (!ValidCaseId(caseId)) return false;
+            _load.TryGetValue(caseId, out var load);
+            var rows = load?.input_rows;
+            int rowNumber = rows?.Count > 0 ? rows[^1] + 1 : 1;
+            if (rowNumber > MaxNodeId)
+            {
+                int available = 1;
+                foreach (int used in rows!)
+                {
+                    if (used != available) break;
+                    available++;
+                }
+                if (available > MaxNodeId) return false;
+                rowNumber = available;
+            }
             load ??= EnsureCase(caseId);
-            load.input_rows ??= new List<int>();
-            ShiftRows(load, rowNumber, +1);
-            load.input_rows.Add(rowNumber);
+            (load.input_rows ??= new List<int>()).Add(rowNumber);
             load.input_rows.Sort();
+            row.CaseId = caseId;
+            row.Row = rowNumber;
+            _assignedIndices.Add(index);
+            _rowIndices.Add((caseId, rowNumber), index);
+            return true;
+        }
+
+        public bool InsertIntensityRowAt(int displayIndex)
+        {
+            if (displayIndex < 0 || displayIndex >= MaxNodeId || IntensityRows[MaxNodeId - 1].IsAssigned)
+                return false;
+            // Only occupied slots need copying: anonymous slots are indistinguishable.
+            var assignments = _assignedIndices.Select(index => (Index: index, Value: IntensityRows[index]))
+                .Select(item => (Index: item.Index >= displayIndex ? item.Index + 1 : item.Index, item.Value)).ToArray();
+            SetIntensityAssignments(assignments);
             FinishRowOperation();
             return true;
         }
 
-        public bool DeleteIntensityRows(IEnumerable<(string CaseId, int Row)> rows)
-        {
-            if (rows == null) return false;
-            var selected = rows.Distinct().ToArray();
-            var visible = IntensityRows.Select(row => (row.CaseId, row.Row)).ToHashSet();
-            if (selected.Length == 0 || selected.Any(item =>
-                !ValidCaseId(item.CaseId) || !visible.Contains(item)))
-                return false;
+        public bool InsertIntensityRow(string caseId, int rowNumber) =>
+            InsertIntensityRowAt(FindIntensityRowIndex(caseId, rowNumber));
 
-            foreach (var group in selected.GroupBy(item => item.CaseId))
+        public bool DeleteIntensityRows(IEnumerable<(string CaseId, int Row)> rows) =>
+            rows != null && DeleteIntensityRowsAt(rows.Select(item => FindIntensityRowIndex(item.CaseId, item.Row)));
+
+        public bool DeleteIntensityRowsAt(IEnumerable<int> displayIndices)
+        {
+            if (displayIndices == null) return false;
+            int[] deletedIndices = displayIndices.Distinct().OrderBy(index => index).ToArray();
+            if (deletedIndices.Length == 0 || deletedIndices[0] < 0 || deletedIndices[^1] >= MaxNodeId)
+                return false;
+            var deletedSet = deletedIndices.ToHashSet();
+            var assignments = _assignedIndices.Select(index => (Index: index, Value: IntensityRows[index])).ToArray();
+            foreach (var group in assignments.Where(item => deletedSet.Contains(item.Index))
+                .GroupBy(item => item.Value.CaseId))
             {
-                if (!_load.TryGetValue(group.Key, out clsLoad? load) ||
-                    load.input_rows == null) continue; // Unsaved starter row.
-                var existing = load.input_rows.ToHashSet();
-                int[] deleted = group.Select(item => item.Row)
-                    .Where(existing.Contains).OrderBy(row => row).ToArray();
-                if (deleted.Length == 0) continue;
-                var deletedSet = deleted.ToHashSet();
-                load.input_rows = load.input_rows.Where(row => !deletedSet.Contains(row))
+                clsLoad load = _load[group.Key];
+                int[] deleted = group.Select(item => item.Value.Row).OrderBy(row => row).ToArray();
+                var rowSet = deleted.ToHashSet();
+                load.input_rows = load.input_rows!.Where(row => !rowSet.Contains(row))
                     .Select(row => row - CountBefore(deleted, row)).ToList();
+                load.load_node?.RemoveAll(node => rowSet.Contains(node.row));
+                load.load_member?.RemoveAll(member => rowSet.Contains(member.row));
                 if (load.load_node != null)
-                {
-                    load.load_node.RemoveAll(node => deletedSet.Contains(node.row));
-                    foreach (var node in load.load_node)
-                        node.row -= CountBefore(deleted, node.row);
-                }
+                    foreach (var node in load.load_node) node.row -= CountBefore(deleted, node.row);
                 if (load.load_member != null)
-                {
-                    load.load_member.RemoveAll(member => deletedSet.Contains(member.row));
-                    foreach (var member in load.load_member)
-                        member.row -= CountBefore(deleted, member.row);
-                }
+                    foreach (var member in load.load_member) member.row -= CountBefore(deleted, member.row);
+                foreach (var survivor in assignments.Where(item => item.Value.CaseId == group.Key &&
+                    !deletedSet.Contains(item.Index)))
+                    survivor.Value.Row -= CountBefore(deleted, survivor.Value.Row);
                 RemoveEmptyCase(group.Key, load);
             }
+            SetIntensityAssignments(assignments.Where(item => !deletedSet.Contains(item.Index))
+                .Select(item => (Index: item.Index - CountBefore(deletedIndices, item.Index), item.Value)));
             FinishRowOperation(normalizeSelection: true);
             return true;
         }
@@ -426,47 +538,89 @@ namespace FrameWebforCS.components.input
         public bool MoveIntensityRow(clsLoadIntensityRow row, string destinationCaseId)
         {
             if (row == null || !ValidCaseId(destinationCaseId) ||
-                row.Row < 1 || row.Row > MaxNodeId ||
-                FindIntensityRowIndex(row.CaseId, row.Row) < 0)
-                return false;
+                !_displayIndices.TryGetValue(row, out int displayIndex)) return false;
+            if (!row.IsAssigned)
+            {
+                if (!AssignIntensityRow(row, displayIndex, destinationCaseId)) return false;
+                DocumentReplacementNotifications.Defer(() => IntensityRows.ResetItem(displayIndex));
+                FinishRowOperation(selectCase: destinationCaseId);
+                DocumentReplacementNotifications.Defer(() => IntensityRowMoved?.Invoke(destinationCaseId, row.Row));
+                return true;
+            }
             if (row.CaseId == destinationCaseId) return true;
             _load.TryGetValue(destinationCaseId, out clsLoad? destination);
-            if (destination?.input_rows?.Count > 0 &&
-                destination.input_rows[^1] == MaxNodeId &&
-                destination.input_rows[^1] >= row.Row)
+            if (destination?.input_rows?.Count > 0 && destination.input_rows[^1] == MaxNodeId)
                 return false;
-
-            _load.TryGetValue(row.CaseId, out clsLoad? source);
-            bool persisted = source?.input_rows?.Contains(row.Row) ?? false;
-            clsLoadNode? node = source?.load_node?.FirstOrDefault(item => item.row == row.Row);
-            clsLoadMember? member = source?.load_member?.FirstOrDefault(item => item.row == row.Row);
-            if (persisted && source != null)
-            {
-                source.input_rows!.Remove(row.Row);
-                source.load_node?.Remove(node!);
-                source.load_member?.Remove(member!);
-                ShiftRowsAfterDeletion(source, row.Row);
-                RemoveEmptyCase(row.CaseId, source);
-            }
+            string sourceCaseId = row.CaseId;
+            int rowNumber = row.Row;
+            clsLoad source = _load[sourceCaseId];
+            source.input_rows!.Remove(rowNumber);
+            if (row.Node != null) source.load_node?.Remove(row.Node);
+            if (row.Member != null) source.load_member?.Remove(row.Member);
+            ShiftRowsAfterDeletion(source, rowNumber);
+            RemoveEmptyCase(sourceCaseId, source);
             destination ??= EnsureCase(destinationCaseId);
             destination.input_rows ??= new List<int>();
-            ShiftRows(destination, row.Row, +1);
-            destination.input_rows.Add(row.Row);
+            ShiftRows(destination, rowNumber, +1);
+            destination.input_rows.Add(rowNumber);
             destination.input_rows.Sort();
-            if (node != null)
+            foreach (int index in _assignedIndices)
             {
-                node.row = row.Row;
-                (destination.load_node ??= new List<clsLoadNode>()).Add(node);
+                var affected = IntensityRows[index];
+                if (ReferenceEquals(affected, row)) continue;
+                if (affected.CaseId == sourceCaseId && affected.Row > rowNumber) affected.Row--;
+                else if (affected.CaseId == destinationCaseId && affected.Row >= rowNumber) affected.Row++;
             }
-            if (member != null)
+            row.CaseId = destinationCaseId;
+            if (row.Node != null)
             {
-                member.row = row.Row;
-                (destination.load_member ??= new List<clsLoadMember>()).Add(member);
+                row.Node.row = rowNumber;
+                if (row.HasNode) (destination.load_node ??= new List<clsLoadNode>()).Add(row.Node);
             }
+            if (row.Member != null)
+            {
+                row.Member.row = rowNumber;
+                if (row.HasMember) (destination.load_member ??= new List<clsLoadMember>()).Add(row.Member);
+            }
+            ReindexAssignedRows();
+            DocumentReplacementNotifications.Defer(() => IntensityRows.ResetBindings());
             FinishRowOperation(selectCase: destinationCaseId);
-            DocumentReplacementNotifications.Defer(() =>
-                IntensityRowMoved?.Invoke(destinationCaseId, row.Row));
+            DocumentReplacementNotifications.Defer(() => IntensityRowMoved?.Invoke(destinationCaseId, rowNumber));
             return true;
+        }
+
+        private void ReindexAssignedRows()
+        {
+            _rowIndices.Clear();
+            foreach (int index in _assignedIndices)
+                _rowIndices.Add((IntensityRows[index].CaseId, IntensityRows[index].Row), index);
+        }
+
+        private void SetIntensityAssignments(IEnumerable<(int Index, clsLoadIntensityRow Value)> assignments)
+        {
+            var next = assignments.ToDictionary(item => item.Index, item => item.Value);
+            IntensityRows.RaiseListChangedEvents = false;
+            try
+            {
+                int[] changed = _assignedIndices.Union(next.Keys)
+                    .Where(index => !next.TryGetValue(index, out var row) ||
+                        !ReferenceEquals(IntensityRows[index], row)).ToArray();
+                foreach (int index in changed)
+                {
+                    _displayIndices.Remove(IntensityRows[index]);
+                    IntensityRows[index] = next.TryGetValue(index, out var row) ? row : new clsLoadIntensityRow();
+                }
+                foreach (int index in changed)
+                    _displayIndices[IntensityRows[index]] = index;
+                _assignedIndices.Clear();
+                _assignedIndices.UnionWith(next.Keys);
+                ReindexAssignedRows();
+            }
+            finally
+            {
+                IntensityRows.RaiseListChangedEvents = true;
+            }
+            DocumentReplacementNotifications.Defer(() => IntensityRows.ResetBindings());
         }
 
         private static void ShiftRows(clsLoad load, int from, int delta)
@@ -573,7 +727,6 @@ namespace FrameWebforCS.components.input
                 _load.Remove(id);
             else
                 _load[id] = row.Value;
-            ReplaceIntensityRows();
             DocumentReplacementNotifications.Publish(CasesChanged, this, EventArgs.Empty);
             DocumentReplacementNotifications.Publish(LoadsEdited);
         }
@@ -582,7 +735,8 @@ namespace FrameWebforCS.components.input
         {
             if (change.ListChangedType != ListChangedType.ItemChanged || change.NewIndex < 0)
                 return;
-            if (change.PropertyDescriptor?.Name == nameof(clsLoadIntensityRow.LoadId))
+            if (change.PropertyDescriptor == null ||
+                change.PropertyDescriptor.Name == nameof(clsLoadIntensityRow.LoadId))
                 return;
             clsLoadIntensityRow row = IntensityRows[change.NewIndex];
             if (!_load.TryGetValue(row.CaseId, out clsLoad? load))
@@ -591,19 +745,6 @@ namespace FrameWebforCS.components.input
                 row.HasMember ? row.Member : null, member => member.row);
             UpdateNestedRow(load.load_node ??= new List<clsLoadNode>(), row.Row,
                 row.HasNode ? row.Node : null, node => node.row);
-            // Editing the starter row makes it persistent; clearing an existing row
-            // leaves its blank position in input_rows for save and reload.
-            if (row.HasMember || row.HasNode)
-            {
-                load.input_rows ??= new List<int>();
-                if (!load.input_rows.Contains(row.Row))
-                {
-                    load.input_rows.Add(row.Row);
-                    load.input_rows.Sort();
-                    ReplaceIntensityRows();
-                }
-            }
-            if (!HasData(load)) _load.Remove(row.CaseId);
             DocumentReplacementNotifications.Publish(CasesChanged, this, EventArgs.Empty);
             DocumentReplacementNotifications.Publish(LoadsEdited);
         }
@@ -622,7 +763,7 @@ namespace FrameWebforCS.components.input
                 list[index] = value;
         }
 
-        private void ReplaceLoad(Dictionary<string, clsLoad> next)
+        private void ReplaceLoad(Dictionary<string, clsLoad> next, Dictionary<int, (string CaseId, int Row)>? layout = null)
         {
             string previousCaseId = _selectedCaseId;
             LoadNames.RaiseListChangedEvents = false;
@@ -648,50 +789,36 @@ namespace FrameWebforCS.components.input
             finally
             {
                 LoadNames.RaiseListChangedEvents = true;
-                DocumentReplacementNotifications.Defer(() => LoadNames.ResetBindings());
             }
-            ReplaceIntensityRows();
+            ReplaceIntensityRows(layout);
+            DocumentReplacementNotifications.Defer(() => LoadNames.ResetBindings());
             DocumentReplacementNotifications.Publish(CasesChanged, this, EventArgs.Empty);
             DocumentReplacementNotifications.Publish(LoadsEdited);
             if (previousCaseId != _selectedCaseId)
                 DocumentReplacementNotifications.Publish(SelectedCaseChanged, _selectedCaseId);
         }
 
-        private void ReplaceIntensityRows()
+        private void ReplaceIntensityRows(Dictionary<int, (string CaseId, int Row)>? layout = null)
         {
-            IntensityRows.RaiseListChangedEvents = false;
-            try
+            var identities = new Dictionary<(string CaseId, int Row), clsLoadIntensityRow>();
+            foreach (var (id, load) in _load)
             {
-                IntensityRows.Clear();
-                foreach (var (caseId, load) in _load)
+                var members = load.load_member?.ToDictionary(row => row.row) ?? new();
+                var nodes = load.load_node?.ToDictionary(row => row.row) ?? new();
+                foreach (int number in load.input_rows ?? new List<int>())
                 {
-                    var members = load.load_member?.ToDictionary(member => member.row) ??
-                        new Dictionary<int, clsLoadMember>();
-                    var nodes = load.load_node?.ToDictionary(node => node.row) ??
-                        new Dictionary<int, clsLoadNode>();
-                    var rows = load.input_rows ?? members.Keys.Concat(nodes.Keys)
-                        .Distinct().OrderBy(row => row).ToList();
-                    foreach (int rowNumber in rows)
+                    members.TryGetValue(number, out var member);
+                    nodes.TryGetValue(number, out var node);
+                    identities.Add((id, number), new clsLoadIntensityRow
                     {
-                        members.TryGetValue(rowNumber, out clsLoadMember? member);
-                        nodes.TryGetValue(rowNumber, out clsLoadNode? node);
-                        IntensityRows.Add(new clsLoadIntensityRow
-                        {
-                            CaseId = caseId, Row = rowNumber, Member = member, Node = node
-                        });
-                    }
-                    int starter = rows.Count == 0 ? 1 : rows[^1] + 1;
-                    if (starter <= MaxNodeId)
-                        IntensityRows.Add(new clsLoadIntensityRow { CaseId = caseId, Row = starter });
+                        CaseId = id, Row = number, Member = member, Node = node
+                    });
                 }
-                if (_load.Count == 0)
-                    IntensityRows.Add(new clsLoadIntensityRow { CaseId = "1", Row = 1 });
             }
-            finally
-            {
-                IntensityRows.RaiseListChangedEvents = true;
-                DocumentReplacementNotifications.Defer(() => IntensityRows.ResetBindings());
-            }
+            if (layout == null)
+                SetIntensityAssignments(identities.Values.Select((row, index) => (index, row)));
+            else
+                SetIntensityAssignments(layout.Select(item => (item.Key, identities[item.Value])));
         }
 
         private static clsLoad? ReadLoad(JsonElement json)

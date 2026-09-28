@@ -53,7 +53,7 @@ public sealed class InputLoadColumnWidthTests(ITestOutputHelper output)
                     Assert.Equal(50f, before[column]);
                 int columnIndex = Enumerable.Range(0, sheet.ColumnCount)
                     .Single(index => sheet.Columns[index].DataField == field);
-                int rowIndex = service.FindIntensityRowIndex("1", 1);
+                int rowIndex = existingRow ? service.FindIntensityRowIndex("1", 1) : 0;
                 Assert.True(rowIndex >= 0);
                 int beforeRows = sheet.RowCount;
                 int resets = 0;
@@ -80,6 +80,7 @@ public sealed class InputLoadColumnWidthTests(ITestOutputHelper output)
                     int committedIndex = service.FindIntensityRowIndex(caseId, 1);
                     var committed = Assert.IsType<clsLoadIntensityRow>(
                         service.GetIntensityRowAt(committedIndex));
+                    Assert.Equal(caseId, sheet.Cells[committedIndex, 0].Text);
                     switch (field)
                     {
                         case "m1": Assert.Equal(text, committed.m1); break;
@@ -94,8 +95,10 @@ public sealed class InputLoadColumnWidthTests(ITestOutputHelper output)
                     output.WriteLine($"Before: [{string.Join(", ", before)}]");
                     output.WriteLine($"Immediately after commit: [{string.Join(", ", immediate)}]");
                     output.WriteLine($"After message processing: [{string.Join(", ", after)}]");
-                    if (existingRow) Assert.Equal(0, resets);
-                    else Assert.True(resets > 0, "The starter-row edit did not reset the bound list.");
+                    Assert.Equal(0, resets);
+                    Assert.Equal(100000, beforeRows);
+                    Assert.Equal(beforeRows, sheet.RowCount);
+                    Assert.False(sheet.DataAutoSizeColumns);
                     Assert.Equal(before, after);
                 }
                 finally { service.IntensityRows.ListChanged -= OnListChanged; }

@@ -242,7 +242,7 @@ namespace FrameWebforCS.providers
             var preparedFixNodes = InputFixNodeService.ParseFixNodeJson(rootElement);
             var preparedFixMembers = InputFixMemberService.ParseFixMemberJson(rootElement);
             var preparedJoints = InputJointService.ParseJointJson(rootElement);
-            var preparedLoads = InputLoadService.ParseLoadJson(rootElement);
+            var preparedLoads = InputLoadService.ParseLoadData(rootElement);
             var preparedNoticePoints = InputNoticePointsService.ParseNoticePointsJson(rootElement);
             var preparedCombine = InputCombineService.ParseCombineJson(rootElement);
             bool hasResult = rootElement.TryGetProperty("result", out var resultElement);
@@ -316,7 +316,7 @@ namespace FrameWebforCS.providers
                 InputFixNodeService.Instance.ApplyFixNode(preparedFixNodes);
                 InputFixMemberService.Instance.ApplyFixMember(preparedFixMembers);
                 InputJointService.Instance.ApplyJoint(preparedJoints);
-                InputLoadService.Instance.ApplyLoads(preparedLoads ?? new Dictionary<string, clsLoad>());
+                InputLoadService.Instance.ApplyLoads(preparedLoads);
                 InputNoticePointsService.Instance.ApplyNoticePoints(preparedNoticePoints);
                 InputCombineService.Instance.ApplyCombine(preparedCombine.Combine,
                     preparedCombine.Define, preparedCombine.Pickup);
@@ -389,6 +389,9 @@ namespace FrameWebforCS.providers
                 ["combine"] = InputCombineService.Instance.getCombineJson(),
                 ["pickup"] = InputCombineService.Instance.getPickupJson(),
             };
+
+            if (InputLoadService.Instance.AssignedIntensityRowIndices.Any())
+                saved["load_intensity_layout"] = InputLoadService.Instance.GetIntensityLayoutJson();
 
             var results = MergeResults(
                 ResultDisgService.Instance.getDisgJson(),

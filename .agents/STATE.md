@@ -22,6 +22,28 @@ Rolling progress summary (latest 5 checkpoints): [PROGRESS.md](../PROGRESS.md)
 
 <!-- Working state below is maintained by workflow skills and manual notes. -->
 
+## Current Feature: Load Sheet Fixed Rows
+<!-- orchestra:block-id: load-sheet-fixed-rows -->
+
+### Context
+
+- User approved `.agents/docs/plans/load-sheet-fixed-rows.md` on 2026-09-28. All questions resolved; row-header multirow Del removes the selected index set simultaneously and compacts survivors in display order.
+- Sheet2 and IntensityRows stay at exactly MaxNodeId (100,000); anonymous slots have empty LoadId. Backslash shifts all following display slots across Cases, rejects an assigned final slot, and preserves blank positions through save/reload.
+- Owned work: service (`InputLoadService.cs`, `InputDataService.cs`), UI (`InputLoadComponent.cs`, existing shared keyboard hook if needed), focused tests. Task list: `.agents/logs/task-list-team-execute-load-sheet-fixed-rows.md`.
+- User/concurrent InputLoadComponent auto-width comment and SidebarComponent changes are preserved.
+
+### Validation
+
+- Implementation complete. Actual-product isolated runner: 96 passed, 0 failed, 0 skipped; final TRX `.tmp/InputLoadFixedRows/TestResults/fixed-rows.trx`. Product build passes with 0 errors.
+- Independent security/quality/test reviews found a direct replacement Reset ordering defect; corrected and verified by both-list observer regression. Whole-document malformed layout/capacity rollback regressions pass. Review artifacts: `.agents/docs/research/review-{security,quality,tests}-load-sheet-fixed-rows.md`.
+- STA performance samples for empty/mixed/99,999 assigned rows: display 1.588/1.206/1.444 seconds, insertion 62/41/822 ms, deletion 49/42/536 ms, reload 51/42/1,420 ms. Post-stage working-set samples 402/402/545 MiB (not peak or retained memory); raw evidence and limits are in the quality review.
+- Full solution build remains blocked by 12 preexisting LoadDisplayConversion CS0103 errors. AgentOnly substantive gates pass; overall fails only concurrent SidebarComponent trailing whitespace. Coverage not measured. Bounded nested quality CLI timed out; its partial LoadId display hypothesis is disproved by five actual editor/display regressions, and native independent review completed.
+
+### Decisions
+
+- Keep Case-local row identities separate from global display slots. Persist optional sparse load_intensity_layout metadata only in saved inputs, exclude it from calculation snapshots.
+- Do not add an analysis Case-count ceiling or modify backend/Angular/converter behavior.
+
 ---
 
 ## Current Bug Fix: framewebforjs-calculation-communication-error

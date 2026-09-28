@@ -19,6 +19,13 @@ namespace FrameWebforCS.components.input
             ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2) ? "load_values" : "load_names";
         private bool _syncingSelection;
         private bool _rowHeaderSelection;
+        private readonly HashSet<int> _coloredIntensityRows = new();
+        private readonly HashSet<int> _pendingColorRows = new();
+        private bool _pendingAllRowColors;
+        private bool _colorRefreshQueued;
+        private int _intensityRevision;
+        private int _selectionRevision;
+        private int _handleRevision;
         private readonly InputLoadService _service = InputLoadService.Instance;
         private InputDataService _input = InputDataService.Instance;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet1;
@@ -54,6 +61,7 @@ namespace FrameWebforCS.components.input
             fpSpread1.DeleteKeyInterceptor = DeleteSelectedIntensityRows;
             fpSpread1.ActiveSheetChanged += OnActiveSheetChanged;
             HandleCreated += OnDisplayActivated;
+            HandleDestroyed += OnDisplayHandleDestroyed;
             VisibleChanged += OnDisplayActivated;
             Disposed += (_, _) =>
             {
@@ -65,12 +73,14 @@ namespace FrameWebforCS.components.input
                 fpSpread1.DeleteKeyInterceptor = null;
                 fpSpread1.ActiveSheetChanged -= OnActiveSheetChanged;
                 HandleCreated -= OnDisplayActivated;
+                HandleDestroyed -= OnDisplayHandleDestroyed;
                 VisibleChanged -= OnDisplayActivated;
             };
         }
 
         private void OnActiveSheetChanged(object? sender, EventArgs e)
         {
+            _selectionRevision++;
             _rowHeaderSelection = false;
             SelectFocusedCase();
             ActiveLoadDisplayModeChanged?.Invoke(ActiveLoadDisplayMode);
@@ -78,6 +88,7 @@ namespace FrameWebforCS.components.input
 
         private void OnSpreadMouseDown(object? sender, MouseEventArgs e)
         {
+            _selectionRevision++;
             _rowHeaderSelection = ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2) &&
                 fpSpread1.HitTest(e.X, e.Y).Type == HitTestType.RowHeader;
         }
@@ -86,10 +97,15 @@ namespace FrameWebforCS.components.input
         {
             // The service reorders the bound list while Spread commits the edit.
             // Move the active cell only after that binding transaction has ended.
-            if (!IsDisposed && IsHandleCreated)
+            int intensityRevision = _intensityRevision;
+            int selectionRevision = _selectionRevision;
+            if (!IsDisposed && !Disposing && IsHandleCreated)
                 BeginInvoke((System.Action)(() =>
                 {
-                    if (!IsDisposed && SelectGridRow(row, "LoadId", caseId))
+                    if (!IsDisposed && !Disposing && IsHandleCreated &&
+                        intensityRevision == _intensityRevision &&
+                        selectionRevision == _selectionRevision &&
+                        SelectGridRow(row, "LoadId", caseId))
                         GridSelectionChanged?.Invoke(row, "loadid");
                 }));
         }
@@ -101,11 +117,16 @@ namespace FrameWebforCS.components.input
                 return;
 
             int displayIndex = fpSpread1_Sheet2.ActiveRowIndex;
-            clsLoadIntensityRow? current = _service.GetIntensityRowAt(displayIndex);
-            string caseId = current?.CaseId ?? _service.SelectedCaseId;
-            int row = current?.Row ?? 1;
-            if (_service.InsertIntensityRow(caseId, row))
-                SelectGridRow(row, caseId: caseId);
+            int columnIndex = fpSpread1_Sheet2.ActiveColumnIndex;
+            bool inserted;
+            _syncingSelection = true;
+            try { inserted = _service.InsertIntensityRowAt(displayIndex); }
+            finally { _syncingSelection = false; }
+            if (inserted)
+            {
+                _selectionRevision++;
+                SelectIntensityDisplayRow(displayIndex, columnIndex, publishSelection: true);
+            }
             e.SuppressKeyPress = true;
         }
 
@@ -129,22 +150,21 @@ namespace FrameWebforCS.components.input
                 for (int row = Math.Max(0, range.Row); row < end; row++)
                     indices.Add(row);
             }
-            var rows = indices.OrderBy(index => index)
-                .Select(_service.GetIntensityRowAt)
-                .Where(row => row != null)
-                .Select(row => (row!.CaseId, row.Row)).ToArray();
-            if (rows.Length == 0) return true;
+            if (indices.Count == 0) return true;
 
             int firstIndex = indices.Min();
-            if (_service.DeleteIntensityRows(rows))
+            int columnIndex = sheet.ActiveColumnIndex;
+            bool deleted;
+            _syncingSelection = true;
+            try { deleted = _service.DeleteIntensityRowsAt(indices); }
+            finally { _syncingSelection = false; }
+            if (deleted)
             {
+                _selectionRevision++;
                 _rowHeaderSelection = false;
                 int next = Math.Min(firstIndex, sheet.RowCount - 1);
                 if (next >= 0)
-                {
-                    var selected = _service.GetIntensityRowAt(next);
-                    if (selected != null) SelectGridRow(selected.Row, caseId: selected.CaseId);
-                }
+                    SelectIntensityDisplayRow(next, columnIndex, publishSelection: true);
             }
             return true;
         }
@@ -156,6 +176,8 @@ namespace FrameWebforCS.components.input
                 SelectFocusedCase();
                 ActiveLoadDisplayModeChanged?.Invoke(ActiveLoadDisplayMode);
                 RefreshIntensityRowColors();
+                _pendingAllRowColors = false;
+                _pendingColorRows.Clear();
             }
         }
 
@@ -164,15 +186,16 @@ namespace FrameWebforCS.components.input
             if (_syncingSelection || !ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2))
                 return;
             clsLoadIntensityRow? row = _service.GetIntensityRowAt(fpSpread1_Sheet2.ActiveRowIndex);
-            if (row != null) _service.SelectCase(row.CaseId);
+            if (row?.IsAssigned == true) _service.SelectCase(row.CaseId);
         }
 
         private void OnEnterCell(object? sender, EnterCellEventArgs e)
         {
             if (_syncingSelection || e.Row < 0 || e.Column < 0 ||
                 !ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2)) return;
+            _selectionRevision++;
             clsLoadIntensityRow? row = _service.GetIntensityRowAt(e.Row);
-            if (row == null) return;
+            if (row?.IsAssigned != true) return;
             _service.SelectCase(row.CaseId);
             string column = fpSpread1_Sheet2.Columns[e.Column].DataField?.ToLowerInvariant() ?? "";
             GridSelectionChanged?.Invoke(row.Row, column);
@@ -189,15 +212,37 @@ namespace FrameWebforCS.components.input
                 for (int i = 0; i < fpSpread1_Sheet2.ColumnCount; i++)
                     if (string.Equals(fpSpread1_Sheet2.Columns[i].DataField, column,
                             StringComparison.OrdinalIgnoreCase)) { columnIndex = i; break; }
+            return SelectIntensityDisplayRow(displayIndex, columnIndex);
+        }
+
+        private void OnDisplayHandleDestroyed(object? sender, EventArgs e)
+        {
+            _handleRevision++;
+            _selectionRevision++;
+            _colorRefreshQueued = false;
+        }
+
+        private bool SelectIntensityDisplayRow(int displayIndex, int columnIndex,
+            bool publishSelection = false)
+        {
+            clsLoadIntensityRow? row = _service.GetIntensityRowAt(displayIndex);
+            if (IsDisposed || Disposing || row == null || fpSpread1_Sheet2.ColumnCount == 0)
+                return false;
+            _selectionRevision++;
+            columnIndex = Math.Clamp(columnIndex, 0, fpSpread1_Sheet2.ColumnCount - 1);
             _syncingSelection = true;
             try
             {
                 _rowHeaderSelection = false;
-                _service.SelectCase(targetCase);
+                if (row.IsAssigned) _service.SelectCase(row.CaseId);
                 fpSpread1.ActiveSheetIndex = 1;
+                fpSpread1_Sheet2.ClearSelection();
                 fpSpread1_Sheet2.SetActiveCell(displayIndex, columnIndex);
             }
             finally { _syncingSelection = false; }
+            if (publishSelection && row.IsAssigned)
+                GridSelectionChanged?.Invoke(row.Row,
+                    fpSpread1_Sheet2.Columns[columnIndex].DataField?.ToLowerInvariant() ?? "");
             return true;
         }
 
@@ -235,7 +280,7 @@ namespace FrameWebforCS.components.input
         {
             fpSpread1_Sheet2.SheetName = "荷重強度";
             ConfigureRows(fpSpread1_Sheet2);
-            fpSpread1_Sheet2.DataAutoSizeColumns = false;
+            fpSpread1_Sheet2.DataAutoSizeColumns = false; // 再バインド時に Spread が列幅を自動調整しないようにする
 
             // データソースを割り付け
             var column = fpSpread1_Sheet2.Columns;
@@ -303,20 +348,22 @@ namespace FrameWebforCS.components.input
             header.Cells[2, 11].Text = "(kN)";
             header.Cells[1, 12].Text = "Z";
             header.Cells[2, 12].Text = "(kN)";
-            header.Cells[1, 13].Text = "RX";
-            header.Cells[2, 13].Text = "(kN・m)";
-            header.Cells[1, 14].Text = "RY";
-            header.Cells[2, 14].Text = "(kN・m)";
-            header.Cells[1, 15].Text = "RZ";
-            header.Cells[2, 15].Text = "(kN・m)";
+            if (_input.dimension != 2)
+            {
+                header.Cells[1, 13].Text = "RX";
+                header.Cells[2, 13].Text = "(kN・m)";
+                header.Cells[1, 14].Text = "RY";
+                header.Cells[2, 14].Text = "(kN・m)";
+                header.Cells[1, 15].Text = "RZ";
+                header.Cells[2, 15].Text = "(kN・m)";
+            }
 
-            header.Cells[0, 9].ColumnSpan = 6;
+            header.Cells[0, 9].ColumnSpan = _input.dimension == 2 ? 4 : 6;
 
             column[9].Width = 50;
 
             if (_input.dimension == 2)
             {
-                header.Cells[0, 9].ColumnSpan = 4;
                 header.Cells[1, 12].Text = "RZ";
                 header.Cells[2, 12].Text = "(kN・m)";
             }
@@ -348,15 +395,25 @@ namespace FrameWebforCS.components.input
         /// </summary>
         private void RefreshIntensityRowColors()
         {
-            for (int i = 0; i < fpSpread1_Sheet2.RowCount; i++)
-            {
-                var row = _service.GetIntensityRowAt(i);
-                bool isEven = int.TryParse(row?.CaseId, out int caseId)
-                    && caseId % 2 == 0;
+            var indices = _service.AssignedIntensityRowIndices.ToHashSet();
+            indices.UnionWith(_coloredIntensityRows);
+            foreach (int index in indices)
+                RefreshIntensityRowColor(index);
+        }
 
-                fpSpread1_Sheet2.Rows[i].BackColor =
-                    isEven ? Color.AliceBlue : SystemColors.Window;
+        private void RefreshIntensityRowColor(int index)
+        {
+            if (index < 0 || index >= fpSpread1_Sheet2.RowCount) return;
+            var row = _service.GetIntensityRowAt(index);
+            bool isEven = row?.IsAssigned == true && int.TryParse(row.CaseId, out int caseId)
+                && caseId % 2 == 0;
+            if (isEven)
+            {
+                _coloredIntensityRows.Add(index);
+                fpSpread1_Sheet2.Rows[index].BackColor = Color.AliceBlue;
             }
+            else if (_coloredIntensityRows.Remove(index))
+                fpSpread1_Sheet2.Rows[index].BackColor = SystemColors.Window;
         }
 
         /// <summary>
@@ -366,15 +423,33 @@ namespace FrameWebforCS.components.input
         /// <param name="e"></param>
         private void OnIntensityRowsChanged(object? sender, ListChangedEventArgs e)
         {
-            if (e.ListChangedType != ListChangedType.Reset ||
-                IsDisposed || !IsHandleCreated)
-                return;
+            if (IsDisposed || Disposing) return;
+            if (e.ListChangedType == ListChangedType.Reset)
+            {
+                _intensityRevision++;
+                _pendingAllRowColors = true;
+                _pendingColorRows.Clear();
+            }
+            else if (e.ListChangedType == ListChangedType.ItemChanged && e.NewIndex >= 0)
+                _pendingColorRows.Add(e.NewIndex);
+            else return;
+            if (!IsHandleCreated || _colorRefreshQueued) return;
 
             // Spreadの再バインドが終わってから色を更新します。
+            _colorRefreshQueued = true;
+            int handleRevision = _handleRevision;
             BeginInvoke((System.Action)(() =>
             {
-                if (!IsDisposed)
+                if (handleRevision != _handleRevision) return;
+                _colorRefreshQueued = false;
+                if (IsDisposed || Disposing || !IsHandleCreated) return;
+                if (_pendingAllRowColors)
                     RefreshIntensityRowColors();
+                else
+                    foreach (int index in _pendingColorRows)
+                        RefreshIntensityRowColor(index);
+                _pendingAllRowColors = false;
+                _pendingColorRows.Clear();
             }));
         }
 

@@ -20,6 +20,8 @@ namespace FrameWebforCS.components.menu
     {
         private AppRoutingModule routing = AppRoutingModule.Instance;
         private readonly InputDataService _input = InputDataService.Instance;
+        
+        // 2Dと3Dで表示が変わるNode
         private readonly TreeNode _panelNode;
         private readonly TreeNode _solidNode;
         private readonly TreeNode _inputNode;
