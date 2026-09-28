@@ -235,6 +235,7 @@ namespace FrameWebforCS.components.input
         {
             fpSpread1_Sheet2.SheetName = "荷重強度";
             ConfigureRows(fpSpread1_Sheet2);
+            fpSpread1_Sheet2.DataAutoSizeColumns = false;
 
             // データソースを割り付け
             var column = fpSpread1_Sheet2.Columns;
