@@ -184,6 +184,7 @@ namespace FrameWebforCS.components.menu
         public SidebarComponent()
         {
             InitializeComponent();
+            treeView1.NodeMouseClick += treeView1_NodeMouseClick;
             setTreeView(targetComponents.Clone());
             _panelNode = treeView1.Nodes.Find("shell", true).Single();
             _solidNode = treeView1.Nodes.Find("solid", true).Single();
@@ -250,7 +251,20 @@ namespace FrameWebforCS.components.menu
 
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            var key = e.Node?.Name;
+            // Mouse navigation is handled by NodeMouseClick, including repeated clicks.
+            if (e.Action != TreeViewAction.ByMouse)
+                ShowNode(e.Node);
+        }
+
+        private void treeView1_NodeMouseClick(object? sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+                ShowNode(e.Node);
+        }
+
+        private void ShowNode(TreeNode? node)
+        {
+            var key = node?.Name;
 
             if (key == null)
                 return;
@@ -265,7 +279,7 @@ namespace FrameWebforCS.components.menu
                     routing.contentsDailogShow(value.Component, value.title, value.option, key);
 
                     // TreeViewの見た目をチェック状態にする
-                    e.Node?.Checked = true;
+                    node?.Checked = true;
                 }
             }
             

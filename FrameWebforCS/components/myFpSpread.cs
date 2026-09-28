@@ -23,6 +23,7 @@ namespace FrameWebforCS.components
         public SheetView AddNewSheetView()
         {
             var fpSpread1_Sheet1 = base.AddNewSheetView();
+            fpSpread1_Sheet1.DataAutoSizeColumns = false; // 再バインド時に Spread が列幅を自動調整しないようにする
 
             return fpSpread1_Sheet1;
         }
