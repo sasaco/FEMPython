@@ -81,6 +81,41 @@ internal sealed class ThreeResultsService : IDisposable
     internal int SectionForceCount => _fsecRoot.Children.Count;
     internal string Mode => _mode;
     internal string? CurrentIndex => _currentIndex;
+    internal string CurrentComponent => _currentRadio;
+
+    internal sealed record PrintDerivedState(
+        Dictionary<string, IReadOnlyDictionary<string, IReadOnlyList<SectionForceSample>>> Cases,
+        Dictionary<string, long> Revisions);
+
+    internal PrintDerivedState CapturePrintDerivedState() =>
+        new(new Dictionary<string, IReadOnlyDictionary<string, IReadOnlyList<SectionForceSample>>>(_derivedFsec),
+            new Dictionary<string, long>(_derivedRevision));
+
+    internal void SetPrintDerivedFsec(string mode, string caseId,
+        IReadOnlyList<SectionForceSample> samples)
+    {
+        ThrowIfDisposed();
+        if (mode is not ("comb_fsec" or "pick_fsec"))
+            throw new ArgumentOutOfRangeException(nameof(mode));
+        if (string.IsNullOrWhiteSpace(caseId) || samples.Count == 0)
+            throw new ArgumentException("A derived print diagram needs a case and samples.");
+        _derivedFsec[mode] = new Dictionary<string, IReadOnlyList<SectionForceSample>>
+        {
+            [caseId] = samples.ToArray()
+        };
+        if (_mode == mode) Redraw();
+    }
+
+    internal void RestorePrintDerivedState(PrintDerivedState state)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(state);
+        _derivedFsec.Clear();
+        foreach (var item in state.Cases) _derivedFsec.Add(item.Key, item.Value);
+        _derivedRevision.Clear();
+        foreach (var item in state.Revisions) _derivedRevision.Add(item.Key, item.Value);
+        Redraw();
+    }
     internal string? RenderedDisplacementCase => _renderedDisgCase;
     internal ResultViewportExtrema? CurrentExtrema { get; private set; }
     internal float DisplacementScale => _displacementScale;

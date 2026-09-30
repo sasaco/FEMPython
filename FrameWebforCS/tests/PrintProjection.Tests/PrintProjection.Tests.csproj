@@ -6,22 +6,15 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <AssemblyName>FrameWebforCS.Tests</AssemblyName>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="PrintProjection.Tests\**;PrintUi.Tests\**;PrintViewportSmoke\**" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\FrameWebforCS.csproj" />
+    <ProjectReference Include="..\..\FrameWebforCS.csproj" />
+    <Compile Include="..\PrintProjectionTests.cs" Link="PrintProjectionTests.cs" />
   </ItemGroup>
 </Project>

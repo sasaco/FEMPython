@@ -2,6 +2,7 @@ using FrameWebforCS.components.input;
 using FrameWebforCS.components.result;
 using FrameWebforCS.calculation;
 using FrameWebforCS.providers;
+using FrameWebforCS.providers.printing;
 using SingleFormsDemo;
 using System.Diagnostics;
 using System.Globalization;
@@ -44,6 +45,7 @@ internal sealed class ThreeService : IDisposable
     private readonly HashSet<UserControl> _boundGridComponents = new();
     private string _loadDisplayMode = "load_names";
     private string _memberDisplayMode = "member";
+    private string? _visibleMode;
     private long _lastFrameStamp = Stopwatch.GetTimestamp();
     private bool _disposed;
 
@@ -105,6 +107,101 @@ internal sealed class ThreeService : IDisposable
     internal ResultViewportExtrema? CurrentResultExtrema => _results.CurrentExtrema;
     internal string? SelectedKind { get; private set; }
 
+    internal readonly record struct PrintState(string? VisibleMode, string LoadDisplayMode,
+        string? LoadCase, string ResultMode, string? ResultCase, string ResultComponent,
+        float DisplacementScale, float ReactionScale, float SectionForceScale,
+        int? NodeId, int? MemberId, int? ElementId, int? PanelId,
+        ConstraintSelection? Constraint, (int Row, string Column)? LoadSelection,
+        string? SelectedKind, ThreeResultsService.PrintDerivedState DerivedState);
+
+    internal PrintState CapturePrintState()
+    {
+        FlushPending();
+        return new PrintState(_visibleMode, _loadDisplayMode, _loads.CurrentCaseId,
+            _results.Mode, _results.CurrentIndex, _results.CurrentComponent,
+            _results.DisplacementScale, _results.ReactionScale,
+            _results.SectionForceScale, _nodes.SelectedNodeId,
+            _members.SelectedMemberId, _members.SelectedElementId,
+            _panels.SelectedPanelId, _constraints.Selected, _loads.Selection, SelectedKind,
+            _results.CapturePrintDerivedState());
+    }
+
+    internal void ApplyPrintView(PrintDiagramRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        string mode = request.Mode;
+        string caseId = request.CaseId;
+        string output = request.Output;
+        if (string.IsNullOrWhiteSpace(mode) || string.IsNullOrWhiteSpace(caseId))
+            throw new ArgumentException("A print diagram needs a mode and case.");
+        string route = mode switch
+        {
+            "PrintLoad" or "print_load" => "load",
+            "disg" => "disg",
+            "reac" => "reac",
+            "fsec" => "fsec",
+            "comb_disg" => "combdisg",
+            "pik_disg" => "pickdisg",
+            "comb_reac" => "combreac",
+            "pik_reac" => "pickreac",
+            "comb_fsec" => "combfsec",
+            "pick_fsec" => "pickfsec",
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode,
+                "The print diagram mode is unsupported.")
+        };
+        if (route == "load") _loadDisplayMode = "load_values";
+        ApplyMode(route);
+        if (route == "load")
+        {
+            _loads.SetCase(caseId);
+            if (_loads.VisibleGlyphCount == 0)
+                throw new InvalidOperationException($"Load case '{caseId}' has no visible diagram.");
+            return;
+        }
+
+        string resultMode = ResultMode(route);
+        if (request.DerivedSamples is { } points)
+        {
+            if (resultMode is not ("comb_fsec" or "pick_fsec") || points.Count is 0 or > 100_000 ||
+                points.Any(point => point.MemberId <= 0 || !float.IsFinite(point.Location) ||
+                    !float.IsFinite(point.Value)))
+                throw new ArgumentException("Invalid derived section-force print samples.", nameof(request));
+            _results.SetPrintDerivedFsec(resultMode, caseId, points.Select(point =>
+                new SectionForceSample(point.MemberId, point.Location, point.Value,
+                    point.IsMaximum ? SectionForceEnvelope.Max : SectionForceEnvelope.Min)).ToArray());
+        }
+        _results.SetMode(resultMode, caseId,
+            resultMode is "fsec" or "comb_fsec" or "pick_fsec" ? output : null);
+        int count = resultMode switch
+        {
+            "disg" or "comb_disg" or "pik_disg" => _results.DisplacementCount,
+            "reac" or "comb_reac" or "pik_reac" => _results.ReactionCount,
+            _ => _results.SectionForceCount
+        };
+        if (count == 0)
+            throw new InvalidOperationException($"Result case '{caseId}' has no '{mode}' diagram.");
+    }
+
+    internal void RestorePrintState(PrintState state)
+    {
+        _results.RestorePrintDerivedState(state.DerivedState);
+        _loadDisplayMode = state.LoadDisplayMode;
+        ApplyMode(state.VisibleMode);
+        _loads.SetCase(state.LoadCase);
+        _results.SetMode(state.ResultMode, state.ResultCase, state.ResultComponent);
+        _results.SetDisplacementScale(state.DisplacementScale);
+        _results.SetReactionScale(state.ReactionScale);
+        _results.SetSectionForceScale(state.SectionForceScale);
+        _nodes.Select(state.NodeId);
+        _members.Select(state.MemberId, state.ElementId);
+        _panels.Select(state.PanelId);
+        _constraints.Select(state.Constraint);
+        _members.HighlightRelated(_constraints.SelectedRelatedMemberId);
+        if (state.LoadSelection is { } load)
+            _loads.Select(load.Row, load.Column);
+        SelectedKind = state.SelectedKind;
+    }
+
     internal IEnumerable<ViewportTextLabel> GetVisibleLabels()
     {
         // Other scene owners can contribute their labels here without creating
@@ -117,13 +214,13 @@ internal sealed class ThreeService : IDisposable
         _results.GetPanelGradientLegend();
 
     internal (string Kind, string Label, float Value, float Minimum, float Maximum, float Step)?
-        GetScaleControl() => EffectiveMode(_routing.ActiveModeKey) switch
+        GetScaleControl() => EffectiveMode(_visibleMode) switch
         {
             "member" or "element" => ("member", "部材倍率", _members.MemberScale, 0, 1000, 1),
             "fix_node" => ("fix_node", "節点拘束倍率", _constraints.FixNodeScale, 5, 100, 1),
             "fix_member" => ("fix_member", "部材拘束倍率", _constraints.FixMemberScale, 0, 5, 0.1f),
             "load_values" => ("load", "荷重倍率 (%)", _loads.LoadScale, 0, 400, 1),
-            _ => ResultMode(_routing.ActiveModeKey) switch
+            _ => ResultMode(_visibleMode) switch
             {
                 "disg" or "comb_disg" or "pik_disg" =>
                     ("disg", "変位倍率", _results.DisplacementScale, 0, 2, 0.1f),
@@ -523,6 +620,7 @@ internal sealed class ThreeService : IDisposable
 
     private void ApplyMode(string? mode)
     {
+        _visibleMode = mode;
         // JS ChangeMode uses plural "nodes"/"members" and "panel"; sidebar keys
         // are singular and "shell". This map also clears hidden selection on route exit.
         _nodes.SetNodeMode(mode == "node");

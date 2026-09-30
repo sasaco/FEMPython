@@ -315,9 +315,9 @@ public sealed class UnifiedLoadIntensitySheetTests
                                from x in Enumerable.Range(0, Math.Min(spread.Width, 70))
                                where spread.HitTest(x, y).Type == HitTestType.RowHeader
                                select (X: x, Y: y)).First();
-            typeof(InputLoadComponent).GetMethod("OnSpreadMouseDown",
-                BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(component,
-                [spread, new MouseEventArgs(MouseButtons.Left, 1, headerPoint.X, headerPoint.Y, 0)]);
+            typeof(Control).GetMethod("OnMouseDown",
+                BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(spread,
+                [new MouseEventArgs(MouseButtons.Left, 1, headerPoint.X, headerPoint.Y, 0)]);
             var delete = new KeyEventArgs(Keys.Delete);
             typeof(myFpSpread).GetMethod("myFpSpread_KeyDown",
                 BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(spread, [spread, delete]);
@@ -346,8 +346,8 @@ public sealed class UnifiedLoadIntensitySheetTests
             int insertIndex = service.FindIntensityRowIndex("2", 1);
             sheet.SetActiveCell(insertIndex, 10);
             var insert = new KeyEventArgs(Keys.Oem5);
-            typeof(InputLoadComponent).GetMethod("OnSpreadKeyDown",
-                BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(component, [spread, insert]);
+            typeof(Control).GetMethod("OnKeyDown",
+                BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(spread, [insert]);
             Assert.True(insert.SuppressKeyPress);
             Assert.False(service.IntensityRows[insertIndex].IsAssigned);
             Assert.Equal("", sheet.Cells[insertIndex, 0].Text);

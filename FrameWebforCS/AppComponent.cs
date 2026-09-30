@@ -25,6 +25,14 @@ namespace FrameWebforCS
             Disposed += (_, _) => three.Dispose();
         }
 
+        internal void ShowPrintDialog()
+        {
+            if (_closePending || IsDisposed) return;
+            using var dialog = new components.printing.PrintDialogForm(requests => three.CapturePrintDiagrams(requests));
+            dialog.ShowDialog(this);
+            if (!IsDisposed) Activate();
+        }
+
         private async void OnFormClosing(object? sender, FormClosingEventArgs e)
         {
             if (_calculationClosed)

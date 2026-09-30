@@ -24,6 +24,7 @@ namespace PDF_Manager.Printing
     {
         static public void PrtText(PdfDocument mc, string str, XFont font = null, XStringFormat align = null)
         {
+            mc.CheckBudget();
             if (str == null)
                 return;
 
@@ -42,6 +43,7 @@ namespace PDF_Manager.Printing
         }
         static public void PrtTextLoadName(PdfDocument mc, string str, XFont font = null, XStringFormat align = null)
         {
+            mc.CheckBudget();
             if (str == null)
                 return;
 
@@ -57,6 +59,7 @@ namespace PDF_Manager.Printing
         }
         static public void PrtTextLoadDig(PdfDocument mc, string str, XPoint? point = null, XFont font = null, XStringFormat align = null)
         {
+            mc.CheckBudget();
             if (str == null)
                 return;
 
@@ -82,4 +85,3 @@ namespace PDF_Manager.Printing
         }
     }
 }
-

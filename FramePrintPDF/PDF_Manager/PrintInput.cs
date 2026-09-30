@@ -6,17 +6,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 public class PrintInput
 {
     private PrintData data;
 
-    public PrintInput(string jsonString)
+    public PrintInput(string jsonString, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // データを読み込む
         JObject data = JObject.Parse(jsonString);
+        cancellationToken.ThrowIfCancellationRequested();
         var value = data.ToObject<Dictionary<string, object>>();
+        cancellationToken.ThrowIfCancellationRequested();
         //　準備のためのclassの呼び出し
         this.data = new PrintData(value);
     }
@@ -28,7 +32,7 @@ public class PrintInput
     {
         //  PDF出力のためのclassの呼び出し
         //  整形したデータを送る
-        var mc = PrintInput.printPDF(this.data);
+        using var mc = PrintInput.printPDF(this.data);
 
         // PDFファイルを生成する
         mc.SavePDF();
@@ -37,7 +41,7 @@ public class PrintInput
     {
         //  PDF出力のためのclassの呼び出し
         //  整形したデータを送る
-        var mc = PrintInput.printPDF(this.data);
+        using var mc = PrintInput.printPDF(this.data);
 
         // PDFファイルを生成する
         mc.SavePDF(filename);
@@ -51,7 +55,7 @@ public class PrintInput
     {
         //  PDF出力のためのclassの呼び出し
         //  整形したデータを送る
-        var mc = PrintInput.printPDF(this.data);
+        using var mc = PrintInput.printPDF(this.data);
 
         // PDF を Byte型に変換
         var b = mc.GetPDFBytes();
@@ -63,12 +67,21 @@ public class PrintInput
         return str;
     }
 
+    /// <summary>Generate PDF bytes directly for in-process desktop printing.</summary>
+    public byte[] GetPdfBytes(int maxPages, int maxBytes, CancellationToken cancellationToken = default)
+    {
+        using var document = printPDF(data, maxPages, cancellationToken);
+        return document.GetPDFBytes(maxPages, maxBytes);
+    }
+
     /// <summary>
     /// PDF を生成する
     /// </summary>
     /// <param name="data"></param>
-    private static PdfDocument printPDF(PrintData data)
+    private static PdfDocument printPDF(PrintData data, int maxPages = int.MaxValue,
+        CancellationToken cancellationToken = default)
     {
+        PdfDocument mc = null;
         try
         {
             // PDF ページを準備する
@@ -83,7 +96,7 @@ public class PrintInput
                 var hasPreviousData = false;
                 var prevIndexPage = indexPage;
 
-                PdfDocument mc = new PdfDocument(data, ref indexPage);
+                mc = new PdfDocument(data, ref indexPage, maxPages, cancellationToken);
 
                 //CHECK HAS PRINT INPUT DATA
                 if (data.hasPrintInputData)
@@ -371,7 +384,7 @@ public class PrintInput
                 var prevIndexPage = indexPage;
 
                 //SAME AS NOMARL PRINT
-                PdfDocument mc = new PdfDocument(data, ref indexPage);
+                mc = new PdfDocument(data, ref indexPage, maxPages, cancellationToken);
                 // 荷重図
                 if (data.printDatas.ContainsKey(DiagramInput.KEY))
                 {
@@ -617,13 +630,12 @@ public class PrintInput
                 return mc;
             }
         }
-        catch (Exception e)
+        catch
         {
-            throw new Exception(e.Message);
+            mc?.Dispose();
+            throw;
         }
     }
 
 }
-
-
 

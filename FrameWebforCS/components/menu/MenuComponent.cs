@@ -28,6 +28,7 @@ namespace FrameWebforCS
             _input.DimensionChanged += OnDimensionChanged;
             _input.FileReplaced += OnFileReplaced;
             計算ToolStripMenuItem.Click += CalculationToolStripMenuItem_Click;
+            印刷ToolStripMenuItem.Click += PrintToolStripMenuItem_Click;
             Disposed += (_, _) =>
             {
                 _closing = true;
@@ -64,6 +65,12 @@ namespace FrameWebforCS
         }
 
         private void OnDimensionChanged(int _) => SyncDimensionMenu();
+
+        private void PrintToolStripMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (_closing || FindForm() is not AppComponent owner) return;
+            owner.ShowPrintDialog();
+        }
 
         private void OnFileReplaced(long _)
         {

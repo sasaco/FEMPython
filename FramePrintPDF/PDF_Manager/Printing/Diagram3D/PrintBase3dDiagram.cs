@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SixLabors.ImageSharp;
 
 namespace PDF_Manager.Printing.Diagram3D
 {
@@ -19,6 +20,7 @@ namespace PDF_Manager.Printing.Diagram3D
             {
                 for(int i = 0; i < result.Count; i++)
                 {
+                    mc.CheckBudget();
                     if (result.Count > 1 && i > 0)
                     {
                         mc.NewPage(ref indexPage);
@@ -33,6 +35,7 @@ namespace PDF_Manager.Printing.Diagram3D
                         double distance = 0;
                         for (int p = 0; p < graphic.Result.Count; p++)
                         {
+                            mc.CheckBudget();
                             if (graphic.Result.Count > 1 && p % 2 == 0 && p > 0)
                             {
                                 mc.NewPage(ref indexPage);
@@ -55,9 +58,19 @@ namespace PDF_Manager.Printing.Diagram3D
                             mc.gfx.DrawString(rs.disgSubInfo1 == null ? "" : rs.disgSubInfo1, fontdisg, XBrushes.Black, new XPoint(mc.currentPos.X + 50, mc.currentPos.Y + 90 + distance));
                             mc.gfx.DrawString(rs.disgSubInfo2 == null ? "" : rs.disgSubInfo2, fontdisg, XBrushes.Black, new XPoint(mc.currentPos.X + 50, mc.currentPos.Y + 95 + distance));
 
-                            byte[] source = Convert.FromBase64String(rs.src.Replace("data:image/png;base64,", ""));
-                            var contents = new MemoryStream(source);
-                            XImage image = XImage.FromStream(() => contents);
+                            const int maxImageBytes = 16 * 1024 * 1024;
+                            const long maxImagePixels = 16_000_000;
+                            string encoded = rs.src.Replace("data:image/png;base64,", "");
+                            if (encoded.Length > ((long)maxImageBytes + 2) / 3 * 4)
+                                throw new InvalidOperationException("Diagram image exceeds the byte limit.");
+                            byte[] source = Convert.FromBase64String(encoded);
+                            if (source.Length > maxImageBytes)
+                                throw new InvalidOperationException("Diagram image exceeds the byte limit.");
+                            var info = Image.Identify(source);
+                            if (info == null || (long)info.Width * info.Height > maxImagePixels)
+                                throw new InvalidOperationException("Diagram image exceeds the pixel limit.");
+                            using var contents = new MemoryStream(source);
+                            using XImage image = XImage.FromStream(() => contents);
                             mc.gfx.DrawImage(image, mc.currentPos.X + 50, mc.currentPos.Y + 110 + distance, 400, 200);
                             distance += 300;                            
                         }

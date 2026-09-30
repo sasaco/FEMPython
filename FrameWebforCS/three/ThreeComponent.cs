@@ -4,8 +4,10 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.WinForms;
 using SingleFormsDemo;
 using FrameWebforCS.providers;
+using FrameWebforCS.providers.printing;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.Globalization;
 using Keys = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 
@@ -26,6 +28,9 @@ namespace FrameWebforCS.three
         private string? _scaleKind;
         private bool _settingScaleControl;
         private long _lastHoverStamp;
+        private int _glThreadId;
+        internal const int MaximumPrintDiagrams = 120;
+        internal const long MaximumPrintPixels = 64_000_000;
 
         private System.Windows.Forms.Timer _timer;
         private int timeInterval = 10;
@@ -85,6 +90,7 @@ namespace FrameWebforCS.three
 
         private void glControl_Load(object? sender, EventArgs e)
         {
+            _glThreadId = Environment.CurrentManagedThreadId;
             this.glControl.Profile = OpenTK.Windowing.Common.ContextProfile.Compatability;
             threeInstance = new SceneService();
             threeInstance.OnInit(glControl);
@@ -94,6 +100,103 @@ namespace FrameWebforCS.three
             CreateViewportControls();
 
             Run();
+        }
+
+        internal IReadOnlyList<PrintDiagramImage> CapturePrintDiagrams(
+            IReadOnlyList<PrintDiagramRequest> requests)
+        {
+            ArgumentNullException.ThrowIfNull(requests);
+            if (requests.Count == 0) return [];
+            if (_disposed || glControl.IsDisposed || !glControl.IsHandleCreated ||
+                threeInstance is null || _threeService is null || _glThreadId == 0)
+                throw new InvalidOperationException("The active OpenGL viewport is unavailable for printing.");
+            if (Environment.CurrentManagedThreadId != _glThreadId)
+                throw new InvalidOperationException("Print diagrams must be captured on the viewport UI thread.");
+            if (requests.Count > MaximumPrintDiagrams)
+                throw new ArgumentOutOfRangeException(nameof(requests), "Too many print diagrams.");
+            Size size = glControl.ClientSize;
+            PrintViewportCapture.ValidateSize(size);
+            if ((long)requests.Count * size.Width * size.Height > MaximumPrintPixels)
+                throw new ArgumentOutOfRangeException(nameof(requests),
+                    "The selected diagrams exceed the print image budget.");
+
+            glControl.MakeCurrent();
+            var state = _threeService.CapturePrintState();
+            var images = new List<PrintDiagramImage>(requests.Count);
+            try
+            {
+                foreach (var request in requests)
+                {
+                    _threeService.ApplyPrintView(request);
+                    using var bitmap = PrintViewportCapture.Capture(threeInstance, size);
+                    using (var graphics = Graphics.FromImage(bitmap))
+                    {
+                        ViewportTextLabels.Draw(graphics, threeInstance.CurrentCamera,
+                            _threeService.GetVisibleLabels(), size);
+                        DrawPrintOverlays(graphics, size);
+                    }
+                    using var stream = new MemoryStream();
+                    bitmap.Save(stream, ImageFormat.Png);
+                    if (stream.Length > 16_777_216)
+                        throw new InvalidOperationException("A print diagram exceeds the PNG size limit.");
+                    images.Add(new PrintDiagramImage(request, stream.ToArray()));
+                }
+                return images;
+            }
+            finally
+            {
+                _threeService.RestorePrintState(state);
+                RefreshViewportControls();
+            }
+        }
+
+        private void DrawPrintOverlays(Graphics graphics, Size size)
+        {
+            if (_threeService is null) return;
+            var scale = _threeService.GetScaleControl();
+            if (scale is { } control)
+            {
+                var bounds = new Rectangle(Math.Max(0, size.Width - 338), 8, 330, 83);
+                using var background = new SolidBrush(System.Drawing.Color.WhiteSmoke);
+                graphics.FillRectangle(background, bounds);
+                TextRenderer.DrawText(graphics, control.Label, Font,
+                    new Rectangle(bounds.X + 7, bounds.Y + 8, 105, 22),
+                    System.Drawing.Color.Black);
+                TextRenderer.DrawText(graphics, control.Value.ToString("0.###", CultureInfo.InvariantCulture),
+                    Font, new Rectangle(bounds.X + 115, bounds.Y + 5, 205, 23),
+                    System.Drawing.Color.Black);
+                if (_threeService.CurrentResultExtrema is { } extrema)
+                {
+                    var first = extrema.Primary;
+                    string text = string.Create(CultureInfo.InvariantCulture,
+                        $"{extrema.CaseId}  Max {first.Max:0.###} ({first.MaxEntityId})  Min {first.Min:0.###} ({first.MinEntityId})");
+                    if (extrema.Secondary is { } second)
+                        text += string.Create(CultureInfo.InvariantCulture,
+                            $"\nMax {second.Max:0.###} ({second.MaxEntityId})  Min {second.Min:0.###} ({second.MinEntityId})");
+                    TextRenderer.DrawText(graphics, text, Font,
+                        new Rectangle(bounds.X + 7, bounds.Y + 34, 315, 45),
+                        System.Drawing.Color.Black);
+                }
+            }
+
+            var legend = _threeService.GetPanelGradientLegend();
+            if (legend.Count == 0) return;
+            var listBounds = new Rectangle(Math.Max(0, size.Width - 153), 95, 145, 230);
+            using var white = new SolidBrush(System.Drawing.Color.White);
+            graphics.FillRectangle(white, listBounds);
+            using var border = new Pen(System.Drawing.Color.Gray);
+            graphics.DrawRectangle(border, listBounds);
+            int visible = Math.Min(legend.Count, listBounds.Height / 20);
+            for (int index = 0; index < visible; index++)
+            {
+                var entry = legend[index];
+                int y = listBounds.Y + index * 20;
+                using var swatch = new SolidBrush(entry.Color);
+                graphics.FillRectangle(swatch, listBounds.X + 3, y + 3, 14, 14);
+                TextRenderer.DrawText(graphics, entry.Text, Font,
+                    new Rectangle(listBounds.X + 22, y + 2, listBounds.Width - 25, 18),
+                    System.Drawing.Color.Black);
+            }
         }
 
         private void glControl_Resize(object? sender, EventArgs e)

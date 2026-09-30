@@ -20,6 +20,7 @@
   <ItemGroup>
     <PackageReference Include="GrapeCity.Spread.WinForms.ja" Version="15.4.0" />
     <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
     <PackageReference Include="OpenTK" Version="4.8.0" />
     <PackageReference Include="OpenTK.WinForms" Version="4.0.0-pre.7" />
     <PackageReference Include="pythonnet" Version="3.1.0" />
@@ -29,9 +30,13 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>FrameWebforCS.Tests</_Parameter1>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>PrintUi.Tests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FramePrintPDF\PDF_Manager\PDF_Manager.csproj" />
     <ProjectReference Include="..\THREE\THREE.OpenGL\THREE.OpenGL.csproj" />
     <ProjectReference Include="..\THREE\THREE\THREE.csproj" />
   </ItemGroup>

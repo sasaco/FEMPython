@@ -8,12 +8,21 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 
 namespace PDF_Manager.Printing
 {
-    internal class PdfDocument
+    internal class PdfDocument : IDisposable
     {
         private PdfSharpCore.Pdf.PdfDocument document;
+        private readonly int maxPages;
+        private readonly CancellationToken cancellationToken;
+        private static int activeDocuments;
+        private bool disposed;
+
+        internal static int ActiveDocumentCount => Volatile.Read(ref activeDocuments);
+
+        internal void CheckBudget() => cancellationToken.ThrowIfCancellationRequested();
         public TrimMargins Margine;     // マージン
         public PdfPage currentPage;     // 現在のページ
 
@@ -48,10 +57,19 @@ namespace PDF_Manager.Printing
         /// コンストラクタ
         /// </summary>
         /// <param name="pd">印刷設定が記録されている</param>
-        public PdfDocument(PrintData pd, ref int indexPage)
+        public PdfDocument(PrintData pd, ref int indexPage,
+            int maxPages = int.MaxValue, CancellationToken cancellationToken = default)
         {
+            if (maxPages <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxPages));
+            this.maxPages = maxPages;
+            this.cancellationToken = cancellationToken;
+            CheckBudget();
             //　新規ドキュメントの作成
             this.document = new PdfSharpCore.Pdf.PdfDocument();
+            Interlocked.Increment(ref activeDocuments);
+            try
+            {
             this.document.Info.Title = "FrameWebForJS";
 
             // フォントリゾルバーのグローバル登録
@@ -68,7 +86,12 @@ namespace PDF_Manager.Printing
 
             // 新しいページを作成する
             this.NewPage(pd.pageSize, pd.pageOrientation, ref indexPage);
-
+            }
+            catch
+            {
+                Dispose();
+                throw;
+            }
         }
 
         /// <summary>
@@ -153,6 +176,10 @@ namespace PDF_Manager.Printing
         /// </summary>
         public void NewPage(ref int indexPage)
         {
+            CheckBudget();
+            if (document.Pages.Count >= maxPages)
+                throw new InvalidOperationException($"PDF page limit exceeded: {maxPages}.");
+            gfx?.Dispose();
             // 白紙をつくる（Ａ４縦または横）          
             this.currentPage = document.AddPage();
             this.currentPage.Size = this.pageSize;
@@ -185,17 +212,35 @@ namespace PDF_Manager.Printing
         /// <returns></returns>
         public byte[] GetPDFBytes()
         {
-            // Creates a new Memory stream
-            MemoryStream stream = new MemoryStream();
+            return GetPDFBytes(int.MaxValue, int.MaxValue);
+        }
 
-            // Saves the document as stream
-            this.document.Save(stream);
-            this.document.Close();
+        public byte[] GetPDFBytes(int maxPages, int maxBytes)
+        {
+            CheckBudget();
+            if (maxPages <= 0 || maxBytes <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxPages), "PDF limits must be positive.");
+            if (document.Pages.Count > maxPages)
+                throw new InvalidOperationException($"PDF page limit exceeded: {document.Pages.Count} > {maxPages}.");
 
-            // Converts the PdfDocument object to byte form.
-            byte[] docBytes = stream.ToArray();
+            using (var stream = new LimitedMemoryStream(maxBytes, cancellationToken))
+            {
+                document.Save(stream, false);
+                CheckBudget();
+                return stream.ToArray();
+            }
+        }
 
-            return docBytes;
+        public void Dispose()
+        {
+            if (disposed) return;
+            disposed = true;
+            try { gfx?.Dispose(); }
+            finally
+            {
+                document.Dispose();
+                Interlocked.Decrement(ref activeDocuments);
+            }
         }
 
         /// <summary>
@@ -217,6 +262,51 @@ namespace PDF_Manager.Printing
         {
             XSize result = this.gfx.MeasureString(text, this.font_mic);
             return result;
+        }
+    }
+
+    internal sealed class LimitedMemoryStream : MemoryStream
+    {
+        private readonly int maxBytes;
+        private readonly CancellationToken cancellationToken;
+
+        public LimitedMemoryStream(int maxBytes, CancellationToken cancellationToken)
+        {
+            this.maxBytes = maxBytes;
+            this.cancellationToken = cancellationToken;
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            CheckLength(count);
+            base.Write(buffer, offset, count);
+        }
+
+        public override void WriteByte(byte value)
+        {
+            CheckLength(1);
+            base.WriteByte(value);
+        }
+
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            CheckLength(buffer.Length);
+            base.Write(buffer);
+        }
+
+        public override void SetLength(long value)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (value > maxBytes)
+                throw new InvalidOperationException($"PDF output exceeds {maxBytes} bytes.");
+            base.SetLength(value);
+        }
+
+        private void CheckLength(int count)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (Math.Max(Position, Length) > maxBytes - count)
+                throw new InvalidOperationException($"PDF output exceeds {maxBytes} bytes.");
         }
     }
 }
@@ -287,7 +377,4 @@ internal class JapaneseFontResolver : IFontResolver
         }
     }
 }
-
-
-
 

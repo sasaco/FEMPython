@@ -24,14 +24,26 @@ internal static class ViewportTextLabels
 
         camera.UpdateMatrixWorld(true);
         using var graphics = Graphics.FromHwnd(viewport.Handle);
-        graphics.SetClip(viewport.ClientRectangle);
+        Draw(graphics, camera, labels, viewport.ClientSize);
+    }
+
+    internal static void Draw(Graphics graphics, Camera camera,
+        IEnumerable<ViewportTextLabel> labels, Size viewportSize)
+    {
+        ArgumentNullException.ThrowIfNull(graphics);
+        ArgumentNullException.ThrowIfNull(camera);
+        ArgumentNullException.ThrowIfNull(labels);
+        if (viewportSize.Width <= 0 || viewportSize.Height <= 0) return;
+
+        camera.UpdateMatrixWorld(true);
+        graphics.SetClip(new System.Drawing.Rectangle(Point.Empty, viewportSize));
         int candidates = 0;
         int drawn = 0;
         foreach (var label in labels)
         {
             if (candidates++ >= MaximumCandidateLabels || drawn >= MaximumVisibleLabels) break;
             if (string.IsNullOrEmpty(label.Text) ||
-                !TryProject(label.Position, camera, viewport.ClientSize, out var center)) continue;
+                !TryProject(label.Position, camera, viewportSize, out var center)) continue;
             var size = TextRenderer.MeasureText(graphics, label.Text, SystemFonts.DefaultFont,
                 Size.Empty, TextFormatFlags.NoPadding);
             TextRenderer.DrawText(graphics, label.Text, SystemFonts.DefaultFont,

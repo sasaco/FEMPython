@@ -351,6 +351,7 @@ namespace PDF_Manager.Printing
                 var rows = 0;
                 for (var r = 0; r < RowHeight.Length; r++)
                 {
+                    mc.CheckBudget();
                     var height = RowHeight[r];
                     if (double.IsNaN(height) || height <= 0)
                     {
@@ -538,16 +539,20 @@ namespace PDF_Manager.Printing
         /// <param name="_mc"></param>
         internal void PrintTable(PdfDocument _mc, XFont font = null)
         {
+            _mc.CheckBudget();
             #region Base Info
             
             XSize[,] textSize1 = new XSize[this.Rows, this.Columns];
             for (int i = 0; i < this.CellRows; ++i)
+            {
+                _mc.CheckBudget();
                 for (int j = 0; j < this.CellCols; ++j)
                 {
                     if (this.Cell[i, j] == null)
                         continue;
                     textSize1[i, j] = _mc.MeasureString(this.Cell[i, j]);
                 }
+            }
 
             ///////////////////////////////////////////////
             for (int i = 0; i < this.CellRows; ++i)
@@ -570,6 +575,7 @@ namespace PDF_Manager.Printing
                 double y1 = _mc.currentPos.Y;
                 for (int i = 0; i <= this.CellRows; ++i)
                 {
+                    _mc.CheckBudget();
                     if (0 < i)
                         y1 += this.RowHeight[i - 1];
 
@@ -583,6 +589,7 @@ namespace PDF_Manager.Printing
                     }
                 }
             }
+            catch (OperationCanceledException) { throw; }
             catch { Text.PrtText(_mc, "Error: PrintTable() - Base Info"); }
             #endregion
 
@@ -593,22 +600,30 @@ namespace PDF_Manager.Printing
                 try
                 {
                     for (i = 0; i < this.CellRows; ++i)
+                    {
+                        _mc.CheckBudget();
                         for (j = 0; j < this.CellCols; ++j)
                             if (HolLW[i, j] != double.NaN)
                                 if (0 < HolLW[i, j])
                                     Shape.DrawLine(_mc, point[i, j], point[i, j + 1], HolLW[i, j]);
+                    }
 
                     for (i = 0; i < CellRows; ++i)
+                    {
+                        _mc.CheckBudget();
                         for (j = 0; j < CellCols; ++j)
                             if (VtcLW[i, j] != double.NaN)
                                 if (0 < VtcLW[i, j])
                                     Shape.DrawLine(_mc, point[i, j], point[i + 1, j], VtcLW[i, j]);
+                    }
                 }
+                catch (OperationCanceledException) { throw; }
                 catch
                 {
                     Text.PrtText(_mc, "Error: PrintTable() - Draw Lines");
                 }
             }
+            catch (OperationCanceledException) { throw; }
             catch { }
             #endregion
 
@@ -617,6 +632,7 @@ namespace PDF_Manager.Printing
             {
                 for (int i = 0; i < CellRows; ++i)
                 {
+                    _mc.CheckBudget();
                     for (int j = 0; j < CellCols; ++j)
                     {
                         if (this.Cell[i, j] == null)
@@ -681,6 +697,7 @@ namespace PDF_Manager.Printing
                     }
                 }
             }
+            catch (OperationCanceledException) { throw; }
             catch { Text.PrtText(_mc, "Error: PrintTable() - Draw String"); }
             #endregion
 

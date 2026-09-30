@@ -28,6 +28,7 @@ internal sealed class ThreeMembersService : IDisposable
 
     internal int MemberCount => _memberList.Count;
     internal int? SelectedMemberId { get; private set; }
+    internal int? SelectedElementId => _selectedElementId;
     internal bool LabelsVisible { get; private set; }
     internal bool GuiEnabled => _gui;
     internal float MemberScale => _memberScale;
