@@ -14,7 +14,6 @@ namespace FrameWebforCS.components.input
     {
         internal event Action<int>? GridSelectionChanged;
         private InputDataService _input = InputDataService.Instance;
-        private const int type_count = InputElementsService.TypeCount;
         private List<FarPoint.Win.Spread.SheetView> fpSpread1_Sheets;
         private MemberDetailPanel? _detailPanel;
         internal int? DetailMemberId => _detailPanel?.MemberId;
@@ -27,7 +26,7 @@ namespace FrameWebforCS.components.input
 
             fpSpread1_Sheets = new List<SheetView>();
 
-            for (int i = 0; i < type_count; i++) { 
+            for (int i = 0; i < InputElementsService.TypeCount; i++) { 
 
                 var fpSpread1_Sheet1 = fpSpread1.AddNewSheetView();
 

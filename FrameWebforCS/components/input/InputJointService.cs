@@ -34,7 +34,7 @@ namespace FrameWebforCS.components.input
     internal class InputJointService
     {
         private const int MaxNodeId = 100_000;
-        private const int SheetCount = 6;
+        internal const int TypeCount = 6;
         private static readonly Lazy<InputJointService> _instance = new(() => new InputJointService());
         public static InputJointService Instance => _instance.Value;
 
@@ -60,7 +60,7 @@ namespace FrameWebforCS.components.input
 
         private InputJointService()
         {
-            for (int sheet = 1; sheet <= SheetCount; sheet++)
+            for (int sheet = 1; sheet <= TypeCount; sheet++)
             {
                 string id = sheet.ToString(CultureInfo.InvariantCulture);
                 var rows = new BindingList<clsJoint> { AllowNew = false, AllowRemove = false, RaiseListChangedEvents = false };
@@ -135,7 +135,7 @@ namespace FrameWebforCS.components.input
             foreach (var (sheet, values) in data)
             {
                 if (!int.TryParse(sheet, NumberStyles.None, CultureInfo.InvariantCulture, out int number) ||
-                    number < 1 || number > SheetCount || sheet != number.ToString(CultureInfo.InvariantCulture))
+                    number < 1 || number > TypeCount || sheet != number.ToString(CultureInfo.InvariantCulture))
                     throw new JsonException($"Invalid joint sheet: {sheet}");
                 var seen = new HashSet<int>();
                 foreach (var value in values)

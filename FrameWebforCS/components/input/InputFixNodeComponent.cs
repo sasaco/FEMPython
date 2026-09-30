@@ -15,14 +15,13 @@ namespace FrameWebforCS.components.input
         internal event Action<int, string>? GridSelectionChanged;
         private bool _syncingSelection;
         private InputDataService _input = InputDataService.Instance;
-        private const int type_count = 6;
 
 
         public InputFixNodeComponent()
         {
             InitializeComponent();
 
-            for (int i = 0; i < type_count; i++)
+            for (int i = 0; i < InputFixNodeService.TypeCount; i++)
             {
                 var fpSpread1_Sheet1 = fpSpread1.AddNewSheetView();
 

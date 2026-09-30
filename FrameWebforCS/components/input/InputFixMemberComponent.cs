@@ -16,13 +16,12 @@ namespace FrameWebforCS.components.input
         internal event Action<int, string>? GridSelectionChanged;
         private bool _syncingSelection;
         private InputDataService _input = InputDataService.Instance;
-        private const int type_count = 6;
 
         public InputFixMemberComponent()
         {
             InitializeComponent();
 
-            for (int i = 0; i < type_count; i++)
+            for (int i = 0; i < InputFixMemberService.TypeCount; i++)
             {
                 var fpSpread1_Sheet1 = fpSpread1.AddNewSheetView();
 
@@ -102,50 +101,57 @@ namespace FrameWebforCS.components.input
 
             if (_input.dimension == 3)
             {
-                fpSpread1_Sheet1.ColumnCount = 5;
+                fpSpread1_Sheet1.ColumnCount = 6;
 
                 header.Cells[0, 0].Text = "部材";
                 header.Cells[1, 0].Text = "No";
-                header.Cells[0, 1].Text = "変位拘束";
-                header.Cells[1, 1].Text = "部材軸方向";
-                header.Cells[0, 2].Text = "";
-                header.Cells[1, 2].Text = "部材Y軸";
+                header.Cells[0, 1].Text = "部材長";
+                header.Cells[1, 1].Text = "(m)";
+                header.Cells[0, 2].Text = "変位拘束";
+                header.Cells[1, 2].Text = "部材軸方向";
                 header.Cells[0, 3].Text = "";
-                header.Cells[1, 3].Text = "部材Z軸";
-                header.Cells[0, 4].Text = "回転拘束";
-                header.Cells[1, 4].Text = "(kNm/rad/m)";
+                header.Cells[1, 3].Text = "部材Y軸";
+                header.Cells[0, 4].Text = "";
+                header.Cells[1, 4].Text = "部材Z軸";
+                header.Cells[0, 5].Text = "回転拘束";
+                header.Cells[1, 5].Text = "(kNm/rad/m)";
 
-                header.Cells[0, 1].ColumnSpan = 3;
+                header.Cells[0, 2].ColumnSpan = 3;
 
                 var column = fpSpread1_Sheet1.Columns;
-                string[] fields = ["M", "Tx", "Ty", "Tz", "Tr"];
-                for (int i = 0; i < fields.Length; i++)
+                string[] fields = ["M", "", "Tx", "Ty", "Tz", "Tr"];
+                column[0].DataField = fields[0];
+                for (int i = 2; i < fields.Length; i++)
                     column[i].DataField = fields[i];
 
                 column[0].Width = 50;
-                for (var i = 1; i < column.Count; i++)
+                column[1].Width = 80;
+                for (var i = 2; i < column.Count; i++)
                 {
                     column[i].Width = 100;
                 }
             }
             else
             {
-                fpSpread1_Sheet1.ColumnCount = 3;
+                fpSpread1_Sheet1.ColumnCount = 4;
 
                 header.Cells[0, 0].Text = "部材";
                 header.Cells[1, 0].Text = "No";
-                header.Cells[0, 1].Text = "部材軸方向";
-                header.Cells[1, 1].Text = "(kN/m/m)";
-                header.Cells[0, 2].Text = "部材直角方向";
+                header.Cells[0, 1].Text = "部材長";
+                header.Cells[1, 1].Text = "(m)";
+                header.Cells[0, 2].Text = "部材軸方向";
                 header.Cells[1, 2].Text = "(kN/m/m)";
+                header.Cells[0, 3].Text = "部材直角方向";
+                header.Cells[1, 3].Text = "(kN/m/m)";
 
                 var column = fpSpread1_Sheet1.Columns;
-                string[] fields = ["M", "Tx", "Ty"];
-                for (int i = 0; i < fields.Length; i++)
-                    column[i].DataField = fields[i];
+                column[0].DataField = "M";
+                column[2].DataField = "Tx";
+                column[3].DataField = "Ty";
 
                 column[0].Width = 50;
-                for (var i = 1; i < column.Count; i++)
+                column[2].Width = 80;
+                for (var i = 2; i < column.Count; i++)
                 {
                     column[i].Width = 100;
                 }

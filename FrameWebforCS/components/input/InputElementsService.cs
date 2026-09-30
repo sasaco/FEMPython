@@ -38,7 +38,7 @@ namespace FrameWebforCS.components.input
     internal class InputElementsService
     {
         private const int MaxNodeId = 100_000;
-        public const int TypeCount = 6;
+        internal const int TypeCount = 6;
         private static readonly Lazy<InputElementsService> _instance = new(() => new InputElementsService());
         public static InputElementsService Instance => _instance.Value;
 
