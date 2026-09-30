@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Aggre-SE", "Aggre-SE\My_Aggre-SE.vbproj", "{D6B6D2D6-F603-4C4E-94FA-028926ADEB17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinPDFPrint", "WinPDFPrint\WinPDFPrint.csproj", "{0FFF891C-F499-40BC-872F-306781AA02C4}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "RCNonlinear", "RCNonlinear\RCNonlinear.vbproj", "{9A28576D-0287-4D78-9AA3-064BCEBE25D0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D6B6D2D6-F603-4C4E-94FA-028926ADEB17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6B6D2D6-F603-4C4E-94FA-028926ADEB17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6B6D2D6-F603-4C4E-94FA-028926ADEB17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6B6D2D6-F603-4C4E-94FA-028926ADEB17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FFF891C-F499-40BC-872F-306781AA02C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FFF891C-F499-40BC-872F-306781AA02C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FFF891C-F499-40BC-872F-306781AA02C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FFF891C-F499-40BC-872F-306781AA02C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A28576D-0287-4D78-9AA3-064BCEBE25D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A28576D-0287-4D78-9AA3-064BCEBE25D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A28576D-0287-4D78-9AA3-064BCEBE25D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A28576D-0287-4D78-9AA3-064BCEBE25D0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 4
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://sasaco.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Aggre-SE\\My_Aggre-SE.vbproj
+		SccProjectName1 = Aggre-SE
+		SccLocalPath1 = Aggre-SE
+		SccProjectUniqueName2 = WinPDFPrint\\WinPDFPrint.csproj
+		SccProjectName2 = WinPDFPrint
+		SccLocalPath2 = WinPDFPrint
+		SccProjectUniqueName3 = RCNonlinear\\RCNonlinear.vbproj
+		SccProjectName3 = RCNonlinear
+		SccLocalPath3 = RCNonlinear
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,50 @@
+# bin フォルダは要らない
+bin/
+# obj フォルダは要らない
+obj/
+# .vs フォルダは要らない
+.vs
+# bkup フォルダは要らない
+bkup
+# サンプルデータの計算結果データは要らない
+*.ATR
+*.BOT
+*.DB1
+*.DB2
+*.DSP
+*.EMG
+*.FMT
+*.KG0
+*.KG1
+*.KG2
+*.KG3
+*.KG4
+*.KG5
+*.KG6
+*.KG7
+*.KG8
+*.KG9
+*.KGR
+*.LOG
+*.LP1
+*.LP2
+*.LP3
+*.ONR
+*.OPT
+*.otf
+*.PDN
+*.PDS
+*.PEL
+*.PMP
+*.R10
+*.R12
+*.ved
+*.csv
+*.OUT
+*.PIC
+*.nd3
+*.pik
+Batchマニュアル/**/*.xlsx
+Batchマニュアル/**/*.xls
+*.user
+Aggre-SE/publish/

@@ -1,0 +1,15 @@
+{
+    "workbench.editorAssociations": {
+        "*.copilotmd": "vscode.markdown.preview.editor",
+        "*.pdf": "pdf.preview",
+        "*.parquet": "duckdb.dataFileViewer",
+        "*.csv": "duckdb.dataFileViewer",
+        "*.tsv": "duckdb.dataFileViewer",
+        "*.qmd": "quarto.visualEditor",
+        "*.xdw": "open-with-system",
+        "*.xbd": "open-with-system",
+        "*.dwg": "open-with-system",
+        "*.xls*": "open-with-system",
+        "*.xlsx": "duckdb.dataFileViewer"
+    }
+}
