@@ -50,9 +50,12 @@ public sealed class CalculationRequestDerivedViewTests
                 var pickupSheet = ((FpSpread)pickup.Controls.Find("fpSpread1", true).Single()).Sheets[0];
                 Assert.Equal("C1 Combined", combineSheet.SheetName);
                 Assert.Equal("P1 Picked", pickupSheet.SheetName);
-                Assert.Equal("3.0000", combineSheet.Cells[0, 1].Text);
-                Assert.Equal("-1.0000", pickupSheet.Cells[0, 2].Text);
-                Assert.Equal("D", combineSheet.Cells[0, 7].Text);
+                Assert.IsType<ResultModeGroupDataModel>(combineSheet.Models.Data);
+                Assert.IsType<ResultModeGroupDataModel>(pickupSheet.Models.Data);
+                Assert.Equal("dx_max", ((ResultModeGroupDataModel)combineSheet.Models.Data).GetModeKey(0));
+                Assert.Equal("3.0000", combineSheet.Cells[1, 1].Text);
+                Assert.Equal("-1.0000", pickupSheet.Cells[1, 2].Text);
+                Assert.Equal("D", combineSheet.Cells[1, 7].Text);
 
                 presentation.UpdateDerived(null);
                 store.Commit(presentation); // A definition edit clears derived rows before recompute.
@@ -69,7 +72,7 @@ public sealed class CalculationRequestDerivedViewTests
                         CalculationDerivedPresentation.ReadOnlyModes(new Dictionary<string, IReadOnlyList<CalculationDerivedRow>>()))], []));
                 store.Commit(presentation); // Same presentation object, new derived snapshot.
                 Assert.Equal("4.0000", ((FpSpread)combine.Controls.Find("fpSpread1", true).Single())
-                    .Sheets[0].Cells[0, 1].Text);
+                    .Sheets[0].Cells[1, 1].Text);
                 store.Clear();
                 Assert.Equal(0, ((FpSpread)combine.Controls.Find("fpSpread1", true).Single()).Sheets.Count);
             }
@@ -115,7 +118,7 @@ public sealed class CalculationRequestDerivedViewTests
                 Assert.Contains(presentation.MomentUnit, sheet.ColumnHeader.Cells[0, 7].Text);
                 Assert.DoesNotContain("kN", sheet.ColumnHeader.Cells[0, 4].Text);
                 Assert.DoesNotContain("kN", sheet.ColumnHeader.Cells[0, 7].Text);
-                Assert.Equal("M1", sheet.Cells[0, 0].Text);
+                Assert.Equal("M1", sheet.Cells[1, 0].Text);
             }
             finally { store.Clear(); }
         });

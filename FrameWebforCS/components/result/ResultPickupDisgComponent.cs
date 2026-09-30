@@ -18,8 +18,6 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
     private readonly string[] _columns3D, _columns2D;
     private readonly Control _dispatcher = new();
     private readonly myFpSpread fpSpread1 = new() { Name = "fpSpread1", Dock = DockStyle.Fill };
-    private readonly ComboBox modeSelector = new() { Name = "modeSelector", DropDownStyle = ComboBoxStyle.DropDownList,
-        Location = new Point(88, 5), Width = 270 };
     private readonly Label statusLabel = new() { Name = "statusLabel", Dock = DockStyle.Bottom,
         Height = 24, Padding = new Padding(8, 2, 8, 2), AutoEllipsis = true };
     private PickupTableOutput? _output;
@@ -46,15 +44,11 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
         _columns2D = columns2D;
         AutoScaleMode = AutoScaleMode.Dpi;
         Size = new Size(800, 566);
-        var panel = new Panel { Dock = DockStyle.Top, Height = 34 };
-        panel.Controls.Add(new Label { Text = "着目項目", AutoSize = true, Location = new Point(10, 9) });
-        panel.Controls.Add(modeSelector);
         Controls.Add(fpSpread1);
         Controls.Add(statusLabel);
-        Controls.Add(panel);
         ResultDimensionNotice.Attach(this);
         fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
-        modeSelector.SelectedIndexChanged += (_, _) => MaterializeSelectedSheet();
+        fpSpread1.EnterCell += OnEnterCell;
         fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
         // AppRoutingModule calls setActiveSheet before showing the floating form.
         VisibleChanged += (_, _) => { if (Visible) MaterializeSelectedSheet(); };
@@ -63,7 +57,7 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
             this is ResultPickupFsecComponent ? CalculationDerivedQuantity.SectionForce :
             this is ResultPickupReacComponent ? CalculationDerivedQuantity.Reaction :
                 CalculationDerivedQuantity.Displacement,
-            fpSpread1, modeSelector, statusLabel, modes3D, modes2D);
+            fpSpread1, statusLabel, modes3D, modes2D);
         CalculationResultStore.Instance.Changed += OnCanonicalChanged;
         attach(OnSourceChanged);
         HandleCreated += (_, _) => Refresh();
@@ -219,10 +213,7 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
         try
         {
             fpSpread1.Sheets.Clear();
-            modeSelector.Items.Clear();
             _materializedSheet = -1;
-            foreach (var mode in output.Dimension == 3 ? _modes3D : _modes2D)
-                modeSelector.Items.Add(new ModeChoice(mode.Key, mode.Title));
             foreach (PickupTableCase item in output.Cases)
             {
                 SheetView sheet = fpSpread1.AddNewSheetView();
@@ -230,7 +221,6 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
                 ConfigureSheet(sheet, output.Dimension == 3 ? _columns3D : _columns2D);
                 sheet.RowCount = 0;
             }
-            if (modeSelector.Items.Count > 0) modeSelector.SelectedIndex = 0;
             if (fpSpread1.Sheets.Count > 0) fpSpread1.ActiveSheetIndex = 0;
             Width = (output.Dimension == 3 ? _columns3D : _columns2D).Length * 88 + 100;
         }
@@ -257,21 +247,45 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
     private void MaterializeSelectedSheet()
     {
         if (_canonical.IsShowing) { _canonical.Materialize(); return; }
-        if (_rebuilding || _output is null || modeSelector.SelectedItem is not ModeChoice mode) return;
+        if (_rebuilding || _output is null) return;
         int index = fpSpread1.ActiveSheetIndex;
         if (index < 0 || index >= _output.Cases.Count) return;
+        if (_materializedSheet == index) return;
         if (_materializedSheet >= 0 && _materializedSheet != index &&
             _materializedSheet < fpSpread1.Sheets.Count)
-            fpSpread1.Sheets[_materializedSheet].RowCount = 0;
+            ResultModeGroupDataModel.Clear(fpSpread1.Sheets[_materializedSheet]);
         SheetView sheet = fpSpread1.Sheets[index];
-        IReadOnlyList<string[]> rows = _output.Cases[index].Rows.TryGetValue(mode.Key, out var value)
-            ? value : Array.Empty<string[]>();
-        sheet.RowCount = rows.Count;
-        for (int row = 0; row < rows.Count; row++)
-            for (int col = 0; col < sheet.ColumnCount && col < rows[row].Length; col++)
-                sheet.Cells[row, col].Text = rows[row][col];
+        var modes = _output.Dimension == 3 ? _modes3D : _modes2D;
+        int visibleColumns = _output.Dimension == 3 ? _columns3D.Length : _columns2D.Length;
+        sheet.ColumnCount = visibleColumns + 1;
+        var caseRows = _output.Cases[index].Rows;
+        sheet.RowCount = modes.Sum(mode => caseRows.TryGetValue(mode.Key, out var rows) ? rows.Count : 0);
+        int row = 0;
+        for (int modeIndex = 0; modeIndex < modes.Length; modeIndex++)
+        {
+            if (!caseRows.TryGetValue(modes[modeIndex].Key, out var rows)) continue;
+            foreach (string[] values in rows)
+            {
+                for (int col = 0; col < visibleColumns && col < values.Length; col++)
+                    sheet.Cells[row, col].Text = values[col];
+                sheet.Cells[row, visibleColumns].Text = ResultModeGroupDataModel.Token(modeIndex);
+                row++;
+            }
+        }
+        ResultModeGroupDataModel.Attach(sheet, visibleColumns, modes);
         _materializedSheet = index;
-        PublishViewportPage(mode.Key, index);
+        if (modes.Length > 0) PublishViewportPage(modes[0].Key, index);
+    }
+
+    private void OnEnterCell(object? sender, EnterCellEventArgs e)
+    {
+        if (_canonical.IsShowing) { _canonical.PublishPage(e.Row); return; }
+        if (e.Row < 0 || e.Column < 0) return;
+        int index = fpSpread1.ActiveSheetIndex;
+        if (index < 0 || fpSpread1.Sheets[index].Models.Data is not ResultModeGroupDataModel grouped)
+            return;
+        string? mode = grouped.GetModeKey(e.Row);
+        if (mode != null) PublishViewportPage(mode, index);
     }
 
     private void PublishViewportPage(string component, int index)
@@ -317,7 +331,7 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
     private void ClearDisplay()
     {
         _rebuilding = true;
-        try { fpSpread1.Sheets.Clear(); modeSelector.Items.Clear(); _materializedSheet = -1; }
+        try { fpSpread1.Sheets.Clear(); _materializedSheet = -1; }
         finally { _rebuilding = false; }
         if (Visible)
         {
@@ -356,10 +370,6 @@ internal abstract class ResultPickupTableComponent<TSnapshot> : UserControl wher
         base.Dispose(disposing);
     }
 
-    private sealed record ModeChoice(string Key, string Title)
-    {
-        public override string ToString() => Title;
-    }
 }
 
 internal sealed class ResultPickupDisgComponent : ResultPickupTableComponent<ResultCombineDisgSnapshot>

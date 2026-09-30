@@ -35,6 +35,7 @@ public partial class ResultCombineReacComponent : UserControl
     private long _generation;
     private long _publishedRevision = -1;
     private int _materializedSheet = -1;
+    private readonly Dictionary<SheetView, ResultModeGroupDataModel> _groups = new();
     private bool _rebuilding;
     private bool _disposed;
     private CalculationDerivedViewRenderer? _canonical;
@@ -53,11 +54,11 @@ public partial class ResultCombineReacComponent : UserControl
         _uiDispatcher = new Control();
         _ = _uiDispatcher.Handle;
         _canonical = new(CalculationDerivedStage.Combine, CalculationDerivedQuantity.Reaction,
-            fpSpread1, modeSelector, statusLabel, Modes3D, Modes2D, ConfigureSheet);
+            fpSpread1, statusLabel, Modes3D, Modes2D, ConfigureSheet);
         CalculationResultStore.Instance.Changed += OnCanonicalChanged;
 
-        modeSelector.SelectedIndexChanged += (_, _) => MaterializeSelectedSheet();
         fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
+        fpSpread1.EnterCell += OnEnterCell;
         // AppRoutingModule calls setActiveSheet before showing the floating form.
         VisibleChanged += (_, _) => { if (Visible) MaterializeSelectedSheet(); };
         HandleCreated += (_, _) => RefreshFromCoordinator();
@@ -104,6 +105,8 @@ public partial class ResultCombineReacComponent : UserControl
             CancelRunning();
             _pending = null;
             _output = null;
+            _groups.Clear();
+            _materializedSheet = -1;
             return;
         }
         long generation = ++_generation;
@@ -218,11 +221,8 @@ public partial class ResultCombineReacComponent : UserControl
         try
         {
             fpSpread1.Sheets.Clear();
+            _groups.Clear();
             _materializedSheet = -1;
-            modeSelector.Items.Clear();
-            foreach (var mode in dimension == 3 ? Modes3D : Modes2D)
-                modeSelector.Items.Add(new ModeChoice(mode.Key, mode.Title));
-
             foreach (CombineReacCaseResult item in result.Cases)
             {
                 SheetView sheet = fpSpread1.AddNewSheetView();
@@ -231,7 +231,6 @@ public partial class ResultCombineReacComponent : UserControl
                 ConfigureSheet(sheet, dimension);
                 sheet.RowCount = 0;
             }
-            if (modeSelector.Items.Count > 0) modeSelector.SelectedIndex = 0;
             if (fpSpread1.Sheets.Count > 0) fpSpread1.ActiveSheetIndex = 0;
             Width = dimension == 3 ? 900 : 650;
         }
@@ -246,45 +245,78 @@ public partial class ResultCombineReacComponent : UserControl
     private void MaterializeSelectedSheet()
     {
         if (_canonical?.IsShowing == true) { _canonical.Materialize(); return; }
-        if (_rebuilding || _output == null || modeSelector.SelectedItem is not ModeChoice mode)
-            return;
+        if (_rebuilding || _output == null) return;
         int sheetIndex = fpSpread1.ActiveSheetIndex;
         if (sheetIndex < 0 || sheetIndex >= _output.Cases.Count) return;
 
         if (_materializedSheet >= 0 && _materializedSheet != sheetIndex &&
             _materializedSheet < fpSpread1.Sheets.Count)
-            fpSpread1.Sheets[_materializedSheet].RowCount = 0;
+        {
+            SheetView previous = fpSpread1.Sheets[_materializedSheet];
+            ResultModeGroupDataModel.Clear(previous);
+            _groups.Remove(previous);
+        }
 
         SheetView sheet = fpSpread1.Sheets[sheetIndex];
-        IReadOnlyList<CombineReacNodeResult> rows =
-            _output.Cases[sheetIndex].Rows.TryGetValue(mode.Key, out var selected)
-                ? selected : Array.Empty<CombineReacNodeResult>();
-        sheet.RowCount = rows.Count;
-        bool is3D = sheet.ColumnCount == 8;
-        for (int row = 0; row < rows.Count; row++)
+        if (_materializedSheet != sheetIndex)
         {
-            CombineReacNodeResult value = rows[row];
-            sheet.Cells[row, 0].Text = value.Id;
-            sheet.Cells[row, 1].Text = Format(value.Tx);
-            sheet.Cells[row, 2].Text = Format(value.Ty);
-            if (is3D)
+            bool is3D = _coordinator.Snapshot?.Dimension == 3;
+            var modes = is3D ? Modes3D : Modes2D;
+            int modeColumn = is3D ? 8 : 5;
+            sheet.ColumnCount = modeColumn + 1;
+            int totalRows = modes.Sum(mode =>
+                _output.Cases[sheetIndex].Rows.TryGetValue(mode.Key, out var rows) ? rows.Count : 0);
+            sheet.RowCount = totalRows;
+            int row = 0;
+            for (int modeIndex = 0; modeIndex < modes.Length; modeIndex++)
             {
-                sheet.Cells[row, 3].Text = Format(value.Tz);
-                sheet.Cells[row, 4].Text = Format(value.Mx);
-                sheet.Cells[row, 5].Text = Format(value.My);
-                sheet.Cells[row, 6].Text = Format(value.Mz);
-                sheet.Cells[row, 7].Text = value.Case;
+                if (!_output.Cases[sheetIndex].Rows.TryGetValue(modes[modeIndex].Key, out var rows))
+                    continue;
+                foreach (CombineReacNodeResult value in rows)
+                {
+                    sheet.Cells[row, 0].Text = value.Id;
+                    sheet.Cells[row, 1].Text = Format(value.Tx);
+                    sheet.Cells[row, 2].Text = Format(value.Ty);
+                    if (is3D)
+                    {
+                        sheet.Cells[row, 3].Text = Format(value.Tz);
+                        sheet.Cells[row, 4].Text = Format(value.Mx);
+                        sheet.Cells[row, 5].Text = Format(value.My);
+                        sheet.Cells[row, 6].Text = Format(value.Mz);
+                        sheet.Cells[row, 7].Text = value.Case;
+                    }
+                    else
+                    {
+                        sheet.Cells[row, 3].Text = Format(value.Mz);
+                        sheet.Cells[row, 4].Text = value.Case;
+                    }
+                    sheet.Cells[row, modeColumn].Text = ResultModeGroupDataModel.Token(modeIndex);
+                    row++;
+                }
             }
-            else
-            {
-                sheet.Cells[row, 3].Text = Format(value.Mz);
-                sheet.Cells[row, 4].Text = value.Case;
-            }
+            _groups[sheet] = ResultModeGroupDataModel.Attach(sheet, modeColumn, modes);
+            _materializedSheet = sheetIndex;
         }
-        _materializedSheet = sheetIndex;
-        if (Visible && _output != null && modeSelector.SelectedItem is ModeChoice selectedMode)
-            FrameWebforCS.three.ThreeResultsService.PublishPage(
-                "comb_reac", _output.Cases[sheetIndex].Id, selectedMode.Key);
+        PublishViewportPage(sheet, sheet.ActiveRowIndex);
+    }
+
+    private void OnEnterCell(object? sender, EnterCellEventArgs e)
+    {
+        if (_canonical?.IsShowing == true) { _canonical.PublishPage(e.Row); return; }
+        if (_rebuilding || _output == null) return;
+        PublishViewportPage(fpSpread1.ActiveSheet, e.Row);
+    }
+
+    private void PublishViewportPage(SheetView sheet, int displayRow)
+    {
+        if (!Visible || _output == null) return;
+        int index = fpSpread1.ActiveSheetIndex;
+        if (index < 0 || index >= _output.Cases.Count) return;
+        string? mode = _groups.TryGetValue(sheet, out var grouped)
+            ? grouped.GetModeKey(displayRow) : null;
+        mode ??= (_coordinator.Snapshot?.Dimension == 3 ? Modes3D : Modes2D)[0].Key;
+        FrameWebforCS.three.ThreeResultsService.PublishPage(
+            "comb_reac", _output.Cases[index].Id, mode);
     }
 
     private static string Format(double value) =>
@@ -297,7 +329,7 @@ public partial class ResultCombineReacComponent : UserControl
         try
         {
             fpSpread1.Sheets.Clear();
-            modeSelector.Items.Clear();
+            _groups.Clear();
             _materializedSheet = -1;
         }
         finally { _rebuilding = false; }
@@ -356,16 +388,12 @@ public partial class ResultCombineReacComponent : UserControl
         _uiDispatcher?.Dispose();
         _uiDispatcher = null;
         _pending = null;
+        fpSpread1.EnterCell -= OnEnterCell;
     }
 
     private void CancelRunning()
     {
         try { _runningCancellation?.Cancel(); }
         catch (ObjectDisposedException) { }
-    }
-
-    private sealed record ModeChoice(string Key, string Title)
-    {
-        public override string ToString() => Title;
     }
 }

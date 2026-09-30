@@ -165,7 +165,7 @@ public sealed class ResultCombineFsecTests
     }
 
     [Fact]
-    public void BackgroundViewDropsStaleResultAndDisplaysSelectedMode()
+    public void BackgroundViewDropsStaleResultAndDisplaysModeGroups()
     {
         RunSta(() =>
         {
@@ -197,19 +197,29 @@ public sealed class ResultCombineFsecTests
             form.Controls.Add(component);
             form.Show();
             var spread = (FpSpread)component.Controls.Find("fpSpread1", true).Single();
-            var modes = (ComboBox)component.Controls.Find("modeSelector", true).Single();
+            Assert.Empty(component.Controls.Find("modeSelector", true));
             PumpUntil(() => started.IsSet);
             LoadCase("8");
             Assert.Equal(0, spread.Sheets.Count);
             release.Set();
             PumpUntil(() => spread.Sheets.Count == 1 &&
-                spread.Sheets[0].SheetName == "8" && spread.Sheets[0].RowCount == 1);
-            Assert.Equal(7, spread.Sheets[0].ColumnCount);
-            Assert.Equal(6, modes.Items.Count);
-            Assert.Equal("8.00", spread.Sheets[0].Cells[0, 3].Text);
-            Assert.Equal("+1", spread.Sheets[0].Cells[0, 6].Text);
-            modes.SelectedIndex = 1;
-            Assert.Equal("-8.00", spread.Sheets[0].Cells[0, 3].Text);
+                spread.Sheets[0].SheetName == "8" && spread.Sheets[0].RowCount == 4);
+            var sheet = spread.Sheets[0];
+            Assert.Equal(8, sheet.ColumnCount);
+            Assert.False(sheet.Columns[7].Visible);
+            var grouped = Assert.IsType<ResultModeGroupDataModel>(sheet.Models.Data);
+            Assert.True(grouped.IsGroup(0));
+            Assert.False(grouped.IsGroup(1));
+            Assert.True(grouped.IsGroup(2));
+            Assert.False(grouped.IsGroup(3));
+            Assert.Equal("fx_max", grouped.GetModeKey(0));
+            Assert.Equal("fx_max", grouped.GetModeKey(1));
+            Assert.Equal("fx_min", grouped.GetModeKey(2));
+            Assert.Equal("fx_min", grouped.GetModeKey(3));
+            Assert.Equal("8.00", sheet.Cells[1, 3].Text);
+            Assert.Equal("-8.00", sheet.Cells[3, 3].Text);
+            Assert.Equal("+1", sheet.Cells[1, 6].Text);
+            Assert.Equal("+1", sheet.Cells[3, 6].Text);
             ResultCombineFsecCoordinator.Instance.FailLoad();
             Assert.Equal(0, spread.Sheets.Count);
         });

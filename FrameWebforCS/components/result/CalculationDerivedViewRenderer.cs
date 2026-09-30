@@ -11,7 +11,7 @@ internal enum CalculationDerivedQuantity { Displacement, Reaction, SectionForce 
 /// <summary>Renders the detached v1 derived projection in the existing result controls.</summary>
 internal sealed class CalculationDerivedViewRenderer(
     CalculationDerivedStage stage, CalculationDerivedQuantity quantity,
-    FpSpread spread, ComboBox selector, Label status,
+    FpSpread spread, Label status,
     (string Key, string Title)[] modes3D, (string Key, string Title)[] modes2D,
     Action<SheetView, int>? configureLegacy = null)
 {
@@ -20,6 +20,7 @@ internal sealed class CalculationDerivedViewRenderer(
     private IReadOnlyList<CalculationDerivedCase> _cases = [];
     private bool _building;
     private int _materialized = -1;
+    private (string Key, string Title)[] _modes = [];
 
     internal bool IsShowing => _presentation != null;
 
@@ -31,6 +32,8 @@ internal sealed class CalculationDerivedViewRenderer(
             _presentation = null;
             _derived = null;
             _cases = [];
+            _modes = [];
+            _materialized = -1;
             return false;
         }
         if (current.Derived is not { } derived)
@@ -40,7 +43,7 @@ internal sealed class CalculationDerivedViewRenderer(
             _cases = [];
             _materialized = -1;
             spread.Sheets.Clear();
-            selector.Items.Clear();
+            _modes = [];
             status.Text = "派生結果を更新しています。";
             return true;
         }
@@ -53,10 +56,8 @@ internal sealed class CalculationDerivedViewRenderer(
         try
         {
             spread.Sheets.Clear();
-            selector.Items.Clear();
             _materialized = -1;
-            foreach (var mode in dimension == 3 ? modes3D : modes2D)
-                selector.Items.Add(new ModeChoice(mode.Key, mode.Title));
+            _modes = dimension == 3 ? modes3D : modes2D;
             for (int index = 0; index < _cases.Count; index++)
             {
                 var item = _cases[index];
@@ -68,7 +69,6 @@ internal sealed class CalculationDerivedViewRenderer(
                 UpdateUnitHeaders(sheet, current, dimension);
                 sheet.RowCount = 0;
             }
-            if (selector.Items.Count > 0) selector.SelectedIndex = 0;
             if (spread.Sheets.Count > 0) spread.ActiveSheetIndex = 0;
         }
         finally { _building = false; }
@@ -79,12 +79,16 @@ internal sealed class CalculationDerivedViewRenderer(
 
     internal void Materialize()
     {
-        if (_building || _presentation is not { } presentation ||
-            selector.SelectedItem is not ModeChoice mode) return;
+        if (_building || _presentation is not { } presentation) return;
         int index = spread.ActiveSheetIndex;
         if (index < 0 || index >= _cases.Count) return;
+        if (_materialized == index)
+        {
+            PublishPage();
+            return;
+        }
         if (_materialized >= 0 && _materialized != index && _materialized < spread.Sheets.Count)
-            spread.Sheets[_materialized].RowCount = 0;
+            ResultModeGroupDataModel.Clear(spread.Sheets[_materialized]);
         var item = _cases[index];
         var modes = quantity switch
         {
@@ -92,43 +96,56 @@ internal sealed class CalculationDerivedViewRenderer(
             CalculationDerivedQuantity.Reaction => item.Reactions,
             _ => item.SectionForces
         };
-        IReadOnlyList<CalculationDerivedRow> rows = modes.TryGetValue(mode.Key, out var selected) ? selected : [];
         SheetView sheet = spread.Sheets[index];
-        sheet.RowCount = rows.Count;
+        int visibleColumns = sheet.ColumnCount;
+        int rowCount = _modes.Sum(mode => modes.TryGetValue(mode.Key, out var rows) ? rows.Count : 0);
+        sheet.ColumnCount = visibleColumns + 1;
+        sheet.RowCount = rowCount;
         int dimension = presentation.Dimension;
-        for (int row = 0; row < rows.Count; row++)
+        int row = 0;
+        for (int modeIndex = 0; modeIndex < _modes.Length; modeIndex++)
         {
-            var value = rows[row];
-            string[] keys = quantity == CalculationDerivedQuantity.Displacement
-                ? dimension == 3 ? ["dx", "dy", "dz", "rx", "ry", "rz"] : ["dx", "dy", "rz"]
-                : dimension == 3 ? ["fx", "fy", "fz", "mx", "my", "mz"] : ["fx", "fy", "mz"];
-            int offset = quantity == CalculationDerivedQuantity.SectionForce ? 3 : 1;
-            sheet.Cells[row, 0].Text = value.EntityId;
-            if (quantity == CalculationDerivedQuantity.SectionForce)
+            if (!modes.TryGetValue(_modes[modeIndex].Key, out var rows)) continue;
+            foreach (var value in rows)
             {
-                sheet.Cells[row, 1].Text = value.StationId ?? "";
-                sheet.Cells[row, 2].Text = StationPosition(presentation, value).ToString("F3", CultureInfo.InvariantCulture);
+                string[] keys = quantity == CalculationDerivedQuantity.Displacement
+                    ? dimension == 3 ? ["dx", "dy", "dz", "rx", "ry", "rz"] : ["dx", "dy", "rz"]
+                    : dimension == 3 ? ["fx", "fy", "fz", "mx", "my", "mz"] : ["fx", "fy", "mz"];
+                int offset = quantity == CalculationDerivedQuantity.SectionForce ? 3 : 1;
+                sheet.Cells[row, 0].Text = value.EntityId;
+                if (quantity == CalculationDerivedQuantity.SectionForce)
+                {
+                    sheet.Cells[row, 1].Text = value.StationId ?? "";
+                    sheet.Cells[row, 2].Text = StationPosition(presentation, value).ToString("F3", CultureInfo.InvariantCulture);
+                }
+                for (int component = 0; component < keys.Length; component++)
+                {
+                    double number = value.Components[keys[component]];
+                    if (quantity == CalculationDerivedQuantity.Displacement && keys[component].StartsWith('d'))
+                        number = presentation.DisplayLength(number);
+                    sheet.Cells[row, component + offset].Text = Format(number,
+                        quantity == CalculationDerivedQuantity.Displacement ? 4 : 2);
+                }
+                sheet.Cells[row, visibleColumns - 1].Text = stage == CalculationDerivedStage.Pickup ||
+                    value.Provenance.Length == 0 ? value.SourceCaseId : value.Provenance;
+                sheet.Cells[row, visibleColumns].Text = ResultModeGroupDataModel.Token(modeIndex);
+                row++;
             }
-            for (int component = 0; component < keys.Length; component++)
-            {
-                double number = value.Components[keys[component]];
-                if (quantity == CalculationDerivedQuantity.Displacement && keys[component].StartsWith('d'))
-                    number = presentation.DisplayLength(number);
-                sheet.Cells[row, component + offset].Text = Format(number,
-                    quantity == CalculationDerivedQuantity.Displacement ? 4 : 2);
-            }
-            sheet.Cells[row, sheet.ColumnCount - 1].Text = stage == CalculationDerivedStage.Pickup ||
-                value.Provenance.Length == 0 ? value.SourceCaseId : value.Provenance;
         }
+        ResultModeGroupDataModel.Attach(sheet, visibleColumns, _modes);
         _materialized = index;
         PublishPage();
     }
 
-    internal void PublishPage()
+    internal void PublishPage(int? displayRow = null)
     {
-        if (_presentation == null || !spread.Visible || selector.SelectedItem is not ModeChoice mode) return;
+        if (_presentation == null || !spread.Visible) return;
         int index = spread.ActiveSheetIndex;
         if (index < 0 || index >= _cases.Count) return;
+        if (spread.Sheets[index].Models.Data is not ResultModeGroupDataModel grouped) return;
+        string? modeKey = grouped.GetModeKey(displayRow ?? spread.Sheets[index].ActiveRowIndex);
+        modeKey ??= _modes.Length > 0 ? _modes[0].Key : null;
+        if (modeKey is null) return;
         string view = (stage, quantity) switch
         {
             (CalculationDerivedStage.Combine, CalculationDerivedQuantity.Displacement) => "comb_disg",
@@ -138,7 +155,7 @@ internal sealed class CalculationDerivedViewRenderer(
             (CalculationDerivedStage.Pickup, CalculationDerivedQuantity.Reaction) => "pik_reac",
             _ => "pick_fsec"
         };
-        FrameWebforCS.three.ThreeResultsService.PublishPage(view, _cases[index].Id, mode.Key);
+        FrameWebforCS.three.ThreeResultsService.PublishPage(view, _cases[index].Id, modeKey);
     }
 
     private static double StationPosition(CalculationResultPresentation presentation, CalculationDerivedRow row) =>
@@ -200,9 +217,4 @@ internal sealed class CalculationDerivedViewRenderer(
     private static string Format(double number, int places) =>
         (Math.Floor(number * Math.Pow(10, places) + 0.5) / Math.Pow(10, places))
             .ToString($"F{places}", CultureInfo.InvariantCulture);
-
-    private sealed record ModeChoice(string Key, string Title)
-    {
-        public override string ToString() => Title;
-    }
 }

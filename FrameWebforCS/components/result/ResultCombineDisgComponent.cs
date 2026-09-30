@@ -35,6 +35,7 @@ public partial class ResultCombineDisgComponent : UserControl
     private long _generation;
     private long _publishedRevision = -1;
     private int _materializedSheet = -1;
+    private int _resultDimension;
     private bool _rebuilding;
     private bool _disposed;
     private CalculationDerivedViewRenderer? _canonical;
@@ -52,7 +53,6 @@ public partial class ResultCombineDisgComponent : UserControl
         fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
         if (UsesLegacyPickup)
         {
-            modePanel.Visible = false;
             statusLabel.Visible = false;
             BuildLegacyPickupSheets();
             return;
@@ -63,10 +63,11 @@ public partial class ResultCombineDisgComponent : UserControl
         _uiDispatcher = new Control();
         _ = _uiDispatcher.Handle;
         _canonical = new(CalculationDerivedStage.Combine, CalculationDerivedQuantity.Displacement,
-            fpSpread1, modeSelector, statusLabel, Modes3D, Modes2D, ConfigureSheet);
+            fpSpread1, statusLabel, Modes3D, Modes2D,
+            (sheet, dimension) => ConfigureSheet(sheet, dimension));
         CalculationResultStore.Instance.Changed += OnCanonicalChanged;
 
-        modeSelector.SelectedIndexChanged += (_, _) => MaterializeSelectedSheet();
+        fpSpread1.EnterCell += OnEnterCell;
         fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
         // AppRoutingModule calls setActiveSheet before showing the floating form.
         VisibleChanged += (_, _) => { if (Visible) MaterializeSelectedSheet(); };
@@ -247,19 +248,16 @@ public partial class ResultCombineDisgComponent : UserControl
         {
             fpSpread1.Sheets.Clear();
             _materializedSheet = -1;
-            modeSelector.Items.Clear();
-            foreach (var mode in dimension == 3 ? Modes3D : Modes2D)
-                modeSelector.Items.Add(new ModeChoice(mode.Key, mode.Title));
+            _resultDimension = dimension;
 
             foreach (CombineDisgCaseResult item in result.Cases)
             {
                 SheetView sheet = fpSpread1.AddNewSheetView();
                 sheet.SheetName = string.IsNullOrWhiteSpace(item.Name)
                     ? item.Id : $"{item.Id} {item.Name}";
-                ConfigureSheet(sheet, dimension);
+                ConfigureSheet(sheet, dimension, grouped: true);
                 sheet.RowCount = 0;
             }
-            if (modeSelector.Items.Count > 0) modeSelector.SelectedIndex = 0;
             if (fpSpread1.Sheets.Count > 0) fpSpread1.ActiveSheetIndex = 0;
             Width = dimension == 3 ? 900 : 650;
         }
@@ -274,45 +272,69 @@ public partial class ResultCombineDisgComponent : UserControl
     private void MaterializeSelectedSheet()
     {
         if (_canonical?.IsShowing == true) { _canonical.Materialize(); return; }
-        if (_rebuilding || _output == null || modeSelector.SelectedItem is not ModeChoice mode)
-            return;
+        if (_rebuilding || _output == null) return;
         int sheetIndex = fpSpread1.ActiveSheetIndex;
         if (sheetIndex < 0 || sheetIndex >= _output.Cases.Count) return;
 
+        if (_materializedSheet == sheetIndex) return;
+
         if (_materializedSheet >= 0 && _materializedSheet != sheetIndex &&
             _materializedSheet < fpSpread1.Sheets.Count)
-            fpSpread1.Sheets[_materializedSheet].RowCount = 0;
+            ResultModeGroupDataModel.Clear(fpSpread1.Sheets[_materializedSheet]);
 
         SheetView sheet = fpSpread1.Sheets[sheetIndex];
-        IReadOnlyList<CombineDisgNodeResult> rows =
-            _output.Cases[sheetIndex].Rows.TryGetValue(mode.Key, out var selected)
-                ? selected : Array.Empty<CombineDisgNodeResult>();
-        sheet.RowCount = rows.Count;
-        bool is3D = sheet.ColumnCount == 8;
-        for (int row = 0; row < rows.Count; row++)
+        var modes = _resultDimension == 3 ? Modes3D : Modes2D;
+        int visibleColumns = _resultDimension == 3 ? 8 : 5;
+        sheet.ColumnCount = visibleColumns + 1;
+        var caseRows = _output.Cases[sheetIndex].Rows;
+        sheet.RowCount = modes.Sum(mode => caseRows.TryGetValue(mode.Key, out var rows) ? rows.Count : 0);
+        bool is3D = _resultDimension == 3;
+        int modeColumn = visibleColumns;
+        int row = 0;
+        for (int modeIndex = 0; modeIndex < modes.Length; modeIndex++)
         {
-            CombineDisgNodeResult value = rows[row];
-            sheet.Cells[row, 0].Text = value.Id;
-            sheet.Cells[row, 1].Text = Format(value.Dx);
-            sheet.Cells[row, 2].Text = Format(value.Dy);
-            if (is3D)
+            if (!caseRows.TryGetValue(modes[modeIndex].Key, out var rows)) continue;
+            foreach (CombineDisgNodeResult value in rows)
             {
-                sheet.Cells[row, 3].Text = Format(value.Dz);
-                sheet.Cells[row, 4].Text = Format(value.Rx);
-                sheet.Cells[row, 5].Text = Format(value.Ry);
-                sheet.Cells[row, 6].Text = Format(value.Rz);
-                sheet.Cells[row, 7].Text = value.Case;
-            }
-            else
-            {
-                sheet.Cells[row, 3].Text = Format(value.Rz);
-                sheet.Cells[row, 4].Text = value.Case;
+                sheet.Cells[row, 0].Text = value.Id;
+                sheet.Cells[row, 1].Text = Format(value.Dx);
+                sheet.Cells[row, 2].Text = Format(value.Dy);
+                if (is3D)
+                {
+                    sheet.Cells[row, 3].Text = Format(value.Dz);
+                    sheet.Cells[row, 4].Text = Format(value.Rx);
+                    sheet.Cells[row, 5].Text = Format(value.Ry);
+                    sheet.Cells[row, 6].Text = Format(value.Rz);
+                    sheet.Cells[row, 7].Text = value.Case;
+                }
+                else
+                {
+                    sheet.Cells[row, 3].Text = Format(value.Rz);
+                    sheet.Cells[row, 4].Text = value.Case;
+                }
+                sheet.Cells[row, modeColumn].Text = ResultModeGroupDataModel.Token(modeIndex);
+                row++;
             }
         }
+        ResultModeGroupDataModel.Attach(sheet, modeColumn, modes);
         _materializedSheet = sheetIndex;
-        if (Visible && _output != null && modeSelector.SelectedItem is ModeChoice selectedMode)
+        if (Visible && _output != null && modes.Length > 0)
             FrameWebforCS.three.ThreeResultsService.PublishPage(
-                "comb_disg", _output.Cases[sheetIndex].Id, selectedMode.Key);
+                "comb_disg", _output.Cases[sheetIndex].Id, modes[0].Key);
+    }
+
+    private void OnEnterCell(object? sender, EnterCellEventArgs e) => PublishModeForRow(e.Row);
+
+    internal void PublishModeForRow(int displayRow)
+    {
+        if (_canonical?.IsShowing == true) { _canonical.PublishPage(displayRow); return; }
+        if (!Visible || _output == null || displayRow < 0) return;
+        int index = fpSpread1.ActiveSheetIndex;
+        if (index < 0 || index >= _output.Cases.Count ||
+            fpSpread1.Sheets[index].Models.Data is not ResultModeGroupDataModel grouped) return;
+        string? mode = grouped.GetModeKey(displayRow);
+        if (mode != null)
+            FrameWebforCS.three.ThreeResultsService.PublishPage("comb_disg", _output.Cases[index].Id, mode);
     }
 
     private static string Format(double value) =>
@@ -325,19 +347,18 @@ public partial class ResultCombineDisgComponent : UserControl
         try
         {
             fpSpread1.Sheets.Clear();
-            modeSelector.Items.Clear();
             _materializedSheet = -1;
         }
         finally { _rebuilding = false; }
     }
 
-    private static void ConfigureSheet(SheetView sheet, int dimension)
+    private static void ConfigureSheet(SheetView sheet, int dimension, bool grouped = false)
     {
         var header = sheet.ColumnHeader;
         header.RowCount = 2;
         if (dimension == 3)
         {
-            sheet.ColumnCount = 8;
+            sheet.ColumnCount = grouped ? 9 : 8;
             header.Cells[0, 0].Text = "節点";
             header.Cells[1, 0].Text = "No";
             header.Cells[0, 1].Text = "移動量(mm)";
@@ -353,7 +374,7 @@ public partial class ResultCombineDisgComponent : UserControl
         }
         else
         {
-            sheet.ColumnCount = 5;
+            sheet.ColumnCount = grouped ? 6 : 5;
             header.Cells[0, 0].Text = "節点";
             header.Cells[1, 0].Text = "No";
             header.Cells[0, 1].Text = "移動量(mm)";
@@ -363,13 +384,14 @@ public partial class ResultCombineDisgComponent : UserControl
             header.Cells[0, 3].Text = "回転";
             header.Cells[1, 3].Text = "(‰rad)";
         }
-        int caseColumn = sheet.ColumnCount - 1;
+        int caseColumn = dimension == 3 ? 7 : 4;
         header.Cells[0, caseColumn].Text = "組み合わせ";
         sheet.Columns[0].Width = 50;
         for (int i = 0; i < sheet.ColumnCount; i++)
             sheet.Columns[i].CellType = new FarPoint.Win.Spread.CellType.TextCellType();
         for (int i = 1; i < caseColumn; i++) sheet.Columns[i].Width = 80;
         sheet.Columns[caseColumn].Width = 200;
+        if (grouped) sheet.Columns[caseColumn + 1].Visible = false;
         sheet.Protect = true;
     }
 
@@ -392,8 +414,4 @@ public partial class ResultCombineDisgComponent : UserControl
         catch (ObjectDisposedException) { }
     }
 
-    private sealed record ModeChoice(string Key, string Title)
-    {
-        public override string ToString() => Title;
-    }
 }

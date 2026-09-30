@@ -112,7 +112,7 @@ public sealed class ResultCombineReacTests
     }
 
     [Fact]
-    public void TwoDimensionalUiDisplaysTwoDecimalPlacesAndSelectedMode()
+    public void TwoDimensionalUiGroupsModesAndDisplaysTwoDecimalPlaces()
     {
         RunSta(() =>
         {
@@ -122,16 +122,22 @@ public sealed class ResultCombineReacTests
             form.Controls.Add(component);
             form.Show();
             var spread = (FpSpread)component.Controls.Find("fpSpread1", true).Single();
-            var modes = (ComboBox)component.Controls.Find("modeSelector", true).Single();
-            PumpUntil(() => spread.Sheets.Count == 1 && spread.Sheets[0].RowCount == 1);
+            PumpUntil(() => spread.Sheets.Count == 1 && spread.Sheets[0].RowCount == 12);
 
-            Assert.Equal("7 Main", spread.Sheets[0].SheetName);
-            Assert.Equal(5, spread.Sheets[0].ColumnCount);
-            Assert.Equal(6, modes.Items.Count);
-            Assert.Equal("2.51", spread.Sheets[0].Cells[0, 1].Text);
-            Assert.Equal("+5", spread.Sheets[0].Cells[0, 4].Text);
-            modes.SelectedIndex = 1;
-            Assert.Equal("2.51", spread.Sheets[0].Cells[0, 1].Text);
+            var sheet = spread.Sheets[0];
+            var grouped = Assert.IsType<ResultModeGroupDataModel>(sheet.Models.Data);
+            Assert.Empty(component.Controls.Find("modeSelector", true));
+            Assert.Equal("7 Main", sheet.SheetName);
+            Assert.Equal(6, sheet.ColumnCount);
+            Assert.False(sheet.Columns[5].Visible);
+            Assert.True(grouped.IsGroup(0));
+            Assert.Equal("tx_max", grouped.GetModeKey(0));
+            Assert.Equal("tx_max", grouped.GetModeKey(1));
+            Assert.Equal("2.51", sheet.Cells[1, 1].Text);
+            Assert.Equal("+5", sheet.Cells[1, 4].Text);
+            Assert.True(grouped.IsGroup(2));
+            Assert.Equal("tx_min", grouped.GetModeKey(2));
+            Assert.Equal("2.51", sheet.Cells[3, 1].Text);
             ResultCombineReacCoordinator.Instance.FailLoad();
             Assert.Equal(0, spread.Sheets.Count);
         });
@@ -148,12 +154,16 @@ public sealed class ResultCombineReacTests
             form.Controls.Add(component);
             form.Show();
             var spread = (FpSpread)component.Controls.Find("fpSpread1", true).Single();
-            var modes = (ComboBox)component.Controls.Find("modeSelector", true).Single();
-            PumpUntil(() => spread.Sheets.Count == 1 && spread.Sheets[0].RowCount == 1);
-            Assert.Equal(8, spread.Sheets[0].ColumnCount);
-            Assert.Equal(12, modes.Items.Count);
-            Assert.Equal("0.25", spread.Sheets[0].Cells[0, 3].Text);
-            Assert.Equal("1.25", spread.Sheets[0].Cells[0, 6].Text);
+            PumpUntil(() => spread.Sheets.Count == 1 && spread.Sheets[0].RowCount == 24);
+            var sheet = spread.Sheets[0];
+            var grouped = Assert.IsType<ResultModeGroupDataModel>(sheet.Models.Data);
+            Assert.Equal(9, sheet.ColumnCount);
+            Assert.False(sheet.Columns[8].Visible);
+            Assert.Equal(12, Enumerable.Range(0, grouped.RowCount).Count(row => grouped.IsGroup(row)));
+            Assert.Equal("tx_max", grouped.GetModeKey(1));
+            Assert.Equal("mz_min", grouped.GetModeKey(23));
+            Assert.Equal("0.25", sheet.Cells[1, 3].Text);
+            Assert.Equal("1.25", sheet.Cells[1, 6].Text);
             ResultCombineReacCoordinator.Instance.FailLoad();
         });
     }
@@ -198,9 +208,13 @@ public sealed class ResultCombineReacTests
             LoadControlledCase("8", "New");
             Assert.Equal(0, spread.Sheets.Count);
             release.Set();
-            PumpUntil(() => spread.Sheets.Count == 1 && spread.Sheets[0].RowCount == 1 &&
+            PumpUntil(() => spread.Sheets.Count == 1 && spread.Sheets[0].RowCount == 2 &&
                 spread.Sheets[0].SheetName == "8 New");
-            Assert.Equal("8.00", spread.Sheets[0].Cells[0, 1].Text);
+            var sheet = spread.Sheets[0];
+            var grouped = Assert.IsType<ResultModeGroupDataModel>(sheet.Models.Data);
+            Assert.True(grouped.IsGroup(0));
+            Assert.Equal("tx_max", grouped.GetModeKey(1));
+            Assert.Equal("8.00", sheet.Cells[1, 1].Text);
             Assert.Equal(1, peak);
             ResultCombineReacCoordinator.Instance.FailLoad();
         });

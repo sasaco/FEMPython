@@ -135,8 +135,15 @@ public sealed class ResultPickupTests
             source.Set(2);
             releaseOld.Set();
             PumpUntil(() => spread.Sheets.Count == 1 &&
-                spread.Sheets[0].SheetName == "2" && spread.Sheets[0].RowCount == 1);
-            Assert.Equal("2", spread.Sheets[0].Cells[0, 1].Text);
+                spread.Sheets[0].SheetName == "2" &&
+                spread.Sheets[0].Models.Data is ResultModeGroupDataModel);
+            var grouped = (ResultModeGroupDataModel)spread.Sheets[0].Models.Data;
+            Assert.Equal(2, grouped.RowCount);
+            Assert.True(grouped.IsGroup(0));
+            Assert.Equal("X 最大", spread.Sheets[0].Cells[0, 0].Text);
+            Assert.Equal("2", spread.Sheets[0].Cells[1, 1].Text);
+            grouped.GetGroup(0).Expanded = false;
+            Assert.Equal("dx_max", grouped.GetModeKey(0));
             source.Clear();
             Assert.Empty(spread.Sheets.Cast<SheetView>());
         });
@@ -166,11 +173,19 @@ public sealed class ResultPickupTests
             form.Controls.Add(view);
             form.Show();
             var spread = (FpSpread)view.Controls.Find("fpSpread1", true).Single();
-            PumpUntil(() => spread.Sheets.Count == 1 && spread.Sheets[0].RowCount == 1);
+            PumpUntil(() => spread.Sheets.Count == 1 &&
+                spread.Sheets[0].Models.Data is ResultModeGroupDataModel);
             Assert.Equal("9 Envelope", spread.Sheets[0].SheetName);
-            Assert.Equal("3000.0000", spread.Sheets[0].Cells[0, 1].Text);
-            Assert.Equal("30000.0000", spread.Sheets[0].Cells[0, 2].Text);
-            Assert.Equal("+6", spread.Sheets[0].Cells[0, 4].Text);
+            var sheet = spread.Sheets[0];
+            var grouped = (ResultModeGroupDataModel)sheet.Models.Data;
+            int maximumRow = Enumerable.Range(0, grouped.RowCount)
+                .Single(row => !grouped.IsGroup(row) && grouped.GetModeKey(row) == "dx_max");
+            Assert.Contains(Enumerable.Range(0, grouped.RowCount),
+                row => grouped.IsGroup(row) && grouped.GetModeKey(row) == "dx_max");
+            Assert.Equal("3000.0000", sheet.Cells[maximumRow, 1].Text);
+            Assert.Equal("30000.0000", sheet.Cells[maximumRow, 2].Text);
+            Assert.Equal("+6", sheet.Cells[maximumRow, 4].Text);
+            Assert.Empty(view.Controls.Find("modeSelector", true));
             coordinator.FailLoad();
             Assert.Equal(0, spread.Sheets.Count);
         });

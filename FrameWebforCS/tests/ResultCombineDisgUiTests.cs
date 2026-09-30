@@ -1,6 +1,7 @@
 using FarPoint.Win.Spread;
 using FrameWebforCS.components.input;
 using FrameWebforCS.components.result;
+using FrameWebforCS.three;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Windows.Forms;
@@ -12,7 +13,7 @@ namespace FrameWebforCS.Tests;
 public sealed class ResultCombineDisgUiTests
 {
     [Fact]
-    public void CombineDisplaysSelectedSheetAndModeOnly()
+    public void CombineGroupsModesWithinSelectedSheet()
     {
         RunSta(() =>
         {
@@ -23,29 +24,44 @@ public sealed class ResultCombineDisgUiTests
             form.Show();
 
             var spread = (FpSpread)component.Controls.Find("fpSpread1", true).Single();
-            var modes = (ComboBox)component.Controls.Find("modeSelector", true).Single();
             var status = (Label)component.Controls.Find("statusLabel", true).Single();
-            PumpUntil(() => spread.Sheets.Count == 2 && spread.Sheets[0].RowCount == 1);
+            PumpUntil(() => spread.Sheets.Count == 2 && spread.Sheets[0].RowCount > 1);
 
             Assert.Equal("7 Main", spread.Sheets[0].SheetName);
             Assert.Equal("8 Second", spread.Sheets[1].SheetName);
             Assert.Equal(0, spread.ActiveSheetIndex);
-            Assert.Equal(5, spread.Sheets[0].ColumnCount);
+            Assert.Equal(6, spread.Sheets[0].ColumnCount);
             Assert.Equal(0, spread.Sheets[1].RowCount);
-            Assert.Equal("2500.0000", spread.Sheets[0].Cells[0, 1].Text);
-            Assert.Equal("+5", spread.Sheets[0].Cells[0, 4].Text);
-            Assert.Equal(6, modes.Items.Count);
+            var firstGroup = Assert.IsType<ResultModeGroupDataModel>(spread.Sheets[0].Models.Data);
+            Assert.True(firstGroup.IsGroup(0));
+            Assert.Equal("dx_max", firstGroup.GetModeKey(0));
+            Assert.Equal("2500.0000", spread.Sheets[0].Cells[1, 1].Text);
+            Assert.Equal("+5", spread.Sheets[0].Cells[1, 4].Text);
+            Assert.Equal(6, Enumerable.Range(0, firstGroup.RowCount).Count(firstGroup.IsGroup));
+            Assert.Empty(component.Controls.Find("modeSelector", true));
             Assert.Contains("2 件", status.Text);
 
             component.setActiveSheet(1); // Sidebar route category must not select sheet 1.
             Assert.Equal(0, spread.ActiveSheetIndex);
             spread.ActiveSheetIndex = 1;
             Assert.Equal(0, spread.Sheets[0].RowCount);
-            Assert.Equal(1, spread.Sheets[1].RowCount);
-            Assert.Equal("5000.0000", spread.Sheets[1].Cells[0, 1].Text);
-
-            modes.SelectedIndex = 1;
-            Assert.Equal("-4000.0000", spread.Sheets[1].Cells[0, 1].Text);
+            var secondGroup = Assert.IsType<ResultModeGroupDataModel>(spread.Sheets[1].Models.Data);
+            Assert.Equal(6, Enumerable.Range(0, secondGroup.RowCount).Count(secondGroup.IsGroup));
+            Assert.Equal("5000.0000", spread.Sheets[1].Cells[1, 1].Text);
+            Assert.Equal("dx_min", secondGroup.GetModeKey(3));
+            Assert.Equal("-4000.0000", spread.Sheets[1].Cells[3, 1].Text);
+            string? publishedMode = null;
+            void OnPageChanged(string view, string? caseId, string? mode)
+            {
+                if (view == "comb_disg" && caseId == "8") publishedMode = mode;
+            }
+            ThreeResultsService.ResultPageChanged += OnPageChanged;
+            try
+            {
+                component.PublishModeForRow(3);
+                Assert.Equal("dx_min", publishedMode);
+            }
+            finally { ThreeResultsService.ResultPageChanged -= OnPageChanged; }
             Assert.Equal(0, spread.Sheets[0].RowCount);
 
             ResultCombineDisgCoordinator.Instance.FailLoad();
@@ -75,31 +91,31 @@ public sealed class ResultCombineDisgUiTests
             form.Controls.Add(combine);
             form.Show();
             var spread = (FpSpread)combine.Controls.Find("fpSpread1", true).Single();
-            var modes = (ComboBox)combine.Controls.Find("modeSelector", true).Single();
-            PumpUntil(() => spread.Sheets.Count == 1 && spread.Sheets[0].RowCount == 1);
+            PumpUntil(() => spread.Sheets.Count == 1 && spread.Sheets[0].RowCount > 1);
 
-            Assert.Equal(8, spread.Sheets[0].ColumnCount);
-            Assert.Equal(12, modes.Items.Count);
-            Assert.Equal("375.0000", spread.Sheets[0].Cells[0, 3].Text);
-            Assert.Equal("750.0000", spread.Sheets[0].Cells[0, 6].Text);
+            Assert.Equal(9, spread.Sheets[0].ColumnCount);
+            var combineGroup = Assert.IsType<ResultModeGroupDataModel>(spread.Sheets[0].Models.Data);
+            Assert.Equal(12, Enumerable.Range(0, combineGroup.RowCount).Count(combineGroup.IsGroup));
+            Assert.Equal("375.0000", spread.Sheets[0].Cells[1, 3].Text);
+            Assert.Equal("750.0000", spread.Sheets[0].Cells[1, 6].Text);
 
             using var pickup = new ResultPickupDisgComponent();
             form.Controls.Add(pickup);
             var pickupSpread = (FpSpread)pickup.Controls.Find("fpSpread1", true).Single();
-            var pickupModes = (ComboBox)pickup.Controls.Find("modeSelector", true).Single();
             var pickupStatus = (Label)pickup.Controls.Find("statusLabel", true).Single();
             try
             {
-                PumpUntil(() => pickupSpread.Sheets.Count == 1 && pickupSpread.Sheets[0].RowCount == 1);
+                PumpUntil(() => pickupSpread.Sheets.Count == 1 && pickupSpread.Sheets[0].RowCount > 1);
             }
             catch (Exception exception)
             {
                 throw new InvalidOperationException(
                     $"PICKUP sheet count: {pickupSpread.Sheets.Count}; status: {pickupStatus.Text}", exception);
             }
-            Assert.Equal(8, pickupSpread.Sheets[0].ColumnCount);
-            Assert.Equal(12, pickupModes.Items.Count);
-            Assert.Equal("1875.0000", pickupSpread.Sheets[0].Cells[0, 1].Text);
+            Assert.Equal(9, pickupSpread.Sheets[0].ColumnCount);
+            var pickupGroup = Assert.IsType<ResultModeGroupDataModel>(pickupSpread.Sheets[0].Models.Data);
+            Assert.Equal(12, Enumerable.Range(0, pickupGroup.RowCount).Count(pickupGroup.IsGroup));
+            Assert.Equal("1875.0000", pickupSpread.Sheets[0].Cells[1, 1].Text);
             pickup.setActiveSheet(2);
             Assert.Equal(0, pickupSpread.ActiveSheetIndex);
             ResultCombineDisgCoordinator.Instance.FailLoad();
@@ -150,10 +166,10 @@ public sealed class ResultCombineDisgUiTests
             Assert.Equal(0, spread.Sheets.Count);
             releaseOld.Set();
             PumpUntil(() => newStarted.IsSet && spread.Sheets.Count == 1 &&
-                spread.Sheets[0].SheetName == "8 B" && spread.Sheets[0].RowCount == 1);
+                spread.Sheets[0].SheetName == "8 B" && spread.Sheets[0].RowCount > 1);
 
             Assert.Equal("8 B", spread.Sheets[0].SheetName);
-            Assert.Equal("8.0000", spread.Sheets[0].Cells[0, 1].Text);
+            Assert.Equal("8.0000", spread.Sheets[0].Cells[1, 1].Text);
             Assert.Equal(1, peakCalculations);
             ResultCombineDisgCoordinator.Instance.FailLoad();
         });
@@ -249,8 +265,8 @@ public sealed class ResultCombineDisgUiTests
 
             releaseOld.Set();
             PumpUntil(() => newStarted.IsSet && spread.Sheets.Count == 1 &&
-                spread.Sheets[0].SheetName == "8 B" && spread.Sheets[0].RowCount == 1);
-            Assert.Equal("8.0000", spread.Sheets[0].Cells[0, 1].Text);
+                spread.Sheets[0].SheetName == "8 B" && spread.Sheets[0].RowCount > 1);
+            Assert.Equal("8.0000", spread.Sheets[0].Cells[1, 1].Text);
             Assert.Equal(1, peak);
             ResultCombineDisgCoordinator.Instance.FailLoad();
         });
@@ -296,8 +312,8 @@ public sealed class ResultCombineDisgUiTests
 
             component.CreateViewHandle();
             PumpUntil(() => newStarted.IsSet && spread.Sheets.Count == 1 &&
-                spread.Sheets[0].SheetName == "8 B" && spread.Sheets[0].RowCount == 1);
-            Assert.Equal("8.0000", spread.Sheets[0].Cells[0, 1].Text);
+                spread.Sheets[0].SheetName == "8 B" && spread.Sheets[0].RowCount > 1);
+            Assert.Equal("8.0000", spread.Sheets[0].Cells[1, 1].Text);
             ResultCombineDisgCoordinator.Instance.FailLoad();
         });
     }

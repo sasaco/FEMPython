@@ -35,6 +35,8 @@ public partial class ResultCombineFsecComponent : UserControl
     private long _generation;
     private long _publishedRevision = -1;
     private int _materializedSheet = -1;
+    private int _displayDimension;
+    private readonly Dictionary<SheetView, ResultModeGroupDataModel> _groups = new();
     private bool _rebuilding;
     private bool _disposed;
     private CalculationDerivedViewRenderer? _canonical;
@@ -53,11 +55,11 @@ public partial class ResultCombineFsecComponent : UserControl
         _uiDispatcher = new Control();
         _ = _uiDispatcher.Handle;
         _canonical = new(CalculationDerivedStage.Combine, CalculationDerivedQuantity.SectionForce,
-            fpSpread1, modeSelector, statusLabel, Modes3D, Modes2D, ConfigureSheet);
+            fpSpread1, statusLabel, Modes3D, Modes2D, ConfigureSheet);
         CalculationResultStore.Instance.Changed += OnCanonicalChanged;
 
-        modeSelector.SelectedIndexChanged += (_, _) => MaterializeSelectedSheet();
         fpSpread1.ActiveSheetChanged += (_, _) => MaterializeSelectedSheet();
+        fpSpread1.EnterCell += (_, e) => PublishViewportPage(e.Row);
         // AppRoutingModule calls setActiveSheet before showing the floating form.
         VisibleChanged += (_, _) => { if (Visible) PublishViewportPage(); };
         HandleCreated += (_, _) => RefreshFromCoordinator();
@@ -216,14 +218,13 @@ public partial class ResultCombineFsecComponent : UserControl
 
     private void PublishResult(ResultCombineFsecOutput result, int dimension)
     {
+        _displayDimension = dimension;
         _rebuilding = true;
         try
         {
             fpSpread1.Sheets.Clear();
+            _groups.Clear();
             _materializedSheet = -1;
-            modeSelector.Items.Clear();
-            foreach (var mode in dimension == 3 ? Modes3D : Modes2D)
-                modeSelector.Items.Add(new ModeChoice(mode.Key, mode.Title));
 
             foreach (CombineFsecCaseResult item in result.Cases)
             {
@@ -233,9 +234,8 @@ public partial class ResultCombineFsecComponent : UserControl
                 ConfigureSheet(sheet, dimension);
                 sheet.RowCount = 0;
             }
-            if (modeSelector.Items.Count > 0) modeSelector.SelectedIndex = 0;
             if (fpSpread1.Sheets.Count > 0) fpSpread1.ActiveSheetIndex = 0;
-            Width = dimension == 3 ? 900 : 650;
+            Width = dimension == 3 ? 1090 : 840;
         }
         finally { _rebuilding = false; }
 
@@ -248,59 +248,79 @@ public partial class ResultCombineFsecComponent : UserControl
     private void MaterializeSelectedSheet()
     {
         if (_canonical?.IsShowing == true) { _canonical.Materialize(); return; }
-        if (_rebuilding || _output == null || modeSelector.SelectedItem is not ModeChoice mode)
-            return;
+        if (_rebuilding || _output == null) return;
         int sheetIndex = fpSpread1.ActiveSheetIndex;
         if (sheetIndex < 0 || sheetIndex >= _output.Cases.Count) return;
 
         if (_materializedSheet >= 0 && _materializedSheet != sheetIndex &&
             _materializedSheet < fpSpread1.Sheets.Count)
-            fpSpread1.Sheets[_materializedSheet].RowCount = 0;
-
-        SheetView sheet = fpSpread1.Sheets[sheetIndex];
-        IReadOnlyList<CombineFsecRowResult> rows =
-            _output.Cases[sheetIndex].Rows.TryGetValue(mode.Key, out var selected)
-                ? selected : Array.Empty<CombineFsecRowResult>();
-        sheet.RowCount = rows.Count;
-        bool is3D = sheet.ColumnCount == 10;
-        for (int row = 0; row < rows.Count; row++)
         {
-            CombineFsecRowResult value = rows[row];
-            sheet.Cells[row, 0].Text = value.MemberDisplay;
-            sheet.Cells[row, 1].Text = value.NodeId;
-            sheet.Cells[row, 2].Text = value.Location.ToString("F3", CultureInfo.InvariantCulture);
-            sheet.Cells[row, 3].Text = Format(value.Fx);
-            sheet.Cells[row, 4].Text = Format(value.Fy);
-            if (is3D)
+            SheetView previous = fpSpread1.Sheets[_materializedSheet];
+            ResultModeGroupDataModel.Clear(previous);
+            _groups.Remove(previous);
+        }
+        SheetView sheet = fpSpread1.Sheets[sheetIndex];
+        if (_groups.ContainsKey(sheet))
+        {
+            _materializedSheet = sheetIndex;
+            PublishViewportPage();
+            return;
+        }
+        var modes = _displayDimension == 3 ? Modes3D : Modes2D;
+        var selected = _output.Cases[sheetIndex];
+        int modeColumn = sheet.ColumnCount - 1;
+        int count = modes.Sum(mode => selected.Rows.TryGetValue(mode.Key, out var rows) ? rows.Count : 0);
+        sheet.RowCount = count;
+        int row = 0;
+        bool is3D = _displayDimension == 3;
+        for (int modeIndex = 0; modeIndex < modes.Length; modeIndex++)
+        {
+            if (!selected.Rows.TryGetValue(modes[modeIndex].Key, out var rows)) continue;
+            foreach (CombineFsecRowResult value in rows)
             {
-                sheet.Cells[row, 5].Text = Format(value.Fz);
-                sheet.Cells[row, 6].Text = Format(value.Mx);
-                sheet.Cells[row, 7].Text = Format(value.My);
-                sheet.Cells[row, 8].Text = Format(value.Mz);
-                sheet.Cells[row, 9].Text = value.Case;
-            }
-            else
-            {
-                sheet.Cells[row, 5].Text = Format(value.Mz);
-                sheet.Cells[row, 6].Text = value.Case;
+                sheet.Cells[row, 0].Text = value.MemberDisplay;
+                sheet.Cells[row, 1].Text = value.NodeId;
+                sheet.Cells[row, 2].Text = value.Location.ToString("F3", CultureInfo.InvariantCulture);
+                sheet.Cells[row, 3].Text = Format(value.Fx);
+                sheet.Cells[row, 4].Text = Format(value.Fy);
+                if (is3D)
+                {
+                    sheet.Cells[row, 5].Text = Format(value.Fz);
+                    sheet.Cells[row, 6].Text = Format(value.Mx);
+                    sheet.Cells[row, 7].Text = Format(value.My);
+                    sheet.Cells[row, 8].Text = Format(value.Mz);
+                    sheet.Cells[row, 9].Text = value.Case;
+                }
+                else
+                {
+                    sheet.Cells[row, 5].Text = Format(value.Mz);
+                    sheet.Cells[row, 6].Text = value.Case;
+                }
+                sheet.Cells[row, modeColumn].Text = ResultModeGroupDataModel.Token(modeIndex);
+                row++;
             }
         }
+        _groups[sheet] = ResultModeGroupDataModel.Attach(sheet, modeColumn, modes);
         _materializedSheet = sheetIndex;
         PublishViewportPage();
     }
 
-    private void PublishViewportPage()
+    private void PublishViewportPage(int? displayRow = null)
     {
-        if (_canonical?.IsShowing == true) { _canonical.PublishPage(); return; }
-        if (!Visible || _output == null || modeSelector.SelectedItem is not ModeChoice mode) return;
+        if (_canonical?.IsShowing == true) { _canonical.PublishPage(displayRow); return; }
+        if (!Visible || _output == null) return;
         int index = fpSpread1.ActiveSheetIndex;
         if (index < 0 || index >= _output.Cases.Count) return;
+        if (!_groups.TryGetValue(fpSpread1.Sheets[index], out var group)) return;
+        string? modeKey = group.GetModeKey(displayRow ?? fpSpread1.ActiveSheet.ActiveRowIndex);
+        if (modeKey == null && group.RowCount > 0) modeKey = group.GetModeKey(0);
+        if (modeKey == null) return;
         var selected = _output.Cases[index];
-        var samples = ProjectViewportSamples(selected, mode.Key);
+        var samples = ProjectViewportSamples(selected, modeKey);
         FrameWebforCS.three.ThreeResultsService.PublishDerivedFsec("comb_fsec",
             new Dictionary<string, IReadOnlyList<FrameWebforCS.three.SectionForceSample>>
             { [selected.Id] = samples }, _coordinator.Revision);
-        FrameWebforCS.three.ThreeResultsService.PublishPage("comb_fsec", selected.Id, mode.Key);
+        FrameWebforCS.three.ThreeResultsService.PublishPage("comb_fsec", selected.Id, modeKey);
     }
 
     internal static IReadOnlyList<FrameWebforCS.three.SectionForceSample> ProjectViewportSamples(
@@ -344,7 +364,7 @@ public partial class ResultCombineFsecComponent : UserControl
         try
         {
             fpSpread1.Sheets.Clear();
-            modeSelector.Items.Clear();
+            _groups.Clear();
             _materializedSheet = -1;
         }
         finally { _rebuilding = false; }
@@ -358,7 +378,7 @@ public partial class ResultCombineFsecComponent : UserControl
 
     private static void ConfigureSheet(SheetView sheet, int dimension)
     {
-        sheet.ColumnCount = dimension == 3 ? 10 : 7;
+        sheet.ColumnCount = dimension == 3 ? 11 : 8;
         var header = sheet.ColumnHeader;
         header.RowCount = 2;
         header.Cells[0, 0].Text = "部材";
@@ -387,9 +407,9 @@ public partial class ResultCombineFsecComponent : UserControl
             header.Cells[0, 5].Text = "曲げモーメント";
             header.Cells[1, 5].Text = "(kN・m)";
         }
-        int caseColumn = sheet.ColumnCount - 1;
+        int caseColumn = sheet.ColumnCount - 2;
         header.Cells[0, caseColumn].Text = "組み合わせ";
-        sheet.Columns[0].Width = 50;
+        sheet.Columns[0].Width = 240;
         sheet.Columns[1].Width = 50;
         for (int i = 0; i < sheet.ColumnCount; i++)
             sheet.Columns[i].CellType = new FarPoint.Win.Spread.CellType.TextCellType();
@@ -415,11 +435,6 @@ public partial class ResultCombineFsecComponent : UserControl
     {
         try { _runningCancellation?.Cancel(); }
         catch (ObjectDisposedException) { }
-    }
-
-    private sealed record ModeChoice(string Key, string Title)
-    {
-        public override string ToString() => Title;
     }
 }
 

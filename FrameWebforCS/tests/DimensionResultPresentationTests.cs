@@ -43,10 +43,10 @@ public sealed class DimensionResultPresentationTests
                     Spread(view).Sheets[0].RowCount > 0));
                 AssertPresentation(views, resultDimension, mismatch: false);
                 Assert.Equal("1.0000", Spread(displacement).Sheets[0].Cells[0, 1].Text);
-                string combinedValue = Spread(combinedDisplacement).Sheets[0].Cells[0, 1].Text;
-                string combinedSource = Spread(combinedDisplacement).Sheets[0].Cells[0,
+                string combinedValue = Spread(combinedDisplacement).Sheets[0].Cells[1, 1].Text;
+                string combinedSource = Spread(combinedDisplacement).Sheets[0].Cells[1,
                     resultDimension == 3 ? 7 : 4].Text;
-                string pickedSource = Spread(pickedDisplacement).Sheets[0].Cells[0,
+                string pickedSource = Spread(pickedDisplacement).Sheets[0].Cells[1,
                     resultDimension == 3 ? 7 : 4].Text;
                 Assert.False(string.IsNullOrWhiteSpace(combinedSource));
                 Assert.False(string.IsNullOrWhiteSpace(pickedSource));
@@ -60,10 +60,10 @@ public sealed class DimensionResultPresentationTests
                 Assert.Same(snapshot, ResultCombineDisgCoordinator.Instance.Snapshot);
                 Assert.Same(reactionSnapshot, ResultCombineReacCoordinator.Instance.Snapshot);
                 Assert.Same(sectionSnapshot, ResultCombineFsecCoordinator.Instance.Snapshot);
-                Assert.Equal(combinedValue, Spread(combinedDisplacement).Sheets[0].Cells[0, 1].Text);
-                Assert.Equal(combinedSource, Spread(combinedDisplacement).Sheets[0].Cells[0,
+                Assert.Equal(combinedValue, Spread(combinedDisplacement).Sheets[0].Cells[1, 1].Text);
+                Assert.Equal(combinedSource, Spread(combinedDisplacement).Sheets[0].Cells[1,
                     resultDimension == 3 ? 7 : 4].Text);
-                Assert.Equal(pickedSource, Spread(pickedDisplacement).Sheets[0].Cells[0,
+                Assert.Equal(pickedSource, Spread(pickedDisplacement).Sheets[0].Cells[1,
                     resultDimension == 3 ? 7 : 4].Text);
 
                 string saved = JsonSerializer.Serialize(InputDataService.Instance.GetSaveJson());
@@ -79,10 +79,10 @@ public sealed class DimensionResultPresentationTests
                     Spread(view).Sheets[0].RowCount > 0));
                 AssertPresentation(views, resultDimension, mismatch: true);
                 Assert.Equal("1.0000", Spread(displacement).Sheets[0].Cells[0, 1].Text);
-                Assert.Equal(combinedValue, Spread(combinedDisplacement).Sheets[0].Cells[0, 1].Text);
-                Assert.Equal(combinedSource, Spread(combinedDisplacement).Sheets[0].Cells[0,
+                Assert.Equal(combinedValue, Spread(combinedDisplacement).Sheets[0].Cells[1, 1].Text);
+                Assert.Equal(combinedSource, Spread(combinedDisplacement).Sheets[0].Cells[1,
                     resultDimension == 3 ? 7 : 4].Text);
-                Assert.Equal(pickedSource, Spread(pickedDisplacement).Sheets[0].Cells[0,
+                Assert.Equal(pickedSource, Spread(pickedDisplacement).Sheets[0].Cells[1,
                     resultDimension == 3 ? 7 : 4].Text);
 
                 Open(ResultFile(nextInputDimension, 0.005));
@@ -115,8 +115,8 @@ public sealed class DimensionResultPresentationTests
 
     private static void AssertPresentation(Control[] views, int resultDimension, bool mismatch)
     {
-        int[] threeDColumns = [7, 7, 9, 8, 8, 10, 8, 8, 10];
-        int[] twoDColumns = [4, 4, 6, 5, 5, 7, 5, 5, 7];
+        int[] threeDColumns = [7, 7, 9, 9, 9, 11, 9, 9, 11];
+        int[] twoDColumns = [4, 4, 6, 6, 6, 8, 6, 6, 8];
         for (int index = 0; index < views.Length; index++)
         {
             Assert.Equal((resultDimension == 3 ? threeDColumns : twoDColumns)[index],

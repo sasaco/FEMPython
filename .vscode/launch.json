@@ -1,0 +1,11 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FrameWebforCS",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/FrameWebforCS/FrameWebforCS.csproj"
+        }
+    ]
+}
