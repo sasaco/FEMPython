@@ -10,7 +10,9 @@ namespace PDF_Manager.Printing
 {
     public class FixMember
     {
+        public int row;
         public string m;   // 部材番号
+        public double? length; // I端からのバネ区間長（m）。旧データでは未指定
         public double tx;
         public double ty;
         public double tz;
@@ -45,7 +47,14 @@ namespace PDF_Manager.Printing
 
                     var fm = new FixMember();
 
+                    fm.row = int.TryParse(item["row"]?.ToString(), out int row) ? row : j + 1;
                     fm.m = dataManager.toString(item["m"]);
+                    if (item["length"] is JToken length && length.Type != JTokenType.Null)
+                    {
+                        fm.length = length.Value<double>();
+                        if (double.IsNaN(fm.length.Value) || double.IsInfinity(fm.length.Value) || fm.length <= 0)
+                            throw new FormatException("fix_member.length must be a finite positive number.");
+                    }
                     fm.tx = dataManager.parseDouble(item["tx"]);
                     fm.ty = dataManager.parseDouble(item["ty"]);
                     fm.tz = dataManager.parseDouble(item["tz"]);
@@ -54,7 +63,7 @@ namespace PDF_Manager.Printing
                     _fixnode.Add(fm);
 
                 }
-                this.fixmembers.Add(key, _fixnode);
+                this.fixmembers.Add(key, _fixnode.OrderBy(fm => fm.row).ToList());
             }
 
         }
@@ -79,37 +88,29 @@ namespace PDF_Manager.Printing
             if (this.dimension == 3)
             {
                 ///テーブルの作成
-                this.myTable = new Table(4, 5);
+                this.myTable = new Table(4, 6);
 
                 ///テーブルの幅
                 this.myTable.ColWidth[0] = 20.0;//節点No
-                this.myTable.ColWidth[1] = 100.0;//部材軸方向
-                this.myTable.ColWidth[2] = 100.0;//部材Y軸
-                this.myTable.ColWidth[3] = 100.0;//部材Z軸
-                this.myTable.ColWidth[4] = 100.0;//回転拘束
+                this.myTable.ColWidth[1] = 55.0;//バネ区間長
+                this.myTable.ColWidth[2] = 90.0;//部材軸方向
+                this.myTable.ColWidth[3] = 90.0;//部材Y軸
+                this.myTable.ColWidth[4] = 90.0;//部材Z軸
+                this.myTable.ColWidth[5] = 90.0;//回転拘束
 
                 this.myTable.RowHeight[1] = printManager.LineSpacing2;
 
+                for (int col = 0; col < this.myTable.Columns; col++)
+                    for (int row = 1; row < this.myTable.Rows; row++)
+                        this.myTable.AlignX[row, col] = "R";
                 this.myTable.AlignX[0, 0] = "L";
                 this.myTable.AlignX[1, 0] = "L";
-                this.myTable.AlignX[1, 1] = "R";
-                this.myTable.AlignX[1, 2] = "R";
-                this.myTable.AlignX[1, 3] = "R";
-                this.myTable.AlignX[1, 4] = "R";
-                this.myTable.AlignX[2, 0] = "R";
-                this.myTable.AlignX[2, 1] = "R";
-                this.myTable.AlignX[2, 2] = "R";
-                this.myTable.AlignX[2, 3] = "R";
-                this.myTable.AlignX[2, 4] = "R";
-                this.myTable.AlignX[3, 1] = "R";
-                this.myTable.AlignX[3, 2] = "R";
-                this.myTable.AlignX[3, 3] = "R";
-                this.myTable.AlignX[3, 4] = "R";
 
-                this.myTable[3, 1] = "(kN/m/m)";
+                this.myTable[3, 1] = "(m)";
                 this.myTable[3, 2] = "(kN/m/m)";
                 this.myTable[3, 3] = "(kN/m/m)";
-                this.myTable[3, 4] = "(kN・m/rad/m)";
+                this.myTable[3, 4] = "(kN/m/m)";
+                this.myTable[3, 5] = "(kN・m/rad/m)";
 
                 switch (data.language)
                 {
@@ -117,33 +118,36 @@ namespace PDF_Manager.Printing
                         this.title = "Spring";
                         this.myTable[1, 0] = "Member";
                         this.myTable[2, 0] = "No";
-                        this.myTable[1, 2] = "Displacement Restraint";
-                        this.myTable[2, 1] = "Kv";
-                        this.myTable[2, 2] = "Ky";
-                        this.myTable[2, 3] = "Kz"; ;
-                        this.myTable[1, 4] = "Rotational Restraint";
+                        this.myTable[1, 1] = "Length";
+                        this.myTable[1, 3] = "Displacement Restraint";
+                        this.myTable[2, 2] = "Kv";
+                        this.myTable[2, 3] = "Ky";
+                        this.myTable[2, 4] = "Kz";
+                        this.myTable[1, 5] = "Rotational Restraint";
                         break;
 
                     case "cn":
                         this.title = "弹簧";
                         this.myTable[1, 0] = "构件";
                         this.myTable[2, 0] = "编码";
-                        this.myTable[1, 2] = "位移约束";
-                        this.myTable[2, 1] = "构件轴向";
-                        this.myTable[2, 2] = "构件Y轴";
-                        this.myTable[2, 3] = "构件Z轴"; ;
-                        this.myTable[1, 4] = "旋转约束";
+                        this.myTable[1, 1] = "构件长度";
+                        this.myTable[1, 3] = "位移约束";
+                        this.myTable[2, 2] = "构件轴向";
+                        this.myTable[2, 3] = "构件Y轴";
+                        this.myTable[2, 4] = "构件Z轴";
+                        this.myTable[1, 5] = "旋转约束";
                         break;
 
                     default:
                         this.title = "バネデータ";
                         this.myTable[1, 0] = "部材";
                         this.myTable[2, 0] = "No";
-                        this.myTable[1, 2] = "変位拘束";
-                        this.myTable[2, 1] = "部材軸方向";
-                        this.myTable[2, 2] = "部材Y軸";
-                        this.myTable[2, 3] = "部材Z軸"; ;
-                        this.myTable[1, 4] = "回転拘束";
+                        this.myTable[1, 1] = "部材長";
+                        this.myTable[1, 3] = "変位拘束";
+                        this.myTable[2, 2] = "部材軸方向";
+                        this.myTable[2, 3] = "部材Y軸";
+                        this.myTable[2, 4] = "部材Z軸";
+                        this.myTable[1, 5] = "回転拘束";
                         break;
                 }
 
@@ -151,76 +155,67 @@ namespace PDF_Manager.Printing
             else
             {
                 ///テーブルの作成
-                this.myTable = new Table(4, 6);
+                this.myTable = new Table(4, 8);
 
                 ///テーブルの幅
-                this.myTable.ColWidth[0] = 20.0;//節点No
-                this.myTable.ColWidth[1] = 100.0;//部材軸方向
-                this.myTable.ColWidth[2] = 100.0;//部材Y軸
-                this.myTable.ColWidth[3] = 40.0;
-                this.myTable.ColWidth[4] = this.myTable.ColWidth[1];
-                this.myTable.ColWidth[5] = this.myTable.ColWidth[2];
+                this.myTable.ColWidth[0] = 20.0;//部材No
+                this.myTable.ColWidth[1] = 50.0;//バネ区間長
+                this.myTable.ColWidth[2] = 80.0;//部材軸方向
+                this.myTable.ColWidth[3] = 80.0;//部材直角方向
+                for (int col = 0; col < 4; col++)
+                    this.myTable.ColWidth[col + 4] = this.myTable.ColWidth[col];
 
                 this.myTable.RowHeight[1] = printManager.LineSpacing2;
 
+                for (int col = 0; col < this.myTable.Columns; col++)
+                    for (int row = 1; row < this.myTable.Rows; row++)
+                        this.myTable.AlignX[row, col] = "R";
                 this.myTable.AlignX[0, 0] = "L";
                 this.myTable.AlignX[1, 0] = "L";
-                this.myTable.AlignX[1, 1] = "R";
-                this.myTable.AlignX[1, 2] = "L";
-                this.myTable.AlignX[1, 3] = "R";
-                this.myTable.AlignX[1, 4] = "R";
-                this.myTable.AlignX[1, 5] = "L";
-                this.myTable.AlignX[2, 0] = "R";
-                this.myTable.AlignX[2, 1] = "R";
-                this.myTable.AlignX[2, 2] = "R";
-                this.myTable.AlignX[2, 3] = "R";
-                this.myTable.AlignX[2, 4] = "R";
-                this.myTable.AlignX[2, 5] = "R";
-                this.myTable.AlignX[3, 1] = "R";
-                this.myTable.AlignX[3, 2] = "R";
-                this.myTable.AlignX[3, 3] = "R";
-                this.myTable.AlignX[3, 4] = "R";
-                this.myTable.AlignX[3, 5] = "R";
+                this.myTable.AlignX[1, 4] = "L";
 
-
-                this.myTable[3, 1] = "(kN/m/m)";
+                this.myTable[3, 1] = "(m)";
                 this.myTable[3, 2] = "(kN/m/m)";
-                this.myTable[3, 4] = this.myTable[3, 1];
-                this.myTable[3, 5] = this.myTable[3, 2];
+                this.myTable[3, 3] = "(kN/m/m)";
+                for (int col = 0; col < 4; col++)
+                    this.myTable[3, col + 4] = this.myTable[3, col];
                 switch (data.language)
                 {
                     case "en":
                         this.title = "Spring";
                         this.myTable[1, 0] = "Member";
                         this.myTable[2, 0] = "No";
-                        this.myTable[1, 2] = "Displacement Restraint";
-                        this.myTable[2, 1] = "Ku";
-                        this.myTable[2, 2] = "Kv";
+                        this.myTable[1, 1] = "Length";
+                        this.myTable[1, 3] = "Displacement Restraint";
+                        this.myTable[2, 2] = "Ku";
+                        this.myTable[2, 3] = "Kv";
                         break;
 
                     case "cn":
                         this.title = "弹簧";
                         this.myTable[1, 0] = "构件";
                         this.myTable[2, 0] = "编码";
-                        this.myTable[1, 2] = "位移约束";
-                        this.myTable[2, 1] = "构件轴向";
-                        this.myTable[2, 2] = "垂直于轴的方向";
+                        this.myTable[1, 1] = "构件长度";
+                        this.myTable[1, 3] = "位移约束";
+                        this.myTable[2, 2] = "构件轴向";
+                        this.myTable[2, 3] = "垂直于轴的方向";
                         break;
 
                     default:
                         this.title = "バネデータ";
                         this.myTable[1, 0] = "部材";
                         this.myTable[2, 0] = "No";
-                        this.myTable[1, 2] = "変位拘束";
-                        this.myTable[2, 1] = "部材軸方向";
-                        this.myTable[2, 2] = "軸直角方向";
+                        this.myTable[1, 1] = "部材長";
+                        this.myTable[1, 3] = "変位拘束";
+                        this.myTable[2, 2] = "部材軸方向";
+                        this.myTable[2, 3] = "軸直角方向";
                         break;
                 }
-                this.myTable[1, 3] = this.myTable[1, 0];
-                this.myTable[1, 5] = this.myTable[1, 2];
-                this.myTable[2, 3] = this.myTable[2, 0];
-                this.myTable[2, 4] = this.myTable[2, 1];
-                this.myTable[2, 5] = this.myTable[2, 2];
+                for (int col = 0; col < 4; col++)
+                {
+                    this.myTable[1, col + 4] = this.myTable[1, col];
+                    this.myTable[2, col + 4] = this.myTable[2, col];
+                }
 
             }
         }
@@ -250,6 +245,9 @@ namespace PDF_Manager.Printing
 
                     int j = 0;
                     table[r, j] = printManager.toString(item.m);
+                    table.AlignX[r, j] = "R";
+                    j++;
+                    table[r, j] = printManager.toString(item.length, 3);
                     table.AlignX[r, j] = "R";
                     j++;
                     table[r, j] = printManager.toString(item.tx, 3);
@@ -282,7 +280,7 @@ namespace PDF_Manager.Printing
                 if (target.Count == 1)
                 {
                     columns = 1;
-                    table.ReDim(col: 3);
+                    table.ReDim(col: 4);
                 }
 
                 int count = this.myTable.Columns;
@@ -319,10 +317,12 @@ namespace PDF_Manager.Printing
 
                         table[r + i, 0 + c * j] = printManager.toString(item.m);
                         table.AlignX[r + i, 0 + c * j] = "R";
-                        table[r + i, 1 + c * j] = printManager.toString(item.tx, 3);
+                        table[r + i, 1 + c * j] = printManager.toString(item.length, 3);
                         table.AlignX[r + i, 1 + c * j] = "R";
-                        table[r + i, 2 + c * j] = printManager.toString(item.ty, 2, "E");
+                        table[r + i, 2 + c * j] = printManager.toString(item.tx, 3);
                         table.AlignX[r + i, 2 + c * j] = "R";
+                        table[r + i, 3 + c * j] = printManager.toString(item.ty, 2, "E");
+                        table.AlignX[r + i, 3 + c * j] = "R";
                     }
                 }
 

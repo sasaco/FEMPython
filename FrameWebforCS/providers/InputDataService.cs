@@ -241,6 +241,7 @@ namespace FrameWebforCS.providers
             var preparedElements = InputElementsService.ParseElementJson(rootElement);
             var preparedFixNodes = InputFixNodeService.ParseFixNodeJson(rootElement);
             var preparedFixMembers = InputFixMemberService.ParseFixMemberJson(rootElement);
+            InputFixMemberService.ValidateAgainstGeometry(preparedFixMembers, preparedMembers, preparedNodes);
             var preparedJoints = InputJointService.ParseJointJson(rootElement);
             var preparedLoads = InputLoadService.ParseLoadData(rootElement);
             var preparedNoticePoints = InputNoticePointsService.ParseNoticePointsJson(rootElement);

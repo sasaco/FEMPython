@@ -268,6 +268,127 @@ public sealed class ThreeConstraintsServiceTests
     }
 
     [Fact]
+    public void MemberSpringIntervalsFollowSourceRowsAndPreservePickIdentity()
+    {
+        ClearInputs();
+        try
+        {
+            Load("""
+                {"fix_member":{"1":[{"row":7,"m":"7","length":1,"tz":2},
+                                    {"row":1,"m":"7","length":2,"tx":2},
+                                    {"row":4,"m":"7","length":2,"ty":2}]}}
+                """);
+            var scene = new Scene();
+            using var layer = new ThreeConstraintsService(scene);
+            layer.SetMode("fix_member");
+            layer.Rebuild(FiveMeterNodes(), Members, "1");
+
+            Assert.Equal(3, layer.Count("fix_member"));
+            Assert.Equal(1f, layer.PositionOf("fix_member", 1, "x")!.X, 4);
+            Assert.Equal(3f, layer.PositionOf("fix_member", 4, "y")!.X, 4);
+            Assert.Equal(4.5f, layer.PositionOf("fix_member", 7, "z")!.X, 4);
+            AssertMemberSpringBounds(scene, 1, 0, 2, new Vector3(1, 0, 0));
+            AssertMemberSpringBounds(scene, 4, 2, 4, new Vector3(1, 0, 0));
+            AssertMemberSpringBounds(scene, 7, 4, 5, new Vector3(1, 0, 0));
+            Assert.Equal(new ConstraintSelection("fix_member", 4, "y"),
+                layer.Pick(new Raycaster(new Vector3(3, 0, 10), new Vector3(0, 0, -1))));
+
+            layer.Select("fix_member", 7, "z");
+            Assert.Equal(new ConstraintSelection("fix_member", 7, "z"), layer.Selected);
+        }
+        finally { ClearInputs(); }
+    }
+
+    [Fact]
+    public void MemberSpringGapTrailingRemainderAndTerminalBlankHaveDistinctSpans()
+    {
+        ClearInputs();
+        try
+        {
+            var scene = new Scene();
+            using var layer = new ThreeConstraintsService(scene);
+            layer.SetMode("fix_member");
+            Load("""
+                {"fix_member":{"1":[{"row":1,"m":"7","length":2,"tx":2},
+                                    {"row":2,"m":"7","length":2},
+                                    {"row":3,"m":"7","length":1,"ty":2}]}}
+                """);
+            layer.Rebuild(FiveMeterNodes(), Members, "1");
+            Assert.Equal(2, layer.Count("fix_member"));
+            Assert.Null(layer.PositionOf("fix_member", 2, "x"));
+            Assert.Equal(4.5f, layer.PositionOf("fix_member", 3, "y")!.X, 4);
+            AssertMemberSpringBounds(scene, 3, 4, 5, new Vector3(1, 0, 0));
+            Assert.Null(layer.Pick(new Raycaster(new Vector3(3, 0, 10), new Vector3(0, 0, -1))));
+
+            Load("""{"fix_member":{"1":[{"row":1,"m":"7","length":2,"tx":2}]}}""");
+            layer.Rebuild(FiveMeterNodes(), Members, "1");
+            Assert.Equal(1, layer.Count("fix_member"));
+            AssertMemberSpringBounds(scene, 1, 0, 2, new Vector3(1, 0, 0));
+            Assert.Null(layer.PositionOf("fix_member", 2, "x"));
+            Assert.Null(layer.Pick(new Raycaster(new Vector3(3.5f, 0, 10), new Vector3(0, 0, -1))));
+
+            Load("""
+                {"fix_member":{"1":[{"row":1,"m":"7","length":2,"tx":2},
+                                    {"row":2,"m":"7","ty":2}]}}
+                """);
+            layer.Rebuild(FiveMeterNodes(), Members, "1");
+            Assert.Equal(3.5f, layer.PositionOf("fix_member", 2, "y")!.X, 4);
+            AssertMemberSpringBounds(scene, 2, 2, 5, new Vector3(1, 0, 0));
+        }
+        finally { ClearInputs(); }
+    }
+
+    [Fact]
+    public void ShortSlopedMemberSpringStaysInsideIntervalAfterScaleChanges()
+    {
+        ClearInputs();
+        try
+        {
+            Load("""
+                {"member":{"7":{"ni":"1","nj":"9","cg":90}},
+                 "fix_member":{"1":[{"row":1,"m":"7","length":0.05,
+                                      "tx":2,"ty":2,"tz":2,"tr":2}]}}
+                """);
+            var scene = new Scene();
+            using var layer = new ThreeConstraintsService(scene);
+            var nodes = new Dictionary<int, Vector3>
+            {
+                [1] = new(0, 0, 0), [9] = new(3, 4, 0)
+            };
+            layer.Rebuild(nodes, Members, "1");
+            var memberAxis = new Vector3(0.6f, 0.8f, 0);
+            foreach (float scale in new[] { 0f, 1f, 5f })
+            {
+                layer.SetFixMemberScale(scale);
+                AssertMemberSpringBounds(scene, 1, 0, 0.05f, memberAxis);
+            }
+            Assert.Equal(0.025f * memberAxis.X,
+                layer.PositionOf("fix_member", 1, "y")!.X, 4);
+        }
+        finally { ClearInputs(); }
+    }
+
+    [Fact]
+    public void LegacyBlankLengthRowsRemainFullMemberSprings()
+    {
+        ClearInputs();
+        try
+        {
+            Load("""
+                {"fix_member":{"1":[{"row":2,"m":"7","tx":2},
+                                    {"row":5,"m":"7","ty":3}]}}
+                """);
+            var scene = new Scene();
+            using var layer = new ThreeConstraintsService(scene);
+            layer.Rebuild(FiveMeterNodes(), Members, "1");
+            Assert.Equal(2, layer.Count("fix_member"));
+            Assert.Equal(2.5f, layer.PositionOf("fix_member", 2, "x")!.X, 4);
+            Assert.Equal(2.5f, layer.PositionOf("fix_member", 5, "y")!.X, 4);
+        }
+        finally { ClearInputs(); }
+    }
+
+    [Fact]
     public void JointAndPointMarkersKeepLegacyFixedSizesAcrossModelScaleChanges()
     {
         ClearInputs();
@@ -424,6 +545,26 @@ public sealed class ThreeConstraintsServiceTests
         Assert.IsType<BufferAttribute<float>>(
             Assert.IsType<BufferGeometry>(line.Geometry).GetAttribute<float>("position")).Array;
 
+    private static void AssertMemberSpringBounds(Scene scene, int row, float start,
+        float end, Vector3 memberAxis)
+    {
+        var root = (Group)scene.GetObjectByName("fix_member")!;
+        var lines = root.Children.OfType<Line>()
+            .Where(line => line.Name.StartsWith($"fix_member{row}", StringComparison.Ordinal)).ToArray();
+        Assert.NotEmpty(lines);
+        foreach (var line in lines)
+        {
+            var vertices = SpringVertices(line);
+            for (int offset = 0; offset < vertices.Length; offset += 3)
+            {
+                var point = new Vector3(line.Position.X + vertices[offset],
+                    line.Position.Y + vertices[offset + 1], line.Position.Z + vertices[offset + 2]);
+                float distance = point.Dot(memberAxis);
+                Assert.InRange(distance, start - 0.0001f, end + 0.0001f);
+            }
+        }
+    }
+
     private static Vector3 Point(float[] vertices, int index) =>
         new(vertices[index * 3], vertices[index * 3 + 1], vertices[index * 3 + 2]);
 
@@ -459,6 +600,11 @@ public sealed class ThreeConstraintsServiceTests
     private static Dictionary<int, Vector3> Nodes() => new()
     {
         [1] = new Vector3(0, 0, 0), [9] = new Vector3(12, 0, 0)
+    };
+
+    private static Dictionary<int, Vector3> FiveMeterNodes() => new()
+    {
+        [1] = new Vector3(0, 0, 0), [9] = new Vector3(5, 0, 0)
     };
 
     private static void Load(string json)

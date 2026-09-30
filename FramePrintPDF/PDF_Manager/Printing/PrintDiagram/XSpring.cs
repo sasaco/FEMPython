@@ -93,35 +93,47 @@ namespace PDF_Manager.Printing
         /// <param name="centerPos">描画領域の中心座標</param>
         /// <param name="topLeft">描画領域の左上角の座標</param>
         /// <param name="bottomRight">描画領域の右下角の座標</param>
-        public XSpring(FixMember fixMember, XMember member, XPoint centerPos, XPoint topLeft, XPoint bottomRight)
+        public XSpring(FixMember fixMember, XMember member, XPoint centerPos, XPoint topLeft, XPoint bottomRight,
+            double startDistance, double spanLength)
             : base(null, null)
         {
             Debug.Assert(fixMember.m == member.No);
+            double tolerance = 1e-6 * Math.Max(1, member.Lenngth);
+            if (member.Lenngth <= 0 || startDistance < 0 || spanLength <= 0 ||
+                startDistance + spanLength > member.Lenngth + tolerance)
+                throw new ArgumentOutOfRangeException(nameof(spanLength));
 
             // 実物の長辺を200mm四方に縮小した状態における1pt相当の長さ(単位は実物と同じ)
             var coef = Math.Max(bottomRight.X - topLeft.X, topLeft.Y - bottomRight.Y) / (200 * XUnit.FromMillimeter(1));
 
             var ni = member.Ni; // 節点座標
             var nj = member.Nj;
+            double directionX = (nj.Pos.X - ni.Pos.X) / member.Lenngth;
+            double directionY = (nj.Pos.Y - ni.Pos.Y) / member.Lenngth;
 
             if (member.MemberType == XMemberType.Horizontal)
             {
                 // 水平部材
 
-                var pitch = coef * HorizontalSpringPitch;
-                var len = member.Lenngth;
+                var scale = Math.Min(coef, spanLength / HorizontalSpringPitch);
+                var pitch = scale * HorizontalSpringPitch;
+                var len = spanLength;
                 var nrepeat = Math.Max((int)(len / pitch), 1);
                 var xmin = Math.Min(HorizontalSpringParams1.Chunk(2).Min(s => s.ElementAt(0)), HorizontalSpringParams2.Chunk(2).Min(s => s.ElementAt(0)));
                 var ymin = Math.Min(HorizontalSpringParams1.Chunk(2).Min(s => s.ElementAt(1)), HorizontalSpringParams2.Chunk(2).Min(s => s.ElementAt(1)));
-                var xoffset = (len - pitch * nrepeat) / 2 - coef * xmin;
-                var yoffset = -coef * (ymin - HorizontalSpringGap);
+                var xoffset = (len - pitch * nrepeat) / 2 - scale * xmin;
+                var yoffset = -scale * (ymin - HorizontalSpringGap);
 
                 for (var i = 0; i < nrepeat; ++i)
                 {
-                    var nps1 = HorizontalSpringParams1.Chunk(2).Select(s => new XPoint(ni.Pos.X + xoffset + pitch * i + coef * s.ElementAt(0), ni.Pos.Y - yoffset - coef * s.ElementAt(1)));
+                    var nps1 = HorizontalSpringParams1.Chunk(2).Select(s => new XPoint(
+                        ni.Pos.X + directionX * (startDistance + xoffset + pitch * i + scale * s.ElementAt(0)),
+                        ni.Pos.Y - yoffset - scale * s.ElementAt(1)));
                     AddLines(nps1.Take(nps1.Count() - 1).Zip(nps1.Skip(1)).Select(pp => (pp.First, pp.Second)));
 
-                    var nps2 = HorizontalSpringParams2.Chunk(2).Select(s => new XPoint(ni.Pos.X + xoffset + pitch * i + coef * s.ElementAt(0), ni.Pos.Y - yoffset - coef * s.ElementAt(1)));
+                    var nps2 = HorizontalSpringParams2.Chunk(2).Select(s => new XPoint(
+                        ni.Pos.X + directionX * (startDistance + xoffset + pitch * i + scale * s.ElementAt(0)),
+                        ni.Pos.Y - yoffset - scale * s.ElementAt(1)));
                     AddLines(nps2.Take(nps2.Count() - 1).Zip(nps2.Skip(1)).Select(pp => (pp.First, pp.Second)));
                 }
 
@@ -136,20 +148,25 @@ namespace PDF_Manager.Printing
                 {
                     // 部材の左側にバネを描画
 
-                    var pitch = coef * VerticalLeftSpringPitch;
-                    var len = member.Lenngth;
+                    var scale = Math.Min(coef, spanLength / VerticalLeftSpringPitch);
+                    var pitch = scale * VerticalLeftSpringPitch;
+                    var len = spanLength;
                     var nrepeat = Math.Max((int)(len / pitch), 1);
                     var xmax = Math.Max(VerticalLeftSpringParams1.Chunk(2).Max(s => s.ElementAt(0)), VerticalLeftSpringParams2.Chunk(2).Max(s => s.ElementAt(0)));
                     var ymin = Math.Min(VerticalLeftSpringParams1.Chunk(2).Min(s => s.ElementAt(1)), VerticalLeftSpringParams2.Chunk(2).Min(s => s.ElementAt(1)));
-                    var xoffset = -coef * (xmax - -VerticalLeftSpringGap);
-                    var yoffset = (len - pitch * nrepeat) / 2 - coef * ymin;
+                    var xoffset = -scale * (xmax - -VerticalLeftSpringGap);
+                    var yoffset = (len - pitch * nrepeat) / 2 - scale * ymin;
 
                     for (var i = 0; i < nrepeat; ++i)
                     {
-                        var nps1 = VerticalLeftSpringParams1.Chunk(2).Select(s => new XPoint(ni.Pos.X + xoffset + coef * s.ElementAt(0), ni.Pos.Y - yoffset - pitch * i - coef * s.ElementAt(1)));
+                        var nps1 = VerticalLeftSpringParams1.Chunk(2).Select(s => new XPoint(
+                            ni.Pos.X + xoffset + scale * s.ElementAt(0),
+                            ni.Pos.Y + directionY * (startDistance + yoffset + pitch * i + scale * s.ElementAt(1))));
                         AddLines(nps1.Take(nps1.Count() - 1).Zip(nps1.Skip(1)).Select(pp => (pp.First, pp.Second)));
 
-                        var nps2 = VerticalLeftSpringParams2.Chunk(2).Select(s => new XPoint(ni.Pos.X + xoffset + coef * s.ElementAt(0), ni.Pos.Y - yoffset - pitch * i - coef * s.ElementAt(1)));
+                        var nps2 = VerticalLeftSpringParams2.Chunk(2).Select(s => new XPoint(
+                            ni.Pos.X + xoffset + scale * s.ElementAt(0),
+                            ni.Pos.Y + directionY * (startDistance + yoffset + pitch * i + scale * s.ElementAt(1))));
                         AddLines(nps2.Take(nps2.Count() - 1).Zip(nps2.Skip(1)).Select(pp => (pp.First, pp.Second)));
                     }
 
@@ -160,26 +177,61 @@ namespace PDF_Manager.Printing
                 {
                     // 部材の右側にバネを描画
 
-                    var pitch = coef * VerticalRightSpringPitch;
-                    var len = member.Lenngth;
+                    var scale = Math.Min(coef, spanLength / VerticalRightSpringPitch);
+                    var pitch = scale * VerticalRightSpringPitch;
+                    var len = spanLength;
                     var nrepeat = Math.Max((int)(len / pitch), 1);
                     var xmin = Math.Min(VerticalRightSpringParams1.Chunk(2).Min(s => s.ElementAt(0)), VerticalRightSpringParams2.Chunk(2).Min(s => s.ElementAt(0)));
                     var ymin = Math.Min(VerticalRightSpringParams1.Chunk(2).Min(s => s.ElementAt(1)), VerticalRightSpringParams2.Chunk(2).Min(s => s.ElementAt(1)));
-                    var xoffset = -coef * (xmin - VerticalRightSpringGap);
-                    var yoffset = (len - pitch * nrepeat) / 2 - coef * ymin;
+                    var xoffset = -scale * (xmin - VerticalRightSpringGap);
+                    var yoffset = (len - pitch * nrepeat) / 2 - scale * ymin;
 
                     for (var i = 0; i < nrepeat; ++i)
                     {
-                        var nps1 = VerticalRightSpringParams1.Chunk(2).Select(s => new XPoint(ni.Pos.X + xoffset + coef * s.ElementAt(0), ni.Pos.Y - yoffset - pitch * i - coef * s.ElementAt(1)));
+                        var nps1 = VerticalRightSpringParams1.Chunk(2).Select(s => new XPoint(
+                            ni.Pos.X + xoffset + scale * s.ElementAt(0),
+                            ni.Pos.Y + directionY * (startDistance + yoffset + pitch * i + scale * s.ElementAt(1))));
                         AddLines(nps1.Take(nps1.Count() - 1).Zip(nps1.Skip(1)).Select(pp => (pp.First, pp.Second)));
 
-                        var nps2 = VerticalRightSpringParams2.Chunk(2).Select(s => new XPoint(ni.Pos.X + xoffset + coef * s.ElementAt(0), ni.Pos.Y - yoffset - pitch * i - coef * s.ElementAt(1)));
+                        var nps2 = VerticalRightSpringParams2.Chunk(2).Select(s => new XPoint(
+                            ni.Pos.X + xoffset + scale * s.ElementAt(0),
+                            ni.Pos.Y + directionY * (startDistance + yoffset + pitch * i + scale * s.ElementAt(1))));
                         AddLines(nps2.Take(nps2.Count() - 1).Zip(nps2.Skip(1)).Select(pp => (pp.First, pp.Second)));
                     }
 
                     LocationType = XLocationType.GR;
                     Height = -VerticalRightSpringGap + VerticalRightSpringParams1.Concat(VerticalRightSpringParams2).Chunk(2).Max(s => s.ElementAt(0));
                 }
+            }
+            else
+            {
+                // 斜め部材では水平部材用の形状を局所軸に沿って配置する。
+                var scale = Math.Min(coef, spanLength / HorizontalSpringPitch);
+                var pitch = scale * HorizontalSpringPitch;
+                var nrepeat = Math.Max((int)(spanLength / pitch), 1);
+                var xmin = Math.Min(HorizontalSpringParams1.Chunk(2).Min(s => s.ElementAt(0)), HorizontalSpringParams2.Chunk(2).Min(s => s.ElementAt(0)));
+                var ymin = Math.Min(HorizontalSpringParams1.Chunk(2).Min(s => s.ElementAt(1)), HorizontalSpringParams2.Chunk(2).Min(s => s.ElementAt(1)));
+                var axialOffset = (spanLength - pitch * nrepeat) / 2 - scale * xmin;
+                var radialOffset = -scale * (ymin - HorizontalSpringGap);
+                XPoint At(double axial, double radial) => new XPoint(
+                    ni.Pos.X + directionX * axial + directionY * radial,
+                    ni.Pos.Y + directionY * axial - directionX * radial);
+
+                for (int i = 0; i < nrepeat; i++)
+                {
+                    var nps1 = HorizontalSpringParams1.Chunk(2).Select(s => At(
+                        startDistance + axialOffset + pitch * i + scale * s.ElementAt(0),
+                        radialOffset + scale * s.ElementAt(1)));
+                    AddLines(nps1.Take(nps1.Count() - 1).Zip(nps1.Skip(1)).Select(pp => (pp.First, pp.Second)));
+
+                    var nps2 = HorizontalSpringParams2.Chunk(2).Select(s => At(
+                        startDistance + axialOffset + pitch * i + scale * s.ElementAt(0),
+                        radialOffset + scale * s.ElementAt(1)));
+                    AddLines(nps2.Take(nps2.Count() - 1).Zip(nps2.Skip(1)).Select(pp => (pp.First, pp.Second)));
+                }
+
+                LocationType = XLocationType.GD;
+                Height = -HorizontalSpringGap + HorizontalSpringParams1.Concat(HorizontalSpringParams2).Chunk(2).Max(s => s.ElementAt(1));
             }
 
             CalculateDiagramRect(out var _topLeft, out var _bottomRight);

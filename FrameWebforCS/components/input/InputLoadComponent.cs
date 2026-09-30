@@ -18,7 +18,6 @@ namespace FrameWebforCS.components.input
         internal string ActiveLoadDisplayMode =>
             ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2) ? "load_values" : "load_names";
         private bool _syncingSelection;
-        private bool _rowHeaderSelection;
         private readonly HashSet<int> _coloredIntensityRows = new();
         private readonly HashSet<int> _pendingColorRows = new();
         private bool _pendingAllRowColors;
@@ -57,8 +56,8 @@ namespace FrameWebforCS.components.input
             this.Width = (int)w;
             fpSpread1.EnterCell += OnEnterCell;
             fpSpread1.MouseDown += OnSpreadMouseDown;
-            fpSpread1.KeyDown += OnSpreadKeyDown;
-            fpSpread1.DeleteKeyInterceptor = DeleteSelectedIntensityRows;
+            fpSpread1.EnableRowOperations(fpSpread1_Sheet2,
+                InsertIntensityDisplayRow, DeleteSelectedIntensityRows);
             fpSpread1.ActiveSheetChanged += OnActiveSheetChanged;
             HandleCreated += OnDisplayActivated;
             HandleDestroyed += OnDisplayHandleDestroyed;
@@ -69,8 +68,7 @@ namespace FrameWebforCS.components.input
                 _service.IntensityRows.ListChanged -= OnIntensityRowsChanged;
                 fpSpread1.EnterCell -= OnEnterCell;
                 fpSpread1.MouseDown -= OnSpreadMouseDown;
-                fpSpread1.KeyDown -= OnSpreadKeyDown;
-                fpSpread1.DeleteKeyInterceptor = null;
+                fpSpread1.DisableRowOperations(fpSpread1_Sheet2);
                 fpSpread1.ActiveSheetChanged -= OnActiveSheetChanged;
                 HandleCreated -= OnDisplayActivated;
                 HandleDestroyed -= OnDisplayHandleDestroyed;
@@ -81,7 +79,6 @@ namespace FrameWebforCS.components.input
         private void OnActiveSheetChanged(object? sender, EventArgs e)
         {
             _selectionRevision++;
-            _rowHeaderSelection = false;
             SelectFocusedCase();
             ActiveLoadDisplayModeChanged?.Invoke(ActiveLoadDisplayMode);
         }
@@ -89,8 +86,6 @@ namespace FrameWebforCS.components.input
         private void OnSpreadMouseDown(object? sender, MouseEventArgs e)
         {
             _selectionRevision++;
-            _rowHeaderSelection = ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2) &&
-                fpSpread1.HitTest(e.X, e.Y).Type == HitTestType.RowHeader;
         }
 
         private void OnIntensityRowMoved(string caseId, int row)
@@ -110,14 +105,8 @@ namespace FrameWebforCS.components.input
                 }));
         }
 
-        private void OnSpreadKeyDown(object? sender, KeyEventArgs e)
+        private bool InsertIntensityDisplayRow(int displayIndex, int columnIndex)
         {
-            if (e.Modifiers != Keys.None || e.KeyCode is not (Keys.Oem5 or Keys.Oem102) ||
-                fpSpread1.EditMode || !ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2))
-                return;
-
-            int displayIndex = fpSpread1_Sheet2.ActiveRowIndex;
-            int columnIndex = fpSpread1_Sheet2.ActiveColumnIndex;
             bool inserted;
             _syncingSelection = true;
             try { inserted = _service.InsertIntensityRowAt(displayIndex); }
@@ -127,33 +116,12 @@ namespace FrameWebforCS.components.input
                 _selectionRevision++;
                 SelectIntensityDisplayRow(displayIndex, columnIndex, publishSelection: true);
             }
-            e.SuppressKeyPress = true;
+            return inserted;
         }
 
-        private bool DeleteSelectedIntensityRows(SheetView sheet)
+        private bool DeleteSelectedIntensityRows(IReadOnlyList<int> indices, int columnIndex)
         {
-            if (!ReferenceEquals(sheet, fpSpread1_Sheet2) || !_rowHeaderSelection)
-                return false;
-
-            var selections = sheet.GetSelections();
-            // Row-header selections use column -1. A cell range spanning every
-            // visible column must still use the ordinary cell-value Delete path.
-            if (selections.Length == 0 || selections.Any(range =>
-                    range.Column != -1 || range.ColumnCount != -1))
-                return false;
-
-            var indices = new HashSet<int>();
-            foreach (var range in selections)
-            {
-                int end = range.RowCount < 0 ? sheet.RowCount :
-                    Math.Min(sheet.RowCount, range.Row + range.RowCount);
-                for (int row = Math.Max(0, range.Row); row < end; row++)
-                    indices.Add(row);
-            }
-            if (indices.Count == 0) return true;
-
-            int firstIndex = indices.Min();
-            int columnIndex = sheet.ActiveColumnIndex;
+            int firstIndex = indices[0];
             bool deleted;
             _syncingSelection = true;
             try { deleted = _service.DeleteIntensityRowsAt(indices); }
@@ -161,12 +129,11 @@ namespace FrameWebforCS.components.input
             if (deleted)
             {
                 _selectionRevision++;
-                _rowHeaderSelection = false;
-                int next = Math.Min(firstIndex, sheet.RowCount - 1);
+                int next = Math.Min(firstIndex, fpSpread1_Sheet2.RowCount - 1);
                 if (next >= 0)
                     SelectIntensityDisplayRow(next, columnIndex, publishSelection: true);
             }
-            return true;
+            return deleted;
         }
 
         private void OnDisplayActivated(object? sender, EventArgs e)
@@ -233,7 +200,7 @@ namespace FrameWebforCS.components.input
             _syncingSelection = true;
             try
             {
-                _rowHeaderSelection = false;
+                fpSpread1.ClearRowHeaderIntent();
                 if (row.IsAssigned) _service.SelectCase(row.CaseId);
                 fpSpread1.ActiveSheetIndex = 1;
                 fpSpread1_Sheet2.ClearSelection();

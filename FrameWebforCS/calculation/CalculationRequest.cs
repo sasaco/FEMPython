@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using FrameWebforCS.components.input;
 
 namespace FrameWebforCS.calculation;
 
@@ -33,7 +34,6 @@ internal static class CalculationRequestBuilder
             if (saved[section] is JsonObject value && value.Count > 0)
                 result[section] = value.DeepClone();
         NormalizeConstraintRows(result, "fix_node", "n", LoadComponents);
-        NormalizeConstraintRows(result, "fix_member", "m", ["tx", "ty", "tz", "tr"]);
 
         var nodes = Object(result, "node");
         var members = Object(result, "member");
@@ -80,6 +80,7 @@ internal static class CalculationRequestBuilder
             var node = value as JsonObject ?? throw new CalculationRequestException("node must be an object.");
             foreach (string axis in new[] { "x", "y", "z" }) DefaultNumber(node, axis);
         }
+        NormalizeMemberSpringRows(result, members, nodes);
         foreach (var (_, sheetValue) in elements)
         {
             if (sheetValue is not JsonObject sheet) throw new CalculationRequestException("element sheet must be an object.");
@@ -403,6 +404,61 @@ internal static class CalculationRequestBuilder
             else groups[groupId] = rows;
         }
         if (groups.Count == 0) result.Remove(section);
+    }
+
+    private static void NormalizeMemberSpringRows(JsonObject result, JsonObject members, JsonObject nodes)
+    {
+        if (result["fix_member"] is not JsonObject groups) return;
+        foreach (string caseId in groups.Select(item => item.Key).ToArray())
+        {
+            if (groups[caseId] is not JsonArray source)
+                throw new CalculationRequestException($"fix_member.{caseId} must be an array.");
+            var typed = new List<clsFixMember>();
+            foreach (JsonNode? value in source)
+            {
+                if (value is not JsonObject row)
+                    throw new CalculationRequestException($"fix_member.{caseId} contains an invalid row.");
+                string memberId = Id(row["m"]);
+                if (!members.ContainsKey(memberId))
+                    throw new CalculationRequestException($"fix_member.{caseId}: member {memberId} does not exist.");
+                double? length = row["length"] == null ? null : Number(row["length"]);
+                if (row["length"] != null && (length == null || length <= 0 || length > float.MaxValue))
+                    throw new CalculationRequestException($"fix_member.{caseId}: invalid length for member {memberId}.");
+                typed.Add(new clsFixMember
+                {
+                    row = (int?)row["row"] ?? 0, m = memberId,
+                    length = length is double metres ? (float)metres : null,
+                    tx = (float)(Number(row["tx"]) ?? 0),
+                    ty = (float)(Number(row["ty"]) ?? 0),
+                    tz = (float)(Number(row["tz"]) ?? 0),
+                    tr = (float)(Number(row["tr"]) ?? 0)
+                });
+            }
+            foreach (var byMember in typed.GroupBy(row => row.m))
+            {
+                try { MemberSpringIntervals.Resolve(byMember, MemberLength(byMember.Key!, members, nodes)); }
+                catch (ArgumentException error)
+                {
+                    throw new CalculationRequestException($"fix_member.{caseId}, member {byMember.Key}: {error.Message}");
+                }
+            }
+            var explicitMembers = typed.Where(row => row.length != null).Select(row => row.m).ToHashSet();
+            var projected = new JsonArray();
+            foreach (var row in typed.OrderBy(row => row.row))
+            {
+                if (row.length == null && !explicitMembers.Contains(row.m) &&
+                    row.tx == 0 && row.ty == 0 && row.tz == 0 && row.tr == 0)
+                    continue;
+                var item = new JsonObject { ["row"] = row.row, ["m"] = row.m,
+                    ["tx"] = row.tx ?? 0, ["ty"] = row.ty ?? 0,
+                    ["tz"] = row.tz ?? 0, ["tr"] = row.tr ?? 0 };
+                if (row.length is float metres) item["length"] = metres;
+                projected.Add(item);
+            }
+            if (projected.Count == 0) groups.Remove(caseId);
+            else groups[caseId] = projected;
+        }
+        if (groups.Count == 0) result.Remove("fix_member");
     }
 
     private static void NormalizeJointRows(JsonObject result, JsonObject members)

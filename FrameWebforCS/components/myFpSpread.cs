@@ -1,24 +1,49 @@
 ﻿using FarPoint.Win.Spread;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Linq;
 using System.Text;
 
 namespace FrameWebforCS.components
 {
     internal class myFpSpread : FarPoint.Win.Spread.FpSpread
     {
+        private sealed record RowOperations(
+            Func<int, int, bool> Insert,
+            Func<IReadOnlyList<int>, int, bool> Delete);
+
+        private readonly Dictionary<SheetView, RowOperations> _rowOperations = new();
+        private SheetView? _rowHeaderSheet;
+
         public myFpSpread() 
         {
             AccessibleDescription = "";
             Font = new Font("ＭＳ ゴシック", 9F);
             KeyDown += myFpSpread_KeyDown;
+            MouseDown += myFpSpread_MouseDown;
+            ActiveSheetChanged += myFpSpread_ActiveSheetChanged;
         }
 
-        // A sheet-specific handler can consume Delete before the shared cell clear.
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        internal Func<SheetView, bool>? DeleteKeyInterceptor { get; set; }
+        // Row mutations belong to each sheet's service. Sheets without a
+        // registration retain only the ordinary cell-value Delete behavior.
+        internal void EnableRowOperations(
+            SheetView sheet,
+            Func<int, int, bool> insert,
+            Func<IReadOnlyList<int>, int, bool> delete)
+        {
+            ArgumentNullException.ThrowIfNull(sheet);
+            ArgumentNullException.ThrowIfNull(insert);
+            ArgumentNullException.ThrowIfNull(delete);
+            _rowOperations[sheet] = new RowOperations(insert, delete);
+        }
+
+        internal void DisableRowOperations(SheetView sheet)
+        {
+            _rowOperations.Remove(sheet);
+            if (ReferenceEquals(_rowHeaderSheet, sheet)) _rowHeaderSheet = null;
+        }
+
+        internal void ClearRowHeaderIntent() => _rowHeaderSheet = null;
 
         public SheetView AddNewSheetView()
         {
@@ -32,6 +57,8 @@ namespace FrameWebforCS.components
         {
             if (disposing)
             {
+                _rowOperations.Clear();
+                _rowHeaderSheet = null;
                 foreach (SheetView sheet in Sheets)
                 {
                     if (sheet.DataSource != null)
@@ -44,15 +71,31 @@ namespace FrameWebforCS.components
 
         private void myFpSpread_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (e.KeyCode != Keys.Delete || e.Modifiers != Keys.None || this.EditMode)
+            if (e.Modifiers != Keys.None || EditMode)
                 return;
 
             var sheet = ActiveSheet;
-            if (sheet?.DataSource == null)
+            // GroupDataModel wraps the bound target model, but Spread reports
+            // DataSource as null after the wrapper is installed.
+            if (sheet == null || sheet.DataSource == null && !_rowOperations.ContainsKey(sheet))
                 return;
 
-            if (DeleteKeyInterceptor?.Invoke(sheet) == true)
+            if (e.KeyCode is Keys.Oem5 or Keys.Oem102)
             {
+                if (!_rowOperations.TryGetValue(sheet, out var operations)) return;
+                operations.Insert(sheet.ActiveRowIndex, sheet.ActiveColumnIndex);
+                e.SuppressKeyPress = true;
+                return;
+            }
+
+            if (e.KeyCode != Keys.Delete) return;
+
+            if (ReferenceEquals(_rowHeaderSheet, sheet) &&
+                _rowOperations.TryGetValue(sheet, out var rowOperations) &&
+                TryGetSelectedHeaderRows(sheet, out var selectedRows))
+            {
+                if (selectedRows.Count == 0 || rowOperations.Delete(selectedRows, sheet.ActiveColumnIndex))
+                    _rowHeaderSheet = null;
                 e.SuppressKeyPress = true;
                 return;
             }
@@ -67,6 +110,38 @@ namespace FrameWebforCS.components
 
             sheet.Cells[row, column].Value = null;
             e.SuppressKeyPress = true;
+        }
+
+        private void myFpSpread_MouseDown(object? sender, MouseEventArgs e)
+        {
+            var sheet = ActiveSheet;
+            _rowHeaderSheet = sheet != null && _rowOperations.ContainsKey(sheet) &&
+                HitTest(e.X, e.Y).Type == HitTestType.RowHeader ? sheet : null;
+        }
+
+        private void myFpSpread_ActiveSheetChanged(object? sender, EventArgs e) =>
+            _rowHeaderSheet = null;
+
+        private static bool TryGetSelectedHeaderRows(SheetView sheet, out IReadOnlyList<int> rows)
+        {
+            var selections = sheet.GetSelections();
+            if (selections.Length == 0 || selections.Any(range =>
+                    range.Column != -1 || range.ColumnCount != -1))
+            {
+                rows = Array.Empty<int>();
+                return false;
+            }
+
+            var indices = new HashSet<int>();
+            foreach (var range in selections)
+            {
+                int end = range.RowCount < 0 ? sheet.RowCount :
+                    Math.Min(sheet.RowCount, range.Row + range.RowCount);
+                for (int row = Math.Max(0, range.Row); row < end; row++)
+                    indices.Add(row);
+            }
+            rows = indices.OrderBy(row => row).ToArray();
+            return true;
         }
 
         // locked 設定してるセルの編集を禁止する

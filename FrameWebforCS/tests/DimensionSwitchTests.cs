@@ -81,34 +81,34 @@ public sealed class DimensionSwitchTests
             host.Controls.Add(controls[0]);
             try
             {
-                AssertColumns([3, 6, 8, 7, 5, 7, 16]);
+                AssertColumns([3, 6, 8, 7, 6, 7, 16]);
                 Assert.Equal(nameof(clsMember.Cg), Spread(controls[1]).Sheets[0].Columns[4].DataField);
                 Assert.Equal(nameof(clsElement.Torsion), Spread(controls[2]).Sheets[0].Columns[4].DataField);
                 Assert.Equal("Tz", Spread(controls[3]).Sheets[0].Columns[3].DataField);
-                Assert.Equal("Tz", Spread(controls[4]).Sheets[0].Columns[3].DataField);
+                Assert.Equal("部材Z軸", Spread(controls[4]).Sheets[0].ColumnHeader.Cells[1, 4].Text);
                 Assert.Equal("Zi", Spread(controls[5]).Sheets[0].Columns[3].DataField);
                 Assert.Equal("tz", Spread(controls[6]).Sheets[1].Columns[12].DataField);
                 Spread(controls[0]).Sheets[0].SetActiveCell(0, 2);
                 Spread(controls[1]).Sheets[0].SetActiveCell(0, 4);
                 Spread(controls[6]).Sheets[1].SetActiveCell(0, 12);
                 input.SetDimension(2);
-                AssertColumns([2, 5, 5, 4, 3, 3, 13]);
+                AssertColumns([2, 5, 5, 4, 4, 3, 13]);
                 Assert.Equal(nameof(clsElement.InertiaZ), Spread(controls[2]).Sheets[0].Columns[3].DataField);
                 Assert.Equal("Rz", Spread(controls[3]).Sheets[0].Columns[3].DataField);
-                Assert.Equal("Ty", Spread(controls[4]).Sheets[0].Columns[2].DataField);
+                Assert.Equal("部材直角方向", Spread(controls[4]).Sheets[0].ColumnHeader.Cells[0, 3].Text);
                 Assert.Equal("Zi", Spread(controls[5]).Sheets[0].Columns[1].DataField);
                 Assert.Equal("rz", Spread(controls[6]).Sheets[1].Columns[12].DataField);
                 Assert.Equal(7, InputNodesService.Instance.Nodes[0].Z);
                 host.Controls.Clear();
                 host.Controls.Add(controls[1]);
                 input.SetDimension(3);
-                AssertColumns([3, 6, 8, 7, 5, 7, 16]);
+                AssertColumns([3, 6, 8, 7, 6, 7, 16]);
                 Assert.Equal("Z", Spread(controls[0]).Sheets[0].Columns[2].DataField);
                 Assert.Equal(7, InputNodesService.Instance.Nodes[0].Z);
                 host.Controls.Clear();
                 host.Controls.Add(controls[6]);
                 input.SetDimension(2);
-                AssertColumns([2, 5, 5, 4, 3, 3, 13]);
+                AssertColumns([2, 5, 5, 4, 4, 3, 13]);
                 Assert.Equal("rz", Spread(controls[6]).Sheets[1].Columns[12].DataField);
                 using var saved = JsonDocument.Parse(JsonSerializer.Serialize(input.GetSaveJson()));
                 Assert.Equal(2, saved.RootElement.GetProperty("dimension").GetInt32());
@@ -116,7 +116,7 @@ public sealed class DimensionSwitchTests
                     .GetProperty("z").GetSingle());
                 input.JsonDataOpen(saved.RootElement);
                 Assert.Equal(2, input.dimension);
-                AssertColumns([2, 5, 5, 4, 3, 3, 13]);
+                AssertColumns([2, 5, 5, 4, 4, 3, 13]);
                 input.SetDimension(3);
                 Assert.Equal(7, InputNodesService.Instance.Nodes[0].Z);
             }

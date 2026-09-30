@@ -320,17 +320,27 @@ public sealed class InputViewportSelectionTests
     {
         RunSta(() =>
         {
-            using var fixMember = new InputFixMemberComponent();
-            var memberSpread = fixMember.Controls.OfType<FpSpread>().Single();
-            var memberSelections = new List<(int Row, string Axis)>();
-            fixMember.GridSelectionChanged += (row, axis) => memberSelections.Add((row, axis));
-            Assert.True(fixMember.SelectGridRow(4, "tz", "3"));
-            Assert.Equal("3", InputFixMemberService.Instance.SelectedCaseId);
-            Assert.Equal(3, memberSpread.ActiveSheet.ActiveRowIndex);
-            Assert.Equal(3, memberSpread.ActiveSheet.ActiveColumnIndex);
-            Assert.Empty(memberSelections);
-            RaiseEnterCell(memberSpread, 6, 2);
-            Assert.Equal([(7, "ty")], memberSelections);
+            var springService = InputFixMemberService.Instance;
+            try
+            {
+                using (var document = JsonDocument.Parse("""
+                    {"fix_member":{"3":[{"row":4,"m":"4","tx":10},
+                                         {"row":7,"m":"7","ty":20}]}}
+                    """)) springService.setFixMemberJson(document.RootElement);
+                using var fixMember = new InputFixMemberComponent();
+                var memberSpread = fixMember.Controls.OfType<FpSpread>().Single();
+                var memberSelections = new List<(int Row, string Axis)>();
+                fixMember.GridSelectionChanged += (row, axis) => memberSelections.Add((row, axis));
+                Assert.True(fixMember.SelectGridRow(4, "tz", "3"));
+                Assert.Equal("3", springService.SelectedCaseId);
+                var grouped = Assert.IsType<SpringGroupDataModel>(memberSpread.ActiveSheet.Models.Data);
+                Assert.Equal(grouped.GetModelIndexFromTargetIndex(0), memberSpread.ActiveSheet.ActiveRowIndex);
+                Assert.Equal(4, memberSpread.ActiveSheet.ActiveColumnIndex);
+                Assert.Empty(memberSelections);
+                RaiseEnterCell(memberSpread, grouped.GetModelIndexFromTargetIndex(1), 3);
+                Assert.Equal([(7, "ty")], memberSelections);
+            }
+            finally { springService.clear(); }
 
             using var joint = new InputJointComponent();
             var jointSpread = joint.Controls.OfType<FpSpread>().Single();

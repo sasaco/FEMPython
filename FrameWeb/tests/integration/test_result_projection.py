@@ -146,6 +146,47 @@ def test_legacy_topology_uses_original_ids_and_request_wide_stations():
         assert segment["j_end"]["fx"] == pytest.approx(4)
 
 
+def test_spring_case_boundaries_share_canonical_topology_but_keep_case_stiffness():
+    from fem.legacy_beam import select_case
+
+    source = _legacy_beam()
+    source["fix_member"] = {
+        "1": [
+            {"m": 7, "length": 1, "tx": 10},
+            {"m": 7, "length": 1, "tx": 0},
+        ],
+        "2": [
+            {"m": 7, "length": 0.75, "ty": 0},
+            {"m": 7, "length": 1, "ty": 20},
+            {"m": 7, "length": 0.25, "ty": 0},
+        ],
+    }
+    source["load"]["first"]["fix_member"] = 1
+    source["load"]["station-from-another-case"]["fix_member"] = 2
+
+    segments_by_case = []
+    for case_id in source["load"]:
+        model = FemModel()
+        model.read_json_model(_read_json_model(select_case(source, case_id)))
+        segments_by_case.append(sorted(
+            (element["member_start"], element["member_end"], element["foundation"])
+            for element in model.mesh.elements.values()
+        ))
+
+    expected_stations = [0, 0.5, 0.75, 1, 1.5, 1.75, 2]
+    assert [[segment[0] for segment in segments] + [2] for segments in segments_by_case] == [
+        expected_stations, expected_stations]
+    assert [segment[2][0] for segment in segments_by_case[0]] == [10, 10, 10, 0, 0, 0]
+    assert [segment[2][1] for segment in segments_by_case[1]] == [0, 0, 20, 20, 20, 0]
+
+    result_set = build_analysis_result_set(source)
+    assert [case["case_id"] for case in result_set["cases"]] == [
+        "first", "station-from-another-case"]
+    assert [station["position"] for station in result_set["topology"]["members"][0]["stations"]] == [
+        *expected_stations]
+    validate_analysis_result_set(result_set)
+
+
 def test_public_model_run_returns_only_the_canonical_result_set():
     model = json_model(axial_json(force=12))
 

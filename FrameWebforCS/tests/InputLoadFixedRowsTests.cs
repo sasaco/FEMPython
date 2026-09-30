@@ -241,7 +241,7 @@ public sealed class InputLoadFixedRowsTests
                 Assert.Empty(selected);
                 Assert.Equal(selectedCase, service.SelectedCaseId);
 
-                LoadSheetTest.MarkRowHeader(component, spread);
+                LoadSheetTest.MarkRowHeader(spread);
                 sheet.ClearSelection();
                 sheet.AddSelection(1, -1, 1, -1);
                 sheet.AddSelection(3, -1, 1, -1);
@@ -528,13 +528,13 @@ internal static class LoadSheetTest
     internal static void EnterCell(FpSpread spread, int row, int column) =>
         typeof(FpSpread).GetMethod("OnEnterCell", BindingFlags.Instance | BindingFlags.NonPublic)!
             .Invoke(spread, [new EnterCellEventArgs(new SpreadView(spread), row, column)]);
-    internal static void MarkRowHeader(InputLoadComponent component, FpSpread spread)
+    internal static void MarkRowHeader(FpSpread spread)
     {
         var point = (from y in Enumerable.Range(0, Math.Min(spread.Height, 250))
                      from x in Enumerable.Range(0, Math.Min(spread.Width, 70))
                      where spread.HitTest(x, y).Type == HitTestType.RowHeader
                      select (X: x, Y: y)).First();
-        typeof(InputLoadComponent).GetMethod("OnSpreadMouseDown", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .Invoke(component, [spread, new MouseEventArgs(MouseButtons.Left, 1, point.X, point.Y, 0)]);
+        typeof(Control).GetMethod("OnMouseDown", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(spread, [new MouseEventArgs(MouseButtons.Left, 1, point.X, point.Y, 0)]);
     }
 }

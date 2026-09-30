@@ -50,10 +50,34 @@ namespace PDF_Manager.Printing
             {
                 var m = kv.Key;
                 var member = kv.Value;
+                var entries = fixMembers.Where(fm => fm.m == m).OrderBy(fm => fm.row).ToList();
+                if (entries.Count == 0 || member.Lenngth <= 0)
+                    continue;
 
-                foreach (var fixMember in fixMembers.Where(fm => fm.m == m))
+                // Old files can contain several additive, whole-member rows without a length.
+                if (entries.All(fm => !fm.length.HasValue))
                 {
-                    member.AddSpring(new XSpring(fixMember, member, centerPos, topLeft, bottomRight));
+                    foreach (var entry in entries.Where(HasStiffness))
+                        member.AddSpring(new XSpring(entry, member, centerPos, topLeft, bottomRight,
+                            0, member.Lenngth));
+                    continue;
+                }
+
+                double cursor = 0;
+                double tolerance = 1e-6 * Math.Max(1, member.Lenngth);
+                for (int index = 0; index < entries.Count; index++)
+                {
+                    var entry = entries[index];
+                    if (!entry.length.HasValue && index != entries.Count - 1)
+                        throw new FormatException($"fix_member {m}: only the final interval may omit length.");
+                    double spanLength = entry.length ?? member.Lenngth - cursor;
+                    if (spanLength <= 0 || cursor + spanLength > member.Lenngth + tolerance)
+                        throw new FormatException($"fix_member {m}: interval is outside the member.");
+                    spanLength = Math.Min(spanLength, member.Lenngth - cursor);
+                    if (HasStiffness(entry))
+                        member.AddSpring(new XSpring(entry, member, centerPos, topLeft, bottomRight,
+                            cursor, spanLength));
+                    cursor += spanLength;
                 }
             }
 
@@ -98,5 +122,9 @@ namespace PDF_Manager.Printing
 
         private readonly IReadOnlyDictionary<string, XMember> memberDic;
         private readonly XCanvas canvas;
+
+        private static bool HasStiffness(FixMember row) =>
+            new[] { row.tx, row.ty, row.tz, row.tr }
+                .Any(value => !double.IsNaN(value) && !double.IsInfinity(value) && value != 0);
     }
 }

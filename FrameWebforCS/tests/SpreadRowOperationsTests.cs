@@ -27,6 +27,8 @@ public sealed class SpreadRowOperationsTests
             disabled.SetActiveCell(0, 0);
             Assert.False(LoadSheetTest.Key(spread, Keys.Oem5).SuppressKeyPress);
             Assert.Equal(0, insertCount);
+            Assert.True(LoadSheetTest.Key(spread, Keys.Delete).SuppressKeyPress);
+            Assert.Equal("", disabled.Cells[0, 0].Text);
 
             spread.ActiveSheetIndex = 1;
             enabled.SetActiveCell(0, 0);
@@ -91,6 +93,7 @@ public sealed class SpreadRowOperationsTests
         var sheet = spread.AddNewSheetView();
         sheet.SheetName = name;
         sheet.AutoGenerateColumns = false;
+        sheet.SelectionPolicy = FarPoint.Win.Spread.Model.SelectionPolicy.MultiRange;
         sheet.ColumnCount = 1;
         sheet.Columns[0].DataField = nameof(BoundRow.Value);
         sheet.DataSource = new BindingList<BoundRow>

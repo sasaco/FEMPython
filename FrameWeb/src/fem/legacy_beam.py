@@ -3,8 +3,67 @@ import copy
 import numpy as np
 
 
+def _spring_rows_by_member(rows):
+    grouped = {}
+    for spring in rows:
+        grouped.setdefault(str(spring['m']), []).append(spring)
+    for member_rows in grouped.values():
+        member_rows.sort(key=lambda row: int(row.get('row') or 0))
+    return grouped
+
+
+def _blank_spring_length(value):
+    return value is None or isinstance(value, str) and not value.strip()
+
+
+def _spring_intervals(rows, member_id, length, tolerance):
+    """Return physical I-end intervals, retaining zero-stiffness cursor rows."""
+    if not rows:
+        return []
+
+    def stiffness(row):
+        values = []
+        for key in ('tx', 'ty', 'tz', 'tr'):
+            value = row.get(key)
+            number = 0. if value is None else float(value)
+            if not np.isfinite(number):
+                raise ValueError(f'Invalid {key} foundation on member {member_id}')
+            values.append(abs(number))
+        return np.array(values)
+
+    if all(_blank_spring_length(row.get('length')) for row in rows):
+        return [(0., length, stiffness(row)) for row in rows]
+
+    cursor = 0.
+    intervals = []
+    for index, row in enumerate(rows):
+        value = row.get('length')
+        if _blank_spring_length(value):
+            if index != len(rows)-1:
+                raise ValueError(f'Nonterminal blank spring length on member {member_id}')
+            end = length
+        else:
+            try:
+                span = float(value) if not isinstance(value, bool) else float('nan')
+            except (TypeError, ValueError, OverflowError) as error:
+                raise ValueError(f'Invalid spring length on member {member_id}') from error
+            if not np.isfinite(span) or span <= 0:
+                raise ValueError(f'Invalid spring length on member {member_id}')
+            end = cursor + span
+            if end > length + tolerance:
+                raise ValueError(f'Spring lengths exceed member {member_id}')
+            end = min(end, length)
+        if end-cursor <= tolerance:
+            raise ValueError(f'Zero-length spring interval on member {member_id}')
+        intervals.append((cursor, end, stiffness(row)))
+        cursor = end
+    return intervals
+
+
 def select_case(data, case_id=None):
     data = copy.deepcopy(data)
+    # Keep the original sheets so all cases use one generated element mesh.
+    data.setdefault('_all_spring_sheets', data.get('fix_member', {}))
     if not data.get('load'):
         return data
     requested = next(iter(data['load'])) if case_id is None else case_id
@@ -50,6 +109,9 @@ def prepare_members(data, model_data):
     notice = {str(v['m']): sorted(set(v.get('Points', []))) for v in data.get('notice_points', [])}
     joints = next(iter(data.get('joint', {}).values()), [])
     springs = next(iter(data.get('fix_member', {}).values()), [])
+    selected_springs = _spring_rows_by_member(springs)
+    all_spring_sheets = data.get('_all_spring_sheets', data.get('fix_member', {}))
+    all_springs = [_spring_rows_by_member(rows) for rows in all_spring_sheets.values()]
     for mid, member in members.items():
         original = mesh.elements[int(mid)]
         ni, nj = original['nodes']
@@ -59,7 +121,22 @@ def prepare_members(data, model_data):
             raise ValueError(f'Zero length member {mid}')
         axis = (end-start)/length
         tolerance = 1e-10*max(1., length)
+        member_spring_sheets = [sheet.get(mid, []) for sheet in all_springs]
+        # Desktop lengths are serialized from float?, so a mathematically
+        # coincident endpoint can differ by a few float32 ulps. Apply this
+        # wider tolerance only to members with explicit spring boundaries.
+        has_spring_boundaries = any(
+            not _blank_spring_length(row.get('length'))
+            for rows in member_spring_sheets for row in rows)
+        position_tolerance = (1e-6*max(1., length)
+                              if has_spring_boundaries else tolerance)
         positions = {0., length}
+        spring_intervals = _spring_intervals(
+            selected_springs.get(mid, []), mid, length, position_tolerance)
+        for rows in member_spring_sheets:
+            for left, right, _ in _spring_intervals(
+                    rows, mid, length, position_tolerance):
+                positions.update((left, right))
         notices = [float(v) for v in notice.get(mid, []) if 0 < v < length]
         positions.update(notices)
         rigid = [v for v in data.get('rigid', []) if str(v['m']) == mid]
@@ -143,7 +220,7 @@ def prepare_members(data, model_data):
         # expressions (L-Jlength vs notice point). Never create a zero segment.
         unique = []
         for p in sorted(positions):
-            if not unique or p-unique[-1] > tolerance:
+            if not unique or p-unique[-1] > position_tolerance:
                 unique.append(p)
         unique[-1] = length
         positions = set(unique)
@@ -166,7 +243,7 @@ def prepare_members(data, model_data):
                     node = next_node
                     next_node += 1
                     mesh.add_node(node, xyz)
-                if any(abs(p-n) <= tolerance for n in notices):
+                if any(abs(p-n) <= position_tolerance for n in notices):
                     n_count += 1
                     label = f'{mid}n{n_count}'
                 elif p in active_points:
@@ -177,10 +254,8 @@ def prepare_members(data, model_data):
                 if str(node) not in data['node']:
                     model_data.setdefault('node_labels', {})[node] = label
             coordinates[p] = node
-        foundation = np.zeros(4)
-        for spring in springs:
-            if str(spring['m']) == mid:
-                foundation += [abs(float(spring.get(k, 0))) for k in ('tx', 'ty', 'tz', 'tr')]
+        spring_intervals = [(snap(left), snap(right), values)
+                            for left, right, values in spring_intervals]
         releases = set()
         for joint in joints:
             if str(joint['m']) == mid:
@@ -192,6 +267,10 @@ def prepare_members(data, model_data):
             if index:
                 next_element += 1
             props = copy.deepcopy(original)
+            foundation = np.zeros(4)
+            for left, right, values in spring_intervals:
+                if a >= left and b <= right:
+                    foundation += values
             mat_id = props['material_id']
             for zone in rigid:
                 # Classify against the same coalesced boundaries used to split
