@@ -164,6 +164,7 @@ internal static class CalculationRequestBuilder
             var positions = String(selector["symbol"]) == "LL"
                 ? MovingPositions(source, memberRows, members, nodes, caseId) : new List<double> { 0 };
             int digit = (int)Math.Pow(10, (positions.Count - 1).ToString(CultureInfo.InvariantCulture).Length);
+            string? firstEffectiveId = null;
             for (int index = 0; index < positions.Count; index++)
             {
                 string id = index == 0 ? caseId : (double.Parse(caseId, CultureInfo.InvariantCulture) +
@@ -176,15 +177,18 @@ internal static class CalculationRequestBuilder
                 {
                     if (projected.ContainsKey(id)) throw new CalculationRequestException($"Duplicate projected load case {id}.");
                     projected[id] = item;
+                    firstEffectiveId ??= id;
                 }
             }
-        }
-        if (projected.Count > 0 && projected.All(pair => pair.Key.Contains('.')))
-        {
-            string first = projected.First().Key;
-            JsonNode value = projected[first]!.DeepClone();
-            projected.Remove(first);
-            projected[first[..first.LastIndexOf('.')]] = value;
+            // A moving load may not reach the structure at position zero. Keep the
+            // first actual load under its integral case ID so result/print grouping
+            // has a parent, independent of other load cases in the request.
+            if (positions.Count > 1 && !projected.ContainsKey(caseId) && firstEffectiveId != null)
+            {
+                JsonNode firstEffective = projected[firstEffectiveId]!.DeepClone();
+                projected.Remove(firstEffectiveId);
+                projected[caseId] = firstEffective;
+            }
         }
         // JavaScript object enumeration puts integer case IDs before decimal child IDs.
         var ordered = new JsonObject();

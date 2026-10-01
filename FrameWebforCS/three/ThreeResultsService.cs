@@ -217,8 +217,10 @@ internal sealed class ThreeResultsService : IDisposable
             if (_mode != "disg" || page is null || page.MovingChildren.Count == 0) return;
             if (++_disgAnimationFrame < 10) return;
             _disgAnimationFrame = 0;
-            _disgAnimationIndex = (_disgAnimationIndex + 1) % page.MovingChildren.Count;
-            _renderedDisgCase = page.MovingChildren[_disgAnimationIndex].CaseId;
+            _disgAnimationIndex = (_disgAnimationIndex + 1) % (page.MovingChildren.Count + 1);
+            _renderedDisgCase = _disgAnimationIndex == 0
+                ? page.Result.CaseId
+                : page.MovingChildren[_disgAnimationIndex - 1].CaseId;
             Redraw();
             return;
         }

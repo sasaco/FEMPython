@@ -30,6 +30,53 @@ public sealed class CalculationThreeResultsTests
     }
 
     [Fact]
+    public void CanonicalMovingDisplacementCyclesParentAndChildrenAndResetsOnModeChange()
+    {
+        var scene = new Scene();
+        using var renderer = new ThreeResultsService(scene);
+        CalculationResultPresentation presentation = Presentation();
+        string parentPage = presentation.Pages[0].Key;
+        renderer.SetCanonicalPresentation(presentation);
+        renderer.SetMode("disg", parentPage);
+
+        AssertRendered("travel", 1);
+        for (int i = 0; i < 9; i++) renderer.AdvanceDisplacementAnimation();
+        AssertRendered("travel", 1);
+        renderer.AdvanceDisplacementAnimation();
+        AssertRendered("travel.1", 2);
+        for (int i = 0; i < 10; i++) renderer.AdvanceDisplacementAnimation();
+        AssertRendered("travel.2", 3);
+        for (int i = 0; i < 10; i++) renderer.AdvanceDisplacementAnimation();
+        AssertRendered("travel", 1);
+        Assert.Equal(parentPage, renderer.CurrentIndex);
+
+        renderer.SetMode("reac", parentPage);
+        Assert.Null(renderer.RenderedDisplacementCase);
+        for (int i = 0; i < 20; i++) renderer.AdvanceDisplacementAnimation();
+        renderer.SetMode("disg", parentPage);
+        AssertRendered("travel", 1);
+        renderer.AdvanceDisplacementAnimation();
+        renderer.SetCanonicalPresentation(presentation);
+        AssertRendered("travel", 1);
+        string staticPage = presentation.Pages.Single(page => page.Result.CaseId == "fixed").Key;
+        renderer.SetMode("disg", staticPage);
+        for (int i = 0; i < 20; i++) renderer.AdvanceDisplacementAnimation();
+        AssertRendered("fixed", 4);
+        renderer.SetMode("disg", null);
+        for (int i = 0; i < 20; i++) renderer.AdvanceDisplacementAnimation();
+        Assert.Null(renderer.CurrentExtrema);
+
+        void AssertRendered(string caseId, double maximum)
+        {
+            Assert.Equal(caseId, renderer.RenderedDisplacementCase);
+            Assert.Equal(caseId, renderer.CurrentExtrema?.CaseId);
+            Assert.Equal(maximum, renderer.CurrentExtrema?.Primary.Max);
+            Assert.Equal("alpha", renderer.CurrentExtrema?.Primary.MaxEntityId);
+            Assert.Contains(scene.Children[0].Children, item => item.Name == "memberbeam/A");
+        }
+    }
+
+    [Fact]
     public void CanonicalDerivedModesUseDerivedRowsWithStringIds()
     {
         var scene = new Scene();
@@ -90,20 +137,22 @@ public sealed class CalculationThreeResultsTests
         {
             new AnalysisCase("travel", "Travel", "LL", AnalysisType.Static, ["alpha"]),
             new AnalysisCase("travel.1", "Position 1", "LL", AnalysisType.Static, ["alpha"]),
-            new AnalysisCase("travel.2", "Position 2", "LL", AnalysisType.Static, ["alpha"])
+            new AnalysisCase("travel.2", "Position 2", "LL", AnalysisType.Static, ["alpha"]),
+            new AnalysisCase("fixed", "Fixed", "DL", AnalysisType.Static, ["alpha"])
         };
         var resultSet = new AnalysisResultSet("analysis_result_set", "1.0",
             new AnalysisUnits("SI", "m", "N", "kg", "s"),
             new CoordinateSystem("global_cartesian", "right", ["x", "y", "z"]),
             cases, topology,
-            [Result("travel", 100), Result("travel.1", -5), Result("travel.2", 8)]);
+            [Result("travel", 100, 1), Result("travel.1", -5, 2),
+                Result("travel.2", 8, 3), Result("fixed", 4, 4)]);
         return new CalculationResultPresentation(resultSet);
     }
 
-    private static StaticAnalysisResult Result(string caseId, double reaction) => new(
+    private static StaticAnalysisResult Result(string caseId, double reaction, double displacement) => new(
         caseId,
         [
-            new NodeDisplacement("alpha", new(1, 0, 0, 0, 0, 0)),
+            new NodeDisplacement("alpha", new(displacement, 0, 0, 0, 0, 0)),
             new NodeDisplacement("beta", new(0, 0, 0, 0, 0, 0))
         ],
         [new SupportReaction("alpha", new(reaction, 0, 0, 0, 0, 0))],

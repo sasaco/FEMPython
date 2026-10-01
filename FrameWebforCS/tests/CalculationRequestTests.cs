@@ -37,10 +37,10 @@ public sealed class CalculationRequestTests
         Assert.True(JsonNode.DeepEquals(JsonNode.Parse(angular), actual), actual?.ToJsonString());
     }
 
-    // Expected load rows captured from the real Angular InputLoadService.getLoadJson(0),
-    // with member lengths of 1 m. The parent LL case has no effective load at L1=0.
+    // Member rows follow the captured Angular projection for 1 m members. Case IDs
+    // deliberately promote the first real moving load to restore desktop grouping.
     [Fact]
-    public void MemberRangesAndMovingChildrenMatchAngular()
+    public void MemberRangesMatchAngularWhileMovingCaseHasAnIntegralParent()
     {
         string saved = BaseSnapshot("""
             "1":{"symbol":"DL","fix_node":1,"fix_member":1,"element":1,"joint":1,"LL_pitch":0.5,
@@ -55,7 +55,7 @@ public sealed class CalculationRequestTests
         Assert.False(root.TryGetProperty("three", out _));
         Assert.False(root.TryGetProperty("result", out _));
         Assert.False(root.TryGetProperty("define", out _));
-        Assert.Equal(new[] { "1", "2.1", "2.2" }, root.GetProperty("load").EnumerateObject().Select(item => item.Name));
+        Assert.Equal(new[] { "1", "2", "2.2" }, root.GetProperty("load").EnumerateObject().Select(item => item.Name));
         var first = root.GetProperty("load").GetProperty("1").GetProperty("load_member");
         Assert.Equal(new[] { 1, 2 }, first.EnumerateArray().Select(item => item.GetProperty("m").GetInt32()));
         Assert.All(first.EnumerateArray(), item =>
@@ -65,10 +65,39 @@ public sealed class CalculationRequestTests
             Assert.Equal(10, item.GetProperty("P1").GetDouble());
             Assert.Equal(20, item.GetProperty("P2").GetDouble());
         });
-        Assert.All(root.GetProperty("load").GetProperty("2.1").GetProperty("load_member").EnumerateArray(),
+        Assert.All(root.GetProperty("load").GetProperty("2").GetProperty("load_member").EnumerateArray(),
             item => Assert.Equal(0.5, item.GetProperty("L1").GetDouble(), 3));
         Assert.All(root.GetProperty("load").GetProperty("2.2").GetProperty("load_member").EnumerateArray(),
             item => Assert.Equal(1, item.GetProperty("L1").GetDouble()));
+    }
+
+    [Fact]
+    public void EachMovingCasePromotesItsFirstEffectivePositionWithoutAddingAForce()
+    {
+        string saved = BaseSnapshot("""
+            "1":{"symbol":"DL","fix_node":1,"element":1,
+              "load_node":[{"row":1,"n":"2","tx":3}]},
+            "2":{"symbol":"LL","fix_node":1,"element":1,"LL_pitch":0.5,
+              "load_member":[{"row":1,"m1":"1","m2":"2","direction":"y","mark":"1","L1":"0","L2":"0","P1":10}]},
+            "3":{"symbol":"LL","fix_node":1,"element":1,"LL_pitch":0.5,
+              "load_member":[{"row":1,"m1":"1","m2":"2","direction":"y","mark":"1","L1":"0","L2":"0","P1":20}]}
+            """);
+        using var result = JsonDocument.Parse(CalculationRequestBuilder.FromSavedJson(saved).Json);
+        var loads = result.RootElement.GetProperty("load");
+        Assert.Equal(new[] { "1", "2", "3", "2.2", "3.2" },
+            loads.EnumerateObject().Select(item => item.Name));
+        foreach (string caseId in new[] { "2", "3" })
+        {
+            var parent = loads.GetProperty(caseId);
+            Assert.False(parent.TryGetProperty("load_node", out _));
+            var members = parent.GetProperty("load_member").EnumerateArray().ToArray();
+            Assert.Equal(2, members.Length);
+            Assert.All(members, member =>
+            {
+                Assert.Equal(0.5, member.GetProperty("L1").GetDouble(), 3);
+                Assert.Equal(caseId == "2" ? 10 : 20, member.GetProperty("P1").GetDouble());
+            });
+        }
     }
 
     [Fact]

@@ -60,6 +60,8 @@ public sealed class PythonCalculationRuntimeTests
             AnalysisResultSet strict = AnalysisResultSetJson.Deserialize(Encoding.UTF8.GetBytes(bridgeJson));
             Assert.Equal("1", Assert.Single(strict.Cases).CaseId);
             Assert.IsType<StaticAnalysisResult>(Assert.Single(strict.Results));
+            await VerifyLlSweepMatchesCantileverEquilibrium(runtime);
+            await VerifyLlSweepWithEmptyInitialPositionKeepsMovingGroup(runtime);
             PythonCalculationException conversion = await Assert.ThrowsAsync<PythonCalculationException>(
                 () => runtime.CalculateAsync("{bad"));
             Assert.Equal(PythonCalculationStage.Conversion, conversion.Stage);
@@ -77,6 +79,81 @@ public sealed class PythonCalculationRuntimeTests
             () => second.CalculateAsync(Request));
         Assert.Equal(PythonCalculationStage.Initialization, error.Stage);
         Assert.Contains("only once", error.Message);
+    }
+
+    private static async Task VerifyLlSweepMatchesCantileverEquilibrium(PythonCalculationRuntime runtime)
+    {
+        const string saved = """
+            {"dimension":2,
+             "node":{"1":{"x":0,"y":0},"2":{"x":2,"y":0}},
+             "member":{"1":{"ni":"1","nj":"2","e":"1"}},
+             "element":{"1":{"1":{"E":10000,"A":1,"Iz":1}}},
+             "fix_node":{"1":[{"n":"1","tx":1,"ty":1,"rz":1}]},
+             "load":{"1":{"symbol":"LL","fix_node":1,"element":1,"LL_pitch":0.5,
+               "load_member":[{"row":1,"m1":"1","m2":"1","direction":"y",
+                 "mark":"1","L1":"0.5","L2":"0","P1":10,"P2":0}]}}}
+            """;
+        CalculationRequest projected = CalculationRequestBuilder.FromSavedJson(saved);
+        using JsonDocument request = JsonDocument.Parse(projected.Json);
+        string[] caseIds = request.RootElement.GetProperty("load").EnumerateObject()
+            .Select(item => item.Name).ToArray();
+        Assert.True(caseIds.Length >= 3, string.Join(",", caseIds));
+        Assert.Equal("1", caseIds[0]);
+
+        string json = await runtime.CalculateAsync(projected.Json).WaitAsync(TimeSpan.FromSeconds(30));
+        AnalysisResultSet result = AnalysisResultSetJson.Deserialize(Encoding.UTF8.GetBytes(json));
+        Assert.Equal(caseIds, result.Cases.Select(item => item.CaseId));
+        double[] tipDisplacements = result.Results.Cast<StaticAnalysisResult>()
+            .Select(item => item.NodeDisplacements.Single(row => row.NodeId == "2").Components.Dy)
+            .ToArray();
+        Assert.All(tipDisplacements, value => Assert.True(double.IsFinite(value)));
+        // Cantilever tip displacement under a point load at station a:
+        // P a^2 (3L - a) / (6 E I), with L = 2 m, E I = 10,000.
+        foreach ((int index, double station) in new[] { 0.5, 1.0, 1.5 }.Index())
+        {
+            double expected = 10 * station * station * (6 - station) / 60_000;
+            Assert.Equal(expected, Math.Abs(tipDisplacements[index]), 8);
+            var support = ((StaticAnalysisResult)result.Results[index]).SupportReactions
+                .Single(row => row.NodeId == "1");
+            Assert.Equal(10, Math.Abs(support.Components.Fy), 8);
+            Assert.Equal(10 * station, Math.Abs(support.Components.Mz), 8);
+        }
+    }
+
+    private static async Task VerifyLlSweepWithEmptyInitialPositionKeepsMovingGroup(
+        PythonCalculationRuntime runtime)
+    {
+        const string saved = """
+            {"dimension":2,
+             "node":{"1":{"x":0,"y":0},"2":{"x":2,"y":0}},
+             "member":{"1":{"ni":"1","nj":"2","e":"1"}},
+             "element":{"1":{"1":{"E":10000,"A":1,"Iz":1}}},
+             "fix_node":{"1":[{"n":"1","tx":1,"ty":1,"rz":1}]},
+             "load":{
+               "1":{"symbol":"DL","fix_node":1,"element":1,
+                 "load_node":[{"row":1,"n":"2","tx":1}]},
+               "2":{"symbol":"LL","fix_node":1,"element":1,"LL_pitch":0.5,
+                 "load_member":[{"row":1,"m1":"1","m2":"1","direction":"y",
+                   "mark":"1","L1":"0","L2":"0","P1":10,"P2":0}]}}}
+            """;
+        CalculationRequest projected = CalculationRequestBuilder.FromSavedJson(saved);
+        using JsonDocument request = JsonDocument.Parse(projected.Json);
+        string[] caseIds = request.RootElement.GetProperty("load").EnumerateObject()
+            .Select(item => item.Name).ToArray();
+        Assert.Contains("1", caseIds);
+        Assert.Contains("2", caseIds);
+        Assert.Contains(caseIds, id => id.StartsWith("2.", StringComparison.Ordinal));
+
+        string json = await runtime.CalculateAsync(projected.Json).WaitAsync(TimeSpan.FromSeconds(30));
+        AnalysisResultSet result = AnalysisResultSetJson.Deserialize(Encoding.UTF8.GetBytes(json));
+        CalculationResultPresentation presentation = new(result, dimension: 2);
+        CalculationResultPage page = Assert.Single(presentation.Pages,
+            item => item.Case.CaseId == "2");
+        Assert.NotEmpty(page.MovingChildren);
+        var support = ((StaticAnalysisResult)page.Result).SupportReactions
+            .Single(row => row.NodeId == "1");
+        Assert.Equal(10, Math.Abs(support.Components.Fy), 8);
+        Assert.Equal(5, Math.Abs(support.Components.Mz), 8);
     }
 
     [Fact]
