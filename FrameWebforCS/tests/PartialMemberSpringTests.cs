@@ -120,6 +120,42 @@ public sealed class PartialMemberSpringTests
     }
 
     [Fact]
+    public void SpringSheetsKeepFixedCapacityWithoutMemberOutlines()
+    {
+        RunSta(() =>
+        {
+            var service = InputFixMemberService.Instance;
+            try
+            {
+                service.clear();
+                using var component = new InputFixMemberComponent();
+                var spread = component.Controls.OfType<FpSpread>().Single();
+                Assert.All(spread.Sheets.Cast<SheetView>(), sheet =>
+                {
+                    Assert.Equal(100_000, sheet.RowCount);
+                    Assert.Empty(sheet.GetRangeGroupInfo(1, true) ?? []);
+                });
+                var first = spread.Sheets[0];
+                first.SetValue(99_999, 0, "1");
+                var row = Assert.Single(service.GetDisplaySnapshot("1"));
+                Assert.Equal(100_000, row.row);
+                Assert.Equal("1", row.m);
+                Assert.Equal(100_000, first.RowCount);
+                Assert.Empty(first.GetRangeGroupInfo(1, true) ?? []);
+                Assert.True(component.SelectGridRow(100_000, "tx", "1"));
+                Assert.Equal(0, first.ActiveRowIndex);
+                first.SetValue(1, 0, "1");
+                var outline = Assert.Single(first.GetRangeGroupInfo(1, true));
+                Assert.Equal(1, outline.Start);
+                Assert.Equal(1, outline.Length);
+                Assert.True(component.SelectGridRow(100_000, "tx", "1"));
+                Assert.Equal(1, first.ActiveRowIndex);
+            }
+            finally { service.clear(); }
+        });
+    }
+
+    [Fact]
     public void RowOutlineShowsWholeMemberAndMasksSprings()
     {
         RunSta(() =>
@@ -136,24 +172,36 @@ public sealed class PartialMemberSpringTests
                 using var component = new InputFixMemberComponent();
                 var sheet = component.Controls.OfType<FpSpread>().Single().Sheets[0];
                 Assert.NotNull(sheet.DataSource);
+                Assert.Equal(100_000, sheet.RowCount);
                 var outline = Assert.Single(sheet.GetRangeGroupInfo(1, true));
-                int detail = outline.Start;
-                Assert.Equal(1, detail);
-                Assert.Equal(2, outline.Length);
-                Assert.Equal("1", sheet.GetValue(detail - 1, 0));
-                Assert.Equal("5.00", sheet.GetValue(detail - 1, 1));
-                Assert.Equal("***", sheet.GetValue(detail - 1, 2));
-                sheet.SetValue(detail, 1, 1.5f);
+                Assert.Equal(1, outline.Start);
+                Assert.Equal(1, outline.Length);
+                Assert.Equal("1", sheet.GetValue(0, 0));
+                Assert.Equal(2f, sheet.GetValue(0, 1));
+                Assert.Equal(10f, sheet.GetValue(0, 2));
+                Assert.False(sheet.Rows[0].Locked);
+                sheet.SetValue(0, 1, 1.5f);
                 Assert.Equal(1.5f, InputFixMemberService.Instance.GetDisplaySnapshot("1")[0].length);
                 Assert.True(component.SelectGridRow(2, "tx", "1"));
-                Assert.Equal(detail + 1, sheet.ActiveRowIndex);
+                Assert.Equal(1, sheet.ActiveRowIndex);
                 sheet.ExpandRangeGroup(outline, true, false);
                 Assert.Equal(GroupState.Collapsed, Assert.Single(sheet.GetRangeGroupInfo(1, true)).State);
-                Assert.Equal("5.00", sheet.GetValue(detail - 1, 1));
-                InputFixMemberService.Instance.GetEditorRows("1")[0].M = "1";
+                Assert.Equal("5.00", sheet.GetValue(0, 1));
+                Assert.Equal("***", sheet.GetValue(0, 2));
+                Assert.True(sheet.Rows[0].Locked);
+                Assert.Equal(1.5f, InputFixMemberService.Instance.GetDisplaySnapshot("1")[0].length);
+                InputFixMemberService.Instance.GetRows("1")[0].M = "1";
                 Assert.Equal(GroupState.Collapsed, Assert.Single(sheet.GetRangeGroupInfo(1, true)).State);
+                outline = Assert.Single(sheet.GetRangeGroupInfo(1, true));
+                sheet.ExpandRangeGroup(outline, true, true);
+                Assert.Equal(1.5f, sheet.GetValue(0, 1));
+                sheet.ExpandRangeGroup(outline, true, false);
+                Assert.Equal("5.00", sheet.GetValue(0, 1));
                 Assert.True(component.SelectGridRow(2, "tx", "1"));
                 Assert.Equal(GroupState.Expanded, Assert.Single(sheet.GetRangeGroupInfo(1, true)).State);
+                Assert.Equal(1.5f, sheet.GetValue(0, 1));
+                Assert.Equal(10f, sheet.GetValue(0, 2));
+                Assert.False(sheet.Rows[0].Locked);
             }
             finally
             {
@@ -187,13 +235,14 @@ public sealed class PartialMemberSpringTests
                     component.Controls.OfType<FpSpread>().Single());
                 var sheet = spread.Sheets[0];
                 Assert.NotNull(sheet.DataSource);
-                Assert.Equal(2, sheet.GetRangeGroupInfo(1, true).Length);
-                Assert.Equal(30f, sheet.GetValue(2, 2));
-                Assert.Equal(20f, sheet.GetValue(4, 2));
+                Assert.Equal(100_000, sheet.RowCount);
+                Assert.Single(sheet.GetRangeGroupInfo(1, true));
+                Assert.Equal(30f, sheet.GetValue(1, 2));
+                Assert.Equal(20f, sheet.GetValue(2, 2));
                 Assert.Equal(new[] { 1, 2, 3 }, InputFixMemberService.Instance
                     .GetDisplaySnapshot("1").Select(row => row.row));
 
-                sheet.SetActiveCell(2, 0);
+                sheet.SetActiveCell(1, 0);
                 Assert.True(LoadSheetTest.Key(spread, System.Windows.Forms.Keys.Oem5).SuppressKeyPress);
                 Assert.Equal(new[] { 1, 2, 3, 4, 5 }, InputFixMemberService.Instance
                     .GetEditorRows("1").Select(row => row.row));
@@ -201,12 +250,12 @@ public sealed class PartialMemberSpringTests
 
                 LoadSheetTest.MarkRowHeader(spread);
                 sheet.ClearSelection();
-                sheet.AddSelection(2, -1, 1, -1);
+                sheet.AddSelection(1, -1, 1, -1);
                 Assert.True(LoadSheetTest.Key(spread, System.Windows.Forms.Keys.Delete).SuppressKeyPress);
                 Assert.Equal(new[] { 1, 2, 3 }, InputFixMemberService.Instance
                     .GetDisplaySnapshot("1").Select(row => row.row));
 
-                sheet.SetValue(4, 0, "1");
+                sheet.SetValue(2, 0, "1");
                 Assert.All(InputFixMemberService.Instance.GetDisplaySnapshot("1"),
                     row => Assert.Equal("1", row.m));
             }
@@ -241,11 +290,14 @@ public sealed class PartialMemberSpringTests
                 var spread = Assert.IsType<FrameWebforCS.components.myFpSpread>(
                     component.Controls.OfType<FpSpread>().Single());
                 var sheet = spread.Sheets[0];
-                Assert.Equal(2, sheet.GetRangeGroupInfo(1, true).Length);
+                var outline = Assert.Single(sheet.GetRangeGroupInfo(1, true));
+                sheet.ExpandRangeGroup(outline, true, false);
                 sheet.SetActiveCell(0, 0);
                 Assert.True(LoadSheetTest.Key(spread, System.Windows.Forms.Keys.Oem5).SuppressKeyPress);
                 Assert.Equal("1", InputFixMemberService.Instance.GetEditorRows("1")
                     .Single(row => row.row == 4).m);
+                outline = Assert.Single(sheet.GetRangeGroupInfo(1, true));
+                sheet.ExpandRangeGroup(outline, true, false);
                 LoadSheetTest.MarkRowHeader(spread);
                 sheet.ClearSelection();
                 sheet.AddSelection(0, -1, 1, -1);

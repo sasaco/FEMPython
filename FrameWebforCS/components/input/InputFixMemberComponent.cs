@@ -16,9 +16,14 @@ namespace FrameWebforCS.components.input
         private bool _syncingSelection;
         private InputDataService _input = InputDataService.Instance;
         private readonly Dictionary<SheetView, BindingList<SpringOutlineRow>> _views = new();
-        private readonly Dictionary<SheetView, ListChangedEventHandler> _editorHandlers = new();
+        private readonly Dictionary<SheetView, SpringOutlineRow[]> _sourceRows = new();
+        private readonly Dictionary<SheetView, ListChangedEventHandler> _rowHandlers = new();
+        private readonly Dictionary<SheetView, List<OutlineSpan>> _outlines = new();
+        private readonly Dictionary<SheetView, int[]> _displayIndices = new();
         private bool _rebuildingOutlines;
         private readonly InputFixMemberService _service = InputFixMemberService.Instance;
+
+        private sealed record OutlineSpan(int First, int Count, string Member);
 
         public InputFixMemberComponent()
         {
@@ -38,7 +43,12 @@ namespace FrameWebforCS.components.input
 
                 setColumn(fpSpread1_Sheet1);
                 fpSpread1_Sheet1.SelectionPolicy = FarPoint.Win.Spread.Model.SelectionPolicy.MultiRange;
+                var source = _service.GetRows(fpSpread1_Sheet1.SheetName);
+                _sourceRows.Add(fpSpread1_Sheet1, Enumerable.Range(0, source.Count)
+                    .Select(index => new SpringOutlineRow(index + 1, source[index], MemberLength)).ToArray());
                 _views.Add(fpSpread1_Sheet1, new BindingList<SpringOutlineRow>());
+                _outlines.Add(fpSpread1_Sheet1, new List<OutlineSpan>());
+                _displayIndices.Add(fpSpread1_Sheet1, new int[source.Count + 1]);
                 SheetView observedSheet = fpSpread1_Sheet1;
                 ListChangedEventHandler handler = (_, e) =>
                 {
@@ -47,10 +57,16 @@ namespace FrameWebforCS.components.input
                         e.ListChangedType == ListChangedType.ItemDeleted ||
                         e.PropertyDescriptor?.Name == nameof(clsFixMember.M))
                         RebuildOutline(observedSheet);
+                    else if (e.ListChangedType == ListChangedType.ItemChanged &&
+                        e.NewIndex >= 0 && e.NewIndex + 1 < _displayIndices[observedSheet].Length &&
+                        _displayIndices[observedSheet][e.NewIndex + 1] > 0)
+                        _views[observedSheet].ResetItem(_displayIndices[observedSheet][e.NewIndex + 1] - 1);
                 };
-                _service.GetEditorRows(fpSpread1_Sheet1.SheetName).ListChanged += handler;
-                _editorHandlers.Add(fpSpread1_Sheet1, handler);
+                source.ListChanged += handler;
+                _rowHandlers.Add(fpSpread1_Sheet1, handler);
                 RebuildOutline(fpSpread1_Sheet1);
+                fpSpread1_Sheet1.Models.RangeGroupModel.Changed += (_, _) =>
+                    SyncOutlineStates(observedSheet);
                 SheetView sheet = fpSpread1_Sheet1;
                 fpSpread1.EnableRowOperations(sheet,
                     (row, column) => InsertRow(sheet, row, column),
@@ -81,7 +97,7 @@ namespace FrameWebforCS.components.input
                 InputMembersService.Instance.MemberEdited -= OnGeometryChanged;
                 foreach (SheetView sheet in fpSpread1.Sheets)
                 {
-                    _service.GetEditorRows(sheet.SheetName).ListChanged -= _editorHandlers[sheet];
+                    _service.GetRows(sheet.SheetName).ListChanged -= _rowHandlers[sheet];
                     fpSpread1.DisableRowOperations(sheet);
                 }
             };
@@ -98,10 +114,10 @@ namespace FrameWebforCS.components.input
         {
             if (_syncingSelection || e.Row < 0 || e.Column < 0) return;
             var sheet = fpSpread1.ActiveSheet;
-            if (e.Row >= _views[sheet].Count || _views[sheet][e.Row].Source is not { } source) return;
+            if (e.Row >= _views[sheet].Count || _views[sheet][e.Row].IsSummary) return;
             string axis = FieldName(e.Column);
             // JS InputFixMemberComponent.selectEnd passes the 1-based row and field key.
-            GridSelectionChanged?.Invoke(source.row, axis);
+            GridSelectionChanged?.Invoke(_views[sheet][e.Row].RowId, axis);
         }
 
         internal bool SelectGridRow(int row, string? axis = null, string? caseId = null)
@@ -111,8 +127,9 @@ namespace FrameWebforCS.components.input
                 fpSpread1.Sheets.Cast<SheetView>().ToList().FindIndex(s => s.SheetName == caseId);
             if (sheetIndex < 0) return false;
             var sheet = fpSpread1.Sheets[sheetIndex];
-            int displayRow = _views[sheet].ToList().FindIndex(item => item.Source?.row == row);
-            if (displayRow < 0) return false;
+            if (row >= _displayIndices[sheet].Length || _displayIndices[sheet][row] == 0)
+                return false;
+            int displayRow = _displayIndices[sheet][row] - 1;
             int column = 0;
             if (axis != null)
                 for (int i = 0; i < sheet.ColumnCount; i++)
@@ -145,96 +162,139 @@ namespace FrameWebforCS.components.input
             _rebuildingOutlines = true;
             try
             {
-                var collapsed = (sheet.GetRangeGroupInfo(1, true) ?? Array.Empty<RangeGroupInfo>())
-                    .Where(group => group.State == GroupState.Collapsed && group.Start > 0 &&
-                        group.Start - 1 < _views[sheet].Count)
-                    .Select(group => _views[sheet][group.Start - 1].M)
-                    .Where(id => id != null).ToHashSet(StringComparer.Ordinal);
-                var view = new List<SpringOutlineRow>();
-                var spans = new List<(int Start, int Count, string Member)>();
-                var editor = _service.GetEditorRows(sheet.SheetName);
-                foreach (var group in editor.Where(item => !string.IsNullOrWhiteSpace(item.m))
-                    .GroupBy(item => item.m!, StringComparer.Ordinal)
-                    .OrderBy(group => group.Key, StringComparer.Ordinal))
-                {
-                    int summary = view.Count;
-                    view.Add(new SpringOutlineRow(group.Key, MemberLength));
-                    foreach (var item in group.OrderBy(item => item.row))
-                        view.Add(new SpringOutlineRow(item));
-                    spans.Add((summary + 1, view.Count - summary - 1, group.Key));
-                }
-                foreach (var item in editor.Where(item => string.IsNullOrWhiteSpace(item.m))
-                    .OrderBy(item => item.row))
-                    view.Add(new SpringOutlineRow(item));
+                var oldGroups = sheet.GetRangeGroupInfo(1, true) ?? Array.Empty<RangeGroupInfo>();
+                var collapsed = _outlines[sheet]
+                    .Where(span => oldGroups.Any(group => group.Start == span.First + 1 &&
+                        group.State == GroupState.Collapsed))
+                    .Select(span => span.Member).ToHashSet(StringComparer.Ordinal);
+                foreach (var span in _outlines[sheet])
+                    sheet.Rows[span.First].Locked = false;
 
+                var assigned = new List<SpringOutlineRow>();
+                var partial = new List<SpringOutlineRow>();
+                var empty = new List<SpringOutlineRow>();
+                var source = _service.GetRows(sheet.SheetName);
+                foreach (var row in _sourceRows[sheet])
+                {
+                    row.Source = source[row.RowId - 1];
+                    row.IsSummary = false;
+                    if (!string.IsNullOrWhiteSpace(row.Source.m)) assigned.Add(row);
+                    else if (!row.Source.IsEmpty) partial.Add(row);
+                    else empty.Add(row);
+                }
+                assigned.Sort((left, right) =>
+                {
+                    int member = StringComparer.Ordinal.Compare(left.Source.m, right.Source.m);
+                    return member != 0 ? member : left.RowId.CompareTo(right.RowId);
+                });
+                var view = new List<SpringOutlineRow>(source.Count);
+                view.AddRange(assigned);
+                view.AddRange(partial);
+                view.AddRange(empty);
+                var spans = new List<OutlineSpan>();
+                for (int first = 0; first < assigned.Count;)
+                {
+                    int end = first + 1;
+                    while (end < assigned.Count && assigned[end].Source.m == assigned[first].Source.m)
+                        end++;
+                    if (end - first > 1)
+                        spans.Add(new OutlineSpan(first, end - first, assigned[first].Source.m!));
+                    first = end;
+                }
                 sheet.ClearRangeGroup(true);
                 _views[sheet] = new BindingList<SpringOutlineRow>(view);
                 sheet.DataSource = _views[sheet];
                 setColumn(sheet);
                 sheet.RangeGroupSummaryRowBelow = false;
                 sheet.RangeGroupButtonStyle = RangeGroupButtonStyle.Enhanced;
+                sheet.DefaultStyle.Locked = false;
                 sheet.Protect = true;
-                foreach (var (start, count, member) in spans)
+                _outlines[sheet] = spans;
+                var indices = _displayIndices[sheet];
+                for (int index = 0; index < view.Count; index++)
+                    indices[view[index].RowId] = index + 1;
+                foreach (var span in spans)
                 {
-                    sheet.Rows[start - 1].Locked = true;
-                    for (int index = start; index < start + count; index++)
-                        sheet.Rows[index].Locked = false;
-                    sheet.AddRangeGroup(start, count, true);
-                    if (collapsed.Contains(member))
+                    sheet.Rows[span.First].Locked = false;
+                    sheet.AddRangeGroup(span.First + 1, span.Count - 1, true);
+                    if (collapsed.Contains(span.Member))
                     {
                         var outline = (sheet.GetRangeGroupInfo(1, true) ?? Array.Empty<RangeGroupInfo>())
-                            .First(group => group.Start == start);
+                            .First(group => group.Start == span.First + 1);
                         sheet.ExpandRangeGroup(outline, true, false);
                     }
+                    UpdateSummary(sheet, span, collapsed.Contains(span.Member));
                 }
-                for (int index = spans.Sum(span => span.Count + 1); index < view.Count; index++)
-                    sheet.Rows[index].Locked = false;
             }
             finally { _rebuildingOutlines = false; }
         }
 
-        private static void ExpandContainingOutline(SheetView sheet, int row)
+        private void SyncOutlineStates(SheetView sheet)
+        {
+            if (_rebuildingOutlines || IsDisposed) return;
+            var groups = sheet.GetRangeGroupInfo(1, true) ?? Array.Empty<RangeGroupInfo>();
+            foreach (var span in _outlines[sheet])
+            {
+                var group = groups.FirstOrDefault(item => item.Start == span.First + 1);
+                if (group != null)
+                    UpdateSummary(sheet, span, group.State == GroupState.Collapsed);
+            }
+        }
+
+        private void UpdateSummary(SheetView sheet, OutlineSpan span, bool collapsed)
+        {
+            if (_views[sheet][span.First].IsSummary == collapsed) return;
+            _views[sheet][span.First].IsSummary = collapsed;
+            sheet.Rows[span.First].Locked = collapsed;
+            _views[sheet].ResetItem(span.First);
+            fpSpread1.Invalidate();
+        }
+
+        private void ExpandContainingOutline(SheetView sheet, int row)
         {
             foreach (var group in sheet.GetRangeGroupInfo(1, true) ?? Array.Empty<RangeGroupInfo>())
-                if (row >= group.Start && row <= group.End && group.State == GroupState.Collapsed)
+                if (row >= group.Start - 1 && row <= group.End && group.State == GroupState.Collapsed)
                 {
                     sheet.ExpandRangeGroup(group, true, true);
+                    var span = _outlines[sheet].First(item => item.First == group.Start - 1);
+                    UpdateSummary(sheet, span, false);
                     break;
                 }
         }
 
         private sealed class SpringOutlineRow
         {
-            private readonly string? _member;
-            private readonly Func<string, float?>? _memberLength;
-            internal clsFixMember? Source { get; }
+            private readonly Func<string, float?> _memberLength;
+            internal int RowId { get; }
+            internal clsFixMember Source { get; set; }
+            internal bool IsSummary { get; set; }
 
-            internal SpringOutlineRow(clsFixMember source) => Source = source;
-            internal SpringOutlineRow(string member, Func<string, float?> memberLength)
+            internal SpringOutlineRow(int rowId, clsFixMember source, Func<string, float?> memberLength)
             {
-                _member = member;
+                RowId = rowId;
+                Source = source;
                 _memberLength = memberLength;
             }
 
             public string? M
             {
-                get => Source?.M ?? _member;
-                set { if (Source != null) Source.M = value; }
+                get => Source.M;
+                set { if (!IsSummary) Source.M = value; }
             }
             public object? Length
             {
-                get => Source != null ? Source.Length :
-                    _memberLength?.Invoke(_member!)?.ToString("0.00", CultureInfo.InvariantCulture);
-                set { if (Source != null) Source.Length = Number(value); }
+                get => IsSummary ? _memberLength(Source.m!)?.ToString("0.00", CultureInfo.InvariantCulture)
+                    : Source.Length;
+                set { if (!IsSummary) Source.Length = Number(value); }
             }
-            public object? Tx { get => Source != null ? Source.Tx : "***";
-                set { if (Source != null) Source.Tx = Number(value); } }
-            public object? Ty { get => Source != null ? Source.Ty : "***";
-                set { if (Source != null) Source.Ty = Number(value); } }
-            public object? Tz { get => Source != null ? Source.Tz : "***";
-                set { if (Source != null) Source.Tz = Number(value); } }
-            public object? Tr { get => Source != null ? Source.Tr : "***";
-                set { if (Source != null) Source.Tr = Number(value); } }
+            public object? Tx { get => IsSummary ? "***" : Source.Tx;
+                set { if (!IsSummary) Source.Tx = Number(value); } }
+            public object? Ty { get => IsSummary ? "***" : Source.Ty;
+                set { if (!IsSummary) Source.Ty = Number(value); } }
+            public object? Tz { get => IsSummary ? "***" : Source.Tz;
+                set { if (!IsSummary) Source.Tz = Number(value); } }
+            public object? Tr { get => IsSummary ? "***" : Source.Tr;
+                set { if (!IsSummary) Source.Tr = Number(value); } }
 
             private static float? Number(object? value) => value == null ||
                 value is string text && string.IsNullOrWhiteSpace(text)
@@ -252,30 +312,23 @@ namespace FrameWebforCS.components.input
         private int SourceRow(SheetView sheet, int displayRow)
         {
             return displayRow >= 0 && displayRow < _views[sheet].Count
-                ? _views[sheet][displayRow].Source?.row ?? -1 : -1;
+                ? _views[sheet][displayRow].RowId : -1;
         }
 
         private bool InsertRow(SheetView sheet, int displayRow, int column)
         {
             string? memberId = null;
             int row = SourceRow(sheet, displayRow);
-            if (displayRow >= 0 && displayRow < _views[sheet].Count &&
-                _views[sheet][displayRow].Source == null)
+            if (row < 1) return false;
+            var current = _views[sheet][displayRow];
+            if (current.IsSummary)
             {
-                memberId = _views[sheet][displayRow].M;
-                int last = displayRow + 1;
-                while (last + 1 < _views[sheet].Count &&
-                    _views[sheet][last + 1].Source?.m == memberId)
-                    last++;
-                int lastRow = SourceRow(sheet, last);
-                if (lastRow < 1) return false;
-                row = lastRow + 1;
+                var span = _outlines[sheet].First(item => item.First == displayRow);
+                memberId = span.Member;
+                row = _views[sheet][span.First + span.Count - 1].RowId + 1;
             }
             else
-            {
-                if (displayRow >= 0 && displayRow < _views[sheet].Count)
-                    memberId = _views[sheet][displayRow].Source?.m;
-            }
+                memberId = current.Source.m;
             if (!_service.InsertEditorRow(sheet.SheetName, row, memberId)) return false;
             SelectGridRow(row, caseId: sheet.SheetName);
             return true;
@@ -287,24 +340,17 @@ namespace FrameWebforCS.components.input
             foreach (int selected in selectedRows)
             {
                 if (selected < 0 || selected >= _views[sheet].Count) continue;
-                if (_views[sheet][selected].Source == null)
+                if (_views[sheet][selected].IsSummary)
                 {
-                    string? memberId = _views[sheet][selected].M;
-                    for (int index = selected + 1; index < _views[sheet].Count &&
-                        _views[sheet][index].Source?.m == memberId; index++)
-                    {
-                        int row = SourceRow(sheet, index);
-                        if (row > 0) indices.Add(row);
-                    }
+                    var span = _outlines[sheet].First(item => item.First == selected);
+                    for (int index = span.First; index < span.First + span.Count; index++)
+                        indices.Add(_views[sheet][index].RowId);
                 }
                 else
-                {
-                    int row = SourceRow(sheet, selected);
-                    if (row > 0) indices.Add(row);
-                }
+                    indices.Add(_views[sheet][selected].RowId);
             }
             if (indices.Count == 0 || !_service.DeleteEditorRows(sheet.SheetName, indices)) return false;
-            int next = Math.Min(indices.Min(), _service.GetEditorRows(sheet.SheetName).Last().row);
+            int next = Math.Min(indices.Min(), _service.GetRows(sheet.SheetName).Count);
             SelectGridRow(next, caseId: sheet.SheetName);
             return true;
         }
