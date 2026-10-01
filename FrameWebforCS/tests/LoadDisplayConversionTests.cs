@@ -1,4 +1,5 @@
 using FrameWebforCS.components.input;
+using FrameWebforCS.three;
 using Xunit;
 
 namespace FrameWebforCS.Tests;
@@ -13,7 +14,7 @@ public sealed class LoadDisplayConversionTests
     [Fact]
     public void PositiveRangeRepeatsPointRowsOnEachMemberAndKeepsGridRow()
     {
-        var cases = LoadDisplayConversion.ExpandMemberLoads("1", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("1", [
             new LoadMemberDisplay(4, 7, 8, "y", 1, 2, 6, 3, 5)
         ], Lengths);
 
@@ -32,7 +33,7 @@ public sealed class LoadDisplayConversionTests
     [Fact]
     public void NegativeEndMemberTreatsDistributedLoadAsContinuousAndInterpolatesIntensity()
     {
-        var cases = LoadDisplayConversion.ExpandMemberLoads("2", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("2", [
             new LoadMemberDisplay(5, 7, -8, "gy", 2, 2, 3, 10, 20)
         ], Lengths);
 
@@ -50,7 +51,7 @@ public sealed class LoadDisplayConversionTests
     [Fact]
     public void ChainedNegativeL1UsesPreviousEndAndBlankRowResetsCarry()
     {
-        var cases = LoadDisplayConversion.ExpandMemberLoads("3", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("3", [
             new LoadMemberDisplay(1, 7, 7, "y", 1, 2, 4, 2, 3),
             new LoadMemberDisplay(2, 7, 7, "y", 1, -1, 7, 5, 6),
             new LoadMemberDisplay(4, 7, 7, "y", 1, -1, 7, 7, 8)
@@ -67,7 +68,7 @@ public sealed class LoadDisplayConversionTests
     public void ContinuousPointChainCarriesActualSecondStationMember()
     {
         // JS getL2Position carries m7/L2=3 into the next adjacent row.
-        var cases = LoadDisplayConversion.ExpandMemberLoads("3", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("3", [
             new LoadMemberDisplay(1, 7, -8, "y", 1, 2, 3, 5, 6),
             new LoadMemberDisplay(2, 7, -8, "y", 1, -1, 0, 7, 0)
         ], Lengths);
@@ -84,7 +85,7 @@ public sealed class LoadDisplayConversionTests
     public void NegativeDistributedStartInterpolatesIntensityAtMemberOrigin()
     {
         // JS checkIntoMemberL1 computes P3 before checkMember2 splits the group.
-        var cases = LoadDisplayConversion.ExpandMemberLoads("3", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("3", [
             new LoadMemberDisplay(1, 7, -8, "y", 2, -2, 0, 0, 30)
         ], Lengths);
 
@@ -97,7 +98,7 @@ public sealed class LoadDisplayConversionTests
     {
         // checkIntoMemberL1 carries raw L2=20 m, so -1 becomes 21 m
         // from m7's start; checkMember2 then resolves that point to m8/L1=11.
-        var cases = LoadDisplayConversion.ExpandMemberLoads("3", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("3", [
             new LoadMemberDisplay(1, 7, -8, "y", 2, 0, 20, 1, 1),
             new LoadMemberDisplay(2, 7, -8, "y", 1, -1, 0, 5, 0)
         ], Lengths);
@@ -113,7 +114,7 @@ public sealed class LoadDisplayConversionTests
     {
         // getEnableLoad keeps a complete row even when both P values are zero;
         // final checkIntoMember removes it only after the next row uses L2.
-        var cases = LoadDisplayConversion.ExpandMemberLoads("3", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("3", [
             new LoadMemberDisplay(1, 7, 7, "y", 1, 0, 4, 0, 0),
             new LoadMemberDisplay(2, 7, 7, "y", 1, -1, 0, 5, 0)
         ], Lengths);
@@ -127,7 +128,7 @@ public sealed class LoadDisplayConversionTests
     public void ConvertedDistancesAndIntensitiesUseLegacyMillimetreAndCentRounding()
     {
         var lengths = new Dictionary<int, float> { [7] = 10.0004f, [8] = 20 };
-        var cases = LoadDisplayConversion.ExpandMemberLoads("3", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("3", [
             new LoadMemberDisplay(1, 7, 7, "y", 1, 10.0004f, 0, 1.234f, 0),
             new LoadMemberDisplay(2, 7, -8, "y", 2, 0, 0, 0, 1)
         ], lengths);
@@ -142,7 +143,7 @@ public sealed class LoadDisplayConversionTests
     public void MovingLoadProducesFractionalDisplayCasesWithoutMutatingInput()
     {
         var source = new LoadMemberDisplay(1, 7, 7, "y", 1, 1, 0, 5, 0);
-        var cases = LoadDisplayConversion.ExpandMemberLoads("1", [source], Lengths,
+        var cases = LoadCaseExpansion.ExpandMemberLoads("1", [source], Lengths,
             symbol: "LL", llPitch: 5);
 
         Assert.Contains("1", cases.Keys);
@@ -161,7 +162,7 @@ public sealed class LoadDisplayConversionTests
     {
         var source = new LoadMemberDisplay(1, 7, 7, "y", 1, -5, 0, 5, 0);
 
-        var cases = LoadDisplayConversion.ExpandMemberLoads("1", [source], Lengths,
+        var cases = LoadCaseExpansion.ExpandMemberLoads("1", [source], Lengths,
             symbol: "LL", llPitch: 5);
 
         Assert.Equal(5, Assert.Single(cases["1"]).L1);
@@ -173,7 +174,7 @@ public sealed class LoadDisplayConversionTests
     [Fact]
     public void ReversedSignedEndStillTraversesMemberChain()
     {
-        var cases = LoadDisplayConversion.ExpandMemberLoads("4", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("4", [
             new LoadMemberDisplay(8, 8, -7, "y", 2, 0, 0, 2, 4)
         ], Lengths);
 
@@ -186,7 +187,7 @@ public sealed class LoadDisplayConversionTests
     [Fact]
     public void OutsideMemberAndUnsupportedRowsAreOmitted()
     {
-        var cases = LoadDisplayConversion.ExpandMemberLoads("1", [
+        var cases = LoadCaseExpansion.ExpandMemberLoads("1", [
             new LoadMemberDisplay(1, 7, 7, "y", 1, 12, 13, 2, 3),
             new LoadMemberDisplay(2, 7, 7, "y", 2, 9, 2, 1, 2),
             new LoadMemberDisplay(3, 7, 7, "y", 99, 0, 0, 1, 1)

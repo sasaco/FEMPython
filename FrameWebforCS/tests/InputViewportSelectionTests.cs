@@ -333,11 +333,11 @@ public sealed class InputViewportSelectionTests
                 fixMember.GridSelectionChanged += (row, axis) => memberSelections.Add((row, axis));
                 Assert.True(fixMember.SelectGridRow(4, "tz", "3"));
                 Assert.Equal("3", springService.SelectedCaseId);
-                var grouped = Assert.IsType<SpringGroupDataModel>(memberSpread.ActiveSheet.Models.Data);
-                Assert.Equal(grouped.GetModelIndexFromTargetIndex(0), memberSpread.ActiveSheet.ActiveRowIndex);
+                Assert.NotNull(memberSpread.ActiveSheet.DataSource);
+                Assert.Equal(1, memberSpread.ActiveSheet.ActiveRowIndex);
                 Assert.Equal(4, memberSpread.ActiveSheet.ActiveColumnIndex);
                 Assert.Empty(memberSelections);
-                RaiseEnterCell(memberSpread, grouped.GetModelIndexFromTargetIndex(1), 3);
+                RaiseEnterCell(memberSpread, 3, 3);
                 Assert.Equal([(7, "ty")], memberSelections);
             }
             finally { springService.clear(); }
