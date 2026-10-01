@@ -150,6 +150,8 @@ public sealed class PartialMemberSpringTests
                 sheet.ExpandRangeGroup(outline, true, false);
                 Assert.Equal(GroupState.Collapsed, Assert.Single(sheet.GetRangeGroupInfo(1, true)).State);
                 Assert.Equal("5.00", sheet.GetValue(detail - 1, 1));
+                InputFixMemberService.Instance.GetEditorRows("1")[0].M = "1";
+                Assert.Equal(GroupState.Collapsed, Assert.Single(sheet.GetRangeGroupInfo(1, true)).State);
                 Assert.True(component.SelectGridRow(2, "tx", "1"));
                 Assert.Equal(GroupState.Expanded, Assert.Single(sheet.GetRangeGroupInfo(1, true)).State);
             }
