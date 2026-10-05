@@ -147,7 +147,8 @@ namespace Convert_Manager.FrameWebForJS
                     g.Value.jDistance = 0;
                     this.Split(mNo, mLength - Distance[i], m.e, eNo, inputData, i);
                 }
-                result = true;
+                // Re-fetch member IDs and geometry after each split before handling the other end.
+                return true;
             }
             return result;
         }
@@ -178,7 +179,7 @@ namespace Convert_Manager.FrameWebForJS
             string old_j = old_m.nj;   // 分割前の j端 の節点番号
 
             // 新しい節点番号を追加する
-            var newNode = _node.addNewNode(old_i, old_j, Distance);
+            var newNode = _node.addNewNode(old_i, old_j, Distance, _fix_member.HasIntervals(old_mNo));
 
             // 支点を新しい節点番号に置き換える
             _fix_node.addNewNode(newNode.Key);
@@ -224,7 +225,7 @@ namespace Convert_Manager.FrameWebForJS
             this.GouikiList = temp;
 
             // バネを二分割された部材に置き換える
-            _fix_member.addNewMember(old_mNo);
+            _fix_member.addNewMember(old_mNo, Distance);
 
             // 着目点を二分割された部材に置き換える
             _notice_point.addNewMember(newMember, _node, _member);

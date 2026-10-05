@@ -135,7 +135,7 @@ namespace SingleFormsDemo
                     _perspectiveTarget = this.controls.Target.Clone();
                 var pos = this.OrthographicCamera.Position;
                 this.camera = this.OrthographicCamera;
-                this.camera.Up.Set(0, -1, 0);
+                this.camera.Up.Set(0, 1, 0);
                 this.camera.Position.X = pos.X;
                 this.camera.Position.Y = pos.Y;
                 this.camera.Position.Z = -10;

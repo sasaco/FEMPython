@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Convert_Manager", "Convert_
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Convert_Test", "Convert_Test\Convert_Test.csproj", "{8E634F8A-0D17-4FBC-879E-B034497B2C94}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Convert_Manager.Tests", "Convert_Manager.Tests\Convert_Manager.Tests.csproj", "{DFFA3431-80F8-4EF0-849A-96C1B621D69E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{8E634F8A-0D17-4FBC-879E-B034497B2C94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E634F8A-0D17-4FBC-879E-B034497B2C94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E634F8A-0D17-4FBC-879E-B034497B2C94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFFA3431-80F8-4EF0-849A-96C1B621D69E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFFA3431-80F8-4EF0-849A-96C1B621D69E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFFA3431-80F8-4EF0-849A-96C1B621D69E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFFA3431-80F8-4EF0-849A-96C1B621D69E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

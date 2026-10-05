@@ -20,10 +20,12 @@ public sealed class InputFileLoaderTests
         Assert.Equal(JsonValueKind.Object, nodes.ValueKind);
         Assert.NotEmpty(nodes.EnumerateObject());
         Assert.False(document.RootElement.GetProperty("fix_node").TryGetProperty("7", out _));
+        Assert.Equal(2, document.RootElement.GetProperty("dimension").GetInt32());
 
         try
         {
             InputDataService.Instance.JsonDataOpen(document.RootElement);
+            Assert.Equal(2, InputDataService.Instance.dimension);
             Assert.NotEmpty(InputDataService.Instance.GetSaveJson()["node"] as
                 System.Collections.IDictionary ?? throw new InvalidOperationException("Nodes were not saved."));
         }
@@ -42,8 +44,9 @@ public sealed class InputFileLoaderTests
         string fileName = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + extension);
         try
         {
-            File.WriteAllText(fileName, """{"node":{"1":{"x":1}}}""");
+            File.WriteAllText(fileName, """{"dimension":3,"node":{"1":{"x":1}}}""");
             using JsonDocument document = InputFileLoader.Open(fileName);
+            Assert.Equal(3, document.RootElement.GetProperty("dimension").GetInt32());
             Assert.Equal(1, document.RootElement.GetProperty("node").GetProperty("1")
                 .GetProperty("x").GetInt32());
         }

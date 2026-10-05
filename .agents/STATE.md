@@ -22,6 +22,24 @@ Rolling progress summary (latest 5 checkpoints): [PROGRESS.md](../PROGRESS.md)
 
 <!-- Working state below is maintained by workflow skills and manual notes. -->
 
+## Current Bug Fix: FrameGConverter Pile Springs
+<!-- orchestra:block-id: framegconverter-pile-springs -->
+
+### Context
+
+- Implemented the requested base `$4.txt` interval lengths, `$5.txt` transverse/axial TYPE pairs, and `$6.txt` J-end support TYPE rows for member names containing `杭`.
+- Shared conversion code lives in `FrameGConverter/Convert_Manager`; interval rows serialize optional `fix_member.length`, with axial `tx` and transverse `ty`. Existing full-member springs are superposed and zero intervals retain their positions.
+- Apply pile springs before rigid-zone splitting. Splits partition intervals, retain J-end supports, preserve coordinate precision for interval springs, and re-fetch geometry before splitting the opposite end.
+- Files without pile spring tables remain convertible. Indexed alternate pile profiles are outside this request; current Angular import drops interval length, while the desktop consumer supports it.
+
+### Validation
+
+- `dotnet test FrameGConverter/Convert_Manager.Tests/Convert_Manager.Tests.csproj -c Release --no-restore`: 19 passed, including real LZH FRD, four TYPEs, malformed tables, zero intervals, existing springs, and 45-degree piles with rigid zones at both ends.
+- `dotnet build FrameGConverter/FrameGConverter.sln -c Release --no-restore`: passed, with the existing NETSDK1138 warning for the legacy netcoreapp3.1 GUI.
+- Independent review identified coordinate rounding versus interval length; fixed and covered by the 45-degree regression.
+
+---
+
 ## Current Feature: Load Sheet Fixed Rows
 <!-- orchestra:block-id: load-sheet-fixed-rows -->
 

@@ -27,6 +27,7 @@ internal static class InputFileLoader
                 if (point is JsonObject row && row["row"] is JsonValue index &&
                     index.TryGetValue(out int zeroBasedRow))
                     row["row"] = checked(zeroBasedRow + 1);
+        root["dimension"] = 2;
         return JsonDocument.Parse(root.ToJsonString());
     }
 

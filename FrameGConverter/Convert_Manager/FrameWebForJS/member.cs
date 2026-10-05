@@ -32,6 +32,7 @@ namespace Convert_Manager.FrameWebForJS
         private const string wFile = "Buzai.tmp";
 
         private Dictionary<string, Member> MemberList = new Dictionary<string, Member>();
+        internal HashSet<string> PileMembers { get; } = new HashSet<string>();
 
         public string message = "";
         public member(Dictionary<string, string> wdata)
@@ -110,7 +111,7 @@ namespace Convert_Manager.FrameWebForJS
                 ee.Add(new object[8] { No, mark, name, n, E, Xp, A, Iz });
 
                 if (name.Contains('杭'))
-                    message = "杭バネ入力情報の変換は対応していません";
+                    PileMembers.Add(No);
             }
 
             // 材料集計

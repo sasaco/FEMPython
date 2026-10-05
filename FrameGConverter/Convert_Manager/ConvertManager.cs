@@ -75,11 +75,12 @@ public class ConvertManager
 
 
         /// 組み換え処理
+        // 杭バネは元の部材番号で追加し、剛域分割時に区間とJ端を引き継ぐ。
+        pile_spring.Apply(wdata, _node, _member, _fix_node, _fix_member);
         // 剛域
         _gouiki = new gouiki(wdata);
         _gouiki.exChange(_node, _member, _fix_node, _fix_member, 
                             _joint, _notice_point, _load);
-        // 杭データ
 
 
 

@@ -78,7 +78,7 @@ namespace Convert_Manager.FrameWebForJS
         /// <param name="nj"></param>
         /// <param name="distance"></param>
         /// <returns></returns>
-        internal KeyValuePair<string, Vector3> addNewNode(string ni, string nj, double distance)
+        internal KeyValuePair<string, Vector3> addNewNode(string ni, string nj, double distance, bool preservePrecision = false)
         {
             var a = this.GetNode(ni);
             var b = this.GetNode(nj);
@@ -87,9 +87,14 @@ namespace Convert_Manager.FrameWebForJS
             var n = length - distance;
             // 新しい節点座標
             var newNode = new Vector3() { 
-                x = Math.Round((n * a.x + m * b.x) / length, 3), 
-                y = Math.Round((n * a.y + m * b.y) / length, 3)
-            };       
+                x = (n * a.x + m * b.x) / length,
+                y = (n * a.y + m * b.y) / length
+            };
+            if (!preservePrecision)
+            {
+                newNode.x = Math.Round(newNode.x, 3);
+                newNode.y = Math.Round(newNode.y, 3);
+            }
             int i_Key = Convert.ToInt32(ni) + 1; // 新しい節点番号
             string n_Key = i_Key.ToString(); 
 
