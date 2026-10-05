@@ -21,10 +21,15 @@ namespace FrameWebforCS
         private bool _calculationRunning;
         private bool _closing;
         private Task? _closeCalculationTask;
+        private readonly ToolStripMenuItem _pickupExportMenuItem = new("PICKUPファイルを出力");
 
         public MenuComponent()
         {
             InitializeComponent();
+            ファイルToolStripMenuItem.DropDownItems.Insert(3, _pickupExportMenuItem);
+            _pickupExportMenuItem.Click += PickupExportMenuItem_Click;
+            CalculationResultStore.Instance.Changed += OnCalculationResultChanged;
+            OnCalculationResultChanged(this, EventArgs.Empty);
             _input.DimensionChanged += OnDimensionChanged;
             _input.FileReplaced += OnFileReplaced;
             計算ToolStripMenuItem.Click += CalculationToolStripMenuItem_Click;
@@ -35,6 +40,7 @@ namespace FrameWebforCS
                 _calculationCancellation?.Cancel();
                 _input.DimensionChanged -= OnDimensionChanged;
                 _input.FileReplaced -= OnFileReplaced;
+                CalculationResultStore.Instance.Changed -= OnCalculationResultChanged;
             };
             SyncDimensionMenu();
         }
@@ -65,6 +71,37 @@ namespace FrameWebforCS
         }
 
         private void OnDimensionChanged(int _) => SyncDimensionMenu();
+
+        private void OnCalculationResultChanged(object? sender, EventArgs e) =>
+            _pickupExportMenuItem.Enabled = CalculationResultStore.Instance.Current?.Derived is not null;
+
+        private void PickupExportMenuItem_Click(object? sender, EventArgs e)
+        {
+            CalculationResultPresentation? presentation = CalculationResultStore.Instance.Current;
+            if (presentation?.Derived is null) return;
+
+            string extension = presentation.Dimension == 2 ? "pik" : "csv";
+            using var dialog = new SaveFileDialog
+            {
+                Filter = $"PICKUP ファイル (*.{extension})|*.{extension}",
+                DefaultExt = extension,
+                AddExtension = true,
+                OverwritePrompt = true,
+                FileName = "FrameWebforCS." + extension,
+                Title = "PICKUPファイルの保存先を選択してください"
+            };
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            try
+            {
+                string content = PickupExportFormatter.Format(presentation);
+                File.WriteAllText(dialog.FileName, content, new UTF8Encoding(false));
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                MessageBox.Show(this, "PICKUPファイルを保存できませんでした。\n" + error.Message,
+                    "PICKUP出力エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
         private void PrintToolStripMenuItem_Click(object? sender, EventArgs e)
         {
