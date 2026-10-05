@@ -162,6 +162,30 @@ public sealed class CalculationRequestTests
     }
 
     [Fact]
+    public void EmptyMemberLoadDirectionReportsCaseAndRow()
+    {
+        string saved = BaseSnapshot("""
+            "1":{"symbol":"DL","fix_node":1,"element":1,
+              "load_member":[{"row":1,"m1":"1","direction":"","mark":"9","L1":0,"L2":0,"P1":10}]}
+            """);
+        var error = Assert.Throws<CalculationRequestException>(() => CalculationRequestBuilder.FromSavedJson(saved));
+        Assert.Contains("load.1.load_member row 1", error.Message);
+        Assert.Contains("direction", error.Message);
+    }
+
+    [Fact]
+    public void UnsupportedMemberLoadMarkReportsCaseAndRow()
+    {
+        string saved = BaseSnapshot("""
+            "1":{"symbol":"DL","fix_node":1,"element":1,
+              "load_member":[{"row":3,"m1":"1","direction":"y","mark":"14","P1":10}]}
+            """);
+        var error = Assert.Throws<CalculationRequestException>(() => CalculationRequestBuilder.FromSavedJson(saved));
+        Assert.Contains("load.1.load_member row 3", error.Message);
+        Assert.Contains("mark 14", error.Message);
+    }
+
+    [Fact]
     public void RelativeRangeClipsFirstMemberOnlyLikeAngular()
     {
         string saved = BaseSnapshot("""

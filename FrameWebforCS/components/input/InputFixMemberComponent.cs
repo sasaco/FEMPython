@@ -1,4 +1,5 @@
 ﻿using FarPoint.Win.Spread;
+using FarPoint.Win.Spread.CellType;
 using FrameWebforCS.providers;
 using System;
 using System.Collections.Generic;
@@ -388,6 +389,7 @@ namespace FrameWebforCS.components.input
 
                 column[0].Width = 50;
                 column[1].Width = 80;
+                column[1].CellType = new NumberCellType() { DecimalPlaces = 3};
                 for (var i = 2; i < column.Count; i++)
                 {
                     column[i].Width = 100;

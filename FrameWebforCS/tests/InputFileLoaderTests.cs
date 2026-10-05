@@ -36,6 +36,28 @@ public sealed class InputFileLoaderTests
         }
     }
 
+    [Fact]
+    public void PileSpringFrdReportsUnsupportedMemberLoadMark()
+    {
+        string fileName = Path.Combine(RepositoryRoot(), "FrameGConverter", "Convert_Test",
+            "TestData", "バネ連衡あり.frd");
+
+        using JsonDocument document = InputFileLoader.Open(fileName);
+        try
+        {
+            InputDataService.Instance.JsonDataOpen(document.RootElement);
+            var error = Assert.Throws<FrameWebforCS.calculation.CalculationRequestException>(
+                () => InputDataService.Instance.CreateCalculationRequest());
+            Assert.Contains("load.2.load_member row 1", error.Message);
+            Assert.Contains("mark 14", error.Message);
+        }
+        finally
+        {
+            using JsonDocument empty = JsonDocument.Parse("{}");
+            InputDataService.Instance.JsonDataOpen(empty.RootElement);
+        }
+    }
+
     [Theory]
     [InlineData(".json")]
     [InlineData(".ndt")]

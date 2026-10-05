@@ -141,7 +141,7 @@ internal static class CalculationRequestBuilder
                 }
             var memberRows = new List<JsonObject>();
             if (source["load_member"] is JsonArray rawMemberRows)
-                foreach (var row in NormalizeRelativeMemberRows(rawMemberRows, members, nodes))
+                foreach (var row in NormalizeRelativeMemberRows(rawMemberRows, members, nodes, caseId))
                     memberRows.AddRange(ExpandMemberRow(row, members, caseId));
             if (nodeRows.Count == 0 && memberRows.Count == 0) continue;
             int elementId = (int)Number(selector["element"])!.Value;
@@ -202,7 +202,7 @@ internal static class CalculationRequestBuilder
     private static IEnumerable<JsonObject> ExpandMemberRow(JsonObject row, JsonObject members, string caseId)
     {
         double? first = Number(row["m1"]), last = Number(row["m2"]), mark = Number(row["mark"]);
-        string direction = String(row["direction"]).Trim().ToLowerInvariant();
+        string direction = mark == 9 ? "x" : String(row["direction"]).Trim().ToLowerInvariant();
         if (first == null && last == null || mark == null || direction.Length == 0) yield break;
         first ??= 0;
         last ??= 0;
@@ -219,7 +219,7 @@ internal static class CalculationRequestBuilder
             if (!members.ContainsKey(id)) throw new CalculationRequestException($"load.{caseId}: member {id} does not exist.");
             var projected = new JsonObject
             {
-                ["m"] = member, ["direction"] = mark == 9 ? "x" : direction,
+                ["m"] = member, ["direction"] = direction,
                 ["mark"] = mark, ["L1"] = Number(row["L1"]) ?? 0,
                 ["L2"] = Number(row["L2"]) ?? 0,
                 ["P1"] = member == begin ? Number(row["P1"]) ?? 0 :
@@ -232,7 +232,7 @@ internal static class CalculationRequestBuilder
     }
 
     private static IEnumerable<JsonObject> NormalizeRelativeMemberRows(JsonArray source,
-        JsonObject members, JsonObject nodes)
+        JsonObject members, JsonObject nodes, string caseId)
     {
         double previousEnd = 0;
         int previousRow = -1;
@@ -240,6 +240,16 @@ internal static class CalculationRequestBuilder
         {
             var row = (JsonObject)value.DeepClone();
             int rowNumber = (int?)row["row"] ?? 0;
+            double? markValue = Number(row["mark"]);
+            if (markValue != 0 && markValue != 1 && markValue != 2 && markValue != 9 && markValue != 11)
+                throw new CalculationRequestException(
+                    $"load.{caseId}.load_member row {rowNumber}: unsupported mark {String(row["mark"])}.");
+            if (string.IsNullOrWhiteSpace(String(row["direction"])))
+                throw new CalculationRequestException(
+                    $"load.{caseId}.load_member row {rowNumber}: direction is required.");
+            if ((Number(row["m1"]) == null && Number(row["m2"]) == null) ||
+                new[] { "L1", "L2", "P1", "P2" }.All(key => Number(row[key]) == null))
+                continue;
             double rawStart = Number(row["L1"]) ?? 0;
             double rawEnd = Number(row["L2"]) ?? 0;
             bool continuation = previousRow + 1 == rowNumber;
@@ -327,7 +337,9 @@ internal static class CalculationRequestBuilder
                 end = Math.Max(0, length - start - Math.Abs(end));
             else if (start + end > length)
             {
-                start = end = 0; row["P1"] = row["P2"] = 0;
+                start = end = 0;
+                row["P1"] = 0;
+                row["P2"] = 0;
             }
             row["L1"] = JsRound(start * 1000) / 1000;
             row["L2"] = JsRound(end * 1000) / 1000;
