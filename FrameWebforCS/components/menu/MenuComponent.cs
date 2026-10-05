@@ -22,12 +22,20 @@ namespace FrameWebforCS
         private bool _closing;
         private Task? _closeCalculationTask;
         private readonly ToolStripMenuItem _pickupExportMenuItem = new("PICKUPファイルを出力");
+        private readonly ToolStripMenuItem _pickupDisplacementExportMenuItem = new("PICKUP変位 CSVを出力");
+        private readonly ToolStripMenuItem _pickupReactionExportMenuItem = new("PICKUP反力 CSVを出力");
 
         public MenuComponent()
         {
             InitializeComponent();
             ファイルToolStripMenuItem.DropDownItems.Insert(3, _pickupExportMenuItem);
+            ファイルToolStripMenuItem.DropDownItems.Insert(4, _pickupDisplacementExportMenuItem);
+            ファイルToolStripMenuItem.DropDownItems.Insert(5, _pickupReactionExportMenuItem);
             _pickupExportMenuItem.Click += PickupExportMenuItem_Click;
+            _pickupDisplacementExportMenuItem.Click += (_, _) =>
+                ExportPickupNodes(PickupNodeQuantity.Displacement);
+            _pickupReactionExportMenuItem.Click += (_, _) =>
+                ExportPickupNodes(PickupNodeQuantity.Reaction);
             CalculationResultStore.Instance.Changed += OnCalculationResultChanged;
             OnCalculationResultChanged(this, EventArgs.Empty);
             _input.DimensionChanged += OnDimensionChanged;
@@ -72,8 +80,13 @@ namespace FrameWebforCS
 
         private void OnDimensionChanged(int _) => SyncDimensionMenu();
 
-        private void OnCalculationResultChanged(object? sender, EventArgs e) =>
-            _pickupExportMenuItem.Enabled = CalculationResultStore.Instance.Current?.Derived is not null;
+        private void OnCalculationResultChanged(object? sender, EventArgs e)
+        {
+            CalculationDerivedPresentation? derived = CalculationResultStore.Instance.Current?.Derived;
+            _pickupExportMenuItem.Enabled = derived is not null;
+            _pickupDisplacementExportMenuItem.Enabled = derived?.Pickups.Count > 0;
+            _pickupReactionExportMenuItem.Enabled = derived?.Pickups.Count > 0;
+        }
 
         private void PickupExportMenuItem_Click(object? sender, EventArgs e)
         {
@@ -100,6 +113,58 @@ namespace FrameWebforCS
             {
                 MessageBox.Show(this, "PICKUPファイルを保存できませんでした。\n" + error.Message,
                     "PICKUP出力エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ExportPickupNodes(PickupNodeQuantity quantity)
+        {
+            CalculationResultPresentation? presentation = CalculationResultStore.Instance.Current;
+            CalculationDerivedPresentation? derived = presentation?.Derived;
+            if (derived?.Pickups.Count is not > 0) return;
+
+            string name = quantity == PickupNodeQuantity.Displacement
+                ? "FrameWebforCS.pickup-displacement.csv" : "FrameWebforCS.pickup-reaction.csv";
+            using var dialog = new SaveFileDialog
+            {
+                Filter = "CSV ファイル (*.csv)|*.csv",
+                DefaultExt = "csv",
+                AddExtension = true,
+                OverwritePrompt = true,
+                FileName = name,
+                Title = "PICKUPファイルの保存先を選択してください"
+            };
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            try
+            {
+                if (!ReferenceEquals(CalculationResultStore.Instance.Current, presentation) ||
+                    !ReferenceEquals(presentation.Derived, derived))
+                    throw new InvalidOperationException("PICKUP results changed while selecting the save location.");
+                string content = PickupNodeExportFormatter.Format(presentation, quantity);
+                WritePickupCsv(dialog.FileName, content);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException)
+            {
+                MessageBox.Show(this, "PICKUPファイルを保存できませんでした。\n" + error.Message,
+                    "PICKUP出力エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        internal static void WritePickupCsv(string path, string content)
+        {
+            string directory = Path.GetDirectoryName(Path.GetFullPath(path))!;
+            string temporary = Path.Combine(directory,
+                "." + Path.GetFileName(path) + "." + Guid.NewGuid().ToString("N") + ".tmp");
+            try
+            {
+                File.WriteAllText(temporary, content, new UTF8Encoding(false));
+                if (File.Exists(path)) File.Replace(temporary, path, null);
+                else File.Move(temporary, path);
+            }
+            finally
+            {
+                try { File.Delete(temporary); }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
             }
         }
 

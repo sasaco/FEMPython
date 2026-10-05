@@ -136,6 +136,34 @@ public sealed class CalculationDerivedPresenterTests
     }
 
     [Fact]
+    public void PickupTiesKeepFirstCombinationForBothSignedExtrema()
+    {
+        var definitions = new Dictionary<int, clsCombine<int>>
+        {
+            [1] = Row("10", 1, (1, 1)),
+        };
+        var combinations = new Dictionary<int, clsCombine<double>>
+        {
+            [1] = Row("40", 1, (10, 1.0)),
+            [2] = Row("41", 2, (10, 1.0)),
+        };
+        var pickups = new Dictionary<int, clsCombine<int>>
+        {
+            [1] = Row("P", 1, (1, 40), (2, 41)),
+        };
+
+        CalculationDerivedCase pickup = Assert.Single(CalculationDerivedPresenter.Build(
+            StaticCases("DL"), 2, definitions, combinations, pickups).Pickups);
+
+        Assert.Equal("40", Assert.Single(pickup.Displacements["dx_max"],
+            row => row.EntityId == "2").SourceCaseId);
+        Assert.Equal("40", Assert.Single(pickup.Displacements["dx_min"],
+            row => row.EntityId == "2").SourceCaseId);
+        Assert.Equal("40", Assert.Single(pickup.Reactions["fx_max"]).SourceCaseId);
+        Assert.Equal("40", Assert.Single(pickup.Reactions["fx_min"]).SourceCaseId);
+    }
+
+    [Fact]
     public void NonStaticOperandIsRejectedForDefineAndFallbackCombine()
     {
         JsonObject root = JsonNode.Parse(Fixture("nonlinear-steps"))!.AsObject();

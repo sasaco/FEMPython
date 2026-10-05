@@ -34,19 +34,23 @@ public sealed class PythonCalculationRuntime : IAsyncDisposable
     private readonly TaskCompletionSource _stopped = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly string _repositoryRoot;
     private readonly string _moduleName;
+    private readonly bool _redirectOutputToStderr;
     private readonly ICalculationDebugGate? _debugGate;
     private readonly object _admission = new();
     private TaskCompletionSource _idle = CompletedIdle();
     private int _busy;
     private int _closing;
 
-    public PythonCalculationRuntime(string? repositoryRoot = null, ICalculationDebugGate? debugGate = null)
-        : this(repositoryRoot, debugGate, "fem.analysis_result_sets") { }
+    public PythonCalculationRuntime(string? repositoryRoot = null, ICalculationDebugGate? debugGate = null,
+        bool redirectOutputToStderr = false)
+        : this(repositoryRoot, debugGate, "fem.analysis_result_sets", redirectOutputToStderr) { }
 
-    internal PythonCalculationRuntime(string? repositoryRoot, ICalculationDebugGate? debugGate, string moduleName)
+    internal PythonCalculationRuntime(string? repositoryRoot, ICalculationDebugGate? debugGate, string moduleName,
+        bool redirectOutputToStderr = false)
     {
         _repositoryRoot = repositoryRoot ?? PythonEnvironment.FindRepositoryRoot(AppContext.BaseDirectory);
         _moduleName = moduleName;
+        _redirectOutputToStderr = redirectOutputToStderr;
 #if DEBUG
         _debugGate = debugGate ?? (Environment.GetEnvironmentVariable("FRAMEWEB_PYTHON_DEBUG_GATE") == "1"
             ? new CalculationDebugPipeGate() : null);
@@ -144,6 +148,12 @@ public sealed class PythonCalculationRuntime : IAsyncDisposable
                             PythonEngine.PythonPath = environment.PythonPath;
                             PythonEngine.Initialize();
                             initialized = true;
+                            if (_redirectOutputToStderr)
+                            {
+                                using PyObject sys = Py.Import("sys");
+                                using PyObject stderr = sys.GetAttr("stderr");
+                                sys.SetAttr("stdout", stderr);
+                            }
                             threadState = PythonEngine.BeginAllowThreads();
                         }
                         catch (PythonCalculationException) { throw; }

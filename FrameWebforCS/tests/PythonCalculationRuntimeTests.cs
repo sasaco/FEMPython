@@ -1,5 +1,6 @@
 using System.IO.Pipes;
 using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using FrameWebforCS.calculation;
@@ -179,15 +180,18 @@ public sealed class PythonCalculationRuntimeTests
             return;
         }
 
-        string project = Path.Combine(RepositoryRoot, "FrameWebforCS.Tests", "FrameWebforCS.Tests.csproj");
+        string project = Path.Combine(RepositoryRoot, "FrameWebforCS", "tests", "FrameWebforCS.Tests.csproj");
+        string configuration = typeof(PythonCalculationRuntimeTests).Assembly
+            .GetCustomAttribute<AssemblyConfigurationAttribute>()!.Configuration;
         var start = new ProcessStartInfo("dotnet")
         {
             WorkingDirectory = RepositoryRoot,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            UseShellExecute = false
+            UseShellExecute = false,
+            CreateNoWindow = true,
         };
-        foreach (string argument in new[] { "test", project, "--no-build", "--no-restore",
+        foreach (string argument in new[] { "test", project, "--no-build", "--no-restore", "--configuration", configuration,
             "--filter", "FullyQualifiedName~ImportFailureIsClassifiedInIsolatedProcess", "-v:q" })
             start.ArgumentList.Add(argument);
         start.Environment["FRAMEWEB_IMPORT_FAILURE_WORKER"] = "1";

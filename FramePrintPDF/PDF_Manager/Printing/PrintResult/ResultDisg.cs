@@ -455,10 +455,13 @@ namespace PDF_Manager.Printing
         {
             // タイトル などの初期化
             printInit(mc, data);
+            DisplacementTableLayout.FitNodeIds(mc, myTable,
+                disgs.Values.OfType<List<Disg>>().SelectMany(rows => rows).Select(row => row.id),
+                dimension == 3 ? 6 : 3, paired: dimension == 2);
 
             titles = new[] { title, };
             headerRows = myTable.Rows;
-            nupInfo = dimension == 3 ? Table.OneUpInfo : new[] { new Table.NupInfo(0, 3), new Table.NupInfo(4, 7), };
+            nupInfo = myTable.Columns != 8 ? Table.OneUpInfo : new[] { new Table.NupInfo(0, 3), new Table.NupInfo(4, 7), };
         }
         protected override IEnumerable<Table> GetTables(PdfDocument mc, PrintData data, int indexPage)
         {

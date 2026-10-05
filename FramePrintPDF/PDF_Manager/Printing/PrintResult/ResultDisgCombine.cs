@@ -643,6 +643,10 @@ namespace PDF_Manager.Printing
         {
             // タイトル などの初期化
             printInit(mc, data);
+            DisplacementTableLayout.FitNodeIds(mc, myTable,
+                disgs.Values.SelectMany(value => Enumerable.Range(0, dimension == 3 ? 12 : 6)
+                    .SelectMany(index => dimension == 3 ? value.getValue3(index) : value.getValue2(index)))
+                    .Select(row => row.id), dimension == 3 ? 6 : 3, hasCombination: true);
 
             titles = new[] { title, };
             headerRows = myTable.Rows;

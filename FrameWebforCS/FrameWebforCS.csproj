@@ -15,6 +15,9 @@
     <Compile Remove="tests\**" />
     <EmbeddedResource Remove="tests\**" />
     <None Remove="tests\**" />
+    <Compile Remove="Headless\**" />
+    <EmbeddedResource Remove="Headless\**" />
+    <None Remove="Headless\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +35,9 @@
     </AssemblyAttribute>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>PrintUi.Tests</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>FrameWebforCS.Headless</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 

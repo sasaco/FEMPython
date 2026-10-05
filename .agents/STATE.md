@@ -417,3 +417,23 @@ Rolling progress summary (latest 5 checkpoints): [PROGRESS.md](../PROGRESS.md)
 - Existing Python rigid/load/notice/spring boundary integration test: 1 passed. Converter solution Release build passed with the existing netcoreapp3.1 warning.
 - Desktop integration test replaces the pile fixture's unsupported mark-14 loads with one supported test load to isolate this feature; no claim of full pile-fixture analysis acceptance.
 - Independent review found a strict floating-point length comparison; reproduced and corrected with a relative roundoff tolerance that preserves exported lengths. Agent infrastructure checks passed.
+
+---
+
+## Current Feature: PICKUP Node Result Exports
+<!-- orchestra:block-id: pickup-node-result-exports -->
+
+### Context
+
+- Implemented the user-requested end-to-end plan and desktop exports for PICKUP displacement and support reactions. Plan: `.agents/docs/plans/pickup-node-result-exports.md`.
+- File menu offers distinct displacement and reaction CSV actions for 2D and 3D. Each 17-column row contains PICKUP/focus/node IDs, selected max/min COMBINE IDs, and all six correlated vectors in raw result units (rotation rad; moment force*length), using invariant round-trip numbers.
+- Uses committed `CalculationResultStore.Current.Derived.Pickups`; validates source IDs, eligible nodes, complete finite components and matching extrema. Save rechecks current/derived identity and atomically replaces through a same-directory temporary file, UTF-8 without BOM.
+- Preserve separate concurrent Headless/Python runtime, PDF displacement layout, and HANDOFF work. Existing section-force `.pik`/`.csv` output is unchanged.
+
+### Validation
+
+- Focused new node exporter, existing section-force exporter and derived presenter tests: 30 passed. Includes 2D/3D, alternate units, raw precision, multiple PICKUP/node order, first-wins ties, malformed rows/source IDs, CSV safety, UTF-8 replacement and locked-target failure preservation.
+- `dotnet build FrameWebforCS/FrameWebforCS.csproj --no-restore -clp:ErrorsOnly`: passed, 0 errors, 1,383 existing warnings.
+- Full desktop suite: 385 passed, 3 failed, 388 total. Failures remain `CombinedPagePublishesWhenInitiallyShownAfterRouteSelection`, `TwoDCameraPanAndWheelZoomKeepZParallelViewWhileRotationIsDisabled`, and `CameraRoundTripRestoresPerspectivePoseAndRotationControl`, matching the known result-page/camera baseline.
+- Final native independent review: PASS. Nested read-only CLI plan consultations timed out; no CLI validation PASS is claimed. Plan shape/artifact gates and git diff --check pass.
+- Agent infrastructure tests/contracts pass; aggregate check fails only scope-isolation for separate concurrent FramePrintPDF files. Evidence: .agents/logs/check-20261005T150539276Z-25644.log.
