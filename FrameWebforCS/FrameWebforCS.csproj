@@ -36,6 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FrameGConverter\Convert_Manager\Convert_Manager.csproj" />
     <ProjectReference Include="..\FramePrintPDF\PDF_Manager\PDF_Manager.csproj" />
     <ProjectReference Include="..\THREE\THREE.OpenGL\THREE.OpenGL.csproj" />
     <ProjectReference Include="..\THREE\THREE\THREE.csproj" />

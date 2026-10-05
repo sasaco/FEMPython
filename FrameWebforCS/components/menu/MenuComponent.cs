@@ -215,7 +215,7 @@ namespace FrameWebforCS
 
         private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialog1.Filter = "jsonファイル(*.json;*.frd;*.ndt)|*.json;*.frd;*.ndt|すべてのファイル(*.*)|*.*";
+            openFileDialog1.Filter = "対応ファイル(*.json;*.frd;*.ndt)|*.json;*.frd;*.ndt|すべてのファイル(*.*)|*.*";
             openFileDialog1.Title = "開くファイルを選択してください";
             openFileDialog1.RestoreDirectory = true;
             openFileDialog1.CheckFileExists = true;
@@ -228,12 +228,11 @@ namespace FrameWebforCS
                 Console.WriteLine(openFileDialog1.FileName);
                 try
                 {
-                    using FileStream jsonFile = File.OpenRead(openFileDialog1.FileName);
-                    using JsonDocument jsonData = JsonDocument.Parse(jsonFile);
+                    using JsonDocument jsonData = InputFileLoader.Open(openFileDialog1.FileName);
 
                     _input.JsonDataOpen(jsonData.RootElement);
                 }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+                catch (Exception ex)
                 {
                     MessageBox.Show(
                         "ファイルを読み込めませんでした。\n" + ex.Message,

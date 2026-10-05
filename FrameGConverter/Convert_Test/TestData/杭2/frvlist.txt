@@ -1,0 +1,20 @@
+[FRAME]
+UNIT=1
+KHEN0=         
+KHEN1=         
+KHEN2=         
+KHEN3= 3
+PRIMODE= 0
+SHUKEI0= 0
+SHUKEI1= 0
+DANSEIuz= 0
+’…–ÚFLG= 1
+KUITAN=0
+CALCMODE=1
+‰pŒêFLG= 0
+momentMax= 0
+”½‹È“_FLG= 0
+PickŽ²—ÍFLG= 0
+GGG_FLG= 1
+PrgVer=4.6.3
+DatVer=4.6.3
