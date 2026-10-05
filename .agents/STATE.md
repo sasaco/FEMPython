@@ -397,3 +397,23 @@ Rolling progress summary (latest 5 checkpoints): [PROGRESS.md](../PROGRESS.md)
 - Serialize process-global PDFsharp work and share one budget across whole-document preview/export.
 - Retire FramePrintAzure at the Step 9 cutover instead of preserving a second printing transport and presentation contract.
 - Step 8 is complete; completed-app redistribution remains NO-GO until Step 9 production gates pass.
+
+---
+
+## Current Feature: FrameGConverter Native Rigid Zones
+<!-- orchestra:block-id: framegconverter-native-rigid-zones -->
+
+### Context
+
+- User approved exporting FRD rigid zones through the native FrameWebforCS rigid schema instead of inserting input nodes and members.
+- ConvertManager emits rigid records with original member IDs, I/J lengths, and integer material IDs; gouiki no longer splits topology or remaps attached data. This supersedes the rigid-zone splitting described in the earlier FrameGConverter Pile Springs block.
+- Preserve original nodes, members, loads, joints, notice points, pile interval springs, and J-end supports. Rigid-section A/Iz come from FRD; E/Xp are retained per material TYPE. Material ID reuse requires a match in every TYPE.
+- Negative, nonfinite, overlapping, or overlength rigid lengths and missing active-zone references produce explicit conversion errors. Zero/missing zones remain valid; exact full-length zones are supported.
+
+### Validation
+
+- Converter Release suite: 40 passed, including three real FRD archives, original topology/reference comparison, sloping piles, both rigid ends, full-length zones, decimal roundoff, and TYPE material reuse.
+- FrameWebforCS filtered Release tests (RigidZoneConversionTests, InputFileLoaderTests, CalculationRequestTests): 19 passed. Native rigid records survive desktop import, save/reload, and calculation request creation.
+- Existing Python rigid/load/notice/spring boundary integration test: 1 passed. Converter solution Release build passed with the existing netcoreapp3.1 warning.
+- Desktop integration test replaces the pile fixture's unsupported mark-14 loads with one supported test load to isolate this feature; no claim of full pile-fixture analysis acceptance.
+- Independent review found a strict floating-point length comparison; reproduced and corrected with a relative roundoff tolerance that preserves exported lengths. Agent infrastructure checks passed.

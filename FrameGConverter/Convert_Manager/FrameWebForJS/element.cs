@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -83,64 +85,32 @@ namespace Convert_Manager.FrameWebForJS
         /// <returns></returns>
         internal string GetElementNo(string eNo, double A, double Iz)
         {
-            var Targets = new Dictionary<string, Element>();
-            int maxNo = -1;
+            if (ElementList.Count == 0)
+                throw new InvalidDataException($"Rigid-zone material {eNo} does not exist.");
+            foreach (var sheet in ElementList)
+                if (!sheet.Value.ContainsKey(eNo))
+                    throw new InvalidDataException($"Rigid-zone source material {eNo} does not exist in TYPE {sheet.Key}.");
 
-            foreach (var e1 in this.ElementList)
+            // A shared material number must match in every TYPE.
+            foreach (var candidate in ElementList.First().Value)
+                if (ElementList.Values.All(sheet => sheet.TryGetValue(candidate.Key, out var value) &&
+                    value.E == sheet[eNo].E && value.Xp == sheet[eNo].Xp && value.A == A && value.Iz == Iz))
+                    return candidate.Key;
+
+            int maxNo = ElementList.Values.SelectMany(sheet => sheet.Keys)
+                .Max(key => int.Parse(key, CultureInfo.InvariantCulture));
+            string newNo = (maxNo + 1).ToString(CultureInfo.InvariantCulture);
+            foreach (var sheet in ElementList.Values)
             {
-                if (!e1.Value.ContainsKey(eNo))
-                { // もし既に登録済の諸元になかったら新しい諸元を追加する処理に飛ぶ
-                    e1.Value.Add(eNo,
-                        new Element()
-                        {
-                            A = A,
-                            Iz = Iz,
-                        });
-                    return eNo;
-                }
-
-                var eNoe = e1.Value[eNo];
-                foreach (var e2 in e1.Value)
+                var source = sheet[eNo];
+                sheet.Add(newNo, new Element
                 {
-                    if (eNoe.E == e2.Value.E && e2.Value.A == A && e2.Value.Iz == Iz
-                         && eNoe.Xp == e2.Value.Xp) 
-                    {   // 諸元が同じ
-                        if (!Targets.ContainsKey(e2.Key))
-                        {   // まだ登録が無ければ
-                            Targets.Add(e2.Key, e2.Value); // 追加する
-                        }
-                    }
-                    else if (Targets.ContainsKey(e2.Key)) { 
-                        // 既に登録済で諸元が異なっていたら
-                        Targets.Remove(e2.Key); // 削除する
-                    }
-
-                    // 最大の材料番号を調べる
-                    var iNo = Convert.ToInt32(e2.Key);
-                    if (maxNo < iNo)
-                        maxNo = iNo;
-                }
-            }
-
-            if (Targets.Count > 0)
-            {   // 最初の要素を取得
-                return Targets.First().Key;
-            }
-
-
-            // もし既に登録済の諸元になかったら新しい諸元を追加する
-            Element eNee = this.ElementList.First().Value[eNo];
-            string newNo = (maxNo + 1).ToString();
-            foreach (var e1 in this.ElementList)
-            {
-                e1.Value.Add(newNo,
-                    new Element() { 
-                        E = eNee.E,
-                        A = A,
-                        Iz = Iz,
-                        Xp = eNee.Xp,
-                        name = "剛域"
-                    });
+                    E = source.E,
+                    A = A,
+                    Iz = Iz,
+                    Xp = source.Xp,
+                    name = "剛域"
+                });
             }
             return newNo;
         }

@@ -75,12 +75,11 @@ public class ConvertManager
 
 
         /// 組み換え処理
-        // 杭バネは元の部材番号で追加し、剛域分割時に区間とJ端を引き継ぐ。
+        // 杭バネは元の部材番号と区間長、J端の支点を保持する。
         pile_spring.Apply(wdata, _node, _member, _fix_node, _fix_member);
         // 剛域
         _gouiki = new gouiki(wdata);
-        _gouiki.exChange(_node, _member, _fix_node, _fix_member, 
-                            _joint, _notice_point, _load);
+        var rigid = _gouiki.GetRigid(_node, _member);
 
 
 
@@ -93,6 +92,8 @@ public class ConvertManager
         result.Add(member.mKEY, _member.GetMember());
         // 材料
         result.Add(element.eKEY, _member.GetElement());
+        // 剛域
+        result.Add(gouiki.KEY, rigid);
         // 着目点
         result.Add(notice_points.KEY, _notice_point.GetNoticePoint());
         // バネ

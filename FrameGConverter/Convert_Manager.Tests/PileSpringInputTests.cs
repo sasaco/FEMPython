@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Reflection;
 using System.Text;
 using Convert_Manager.FrameWebForJS;
 using Xunit;
@@ -144,7 +143,7 @@ public class PileSpringInputTests
     [InlineData(0, false)]
     [InlineData(0.5, false)]
     [InlineData(0.5, true)]
-    public void RigidZoneSplitPartitionsPileIntervalsAndKeepsSupportAtOriginalTip(double jRigidLength, bool sloping)
+    public void NativeRigidZoneKeepsPileIntervalsAndOriginalTip(double jRigidLength, bool sloping)
     {
         var input = ReadFixture();
         // Isolate rigid zones on original pile member 20.
@@ -161,51 +160,29 @@ public class PileSpringInputTests
         }
         var tipCoordinates = (originalTip.x, originalTip.y);
         model.Apply();
-        var springIntegrals = model.Springs.GetFixMember().ToDictionary(sheet => sheet.Key,
-            sheet => (Tx: sheet.Value.Sum(r => r.tx * r.length!.Value), Ty: sheet.Value.Sum(r => r.ty * r.length!.Value)));
-        var splitter = new gouiki(input);
-        var split = typeof(gouiki).GetMethod("exChange", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var originalMembers = model.Members.GetMember().ToDictionary(pair => pair.Key,
+            pair => (pair.Value.ni, pair.Value.nj, pair.Value.e));
+        var originalNodeCount = model.Nodes.GetNode().Count;
+        var rigid = new gouiki(input).GetRigid(model.Nodes, model.Members);
 
-        split.Invoke(splitter, [model.Nodes, model.Members, model.Supports, model.Springs,
-            new joint(input), new notice_points(input), new load(input)]);
-
-        var firstSegment = model.Members.getMember("20");
-        var remainingSegment = model.Members.getMember("21");
-        Assert.Equal(1, firstSegment.Length(model.Nodes), 8);
-        Assert.Equal(22.95 - jRigidLength, remainingSegment.Length(model.Nodes), 8);
-        var firstSpring = Assert.Single(model.Springs.GetFixMember()["1"], r => r.m == "20");
-        Assert.Equal(1, firstSpring.length);
-        Assert.Equal(2220, firstSpring.ty);
-        var remainder = model.Springs.GetFixMember()["1"].Where(r => r.m == "21").ToArray();
-        Assert.Equal(jRigidLength == 0 ? 10 : 9, remainder.Length);
-        Assert.Equal(1.861, remainder[0].length!.Value, 8);
-        Assert.Equal(22.95 - jRigidLength, remainder.Sum(r => r.length!.Value), 8);
-        Assert.Equal(23.95 * 4, model.Springs.GetFixMember()["1"].Sum(r => r.length!.Value), 8);
-        var tipSegment = jRigidLength == 0 ? remainingSegment : model.Members.getMember("22");
-        if (jRigidLength != 0)
-        {
-            var tipSprings = model.Springs.GetFixMember()["1"].Where(r => r.m == "22").ToArray();
-            Assert.Equal(2, tipSprings.Length);
-            Assert.Equal(0.1, tipSprings[0].length!.Value, 8);
-            Assert.Equal(0.4, tipSprings[1].length!.Value, 8);
-            Assert.Equal(20936, tipSprings[0].tx);
-            Assert.Equal(0, tipSprings[1].tx);
-        }
-        Assert.Same(originalTip, model.Nodes.GetNode(tipSegment.nj));
+        var rigidRow = Assert.Single(rigid);
+        Assert.Equal("20", rigidRow.m);
+        Assert.Equal(1, rigidRow.Ilength);
+        Assert.Equal(jRigidLength, rigidRow.Jlength);
+        Assert.Equal(originalNodeCount, model.Nodes.GetNode().Count);
+        Assert.Equal(originalMembers, model.Members.GetMember().ToDictionary(pair => pair.Key,
+            pair => (pair.Value.ni, pair.Value.nj, pair.Value.e)));
+        Assert.Same(originalTip, model.Nodes.GetNode("18"));
         Assert.Equal(tipCoordinates, (originalTip.x, originalTip.y));
-        var tipSupport = Assert.Single(model.Supports.GetFixNode()["1"], r => r.n == tipSegment.nj);
+        var tipSupport = Assert.Single(model.Supports.GetFixNode()["1"], r => r.n == "18");
         Assert.Equal(210719, tipSupport.ty);
-        Assert.DoesNotContain(model.Supports.GetFixNode()["1"], r => r.n == firstSegment.nj);
         foreach (var sheet in model.Springs.GetFixMember())
         {
-            Assert.Equal(springIntegrals[sheet.Key].Tx, sheet.Value.Sum(r => r.tx * r.length!.Value), 6);
-            Assert.Equal(springIntegrals[sheet.Key].Ty, sheet.Value.Sum(r => r.ty * r.length!.Value), 6);
-            foreach (var group in sheet.Value.GroupBy(r => r.m))
-            {
-                double geometricLength = model.Members.getMember(group.Key).Length(model.Nodes);
-                Assert.InRange(group.Sum(r => r.length!.Value), geometricLength - 1e-6 * Math.Max(1, geometricLength),
-                    geometricLength + 1e-6 * Math.Max(1, geometricLength));
-            }
+            Assert.Equal(40, sheet.Value.Count);
+            Assert.All(sheet.Value, row => Assert.Contains(row.m, originalMembers.Keys));
+            var intervals = sheet.Value.Where(row => row.m == "20").ToArray();
+            Assert.Equal(10, intervals.Length);
+            Assert.Equal(23.95, intervals.Sum(row => row.length!.Value), 8);
         }
     }
 

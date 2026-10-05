@@ -8,7 +8,7 @@ namespace Convert_Manager.FrameWebForJS
 {
     public static class pile_spring
     {
-        // Apply before rigid-zone splitting, while the original member IDs still exist.
+        // Attach intervals and tip supports to the original member and node IDs.
         public static void Apply(Dictionary<string, string> wdata, node nodes, member members,
                                  fix_node supports, fix_member springs)
         {
