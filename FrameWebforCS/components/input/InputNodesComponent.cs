@@ -1,4 +1,5 @@
 ﻿using FarPoint.Win.Spread;
+using FarPoint.Win.Spread.CellType;
 using FrameWebforCS.providers;
 using System.Windows.Forms;
 
@@ -35,7 +36,7 @@ namespace FrameWebforCS.components.input
             string[] fields = _input.dimension == 3
                 ? new[] { "X", "Y", "Z" }
                 : new[] { "X", "Y" };
-            var coordinateType = new PrintNumberCellType("F3");
+            var coordinateType = new GeneralCellType { FormatString = "F3" };
 
             for (int i = 0; i < fields.Length; i++)
             {

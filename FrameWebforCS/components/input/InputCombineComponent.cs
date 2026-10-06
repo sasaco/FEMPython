@@ -103,7 +103,7 @@ namespace FrameWebforCS.components.input
                     sheet.ColumnHeader.Cells[0, column].Text =
                         prefix + (column + 1).ToString(CultureInfo.InvariantCulture);
                     sheet.Columns[column].Width = 50;
-                    sheet.Columns[column].CellType = new PrintNumberCellType("F3");
+                    sheet.Columns[column].CellType = new GeneralCellType { FormatString = "F3" };
                 }
                 sheet.ColumnHeader.Cells[0, count].Text = "名称";
                 sheet.Columns[count].Width = 200;

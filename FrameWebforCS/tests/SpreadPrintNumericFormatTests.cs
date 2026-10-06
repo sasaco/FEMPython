@@ -18,7 +18,7 @@ namespace FrameWebforCS.Tests;
 public sealed class SpreadPrintNumericFormatTests
 {
     [Fact]
-    public void NodeCoordinateUsesSavedDecimalPrinterRounding()
+    public void NodeCoordinateUsesFixedThreeDecimalsWithoutChangingBoundFloat()
     {
         RunSta("ja-JP", () =>
         {
@@ -31,7 +31,7 @@ public sealed class SpreadPrintNumericFormatTests
                 using var view = new InputNodesComponent();
                 form.Controls.Add(view);
                 form.Show();
-                Assert.Equal(PrinterFloat(service.Nodes[0].X!.Value, "F3"),
+                Assert.Equal(service.Nodes[0].X!.Value.ToString("F3", CultureInfo.CurrentCulture),
                     Spread(view).Sheets[0].Cells[0, 0].Text);
                 Assert.Equal("-0.000", Spread(view).Sheets[0].Cells[0, 1].Text);
                 FpSpread spread = Spread(view);
@@ -83,7 +83,7 @@ public sealed class SpreadPrintNumericFormatTests
     [Theory]
     [InlineData(2)]
     [InlineData(3)]
-    public void ElementCellsUsePrinterFormatsWithoutChangingBoundFloats(int dimension)
+    public void ElementCellsUseFixedDigitsAndThresholdWithoutChangingBoundFloats(int dimension)
     {
         RunSta("ja-JP", () =>
         {
@@ -110,7 +110,7 @@ public sealed class SpreadPrintNumericFormatTests
                 int area = dimension == 3 ? 3 : 2;
                 int inertia = dimension == 3 ? 5 : 3;
                 Assert.Equal("998.9990", sheet.Cells[0, area].Text);
-                Assert.Equal("998.999000", sheet.Cells[0, inertia].Text);
+                Assert.Equal("998.999023", sheet.Cells[0, inertia].Text);
                 Assert.Equal(dimension == 3 ? "999" : "999.0000", sheet.Cells[1, area].Text);
                 Assert.Equal(dimension == 3 ? "999" : "999.000000", sheet.Cells[1, inertia].Text);
                 float? original = InputElementsService.Instance.GetRows(1)[0].Area;
@@ -118,11 +118,9 @@ public sealed class SpreadPrintNumericFormatTests
                 using var saved = JsonDocument.Parse(JsonSerializer.Serialize(input.GetSaveJson()));
                 Assert.Equal(original, saved.RootElement.GetProperty("element").GetProperty("1")
                     .GetProperty("1").GetProperty("A").GetSingle());
-                JsonElement nearMidpoint = saved.RootElement.GetProperty("element")
-                    .GetProperty("1").GetProperty("3").GetProperty("Xp");
-                string printerText = double.Parse(nearMidpoint.GetRawText(),
-                    CultureInfo.InvariantCulture).ToString("E2", CultureInfo.CurrentCulture);
-                Assert.Equal(printerText, sheet.Cells[2, dimension == 3 ? 2 : 1].Text);
+                float expansion = InputElementsService.Instance.GetRows(1)[2].Expansion!.Value;
+                Assert.Equal(expansion.ToString("E2", CultureInfo.CurrentCulture),
+                    sheet.Cells[2, dimension == 3 ? 2 : 1].Text);
                 FpSpread materialSpread = Spread(view);
                 sheet.SetActiveCell(0, area);
                 materialSpread.StartCellEditing(EventArgs.Empty, false);
@@ -248,11 +246,11 @@ public sealed class SpreadPrintNumericFormatTests
                     """)) combine.setCombineJson(combination.RootElement);
                 using var view = new InputCombineComponent();
                 SheetView sheet = Spread(view).Sheets[1];
-                Assert.Equal("1.23", sheet.Cells[0, 8].Text);
+                Assert.Equal("1.235", sheet.Cells[0, 8].Text);
                 Assert.Equal(1.23456, combine.CombineRows[1].Coefficients[9]);
                 using (var next = JsonDocument.Parse("""{"load":{"12":{"name":"later"}}}"""))
                     load.setLoadJson(next.RootElement);
-                Assert.Equal("1.23", sheet.Cells[0, 8].Text);
+                Assert.Equal("1.235", sheet.Cells[0, 8].Text);
             }
             finally { combine.clear(); load.clear(); }
         });
@@ -286,7 +284,7 @@ public sealed class SpreadPrintNumericFormatTests
                     load.setLoadJson(next.RootElement);
                 Assert.Equal(7, sheet.ColumnCount);
                 Assert.Equal("Original", sheet.Cells[0, 6].Text);
-                Assert.IsType<PrintNumberCellType>(sheet.Columns[5].CellType);
+                Assert.IsType<GeneralCellType>(sheet.Columns[5].CellType);
 
                 load.clear();
                 Assert.Equal(6, sheet.ColumnCount);
@@ -325,7 +323,7 @@ public sealed class SpreadPrintNumericFormatTests
                 form.Show();
                 FpSpread spread = Spread(view);
                 SheetView sheet = spread.ActiveSheet;
-                Assert.Equal("1,234", sheet.Cells[0, 0].Text);
+                Assert.Equal("1,235", sheet.Cells[0, 0].Text);
                 sheet.SetActiveCell(0, 0);
                 spread.StartCellEditing(EventArgs.Empty, false);
                 spread.StopCellEditing();
@@ -344,7 +342,7 @@ public sealed class SpreadPrintNumericFormatTests
     }
 
     [Fact]
-    public void BoundMemberSpringAndNoticeFloatsUseSavedDecimalPrinterRounding()
+    public void BoundMemberSpringAndNoticeFloatsUseFixedDigits()
     {
         RunSta("ja-JP", () =>
         {
@@ -373,20 +371,20 @@ public sealed class SpreadPrintNumericFormatTests
                 SheetView rigid = Spread(members).Sheets[1];
                 SheetView spring = Spread(springs).Sheets[0];
                 SheetView notice = Spread(notices).Sheets[0];
-                Assert.Equal(PrinterFloat(InputMembersService.Instance.Members[0].Cg!.Value, "F3"),
+                Assert.Equal(InputMembersService.Instance.Members[0].Cg!.Value.ToString("F3", CultureInfo.CurrentCulture),
                     member.Cells[0, 4].Text);
-                Assert.Equal(PrinterFloat(InputRigidZoneService.Instance.Rows[0].Ilength!.Value, "F2"),
+                Assert.Equal(InputRigidZoneService.Instance.Rows[0].Ilength!.Value.ToString("F2", CultureInfo.CurrentCulture),
                     rigid.Cells[0, 3].Text);
-                Assert.Equal(PrinterFloat(InputRigidZoneService.Instance.Rows[0].Jlength!.Value, "F2"),
+                Assert.Equal(InputRigidZoneService.Instance.Rows[0].Jlength!.Value.ToString("F2", CultureInfo.CurrentCulture),
                     rigid.Cells[0, 4].Text);
                 clsFixMember springValue = InputFixMemberService.Instance.GetRows("1")[0];
-                Assert.Equal(PrinterFloat(springValue.length!.Value, "F3"), spring.Cells[0, 1].Text);
-                Assert.Equal(PrinterFloat(springValue.tx!.Value, "F3"), spring.Cells[0, 2].Text);
-                Assert.Equal(PrinterFloat(springValue.ty!.Value, "E2"), spring.Cells[0, 3].Text);
-                Assert.Equal(PrinterFloat(springValue.tz!.Value, "E2"), spring.Cells[0, 4].Text);
-                Assert.Equal(PrinterFloat(springValue.tr!.Value, "F2"), spring.Cells[0, 5].Text);
-                Assert.Equal(PrinterFloat(InputNoticePointsService.Instance.NoticePoints[0].P1!.Value,
-                    "F3"), notice.Cells[0, 2].Text);
+                Assert.Equal(springValue.length!.Value.ToString("F3", CultureInfo.CurrentCulture), spring.Cells[0, 1].Text);
+                Assert.Equal(springValue.tx!.Value.ToString("F3", CultureInfo.CurrentCulture), spring.Cells[0, 2].Text);
+                Assert.Equal(springValue.ty!.Value.ToString("E2", CultureInfo.CurrentCulture), spring.Cells[0, 3].Text);
+                Assert.Equal(springValue.tz!.Value.ToString("E2", CultureInfo.CurrentCulture), spring.Cells[0, 4].Text);
+                Assert.Equal(springValue.tr!.Value.ToString("F2", CultureInfo.CurrentCulture), spring.Cells[0, 5].Text);
+                Assert.Equal(InputNoticePointsService.Instance.NoticePoints[0].P1!.Value.ToString(
+                    "F3", CultureInfo.CurrentCulture), notice.Cells[0, 2].Text);
                 RangeGroupInfo group = Assert.Single(spring.GetRangeGroupInfo(1, true));
                 spring.ExpandRangeGroup(group, true, false);
                 Assert.Equal("***", spring.Cells[0, 2].Text);
@@ -412,7 +410,7 @@ public sealed class SpreadPrintNumericFormatTests
     }
 
     [Fact]
-    public void BoundLoadFloatUsesSavedDecimalPrinterRounding()
+    public void BoundLoadFloatUsesFixedTwoDecimals()
     {
         RunSta("ja-JP", () =>
         {
@@ -427,8 +425,8 @@ public sealed class SpreadPrintNumericFormatTests
                 SheetView sheet = Spread(view).Sheets[1];
                 int row = service.FindIntensityRowIndex("1", 1);
                 clsLoadIntensityRow bound = service.GetIntensityRowAt(row)!;
-                Assert.Equal(PrinterFloat(bound.P1!.Value, "F2"), sheet.Cells[row, 7].Text);
-                Assert.Equal(PrinterFloat(bound.P2!.Value, "F2"), sheet.Cells[row, 8].Text);
+                Assert.Equal(bound.P1!.Value.ToString("F2", CultureInfo.CurrentCulture), sheet.Cells[row, 7].Text);
+                Assert.Equal(bound.P2!.Value.ToString("F2", CultureInfo.CurrentCulture), sheet.Cells[row, 8].Text);
             }
             finally { service.clear(); }
         });
@@ -545,10 +543,6 @@ public sealed class SpreadPrintNumericFormatTests
 
     private static FpSpread Spread(Control control) =>
         (FpSpread)control.Controls.Find("fpSpread1", true).Single();
-
-    private static string PrinterFloat(float value, string format) =>
-        double.Parse(value.ToString("R", CultureInfo.InvariantCulture),
-            CultureInfo.InvariantCulture).ToString(format, CultureInfo.CurrentCulture);
 
     private static void PumpUntil(Func<bool> condition)
     {

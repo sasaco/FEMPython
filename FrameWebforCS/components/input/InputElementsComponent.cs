@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 
@@ -13,6 +14,22 @@ namespace FrameWebforCS.components.input
 {
     public partial class InputElementsComponent : UserControl
     {
+        private sealed class SectionCellType : GeneralCellType
+        {
+            private readonly string _format;
+
+            internal SectionCellType(string format) => _format = format;
+
+            public override string Format(object value)
+            {
+                if (value is not float && value is not double) return base.Format(value);
+                double number = Convert.ToDouble(value);
+                if (double.IsNaN(number)) return string.Empty;
+                return ((IFormattable)value).ToString(number >= 999 ? null : _format,
+                    CultureInfo.CurrentCulture);
+            }
+        }
+
         internal event Action<int>? GridSelectionChanged;
         private InputDataService _input = InputDataService.Instance;
         private List<FarPoint.Win.Spread.SheetView> fpSpread1_Sheets;
@@ -115,13 +132,13 @@ namespace FrameWebforCS.components.input
                 column[6].DataField = nameof(clsElement.InertiaZ);
                 column[7].DataField = nameof(clsElement.Name);
 
-                column[0].CellType = new PrintNumberCellType("E2");
-                column[1].CellType = new PrintNumberCellType("E2");
-                column[2].CellType = new PrintNumberCellType("E2");
-                column[3].CellType = new PrintNumberCellType("F4", useDefaultAt999: true);
-                column[4].CellType = new PrintNumberCellType("F6", useDefaultAt999: true);
-                column[5].CellType = new PrintNumberCellType("F6", useDefaultAt999: true);
-                column[6].CellType = new PrintNumberCellType("F6", useDefaultAt999: true);
+                column[0].CellType = new GeneralCellType { FormatString = "E2" };
+                column[1].CellType = new GeneralCellType { FormatString = "E2" };
+                column[2].CellType = new GeneralCellType { FormatString = "E2" };
+                column[3].CellType = new SectionCellType("F4");
+                column[4].CellType = new SectionCellType("F6");
+                column[5].CellType = new SectionCellType("F6");
+                column[6].CellType = new SectionCellType("F6");
 
                 column[0].Width = 80;
                 column[1].Width = 150;
@@ -154,10 +171,10 @@ namespace FrameWebforCS.components.input
                 column[3].DataField = nameof(clsElement.InertiaZ);
                 column[4].DataField = nameof(clsElement.Name);
 
-                column[0].CellType = new PrintNumberCellType("E2");
-                column[1].CellType = new PrintNumberCellType("E2");
-                column[2].CellType = new PrintNumberCellType("F4");
-                column[3].CellType = new PrintNumberCellType("F6");
+                column[0].CellType = new GeneralCellType { FormatString = "E2" };
+                column[1].CellType = new GeneralCellType { FormatString = "E2" };
+                column[2].CellType = new GeneralCellType { FormatString = "F4" };
+                column[3].CellType = new GeneralCellType { FormatString = "F6" };
                 column[4].CellType = new GeneralCellType();
 
                 column[0].Width = 80;

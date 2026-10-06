@@ -422,13 +422,13 @@ namespace FrameWebforCS.components.input
             }
 
             var numericColumns = fpSpread1_Sheet1.Columns;
-            numericColumns[1].CellType = new PrintNumberCellType("F3");
-            numericColumns[2].CellType = new PrintNumberCellType("F3");
-            numericColumns[3].CellType = new PrintNumberCellType("E2");
+            numericColumns[1].CellType = new GeneralCellType { FormatString = "F3" };
+            numericColumns[2].CellType = new GeneralCellType { FormatString = "F3" };
+            numericColumns[3].CellType = new GeneralCellType { FormatString = "E2" };
             if (_input.dimension == 3)
             {
-                numericColumns[4].CellType = new PrintNumberCellType("E2");
-                numericColumns[5].CellType = new PrintNumberCellType("F2");
+                numericColumns[4].CellType = new GeneralCellType { FormatString = "E2" };
+                numericColumns[5].CellType = new GeneralCellType { FormatString = "F2" };
             }
         }
 

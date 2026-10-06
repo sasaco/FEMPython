@@ -277,8 +277,8 @@ namespace FrameWebforCS.components.input
             }
             column[5].CellType = new LoadLengthCellType();
             column[6].CellType = new LoadLengthCellType();
-            column[7].CellType = new PrintNumberCellType("F2");
-            column[8].CellType = new PrintNumberCellType("F2");
+            column[7].CellType = new GeneralCellType { FormatString = "F2" };
+            column[8].CellType = new GeneralCellType { FormatString = "F2" };
             fpSpread1_Sheet2.DataSource = _service.IntensityRows;
 
             // 見た目の制御

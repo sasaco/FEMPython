@@ -53,7 +53,7 @@ namespace FrameWebforCS.components.input
             {
                 header.Cells[1, i].Text = "L" + (i - 1);
                 column[i].Width = 80;
-                column[i].CellType = new PrintNumberCellType("F3");
+                column[i].CellType = new GeneralCellType { FormatString = "F3" };
             }
 
             header.Cells[0, 2].ColumnSpan = column.Count - 2;
