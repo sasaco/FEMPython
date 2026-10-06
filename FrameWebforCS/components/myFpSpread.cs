@@ -19,9 +19,30 @@ namespace FrameWebforCS.components
         {
             AccessibleDescription = "";
             Font = new Font("ＭＳ ゴシック", 9F);
+            EditModePermanent = false;
+            EditModeReplace = true;
+            // Enter commits and moves down whether the sheet or its cell editor has focus.
+            const string enterAction = "CommitAndMoveToNextRow";
+            GetActionMap().Put(enterAction, new CommitAndMoveToNextRowAction(this));
+            GetInputMap(InputMapMode.WhenFocused)
+                .Put(new Keystroke(Keys.Enter, Keys.None), enterAction);
+            GetInputMap(InputMapMode.WhenAncestorOfFocused)
+                .Put(new Keystroke(Keys.Enter, Keys.None), enterAction);            
             KeyDown += myFpSpread_KeyDown;
             MouseDown += myFpSpread_MouseDown;
             ActiveSheetChanged += myFpSpread_ActiveSheetChanged;
+        }
+        
+        private sealed class CommitAndMoveToNextRowAction(myFpSpread spread) : FarPoint.Win.Spread.Action
+        {
+            public override void PerformAction(object sender)
+            {
+                // A rejected edit can leave EditMode on even when StopCellEditing returns true.
+                if (spread.EditMode && (!spread.StopCellEditing() || spread.EditMode))
+                    return;
+
+                spread.GetActionMap().Get(SpreadActions.MoveToNextRow).PerformAction(sender);
+            }
         }
 
         // Row mutations belong to each sheet's service. Sheets without a
