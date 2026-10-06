@@ -140,7 +140,5 @@ internal static class ResultPickupDisgAggregator
                 : [row.Id, Format(row.Dx), Format(row.Dy), Format(row.Rz), row.Case],
             cancellationToken);
 
-    internal static string Format(double value) =>
-        (Math.Floor(value * 10_000 + 0.5) / 10_000)
-            .ToString("F4", CultureInfo.InvariantCulture);
+    internal static string Format(double value) => ResultPrintNumberFormat.Displacement(value);
 }

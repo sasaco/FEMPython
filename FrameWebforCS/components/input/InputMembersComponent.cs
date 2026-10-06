@@ -1,4 +1,5 @@
 ﻿using FarPoint.Win.Spread;
+using FarPoint.Win.Spread.CellType;
 using FrameWebforCS.providers;
 using GrapeCity.Win.Spread.InputMan.CellType;
 using System;
@@ -167,6 +168,10 @@ namespace FrameWebforCS.components.input
             column[_input.dimension == 3 ? 5 : 4].Locked = true;
             column[2].BackColor = SystemColors.Control;
             column[_input.dimension == 3 ? 5 : 4].BackColor = SystemColors.Control;
+            if (_input.dimension == 3)
+                column[4].CellType = new PrintNumberCellType("F3");
+            else
+                column[4].CellType = new GeneralCellType();
             fpSpread1_Sheet1.Protect = true;
 
         }
@@ -221,6 +226,8 @@ namespace FrameWebforCS.components.input
             }
             column[6].Locked = true;
             column[6].BackColor = SystemColors.Control;
+            column[3].CellType = new PrintNumberCellType("F2");
+            column[4].CellType = new PrintNumberCellType("F2");
             fpSpread1_Sheet2.Protect = true;
 
         }

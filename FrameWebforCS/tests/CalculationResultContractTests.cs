@@ -131,20 +131,24 @@ public sealed class CalculationResultContractTests
         CalculationResultTableWriter.FillDisplacements(displacement, presentation,
             presentation.Pages[0], 3);
         Assert.Contains("単位未指定", displacement.ColumnHeader.Cells[0, 1].Text);
-        Assert.Equal("0.001", displacement.Cells[1, 1].Text);
+        Assert.Equal("0.0010", displacement.Cells[1, 1].Text);
 
         using var reaction = new FarPoint.Win.Spread.SheetView();
         CalculationResultTableWriter.FillReactions(reaction, presentation,
             presentation.Pages[0], 3);
         Assert.Contains("単位未指定", reaction.ColumnHeader.Cells[0, 1].Text);
-        Assert.Equal("-10", reaction.Cells[0, 1].Text);
+        Assert.Equal("-10.00", reaction.Cells[0, 1].Text);
 
         using var section = new FarPoint.Win.Spread.SheetView();
         CalculationResultTableWriter.FillSectionForces(section, presentation,
             presentation.Pages[0], 3);
         Assert.Contains("単位未指定", section.ColumnHeader.Cells[0, 4].Text);
         Assert.Contains("単位未指定", section.ColumnHeader.Cells[0, 7].Text);
-        Assert.Equal("10", section.Cells[0, 3].Text);
+        Assert.Equal("10.00", section.Cells[0, 3].Text);
+        var raw = Assert.IsType<StaticAnalysisResult>(Assert.Single(presentation.ResultSet.Results));
+        Assert.Equal(0.001, raw.NodeDisplacements[1].Components.Dx);
+        Assert.Equal(-10, raw.SupportReactions[0].Components.Fx);
+        Assert.Equal(10, raw.MemberSectionForces[0].Segments[0].IEnd.Fx);
     }
 
     [Fact]
@@ -159,8 +163,8 @@ public sealed class CalculationResultContractTests
         using var sheet = new FarPoint.Win.Spread.SheetView();
         CalculationResultTableWriter.FillSectionForces(sheet, presentation,
             presentation.Pages[0], 3);
-        Assert.Equal("0.2", sheet.Cells[0, 2].Text);
-        Assert.Equal("1.2", sheet.Cells[1, 2].Text);
+        Assert.Equal("0.200", sheet.Cells[0, 2].Text);
+        Assert.Equal("1.200", sheet.Cells[1, 2].Text);
     }
 
     [Fact]

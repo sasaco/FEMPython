@@ -1,7 +1,6 @@
 using FarPoint.Win.Spread;
 using FrameWebforCS.providers;
 using FrameWebforCS.calculation;
-using System.Globalization;
 
 namespace FrameWebforCS.components.result;
 
@@ -337,9 +336,7 @@ public partial class ResultCombineDisgComponent : UserControl
             FrameWebforCS.three.ThreeResultsService.PublishPage("comb_disg", _output.Cases[index].Id, mode);
     }
 
-    private static string Format(double value) =>
-        (Math.Floor(value * 10_000 + 0.5) / 10_000)
-            .ToString("F4", CultureInfo.InvariantCulture);
+    private static string Format(double value) => ResultPrintNumberFormat.Displacement(value);
 
     private void ClearDisplay()
     {

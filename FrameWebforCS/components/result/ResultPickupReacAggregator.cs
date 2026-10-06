@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Globalization;
 
 namespace FrameWebforCS.components.result;
 
@@ -29,7 +28,5 @@ internal static class ResultPickupReacAggregator
                 : [row.Id, Format(row.Tx), Format(row.Ty), Format(row.Mz), row.Case],
             cancellationToken);
 
-    internal static string Format(double value) =>
-        (Math.Floor(value * 100 + 0.5) / 100)
-            .ToString("F2", CultureInfo.InvariantCulture);
+    internal static string Format(double value) => ResultPrintNumberFormat.Force(value);
 }

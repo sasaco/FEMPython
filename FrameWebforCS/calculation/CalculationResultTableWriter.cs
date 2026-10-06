@@ -25,6 +25,7 @@ internal static class CalculationResultTableWriter
             return;
         }
         ResultDisgComponent.SetSheet1(sheet);
+        if (page.Result is ForceAnalysisResult) ConfigureTextColumns(sheet, 1);
         sheet.ColumnHeader.Cells[0, 1].Text = page.Result is ModalAnalysisResult
             ? "固有モード (無次元)" : $"移動量 ({presentation.DisplayLengthUnit})";
         sheet.ColumnHeader.Cells[0, dimension == 3 ? 4 : 3].Text =
@@ -41,17 +42,19 @@ internal static class CalculationResultTableWriter
             NodeDisplacement entry = rows[row];
             double Scale(double value) => page.Result is ModalAnalysisResult
                 ? value : presentation.DisplayLength(value);
+            string FormatDisplacement(double value) => page.Result is ModalAnalysisResult
+                ? Format(value) : ResultPrintNumberFormat.Displacement(value);
             sheet.Cells[row, 0].Text = entry.NodeId;
-            sheet.Cells[row, 1].Text = Format(Scale(entry.Components.Dx));
-            sheet.Cells[row, 2].Text = Format(Scale(entry.Components.Dy));
+            sheet.Cells[row, 1].Text = FormatDisplacement(Scale(entry.Components.Dx));
+            sheet.Cells[row, 2].Text = FormatDisplacement(Scale(entry.Components.Dy));
             if (dimension == 3)
             {
-                sheet.Cells[row, 3].Text = Format(Scale(entry.Components.Dz));
-                sheet.Cells[row, 4].Text = Format(entry.Components.Rx);
-                sheet.Cells[row, 5].Text = Format(entry.Components.Ry);
-                sheet.Cells[row, 6].Text = Format(entry.Components.Rz);
+                sheet.Cells[row, 3].Text = FormatDisplacement(Scale(entry.Components.Dz));
+                sheet.Cells[row, 4].Text = FormatDisplacement(entry.Components.Rx);
+                sheet.Cells[row, 5].Text = FormatDisplacement(entry.Components.Ry);
+                sheet.Cells[row, 6].Text = FormatDisplacement(entry.Components.Rz);
             }
-            else sheet.Cells[row, 3].Text = Format(entry.Components.Rz);
+            else sheet.Cells[row, 3].Text = FormatDisplacement(entry.Components.Rz);
         }
         sheet.Protect = true;
     }
@@ -72,6 +75,7 @@ internal static class CalculationResultTableWriter
             return;
         }
         ResultReacComponent.SetSheet1(sheet);
+        if (page.Result is ForceAnalysisResult) ConfigureTextColumns(sheet, 1);
         sheet.ColumnHeader.Cells[0, 1].Text = $"支点反力 ({presentation.ForceUnit})";
         sheet.ColumnHeader.Cells[0, dimension == 3 ? 4 : 3].Text =
             $"回転反力 ({presentation.MomentUnit})";
@@ -82,16 +86,16 @@ internal static class CalculationResultTableWriter
         {
             SupportReaction entry = rows[row];
             sheet.Cells[row, 0].Text = entry.NodeId;
-            sheet.Cells[row, 1].Text = Format(entry.Components.Fx);
-            sheet.Cells[row, 2].Text = Format(entry.Components.Fy);
+            sheet.Cells[row, 1].Text = ResultPrintNumberFormat.Force(entry.Components.Fx);
+            sheet.Cells[row, 2].Text = ResultPrintNumberFormat.Force(entry.Components.Fy);
             if (dimension == 3)
             {
-                sheet.Cells[row, 3].Text = Format(entry.Components.Fz);
-                sheet.Cells[row, 4].Text = Format(entry.Components.Mx);
-                sheet.Cells[row, 5].Text = Format(entry.Components.My);
-                sheet.Cells[row, 6].Text = Format(entry.Components.Mz);
+                sheet.Cells[row, 3].Text = ResultPrintNumberFormat.Force(entry.Components.Fz);
+                sheet.Cells[row, 4].Text = ResultPrintNumberFormat.Force(entry.Components.Mx);
+                sheet.Cells[row, 5].Text = ResultPrintNumberFormat.Force(entry.Components.My);
+                sheet.Cells[row, 6].Text = ResultPrintNumberFormat.Force(entry.Components.Mz);
             }
-            else sheet.Cells[row, 3].Text = Format(entry.Components.Mz);
+            else sheet.Cells[row, 3].Text = ResultPrintNumberFormat.Force(entry.Components.Mz);
         }
         sheet.Protect = true;
     }
@@ -115,6 +119,7 @@ internal static class CalculationResultTableWriter
             return;
         }
         ResultFsecComponent.SetSheet1(sheet);
+        if (page.Result is ForceAnalysisResult) ConfigureTextColumns(sheet, 2);
         if (dimension == 3)
         {
             sheet.ColumnHeader.Cells[0, 4].Text = $"せん断力 ({presentation.ForceUnit})";
@@ -150,22 +155,28 @@ internal static class CalculationResultTableWriter
             var entry = rows[row];
             sheet.Cells[row, 0].Text = entry.Member;
             sheet.Cells[row, 1].Text = entry.Station;
-            sheet.Cells[row, 2].Text = Format(entry.Position);
-            sheet.Cells[row, 3].Text = Format(entry.Force.Fx);
-            sheet.Cells[row, 4].Text = Format(entry.Force.Fy);
+            sheet.Cells[row, 2].Text = ResultPrintNumberFormat.Station(entry.Position);
+            sheet.Cells[row, 3].Text = ResultPrintNumberFormat.Force(entry.Force.Fx);
+            sheet.Cells[row, 4].Text = ResultPrintNumberFormat.Force(entry.Force.Fy);
             if (dimension == 3)
             {
-                sheet.Cells[row, 5].Text = Format(entry.Force.Fz);
-                sheet.Cells[row, 6].Text = Format(entry.Force.Mx);
-                sheet.Cells[row, 7].Text = Format(entry.Force.My);
-                sheet.Cells[row, 8].Text = Format(entry.Force.Mz);
+                sheet.Cells[row, 5].Text = ResultPrintNumberFormat.Force(entry.Force.Fz);
+                sheet.Cells[row, 6].Text = ResultPrintNumberFormat.Force(entry.Force.Mx);
+                sheet.Cells[row, 7].Text = ResultPrintNumberFormat.Force(entry.Force.My);
+                sheet.Cells[row, 8].Text = ResultPrintNumberFormat.Force(entry.Force.Mz);
             }
-            else sheet.Cells[row, 5].Text = Format(entry.Force.Mz);
+            else sheet.Cells[row, 5].Text = ResultPrintNumberFormat.Force(entry.Force.Mz);
         }
         sheet.Protect = true;
     }
 
     private static string Format(double value) => value.ToString("G10", CultureInfo.InvariantCulture);
+
+    private static void ConfigureTextColumns(SheetView sheet, int firstColumn)
+    {
+        for (int column = firstColumn; column < sheet.ColumnCount; column++)
+            sheet.Columns[column].CellType = new FarPoint.Win.Spread.CellType.TextCellType();
+    }
 
     private static double[] ToArray(ForceComponents force) =>
         [force.Fx, force.Fy, force.Fz, force.Mx, force.My, force.Mz];

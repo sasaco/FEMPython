@@ -1,4 +1,5 @@
 ﻿using FarPoint.Win.Spread;
+using FarPoint.Win.Spread.CellType;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -102,9 +103,11 @@ namespace FrameWebforCS.components.input
                     sheet.ColumnHeader.Cells[0, column].Text =
                         prefix + (column + 1).ToString(CultureInfo.InvariantCulture);
                     sheet.Columns[column].Width = 50;
+                    sheet.Columns[column].CellType = new PrintNumberCellType("F3");
                 }
                 sheet.ColumnHeader.Cells[0, count].Text = "名称";
                 sheet.Columns[count].Width = 200;
+                sheet.Columns[count].CellType = new GeneralCellType();
                 sheet.FrozenTrailingColumnCount = 1;
                 _combineCoefficientCount = count;
                 _combinePrefix = prefix;

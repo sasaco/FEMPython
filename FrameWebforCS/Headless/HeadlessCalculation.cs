@@ -25,7 +25,11 @@ internal static class HeadlessCalculation
         if (options.GeneratePik && dimension != 2)
             throw new RunnerException("PIK_REQUIRES_2D", "PIK output requires a 2D model; disable PIK for a 3D calculation.");
         var rows = InputCombineService.ParseCombineJson(saved.RootElement);
-        bool needsPickup = options.GeneratePik || options.GeneratePdf && options.PdfSections.Any(section => section.StartsWith("pickup_", StringComparison.Ordinal));
+        bool needsSectionForcePickup = options.GeneratePik ||
+            options.GeneratePdf && options.PdfSections.Contains("pickup_section_force");
+        bool needsDisplacementTable = options.GeneratePdf && options.PdfSections.Contains("pickup_displacement");
+        bool needsPickup = needsSectionForcePickup || needsDisplacementTable ||
+            options.GeneratePickupDisplacementCsv || options.GeneratePickupReactionCsv;
         if (needsPickup && rows.Pickup.Count == 0)
             throw new RunnerException("PICKUP_REQUIRED", "Requested output requires at least one PICKUP definition.");
         CalculationRequest request = await Task.Run(() => CalculationRequestBuilder.FromSavedJson(savedJson), cancellationToken)
@@ -58,8 +62,8 @@ internal static class HeadlessCalculation
             CalculationDerivedPresenter.Build(result, dimension, snapshot), cancellationToken).WaitAsync(cancellationToken);
         var presentation = new CalculationResultPresentation(result, derived, dimension);
         if (needsPickup && (derived.Pickups.Count != rows.Pickup.Count || derived.Pickups.Any(pickup =>
-            !pickup.SectionForces.Values.Any(values => values.Count > 0) ||
-            !pickup.Displacements.Values.Any(values => values.Count > 0))))
+            needsSectionForcePickup && !pickup.SectionForces.Values.Any(values => values.Count > 0) ||
+            needsDisplacementTable && !pickup.Displacements.Values.Any(values => values.Count > 0))))
             throw new RunnerException("PICKUP_UNAVAILABLE", "One or more PICKUP definitions have no calculated results.", "calculation");
 
         using JsonDocument canonical = JsonDocument.Parse(canonicalJson);
@@ -103,6 +107,12 @@ internal static class HeadlessCalculation
                 throw new RunnerException("INVALID_PDF", "PDF generation returned an invalid document.", "output");
             outputs.Add(("report.pdf", "pdf", "application/pdf", pdf));
         }
+        if (options.GeneratePickupDisplacementCsv)
+            outputs.Add(("pickup-displacement.csv", "pickup-displacement", "text/csv; charset=utf-8",
+                Utf8.GetBytes(PickupNodeExportFormatter.Format(presentation, PickupNodeQuantity.Displacement))));
+        if (options.GeneratePickupReactionCsv)
+            outputs.Add(("pickup-reaction.csv", "pickup-reaction", "text/csv; charset=utf-8",
+                Utf8.GetBytes(PickupNodeExportFormatter.Format(presentation, PickupNodeQuantity.Reaction))));
 
         var messages = skippedLoadIds.Take(50).Select(id => new RunnerMessage("warning",
             "EMPTY_LOAD_CASE_SKIPPED", $"Saved load case {id} has no effective loads and was omitted by the shared desktop request projection.",

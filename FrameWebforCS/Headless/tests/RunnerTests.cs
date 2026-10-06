@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace FrameWebforCS.Headless.Tests;
@@ -25,6 +26,8 @@ public sealed class RunnerTests
 
     [Theory]
     [InlineData("--generate-pdf", "yes")]
+    [InlineData("--generate-pickup-displacement-csv", "yes")]
+    [InlineData("--generate-pickup-reaction-csv", "1")]
     [InlineData("--pdf-sections", "input,input")]
     [InlineData("--pdf-sections", "input,unknown")]
     [InlineData("--pdf-sections", "")]
@@ -50,6 +53,8 @@ public sealed class RunnerTests
         var options = RunOptions.Parse(["run", "--input", "C:\\input.json", "--output-dir", "C:\\output"]);
         Assert.True(options.GeneratePdf);
         Assert.True(options.GeneratePik);
+        Assert.False(options.GeneratePickupDisplacementCsv);
+        Assert.False(options.GeneratePickupReactionCsv);
         Assert.Equal(RunOptions.DefaultSections, options.PdfSections);
     }
 
@@ -180,6 +185,183 @@ public sealed class RunnerTests
         Assert.Equal(1, document.RootElement.GetProperty("summary").GetProperty("cases").GetInt32());
         Assert.Equal("EMPTY_LOAD_CASE_SKIPPED", document.RootElement.GetProperty("messages")[0].GetProperty("code").GetString());
         Assert.Equal("load.2", document.RootElement.GetProperty("messages")[0].GetProperty("path").GetString());
+    }
+
+    [Theory]
+    [InlineData(2, true, false)]
+    [InlineData(2, false, true)]
+    [InlineData(2, true, true)]
+    [InlineData(3, true, false)]
+    [InlineData(3, false, true)]
+    [InlineData(3, true, true)]
+    public async Task NodeCsvExportsPreserveRawCorrelatedVectors(int dimension, bool displacement, bool reaction)
+    {
+        using var job = new Job(NodeCsvModel(dimension));
+        var response = await Run(job, "--generate-pdf", "false", "--generate-pik", "false",
+            "--generate-pickup-displacement-csv", displacement ? "true" : "false",
+            "--generate-pickup-reaction-csv", reaction ? "true" : "false");
+        Assert.True(response.ExitCode == 0, response.Stdout + response.Stderr);
+        using var envelope = JsonDocument.Parse(response.Stdout);
+        using var result = JsonDocument.Parse(File.ReadAllText(Path.Combine(job.Output, "result.json")));
+        Assert.Equal(1 + (displacement ? 1 : 0) + (reaction ? 1 : 0),
+            envelope.RootElement.GetProperty("artifacts").GetArrayLength());
+        Assert.Equal(displacement, File.Exists(Path.Combine(job.Output, "pickup-displacement.csv")));
+        Assert.Equal(reaction, File.Exists(Path.Combine(job.Output, "pickup-reaction.csv")));
+        Assert.False(File.Exists(Path.Combine(job.Output, "pickup.pik")));
+        Assert.False(File.Exists(Path.Combine(job.Output, "report.pdf")));
+        if (displacement) AssertNodeCsv(job, envelope.RootElement, result.RootElement, dimension, "displacement");
+        if (reaction) AssertNodeCsv(job, envelope.RootElement, result.RootElement, dimension, "reaction");
+    }
+
+    [Fact]
+    public async Task BothCsvExportsCanAccompanyExistingPikAndPdf()
+    {
+        using var job = new Job(SavedModel);
+        var response = await Run(job, "--generate-pickup-displacement-csv", "true",
+            "--generate-pickup-reaction-csv", "true");
+        Assert.True(response.ExitCode == 0, response.Stdout + response.Stderr);
+        using var document = JsonDocument.Parse(response.Stdout);
+        Assert.Equal(new[] { "result.json", "pickup.pik", "report.pdf", "pickup-displacement.csv", "pickup-reaction.csv" },
+            document.RootElement.GetProperty("artifacts").EnumerateArray().Select(item => item.GetProperty("relativePath").GetString()));
+    }
+
+    [Theory]
+    [InlineData("--generate-pickup-displacement-csv", "pickup-displacement.csv")]
+    [InlineData("--generate-pickup-reaction-csv", "pickup-reaction.csv")]
+    public async Task ShellNodeCsvDoesNotRequireMemberSectionForces(string flag, string filename)
+    {
+        var model = JsonNode.Parse(NodeCsvModel(3))!.AsObject();
+        model["node"]!["3"] = JsonNode.Parse("""{"x":0,"y":1,"z":0}""");
+        model["member"] = new JsonObject();
+        model["shell"] = JsonNode.Parse("""{"1":{"nodes":[1,2,3],"e":1}}""");
+        model["element"]!["1"]!["1"] = JsonNode.Parse("""{"E":10000,"G":4000,"nu":0.25,"A":0.2}""");
+        model["fix_node"]!["1"] = JsonNode.Parse("""
+            [{"n":"1","tx":1,"ty":1,"tz":1,"rx":1,"ry":1,"rz":1},
+             {"n":"2","tx":1,"ty":1,"tz":1,"rx":1,"ry":1,"rz":1},
+             {"n":"3","rz":1}]
+            """);
+        model["load"]!["1"]!["load_node"]![0]!["n"] = "3";
+        model["load"]!["2"]!["load_node"]![0]!["n"] = "3";
+        using var job = new Job(model.ToJsonString());
+        var response = await Run(job, "--generate-pdf", "false", "--generate-pik", "false", flag, "true");
+        Assert.True(response.ExitCode == 0, response.Stdout + response.Stderr);
+        Assert.True(File.Exists(Path.Combine(job.Output, filename)));
+        using var result = JsonDocument.Parse(File.ReadAllText(Path.Combine(job.Output, "result.json")));
+        Assert.Empty(result.RootElement.GetProperty("analysisResultSet").GetProperty("topology").GetProperty("members").EnumerateArray());
+        var sectionModes = result.RootElement.GetProperty("derived").GetProperty("pickups")[0].GetProperty("sectionForces");
+        Assert.All(sectionModes.EnumerateObject(), mode => Assert.Empty(mode.Value.EnumerateArray()));
+    }
+
+    [Theory]
+    [InlineData("--generate-pickup-displacement-csv")]
+    [InlineData("--generate-pickup-reaction-csv")]
+    public async Task RequestedNodeCsvRequiresPickupDefinitions(string flag)
+    {
+        var model = JsonNode.Parse(SavedModel)!.AsObject();
+        model.Remove("pickup");
+        using var job = new Job(model.ToJsonString());
+        var response = await Run(job, "--generate-pdf", "false", "--generate-pik", "false", flag, "true");
+        Assert.NotEqual(0, response.ExitCode);
+        using var document = JsonDocument.Parse(response.Stdout);
+        Assert.Equal("PICKUP_REQUIRED", document.RootElement.GetProperty("errors")[0].GetProperty("code").GetString());
+        Assert.Empty(document.RootElement.GetProperty("artifacts").EnumerateArray());
+        Assert.False(Directory.Exists(job.Output));
+    }
+
+    [Theory]
+    [InlineData("--generate-pickup-displacement-csv", "dx")]
+    [InlineData("--generate-pickup-reaction-csv", "fx")]
+    public async Task MissingRequestedNodeQuantityRejectsAllPreparedArtifacts(string flag, string component)
+    {
+        var model = JsonNode.Parse(SavedModel)!.AsObject();
+        model["load"]!["2"] = JsonNode.Parse("""{"symbol":"EMPTY","fix_node":1,"element":1}""");
+        model["define"]!["1"]!["C1"] = 2;
+        using var job = new Job(model.ToJsonString());
+        var response = await Run(job, "--generate-pik", "false", "--pdf-sections", "input", flag, "true");
+        Assert.NotEqual(0, response.ExitCode);
+        using var document = JsonDocument.Parse(response.Stdout);
+        Assert.Equal("EXECUTION_FAILED", document.RootElement.GetProperty("errors")[0].GetProperty("code").GetString());
+        Assert.Contains(component + " nodes", document.RootElement.GetProperty("errors")[0].GetProperty("message").GetString());
+        Assert.Empty(document.RootElement.GetProperty("artifacts").EnumerateArray());
+        Assert.False(Directory.Exists(job.Output));
+    }
+
+    private static string NodeCsvModel(int dimension)
+    {
+        var model = JsonNode.Parse(SavedModel)!.AsObject();
+        model["dimension"] = dimension;
+        model["element"]!["1"]!["1"] = JsonNode.Parse("""{"E":10000,"G":4000,"A":1,"Iz":1,"Iy":1,"J":1}""");
+        model["fix_node"]!["1"] = JsonNode.Parse("""[{"n":"1","tx":1,"ty":1,"tz":1,"rx":1,"ry":1,"rz":1}]""");
+        model["load"] = JsonNode.Parse("""
+            {"1":{"symbol":"DL","fix_node":1,"element":1,
+                  "load_node":[{"row":1,"n":"2","tx":4.12345678901234,"ty":5,"tz":6,"rx":7,"ry":8,"rz":9}]},
+             "2":{"symbol":"DL","fix_node":1,"element":1,
+                  "load_node":[{"row":1,"n":"2","tx":-3,"ty":-5,"tz":2,"rx":-7,"ry":-9,"rz":1}]}}
+            """);
+        model["define"]!["2"] = JsonNode.Parse("""{"row":2,"C1":2}""");
+        model["combine"]!["2"] = JsonNode.Parse("""{"row":2,"C2":1}""");
+        model["pickup"] = JsonNode.Parse("""{"検証":{"row":1,"C1":1,"C2":2}}""");
+        return model.ToJsonString();
+    }
+
+    private static void AssertNodeCsv(Job job, JsonElement envelope, JsonElement result, int dimension, string quantity)
+    {
+        string filename = "pickup-" + quantity + ".csv";
+        byte[] bytes = File.ReadAllBytes(Path.Combine(job.Output, filename));
+        Assert.False(bytes.AsSpan().StartsWith(new byte[] { 0xef, 0xbb, 0xbf }));
+        string csv = new UTF8Encoding(false, true).GetString(bytes);
+        Assert.Contains("検証", csv);
+        var artifact = envelope.GetProperty("artifacts").EnumerateArray()
+            .Single(item => item.GetProperty("relativePath").GetString() == filename);
+        Assert.Equal("pickup-" + quantity, artifact.GetProperty("kind").GetString());
+        Assert.Equal("text/csv; charset=utf-8", artifact.GetProperty("mediaType").GetString());
+        Assert.Equal(bytes.Length, artifact.GetProperty("bytes").GetInt32());
+        Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(bytes)), artifact.GetProperty("sha256").GetString());
+        string[] components = quantity == "displacement" ? ["dx", "dy", "dz", "rx", "ry", "rz"] : ["fx", "fy", "fz", "mx", "my", "mz"];
+        string[] focus = dimension == 2 ? [components[0], components[1], components[5]] : components;
+        string[][] lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(line => line.Split(',')).ToArray();
+        string length = result.GetProperty("analysisResultSet").GetProperty("units").GetProperty("length").GetString()!;
+        string force = result.GetProperty("analysisResultSet").GetProperty("units").GetProperty("force").GetString()!;
+        string[] units = quantity == "displacement" ? [length, length, length, "rad", "rad", "rad"] :
+            [force, force, force, force + "*" + length, force + "*" + length, force + "*" + length];
+        string[] expectedHeader = ["pickup_id", "focus_component", "node_id", "max_combine_id", "min_combine_id",
+            .. new[] { "max", "min" }.SelectMany(prefix => components.Select((name, index) => $"{prefix}_{name} ({units[index]})"))];
+        Assert.Equal(expectedHeader, lines[0]);
+        var pickup = result.GetProperty("derived").GetProperty("pickups")[0];
+        var modes = pickup.GetProperty(quantity == "displacement" ? "displacements" : "reactions");
+        string[] topology = result.GetProperty("analysisResultSet").GetProperty("topology").GetProperty("nodes")
+            .EnumerateArray().Select(node => node.GetProperty("node_id").GetString()!).ToArray();
+        var expectedOrder = new List<string>();
+        foreach (string component in focus)
+        {
+            var nodes = modes.GetProperty(component + "_max").EnumerateArray().Select(row => row.GetProperty("entityId").GetString()).ToHashSet();
+            expectedOrder.AddRange(topology.Where(nodes.Contains).Select(node => component + "/" + node));
+        }
+        Assert.Equal(expectedOrder, lines.Skip(1).Select(line => line[1] + "/" + line[2]));
+        foreach (string[] cells in lines.Skip(1))
+        {
+            Assert.Equal(17, cells.Length);
+            Assert.Equal(pickup.GetProperty("id").GetString(), cells[0]);
+            foreach (var (extreme, sourceColumn, valueColumn) in new[] { ("max", 3, 5), ("min", 4, 11) })
+            {
+                var vector = modes.GetProperty(cells[1] + "_" + extreme).EnumerateArray()
+                    .Single(row => row.GetProperty("entityId").GetString() == cells[2]);
+                Assert.Equal(vector.GetProperty("sourceCaseId").GetString(), cells[sourceColumn]);
+                for (int index = 0; index < components.Length; index++)
+                    Assert.Equal(vector.GetProperty("components").GetProperty(components[index]).GetDouble(),
+                        double.Parse(cells[valueColumn + index], CultureInfo.InvariantCulture));
+            }
+        }
+        Assert.Contains(lines.Skip(1), cells => cells[3] != cells[4]);
+        if (quantity == "reaction")
+        {
+            // The shared 2D projection adds out-of-plane restraints at other nodes.
+            // Match the actual support-reaction subset, rather than the original input supports.
+            string[] reactionNodes = result.GetProperty("analysisResultSet").GetProperty("results")
+                .EnumerateArray().SelectMany(item => item.GetProperty("support_reactions").EnumerateArray())
+                .Select(row => row.GetProperty("node_id").GetString()!).Distinct().Order().ToArray();
+            Assert.Equal(reactionNodes, lines.Skip(1).Select(cells => cells[2]).Distinct().Order());
+        }
     }
 
     private static async Task<(int ExitCode, string Stdout, string Stderr)> Run(Job job, params string[] additional)

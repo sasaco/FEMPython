@@ -1,5 +1,6 @@
 ﻿using FarPoint.Win.Spread;
 using FrameWebforCS.providers;
+using FarPoint.Win.Spread.CellType;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -114,6 +115,14 @@ namespace FrameWebforCS.components.input
                 column[6].DataField = nameof(clsElement.InertiaZ);
                 column[7].DataField = nameof(clsElement.Name);
 
+                column[0].CellType = new PrintNumberCellType("E2");
+                column[1].CellType = new PrintNumberCellType("E2");
+                column[2].CellType = new PrintNumberCellType("E2");
+                column[3].CellType = new PrintNumberCellType("F4", useDefaultAt999: true);
+                column[4].CellType = new PrintNumberCellType("F6", useDefaultAt999: true);
+                column[5].CellType = new PrintNumberCellType("F6", useDefaultAt999: true);
+                column[6].CellType = new PrintNumberCellType("F6", useDefaultAt999: true);
+
                 column[0].Width = 80;
                 column[1].Width = 150;
                 column[2].Width = 80;
@@ -144,6 +153,12 @@ namespace FrameWebforCS.components.input
                 column[2].DataField = nameof(clsElement.Area);
                 column[3].DataField = nameof(clsElement.InertiaZ);
                 column[4].DataField = nameof(clsElement.Name);
+
+                column[0].CellType = new PrintNumberCellType("E2");
+                column[1].CellType = new PrintNumberCellType("E2");
+                column[2].CellType = new PrintNumberCellType("F4");
+                column[3].CellType = new PrintNumberCellType("F6");
+                column[4].CellType = new GeneralCellType();
 
                 column[0].Width = 80;
                 column[1].Width = 80;

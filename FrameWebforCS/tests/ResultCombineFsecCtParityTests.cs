@@ -9,11 +9,11 @@ namespace FrameWebforCS.Tests;
 public sealed class ResultCombineFsecCtParityTests
 {
     [Theory]
-    [InlineData(7.625, "7.63")]
-    [InlineData(-7.625, "-7.63")]
+    [InlineData(7.625, "7.62")]
+    [InlineData(-7.625, "-7.62")]
     [InlineData(1.005, "1.00")]
     [InlineData(-1.005, "-1.00")]
-    public void PickupFormattingMatchesJavascriptBinary64ToFixed(double value, string expected)
+    public void PickupFormattingMatchesPdfF2(double value, string expected)
     {
         Assert.Equal(expected, ResultPickupFsecAggregator.Format(value));
     }

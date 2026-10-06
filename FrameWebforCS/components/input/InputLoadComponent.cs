@@ -1,10 +1,12 @@
 ﻿using FarPoint.Win.Spread;
+using FarPoint.Win.Spread.CellType;
 using FrameWebforCS.providers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -13,6 +15,19 @@ namespace FrameWebforCS.components.input
 {
     public partial class InputLoadComponent : UserControl
     {
+        private sealed class LoadLengthCellType : GeneralCellType
+        {
+            public override string Format(object value)
+            {
+                if (value is string text && double.TryParse(text, NumberStyles.Float,
+                        CultureInfo.InvariantCulture, out double length))
+                    return length.ToString("F3", CultureInfo.CurrentCulture);
+                return base.Format(value);
+            }
+
+            public override object Parse(string text) => text;
+        }
+
         internal event Action<int, string>? GridSelectionChanged;
         internal event Action<string>? ActiveLoadDisplayModeChanged;
         internal string ActiveLoadDisplayMode =>
@@ -260,6 +275,10 @@ namespace FrameWebforCS.components.input
                 fpSpread1_Sheet2.ColumnCount = 13;
                 column[12].DataField = "rz";
             }
+            column[5].CellType = new LoadLengthCellType();
+            column[6].CellType = new LoadLengthCellType();
+            column[7].CellType = new PrintNumberCellType("F2");
+            column[8].CellType = new PrintNumberCellType("F2");
             fpSpread1_Sheet2.DataSource = _service.IntensityRows;
 
             // 見た目の制御

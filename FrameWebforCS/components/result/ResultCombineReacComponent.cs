@@ -1,7 +1,6 @@
 using FarPoint.Win.Spread;
 using FrameWebforCS.providers;
 using FrameWebforCS.calculation;
-using System.Globalization;
 
 namespace FrameWebforCS.components.result;
 
@@ -319,9 +318,7 @@ public partial class ResultCombineReacComponent : UserControl
             "comb_reac", _output.Cases[index].Id, mode);
     }
 
-    private static string Format(double value) =>
-        (Math.Floor(value * 100 + 0.5) / 100)
-            .ToString("F2", CultureInfo.InvariantCulture);
+    private static string Format(double value) => ResultPrintNumberFormat.Force(value);
 
     private void ClearDisplay()
     {

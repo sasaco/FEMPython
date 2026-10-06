@@ -179,7 +179,7 @@ namespace FrameWebforCS.components.result
                 var value = rows[row];
                 sheet.Cells[row, 0].Text = value.Member;
                 sheet.Cells[row, 1].Text = value.Node;
-                sheet.Cells[row, 2].Text = value.Station.ToString("F3", CultureInfo.InvariantCulture);
+                sheet.Cells[row, 2].Text = ResultPrintNumberFormat.Station(value.Station);
                 sheet.Cells[row, 3].Text = Format(value.Fx);
                 sheet.Cells[row, 4].Text = Format(value.Fy);
                 if (is3D)
@@ -197,8 +197,7 @@ namespace FrameWebforCS.components.result
         private static double JsRound(double value, double scale) =>
             Math.Floor(value * scale + 0.5) / scale;
 
-        private static string Format(double value) =>
-            JsRound(value, 100).ToString("F2", CultureInfo.InvariantCulture);
+        private static string Format(double value) => ResultPrintNumberFormat.Force(value);
 
         internal static void SetSheet1(SheetView _Sheet)
         {

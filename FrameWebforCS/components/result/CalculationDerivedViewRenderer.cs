@@ -1,6 +1,5 @@
 using FarPoint.Win.Spread;
 using FrameWebforCS.calculation;
-using System.Globalization;
 using System.Windows.Forms;
 
 namespace FrameWebforCS.components.result;
@@ -116,15 +115,15 @@ internal sealed class CalculationDerivedViewRenderer(
                 if (quantity == CalculationDerivedQuantity.SectionForce)
                 {
                     sheet.Cells[row, 1].Text = value.StationId ?? "";
-                    sheet.Cells[row, 2].Text = StationPosition(presentation, value).ToString("F3", CultureInfo.InvariantCulture);
+                    sheet.Cells[row, 2].Text = ResultPrintNumberFormat.Station(StationPosition(presentation, value));
                 }
                 for (int component = 0; component < keys.Length; component++)
                 {
                     double number = value.Components[keys[component]];
                     if (quantity == CalculationDerivedQuantity.Displacement && keys[component].StartsWith('d'))
                         number = presentation.DisplayLength(number);
-                    sheet.Cells[row, component + offset].Text = Format(number,
-                        quantity == CalculationDerivedQuantity.Displacement ? 4 : 2);
+                    sheet.Cells[row, component + offset].Text = quantity == CalculationDerivedQuantity.Displacement
+                        ? ResultPrintNumberFormat.Displacement(number) : ResultPrintNumberFormat.Force(number);
                 }
                 sheet.Cells[row, visibleColumns - 1].Text = stage == CalculationDerivedStage.Pickup ||
                     value.Provenance.Length == 0 ? value.SourceCaseId : value.Provenance;
@@ -213,8 +212,4 @@ internal sealed class CalculationDerivedViewRenderer(
         }
         sheet.Protect = true;
     }
-
-    private static string Format(double number, int places) =>
-        (Math.Floor(number * Math.Pow(10, places) + 0.5) / Math.Pow(10, places))
-            .ToString($"F{places}", CultureInfo.InvariantCulture);
 }

@@ -8,7 +8,8 @@ internal sealed class RunnerException(string code, string message, string catego
 }
 
 internal sealed record RunOptions(string Input, string OutputDirectory, bool GeneratePdf,
-    bool GeneratePik, IReadOnlyList<string> PdfSections)
+    bool GeneratePik, IReadOnlyList<string> PdfSections,
+    bool GeneratePickupDisplacementCsv = false, bool GeneratePickupReactionCsv = false)
 {
     internal static readonly string[] DefaultSections =
         ["input", "section_force", "pickup_section_force", "displacement", "pickup_displacement"];
@@ -18,7 +19,8 @@ internal sealed record RunOptions(string Input, string OutputDirectory, bool Gen
         if (args.Length == 0 || args[0] != "run" || args.Length % 2 != 1)
             throw new RunnerException("INVALID_ARGUMENT", "Expected run followed by named option/value pairs.");
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
-        string[] allowed = ["--input", "--output-dir", "--generate-pdf", "--generate-pik", "--pdf-sections"];
+        string[] allowed = ["--input", "--output-dir", "--generate-pdf", "--generate-pik", "--pdf-sections",
+            "--generate-pickup-displacement-csv", "--generate-pickup-reaction-csv"];
         for (int index = 1; index < args.Length; index += 2)
             if (!allowed.Contains(args[index]) || !values.TryAdd(args[index], args[index + 1]))
                 throw new RunnerException("INVALID_ARGUMENT", $"Unknown or repeated option: {args[index]}");
@@ -30,7 +32,7 @@ internal sealed record RunOptions(string Input, string OutputDirectory, bool Gen
                 throw new RunnerException("INVALID_ARGUMENT", $"{key} requires an absolute path.");
             return Path.GetFullPath(path);
         }
-        bool Flag(string key) => !values.TryGetValue(key, out string? value) ? true : value switch
+        bool Flag(string key, bool defaultValue = true) => !values.TryGetValue(key, out string? value) ? defaultValue : value switch
         {
             "true" => true, "false" => false,
             _ => throw new RunnerException("INVALID_ARGUMENT", $"{key} must be true or false."),
@@ -41,6 +43,7 @@ internal sealed record RunOptions(string Input, string OutputDirectory, bool Gen
             sections.Distinct(StringComparer.Ordinal).Count() != sections.Length)
             throw new RunnerException("INVALID_ARGUMENT", "PDF sections must be distinct supported section names.");
         return new(AbsolutePath("--input"), AbsolutePath("--output-dir"),
-            Flag("--generate-pdf"), Flag("--generate-pik"), sections);
+            Flag("--generate-pdf"), Flag("--generate-pik"), sections,
+            Flag("--generate-pickup-displacement-csv", false), Flag("--generate-pickup-reaction-csv", false));
     }
 }

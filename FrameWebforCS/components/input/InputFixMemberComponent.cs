@@ -389,7 +389,6 @@ namespace FrameWebforCS.components.input
 
                 column[0].Width = 50;
                 column[1].Width = 80;
-                column[1].CellType = new NumberCellType() { DecimalPlaces = 3};
                 for (var i = 2; i < column.Count; i++)
                 {
                     column[i].Width = 100;
@@ -420,6 +419,16 @@ namespace FrameWebforCS.components.input
                 {
                     column[i].Width = 100;
                 }
+            }
+
+            var numericColumns = fpSpread1_Sheet1.Columns;
+            numericColumns[1].CellType = new PrintNumberCellType("F3");
+            numericColumns[2].CellType = new PrintNumberCellType("F3");
+            numericColumns[3].CellType = new PrintNumberCellType("E2");
+            if (_input.dimension == 3)
+            {
+                numericColumns[4].CellType = new PrintNumberCellType("E2");
+                numericColumns[5].CellType = new PrintNumberCellType("F2");
             }
         }
 

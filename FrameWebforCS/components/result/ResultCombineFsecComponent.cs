@@ -280,7 +280,7 @@ public partial class ResultCombineFsecComponent : UserControl
             {
                 sheet.Cells[row, 0].Text = value.MemberDisplay;
                 sheet.Cells[row, 1].Text = value.NodeId;
-                sheet.Cells[row, 2].Text = value.Location.ToString("F3", CultureInfo.InvariantCulture);
+                sheet.Cells[row, 2].Text = ResultPrintNumberFormat.Station(value.Location);
                 sheet.Cells[row, 3].Text = Format(value.Fx);
                 sheet.Cells[row, 4].Text = Format(value.Fy);
                 if (is3D)

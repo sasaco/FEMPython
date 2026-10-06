@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 
@@ -149,8 +148,7 @@ namespace FrameWebforCS.components.result
         private static string Format(double? value)
         {
             double scaled = (value ?? 0) * 1000;
-            double rounded = Math.Floor(scaled * 10000 + 0.5) / 10000;
-            return rounded.ToString("F4", CultureInfo.InvariantCulture);
+            return ResultPrintNumberFormat.Displacement(scaled);
         }
 
         public static void SetSheet1(SheetView _Sheet)
