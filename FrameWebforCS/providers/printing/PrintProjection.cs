@@ -16,6 +16,7 @@ internal enum PrintOption
     PickupSectionForce = 9, ReservedScreen = 10, SectionDiagram = 11,
     CombinedSectionDiagram = 12, PickupSectionDiagram = 13,
     DisplacementDiagram = 14, LoadDiagram = 15, ReservedReactionDiagram = 16,
+    BridgeDefinitions = 17, BridgeLoads = 18, BridgeLoadDiagram = 19, BridgeAudit = 20,
 }
 
 internal enum PrintLayout { Single, SplitHorizontal, SplitVertical }
@@ -40,20 +41,26 @@ internal sealed record PrintSelection(
     IReadOnlyList<string>? ReactionComponents = null,
     IReadOnlyList<string>? SectionForceComponents = null,
     IReadOnlyList<string>? DiagramComponents = null,
-    IReadOnlyList<string>? LoadDiagramComponents = null);
+    IReadOnlyList<string>? LoadDiagramComponents = null,
+    IReadOnlyList<string>? InputCaseIds = null,
+    IReadOnlyList<string>? BridgeDiagramViews = null,
+    bool BridgeShowMesh = true,
+    bool BridgeShowLabels = true);
 
 internal sealed record PrintSectionForcePoint(int MemberId, float Location, float Value,
     bool IsMaximum);
 
 internal sealed record PrintDiagramRequest(
     int Order, PrintOption Option, string Mode, string CaseId, string Output, string Title,
-    IReadOnlyList<PrintSectionForcePoint>? DerivedSamples = null);
+    IReadOnlyList<PrintSectionForcePoint>? DerivedSamples = null,
+    string? View = null, bool ShowMesh = true, bool ShowLabels = true);
 
 internal sealed class PrintSnapshot
 {
     internal PrintSnapshot(PrintSelection selection, string inputJson, long documentRevision,
         long inputRevision, CalculationResultPresentation? result,
-        CalculationDerivedPresentation? derived, IReadOnlyList<PrintDiagramRequest> diagrams)
+        CalculationDerivedPresentation? derived, IReadOnlyList<PrintDiagramRequest> diagrams,
+        long? resultInputRevision = null)
     {
         Selection = selection;
         InputJson = inputJson;
@@ -62,6 +69,7 @@ internal sealed class PrintSnapshot
         Result = result;
         Derived = derived;
         DiagramRequests = diagrams;
+        ResultInputRevision = resultInputRevision;
     }
 
     internal PrintSelection Selection { get; }
@@ -71,6 +79,7 @@ internal sealed class PrintSnapshot
     internal CalculationResultPresentation? Result { get; }
     internal CalculationDerivedPresentation? Derived { get; }
     internal IReadOnlyList<PrintDiagramRequest> DiagramRequests { get; }
+    internal long? ResultInputRevision { get; }
 }
 
 internal sealed class PrintProjectionException(string message) : InvalidOperationException(message);
@@ -89,6 +98,8 @@ internal static class PrintProjection
         PrintOption.PickupSectionForce, PrintOption.SectionDiagram,
         PrintOption.CombinedSectionDiagram, PrintOption.PickupSectionDiagram,
         PrintOption.DisplacementDiagram, PrintOption.LoadDiagram,
+        PrintOption.BridgeDefinitions, PrintOption.BridgeLoads,
+        PrintOption.BridgeLoadDiagram, PrintOption.BridgeAudit,
     ];
 
     /// <summary>UI-thread metadata for enabling choices before preview generation.</summary>
@@ -108,6 +119,9 @@ internal static class PrintProjection
             (family switch { "disg" => item.Displacements, "reac" => item.Reactions,
                 _ => item.SectionForces }).Values.Any(rows => rows.Count > 0));
         bool hasLoad = FrameWebforCS.components.input.InputLoadService.Instance.getLoadJson().Count > 0;
+        var saved = JsonSerializer.SerializeToNode(InputDataService.Instance.GetSaveJson()) as JsonObject;
+        bool hasBridge = InputDataService.Instance.dimension == 3 &&
+            BridgePrintProjection.HasLoads(saved);
         return AllowedOptions.Select(option =>
         {
             bool available = option switch
@@ -125,6 +139,12 @@ internal static class PrintProjection
                 PrintOption.PickupSectionForce or PrintOption.PickupSectionDiagram =>
                     HasRows(pickup, "fsec"),
                 PrintOption.LoadDiagram => hasLoad,
+                PrintOption.BridgeDefinitions => InputDataService.Instance.dimension == 3 &&
+                    BridgePrintProjection.HasDefinitions(saved),
+                PrintOption.BridgeLoads or PrintOption.BridgeLoadDiagram => hasBridge,
+                PrintOption.BridgeAudit => InputDataService.Instance.dimension == 3 &&
+                    BridgePrintProjection.HasAudit(current) &&
+                    CalculationResultStore.Instance.CurrentInputRevision == InputDataService.Instance.CalculationInputRevision,
                 _ => false,
             };
             if (option == PrintOption.DisplacementDiagram &&
@@ -157,11 +177,14 @@ internal static class PrintProjection
             SectionForceComponents = selection.SectionForceComponents?.ToArray(),
             DiagramComponents = selection.DiagramComponents?.ToArray(),
             LoadDiagramComponents = selection.LoadDiagramComponents?.ToArray(),
+            InputCaseIds = selection.InputCaseIds?.ToArray(),
+            BridgeDiagramViews = selection.BridgeDiagramViews?.ToArray(),
         };
         IReadOnlyList<PrintDiagramRequest> diagrams = MakeDiagramRequests(frozenSelection,
             current, JsonNode.Parse(detached)!.AsObject());
         return new(frozenSelection, detached, input.DocumentRevision,
-            input.CalculationInputRevision, current, current?.Derived, diagrams);
+            input.CalculationInputRevision, current, current?.Derived, diagrams,
+            CalculationResultStore.Instance.CurrentInputRevision);
     }
 
     /// <summary>Must be checked on the UI thread before publishing the generated preview.</summary>
@@ -186,6 +209,7 @@ internal static class PrintProjection
         JsonObject saved = JsonNode.Parse(snapshot.InputJson)?.AsObject() ??
             throw new PrintProjectionException("The print snapshot has no input root.");
         PrintSelection choice = snapshot.Selection;
+        BridgePrintProjection.ValidateDimension(saved, choice);
         var root = new JsonObject
         {
             ["dimension"] = saved["dimension"]?.DeepClone() ?? JsonValue.Create(3),
@@ -202,6 +226,7 @@ internal static class PrintProjection
 
         if (choice.Options.Any(IsTableResult) || choice.Options.Any(IsResultDiagram))
             AddResults(root, snapshot);
+        BridgePrintProjection.AddTables(root, saved, snapshot);
         AddVectorDiagrams(root, snapshot);
         AddCapturedDiagrams(root, snapshot.DiagramRequests, images);
         if (stillCurrent is not null && !stillCurrent())
@@ -231,7 +256,7 @@ internal static class PrintProjection
             selection.NodeIds, selection.MemberIds, selection.Components,
             selection.DisplacementComponents, selection.ReactionComponents,
             selection.SectionForceComponents, selection.DiagramComponents,
-            selection.LoadDiagramComponents })
+            selection.LoadDiagramComponents, selection.InputCaseIds, selection.BridgeDiagramViews })
             if (ids is { Count: > 10_000 } || ids?.Any(id => string.IsNullOrWhiteSpace(id)) == true)
                 throw new PrintProjectionException("A print filter is invalid or too large.");
         if (selection.Components is not null && selection.Components.Any(component =>
@@ -250,6 +275,7 @@ internal static class PrintProjection
         ValidateComponents(selection.DiagramComponents,
             ["fx", "fy", "fz", "mx", "my", "mz", "disg"], "diagram", false);
         ValidateComponents(selection.LoadDiagramComponents, ["axis", "load"], "load diagram", false);
+        ValidateComponents(selection.BridgeDiagramViews, ["plan", "iso"], "bridge view", false);
     }
 
     private static void ValidateComponents(IReadOnlyList<string>? selected,
@@ -651,10 +677,11 @@ internal static class PrintProjection
         }
     }
 
-    private static IReadOnlyList<PrintDiagramRequest> MakeDiagramRequests(PrintSelection selection,
+    internal static IReadOnlyList<PrintDiagramRequest> MakeDiagramRequests(PrintSelection selection,
         CalculationResultPresentation? result, JsonObject saved)
     {
         var requests = new List<PrintDiagramRequest>();
+        BridgePrintProjection.ValidateDimension(saved, selection);
         if ((saved["dimension"]?.GetValue<int>() ?? 3) == 2)
         {
             if (selection.Options.Contains(PrintOption.DisplacementDiagram))
@@ -704,6 +731,7 @@ internal static class PrintProjection
                         option is PrintOption.CombinedSectionDiagram or PrintOption.PickupSectionDiagram
                             ? MakeDerivedSamples(result!, option, id, output) : null));
         }
+        BridgePrintProjection.AddDiagrams(requests, saved, selection);
         if (requests.Count > 120) throw new PrintProjectionException("Too many selected diagrams.");
         return requests.AsReadOnly();
     }

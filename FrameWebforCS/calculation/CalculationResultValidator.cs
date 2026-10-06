@@ -261,6 +261,8 @@ public static class AnalysisResultSetValidator
             case StaticAnalysisResult staticResult:
                 Require(resultCase.AnalysisType == AnalysisType.Static, "Static result is assigned to a non-static case.");
                 ValidateWarnings(staticResult.Diagnostics.Warnings);
+                if (staticResult.Diagnostics.SpatialLoads is { } spatialLoads)
+                    ValidateSpatialAudit(spatialLoads, topology);
                 break;
             case LoadStepAnalysisResult loadStep:
                 Require(resultCase.AnalysisType == AnalysisType.MaterialNonlinear,
@@ -309,6 +311,43 @@ public static class AnalysisResultSetValidator
             default:
                 throw new AnalysisContractException("Unsupported result variant.");
         }
+    }
+
+    private static void ValidateSpatialAudit(SpatialLoadAudit audit, AnalysisTopology topology)
+    {
+        ValidateSpatialTotals(audit.Resultant, audit.Moment, audit.NodalResultant,
+            audit.NodalMoment, audit.ForceError, audit.MomentError);
+        Require(audit.NodeLoads.Count > 0 && audit.Loads.Count > 0,
+            "Spatial audit requires loads and node_loads.");
+        HashSet<string> topologyNodes = IdSet(topology.Nodes.Select(node => node.NodeId));
+        EnsureUniqueIds(audit.NodeLoads.Select(node => node.NodeId), "spatial node_loads");
+        foreach (SpatialNodalLoad node in audit.NodeLoads)
+        {
+            Require(topologyNodes.Contains(node.NodeId), "Spatial audit references an unknown topology node.");
+            ValidateVector(node.Force, "spatial node force");
+        }
+        HashSet<int> loadIds = [];
+        foreach (SpatialLoadItemAudit item in audit.Loads)
+        {
+            Require(loadIds.Add(item.LoadId), "Duplicate spatial load_id.");
+            Require(item.Feature is "spatial_line" or "spatial_area", "Invalid spatial audit feature.");
+            ValidateFiniteValues(item.IntegratedLength, item.ClippedArea);
+            Require(item.IntegratedLength >= 0 && item.ClippedArea >= 0,
+                "Spatial audit length and area cannot be negative.");
+            ValidateSpatialTotals(item.Resultant, item.Moment, item.NodalResultant,
+                item.NodalMoment, item.ForceError, item.MomentError);
+        }
+    }
+
+    private static void ValidateSpatialTotals(Vector3Value resultant, Vector3Value moment,
+        Vector3Value nodalResultant, Vector3Value nodalMoment, double forceError, double momentError)
+    {
+        ValidateVector(resultant, "spatial resultant");
+        ValidateVector(moment, "spatial moment");
+        ValidateVector(nodalResultant, "spatial nodal_resultant");
+        ValidateVector(nodalMoment, "spatial nodal_moment");
+        ValidateFiniteValues(forceError, momentError);
+        Require(forceError >= 0 && momentError >= 0, "Spatial audit errors cannot be negative.");
     }
 
     private static void ValidateForceResult(

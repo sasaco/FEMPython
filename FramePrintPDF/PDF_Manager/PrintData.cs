@@ -89,6 +89,7 @@ namespace PDF_Manager
             this.printDatas.Add(InputCombine.KEY, new InputCombine(data));
             // pickup
             this.printDatas.Add(InputPickup.KEY, new InputPickup(data));
+            this.printDatas.Add(BridgeLoadTables.KEY, new BridgeLoadTables(data));
 
             // disg
             this.printDatas.Add(ResultDisg.KEY, new ResultDisg(data));

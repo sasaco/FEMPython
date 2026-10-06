@@ -49,12 +49,13 @@ namespace FrameWebforCS
 
         private void OnDimensionChanged(int _)
         {
-            if (_input.dimension == 2 && _input.CurrentComponent is InputPanelComponent &&
+            if (_input.dimension == 2 && _input.CurrentComponent is InputPanelComponent or InputBridgeLoadComponent &&
                 floatForm is { IsDisposed: false })
             {
                 floatForm.Close();
                 _input.CurrentComponent = null;
             }
+            if (_input.dimension == 2 && ActiveModeKey == "bridge_load") NotifyInputMode("node");
 
             foreach (var component in myComponents.ToArray())
             {
@@ -68,6 +69,7 @@ namespace FrameWebforCS
                     case InputFixMemberComponent fixMember: fixMember.RefreshDimension(); break;
                     case InputJointComponent joint: joint.RefreshDimension(); break;
                     case InputLoadComponent load: load.RefreshDimension(); break;
+                    case InputBridgeLoadComponent bridge: bridge.RefreshDimension(); break;
                 }
             }
 
@@ -80,6 +82,7 @@ namespace FrameWebforCS
         {
             if (_target == null)
                 return;
+            if (_input.dimension != 3 && _target == typeof(InputBridgeLoadComponent)) return;
 
             var target = GetTargetComponent(_target);
             if (target == null)

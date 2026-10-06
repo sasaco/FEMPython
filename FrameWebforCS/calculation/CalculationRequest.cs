@@ -27,12 +27,31 @@ internal static class CalculationRequestBuilder
 
         int dimension = (int?)saved["dimension"] ?? 3;
         if (dimension is not (2 or 3)) throw new CalculationRequestException("dimension must be 2 or 3.");
+        IReadOnlyDictionary<string, JsonObject> bridgeCases;
+        try
+        {
+            using var document = JsonDocument.Parse(savedJson);
+            bridgeCases = InputBridgeLoadService.ProjectCases(document.RootElement);
+        }
+        catch (JsonException error) { throw new CalculationRequestException(error.Message); }
         var result = new JsonObject { ["ver"] = "2.5.12" };
         foreach (string section in new[] { "node", "member", "element", "rigid", "load" })
             result[section] = saved[section]?.DeepClone() ?? (section == "rigid" ? new JsonArray() : new JsonObject());
         foreach (string section in OptionalSections)
             if (saved[section] is JsonObject value && value.Count > 0)
                 result[section] = value.DeepClone();
+        var savedLoads = Object(result, "load");
+        foreach (var (caseId, spatial) in bridgeCases)
+        {
+            if (!savedLoads.ContainsKey(caseId)) savedLoads[caseId] = new JsonObject();
+            var load = savedLoads[caseId] as JsonObject ?? throw new CalculationRequestException($"load.{caseId} must be an object.");
+            if (saved.ContainsKey("bridge_loads") && (load.ContainsKey("spatial_loads") || load.ContainsKey("load_inf")))
+                throw new CalculationRequestException($"load.{caseId}: 橋面荷重が重複して定義されています。");
+            load.Remove("spatial_loads"); load.Remove("load_inf"); load.Remove("inf_panel");
+            if (String(load["symbol"]) == "LL")
+                throw new CalculationRequestException($"load.{caseId}: 橋面荷重は固定位置の荷重ケースに指定してください。");
+            load["spatial_loads"] = spatial.DeepClone();
+        }
         NormalizeConstraintRows(result, "fix_node", "n", LoadComponents);
 
         var nodes = Object(result, "node");
@@ -143,7 +162,16 @@ internal static class CalculationRequestBuilder
             if (source["load_member"] is JsonArray rawMemberRows)
                 foreach (var row in NormalizeRelativeMemberRows(rawMemberRows, members, nodes, caseId))
                     memberRows.AddRange(ExpandMemberRow(row, members, caseId));
-            if (nodeRows.Count == 0 && memberRows.Count == 0) continue;
+            var spatial = source["spatial_loads"] as JsonObject;
+            bool hasSpatial = spatial?["loads"] is JsonArray spatialLoads && spatialLoads.Count > 0;
+            if (hasSpatial && dimension != 3)
+                throw new CalculationRequestException($"load.{caseId}: 橋面荷重は3D解析専用です。");
+            if (hasSpatial)
+                foreach (var panel in (JsonArray)spatial!["panels"]!)
+                    foreach (var node in (JsonArray)panel!["nodes"]!)
+                        if (!nodes.ContainsKey(Id(node)))
+                            throw new CalculationRequestException($"load.{caseId}: 橋面の節点 {Id(node)} は構造に接続されていません。");
+            if (nodeRows.Count == 0 && memberRows.Count == 0 && !hasSpatial) continue;
             int elementId = (int)Number(selector["element"])!.Value;
             if (!elements.ContainsKey(elementId.ToString(CultureInfo.InvariantCulture)))
                 throw new CalculationRequestException($"load.{caseId}: element {elementId} does not exist.");
@@ -173,7 +201,8 @@ internal static class CalculationRequestBuilder
                 if (nodeRows.Count > 0 && index == 0) item["load_node"] = nodeRows.DeepClone();
                 var positioned = PositionMemberRows(memberRows, positions[index], members, nodes);
                 if (positioned.Count > 0) item["load_member"] = positioned;
-                if (item.ContainsKey("load_node") || item.ContainsKey("load_member"))
+                if (hasSpatial) item["spatial_loads"] = spatial!.DeepClone();
+                if (item.ContainsKey("load_node") || item.ContainsKey("load_member") || hasSpatial)
                 {
                     if (projected.ContainsKey(id)) throw new CalculationRequestException($"Duplicate projected load case {id}.");
                     projected[id] = item;

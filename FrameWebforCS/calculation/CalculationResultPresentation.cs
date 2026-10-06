@@ -94,6 +94,7 @@ internal sealed class CalculationResultStore
         components.input.InputCombineService.Instance.RowsChanged += OnDerivedInputChanged;
     }
     internal CalculationResultPresentation? Current { get; private set; }
+    internal long? CurrentInputRevision { get; private set; }
     internal event EventHandler? Changed;
 
     internal void Commit(CalculationResultPresentation presentation)
@@ -101,6 +102,7 @@ internal sealed class CalculationResultStore
         ArgumentNullException.ThrowIfNull(presentation);
         _derivedGeneration++;
         Current = presentation;
+        CurrentInputRevision = providers.InputDataService.Instance.CalculationInputRevision;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -108,6 +110,7 @@ internal sealed class CalculationResultStore
     {
         _derivedGeneration++;
         Current = null;
+        CurrentInputRevision = null;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 

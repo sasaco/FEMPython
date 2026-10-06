@@ -168,12 +168,13 @@ namespace FrameWebforCS.components.input
         internal event Action<string>? SelectedCaseChanged;
         internal event Action<string, int>? IntensityRowMoved;
         public string SelectedCaseId => _selectedCaseId;
-        public IEnumerable<string> CaseIds => _load.Keys;
+        public IEnumerable<string> CaseIds => _load.Keys.Union(InputBridgeLoadService.Instance.CaseIds);
         internal int MaximumEffectiveCaseId
         {
             get
             {
-                int maximum = 0;
+                int maximum = InputBridgeLoadService.Instance.CaseIds.Select(id => int.Parse(id,
+                    CultureInfo.InvariantCulture)).DefaultIfEmpty(0).Max();
                 foreach (var (id, load) in _load)
                 {
                     if (IsEffectiveCase(load) &&
@@ -355,8 +356,13 @@ namespace FrameWebforCS.components.input
                 if (HasData(item.Value))
                     load.Add(item.Key, WriteLoad(item.Value));
             }
+            foreach (string id in InputBridgeLoadService.Instance.CaseIds)
+                load.TryAdd(id, new Dictionary<string, object>());
             return load;
         }
+
+        internal void NotifyBridgeCasesChanged() =>
+            DocumentReplacementNotifications.Publish(CasesChanged, this, EventArgs.Empty);
 
         internal IReadOnlyDictionary<string, LoadCaseDisplay> GetDisplaySnapshot()
         {

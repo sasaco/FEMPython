@@ -101,6 +101,10 @@ def from_legacy(data, mesh, shell_ids):
     """Only the case already chosen by legacy_beam.select_case is consumed."""
     case = next(iter(data.get('load', {}).values()), {})
     records = sequence(case.get('load_inf', ()), 'load_inf')
+    if 'spatial_loads' in case:
+        if 'spatial_loads' in data or records:
+            raise ValueError('Cannot specify both case spatial_loads and root spatial_loads or load_inf')
+        return _from_legacy_case_json(case['spatial_loads'], mesh, shell_ids)
     if 'spatial_loads' in data:
         if records:
             raise ValueError('Cannot specify both load_inf and spatial_loads')
@@ -158,3 +162,23 @@ def from_legacy(data, mesh, shell_ids):
     result = SpatialLoadDefinitions((panel,), tuple(paths.values()), loads)
     validate_references(result, mesh)
     return result
+
+
+def _from_legacy_case_json(value, mesh, shell_ids):
+    """Case-local normalized input uses the desktop's public shell namespace."""
+    data = _record(value, ('panels', 'paths', 'loads'), (), 'spatial_loads')
+    panels = []
+    for panel in sequence(data.get('panels', ()), 'panels'):
+        if not isinstance(panel, Mapping):
+            raise ValueError('spatial panel: expected an object')
+        mapped = dict(panel)
+        if 'elements' in mapped:
+            elements = []
+            for value in sequence(mapped['elements'], 'panel elements'):
+                public_id = integer_id(value, 'legacy shell')
+                if public_id not in shell_ids:
+                    raise ValueError(f"panel {panel.get('id')}: missing legacy shell {public_id}")
+                elements.append(shell_ids[public_id])
+            mapped['elements'] = elements
+        panels.append(mapped)
+    return from_json({**data, 'panels': panels}, mesh)

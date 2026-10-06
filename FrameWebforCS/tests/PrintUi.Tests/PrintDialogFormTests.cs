@@ -9,6 +9,26 @@ namespace PrintUi.Tests;
 public sealed class PrintDialogFormTests
 {
     [Fact]
+    public void BridgeChoicesAndInputCaseControlsAreHiddenInTwoDimensions()
+    {
+        RunSta(() =>
+        {
+            var input = FrameWebforCS.providers.InputDataService.Instance;
+            int original = input.dimension;
+            try
+            {
+                input.dimension = 2;
+                using var dialog = new PrintDialogForm(_ => []);
+                var options = (CheckedListBox)Assert.Single(dialog.Controls.Find("printOptions", true));
+                Assert.DoesNotContain(options.Items.Cast<object>(), item => item.ToString()!.Contains("橋面"));
+                Assert.Empty(dialog.Controls.Find("bridgeInputCases", true));
+                Assert.Empty(dialog.Controls.Find("bridgeDiagramViews", true));
+            }
+            finally { input.dimension = original; }
+        });
+    }
+
+    [Fact]
     public void DefaultSelectionUsesLegacyInputOptionAndPageSettings()
     {
         RunSta(() =>
@@ -32,7 +52,8 @@ public sealed class PrintDialogFormTests
         {
             using var dialog = new PrintDialogForm(_ => []);
             var options = (CheckedListBox)Assert.Single(dialog.Controls.Find("printOptions", true));
-            Assert.Equal(15, options.Items.Count);
+            Assert.Equal(FrameWebforCS.providers.InputDataService.Instance.dimension == 3 ? 19 : 15,
+                options.Items.Count);
             Assert.DoesNotContain(options.Items.Cast<object>(), item =>
                 item.ToString()!.Contains("画面印刷") || item.ToString()!.Contains("反力図"));
             var displacement = (CheckedListBox)Assert.Single(

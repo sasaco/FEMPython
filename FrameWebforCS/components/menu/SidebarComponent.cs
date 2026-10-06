@@ -24,6 +24,7 @@ namespace FrameWebforCS.components.menu
         // 2Dと3Dで表示が変わるNode
         private readonly TreeNode _panelNode;
         private readonly TreeNode _solidNode;
+        private readonly TreeNode _bridgeNode;
         private readonly TreeNode _inputNode;
 
         internal class targetComponent
@@ -96,6 +97,11 @@ namespace FrameWebforCS.components.menu
                 title = "荷重",
                 root = "input",
                 option = 0  
+            }},
+            { "bridge_load", new targetComponent(){
+                Component = typeof(InputBridgeLoadComponent),
+                title = "橋面荷重",
+                root = "input"
             }},
             { "Combine", new targetComponent(){ 
                 Component = typeof(InputCombineComponent),
@@ -188,6 +194,7 @@ namespace FrameWebforCS.components.menu
             setTreeView(targetComponents.Clone());
             _panelNode = treeView1.Nodes.Find("shell", true).Single();
             _solidNode = treeView1.Nodes.Find("solid", true).Single();
+            _bridgeNode = treeView1.Nodes.Find("bridge_load", true).Single();
             _inputNode = treeView1.Nodes.Find("input", true).Single();
             treeView1.ExpandAll();
             _input.DimensionChanged += OnDimensionChanged;
@@ -210,11 +217,17 @@ namespace FrameWebforCS.components.menu
             {
                 if (_panelNode.Parent == null) _inputNode.Nodes.Insert(3, _panelNode);
                 if (_solidNode.Parent == null) _inputNode.Nodes.Insert(4, _solidNode);
+                if (_bridgeNode.Parent == null)
+                {
+                    int loadIndex = _inputNode.Nodes.IndexOfKey("load");
+                    _inputNode.Nodes.Insert(loadIndex + 1, _bridgeNode);
+                }
             }
             else
             {
                 if (_panelNode.Parent != null) _panelNode.Remove();
                 if (_solidNode.Parent != null) _solidNode.Remove();
+                if (_bridgeNode.Parent != null) _bridgeNode.Remove();
             }
         }
 

@@ -5,7 +5,7 @@ using THREE;
 namespace FrameWebforCS.three;
 
 internal readonly record struct ViewportTextLabel(string Text, Vector3 Position,
-    System.Drawing.Color? ForeColor = null);
+    System.Drawing.Color? ForeColor = null, bool AvoidOverlap = false);
 
 /// <summary>Draws the legacy CSS2D-style labels over the swapped GL frame.</summary>
 internal static class ViewportTextLabels
@@ -39,6 +39,7 @@ internal static class ViewportTextLabels
         graphics.SetClip(new System.Drawing.Rectangle(Point.Empty, viewportSize));
         int candidates = 0;
         int drawn = 0;
+        var occupied = new List<System.Drawing.Rectangle>();
         foreach (var label in labels)
         {
             if (candidates++ >= MaximumCandidateLabels || drawn >= MaximumVisibleLabels) break;
@@ -46,10 +47,25 @@ internal static class ViewportTextLabels
                 !TryProject(label.Position, camera, viewportSize, out var center)) continue;
             var size = TextRenderer.MeasureText(graphics, label.Text, SystemFonts.DefaultFont,
                 Size.Empty, TextFormatFlags.NoPadding);
+            var bounds = new System.Drawing.Rectangle(center.X - size.Width / 2, center.Y - size.Height,
+                size.Width, size.Height);
+            if (label.AvoidOverlap)
+            {
+                bounds.X = Math.Clamp(bounds.X, 2, Math.Max(2, viewportSize.Width - bounds.Width - 2));
+                int originalY = bounds.Y;
+                for (int attempt = 0; attempt < 12 && occupied.Any(rect => rect.IntersectsWith(bounds)); attempt++)
+                    bounds.Y = originalY + (attempt % 2 == 0 ? -1 : 1) * (attempt / 2 + 1) * (size.Height + 3);
+                bounds.Y = Math.Clamp(bounds.Y, 2, Math.Max(2, viewportSize.Height - bounds.Height - 2));
+                if (bounds.Y != originalY)
+                    graphics.DrawLine(Pens.LightGray, center,
+                        new Point(Math.Clamp(center.X, bounds.Left, bounds.Right), bounds.Bottom));
+                graphics.FillRectangle(Brushes.White, bounds);
+            }
             TextRenderer.DrawText(graphics, label.Text, SystemFonts.DefaultFont,
-                new Point(center.X - size.Width / 2, center.Y - size.Height),
+                bounds.Location,
                 label.ForeColor ?? System.Drawing.Color.Black,
                 TextFormatFlags.NoPadding);
+            occupied.Add(bounds);
             drawn++;
         }
     }

@@ -443,6 +443,14 @@ public class PrintInput
                     }
                 }
 
+                var bridgeTables = (BridgeLoadTables)data.printDatas[BridgeLoadTables.KEY];
+                if (bridgeTables.HasData)
+                {
+                    bridgeTables.printPDF(mc, data, ref indexPage);
+                    hasPreviousData = true;
+                    prevIndexPage = indexPage;
+                }
+
                 // 計算結果データ
                 // 変位量
                 if (data.keyCal.Any(x => x.Contains(ResultDisg.KEY + "Name")))
@@ -638,4 +646,3 @@ public class PrintInput
     }
 
 }
-

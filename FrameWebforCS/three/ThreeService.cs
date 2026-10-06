@@ -29,6 +29,11 @@ internal sealed class ThreeService : IDisposable
     private readonly ThreePanelsService _panels;
     private readonly ThreeConstraintsService _constraints;
     private readonly ThreeLoadsService _loads;
+    private readonly ThreeBridgeLoadsService _bridge;
+    private readonly InputBridgeLoadService _inputBridge;
+    private string? _pendingBridgeView;
+    private bool _bridgeDisplayPending;
+    private long _bridgeInputRevision = -1;
     private readonly ThreeResultsService _results;
     private readonly object _pendingLock = new();
     private readonly HashSet<int> _pendingIds = new();
@@ -51,7 +56,7 @@ internal sealed class ThreeService : IDisposable
 
     [Flags]
     private enum PendingEntity { None = 0, Members = 1, Panels = 2, Constraints = 4, Loads = 8,
-        Results = 16, All = Members | Panels | Constraints | Loads | Results }
+        Results = 16, Bridge = 32, All = Members | Panels | Constraints | Loads | Results | Bridge }
 
     internal ThreeService(SceneService scene)
     {
@@ -68,6 +73,8 @@ internal sealed class ThreeService : IDisposable
         _panels = new ThreePanelsService(scene.scene);
         _constraints = new ThreeConstraintsService(scene.scene);
         _loads = new ThreeLoadsService(scene.scene);
+        _bridge = new ThreeBridgeLoadsService(scene.scene);
+        _inputBridge = InputBridgeLoadService.Instance;
         _results = new ThreeResultsService(scene.scene);
         _pendingMode = _routing.ActiveModeKey;
         ApplyMode(_routing.ActiveModeKey);
@@ -81,6 +88,10 @@ internal sealed class ThreeService : IDisposable
         InputNoticePointsService.Instance.Changed += OnConstraintEdited;
         _inputLoads.LoadsEdited += OnLoadsEdited;
         _inputLoads.SelectedCaseChanged += OnCaseChanged;
+        _inputBridge.Changed += OnBridgeEdited;
+        _inputBridge.DisplayChanged += OnBridgeDisplayChanged;
+        _inputBridge.SelectionChanged += OnBridgeSelected;
+        _inputBridge.ViewRequested += OnBridgeViewRequested;
         ResultDisgService.Instance.Changed += OnResultEdited;
         ResultReacService.Instance.Changed += OnResultEdited;
         ResultFsecService.Instance.Changed += OnResultEdited;
@@ -100,6 +111,7 @@ internal sealed class ThreeService : IDisposable
     internal int? SelectedPanelId => _panels.SelectedPanelId;
     internal int ConstraintCount(string kind) => _constraints.Count(kind);
     internal int LoadGlyphCount => _loads.GlyphCount;
+    internal int BridgeLoadCount => _bridge.VisibleLoadCount;
     internal int DisplacementCount => _results.DisplacementCount;
     internal int ReactionCount => _results.ReactionCount;
     internal int SectionForceCount => _results.SectionForceCount;
@@ -112,7 +124,16 @@ internal sealed class ThreeService : IDisposable
         float DisplacementScale, float ReactionScale, float SectionForceScale,
         int? NodeId, int? MemberId, int? ElementId, int? PanelId,
         ConstraintSelection? Constraint, (int Row, string Column)? LoadSelection,
-        string? SelectedKind, ThreeResultsService.PrintDerivedState DerivedState);
+        string? SelectedKind, ThreeResultsService.PrintDerivedState DerivedState,
+        string? BridgeCase, BridgeSelection? BridgeSelection, bool BridgeMesh, bool BridgeLabels,
+        bool BridgeEquivalent, BridgeCameraState? CameraState);
+
+    internal sealed record BridgeCameraState(Vector3 Position, Quaternion Quaternion, Vector3 Up,
+        Vector3? Target, float Near, float Far);
+
+    private BridgeCameraState? CaptureBridgeCamera() => _scene.CurrentCamera is { } camera
+        ? new(camera.Position.Clone(), (Quaternion)camera.Quaternion.Clone(), camera.Up.Clone(),
+            _scene.controls?.Target.Clone(), camera.Near, camera.Far) : null;
 
     internal PrintState CapturePrintState()
     {
@@ -123,7 +144,8 @@ internal sealed class ThreeService : IDisposable
             _results.SectionForceScale, _nodes.SelectedNodeId,
             _members.SelectedMemberId, _members.SelectedElementId,
             _panels.SelectedPanelId, _constraints.Selected, _loads.Selection, SelectedKind,
-            _results.CapturePrintDerivedState());
+            _results.CapturePrintDerivedState(), _bridge.CaseId, _bridge.Selection,
+            _bridge.ShowMesh, _bridge.ShowLabels, _bridge.Equivalent, CaptureBridgeCamera());
     }
 
     internal void ApplyPrintView(PrintDiagramRequest request)
@@ -134,6 +156,18 @@ internal sealed class ThreeService : IDisposable
         string output = request.Output;
         if (string.IsNullOrWhiteSpace(mode) || string.IsNullOrWhiteSpace(caseId))
             throw new ArgumentException("A print diagram needs a mode and case.");
+        if (mode == "print_bridge_load")
+        {
+            if (_inputData.dimension != 3) throw new InvalidOperationException("橋面荷重図は3D専用です。");
+            ApplyMode("bridge_load");
+            _bridge.SetCase(caseId, GetBridgeAudit(caseId));
+            _bridge.Select(null);
+            _bridge.SetView(true, request.ShowMesh, request.ShowLabels, false);
+            if (_bridge.VisibleLoadCount == 0 || _bridge.Errors.Count > 0)
+                throw new InvalidOperationException(_bridge.Errors.FirstOrDefault() ?? $"橋面荷重ケース {caseId} の図がありません。");
+            ApplyBridgeView(request.View ?? "plan");
+            return;
+        }
         string route = mode switch
         {
             "PrintLoad" or "print_load" => "load",
@@ -199,6 +233,17 @@ internal sealed class ThreeService : IDisposable
         _members.HighlightRelated(_constraints.SelectedRelatedMemberId);
         if (state.LoadSelection is { } load)
             _loads.Select(load.Row, load.Column);
+        _bridge.SetCase(state.BridgeCase, GetBridgeAudit(state.BridgeCase));
+        _bridge.Select(state.BridgeSelection);
+        _bridge.SetView(state.VisibleMode == "bridge_load" || state.VisibleMode == "load",
+            state.BridgeMesh, state.BridgeLabels, state.BridgeEquivalent);
+        if (state.CameraState is { } pose && _scene.CurrentCamera is { } camera)
+        {
+            camera.Position.Copy(pose.Position); camera.Quaternion.Copy(pose.Quaternion);
+            camera.Up.Copy(pose.Up); camera.Near = pose.Near; camera.Far = pose.Far;
+            camera.UpdateProjectionMatrix(); camera.UpdateMatrixWorld(true);
+            if (_scene.controls != null && pose.Target != null) _scene.controls.Target.Copy(pose.Target);
+        }
         SelectedKind = state.SelectedKind;
     }
 
@@ -207,7 +252,7 @@ internal sealed class ThreeService : IDisposable
         // Other scene owners can contribute their labels here without creating
         // another overlay or another renderer.
         return _results.GetVisibleLabels().Concat(_loads.GetVisibleLabels())
-            .Concat(_members.GetVisibleLabels());
+            .Concat(_members.GetVisibleLabels()).Concat(_bridge.GetVisibleLabels());
     }
 
     internal IReadOnlyList<PanelGradientLegendEntry> GetPanelGradientLegend() =>
@@ -269,7 +314,50 @@ internal sealed class ThreeService : IDisposable
 
     private void OnPanelEdited(int id)
     {
-        lock (_pendingLock) _pendingEntities |= PendingEntity.Panels | PendingEntity.Results;
+        lock (_pendingLock) _pendingEntities |= PendingEntity.Panels | PendingEntity.Results | PendingEntity.Bridge;
+    }
+
+    private void OnBridgeEdited()
+    { lock (_pendingLock) _pendingEntities |= PendingEntity.Bridge; }
+    private void OnBridgeDisplayChanged()
+    { lock (_pendingLock) _bridgeDisplayPending = true; }
+    private void OnBridgeSelected(BridgeSelection? _)
+    { lock (_pendingLock) { _pendingEntities |= PendingEntity.Bridge; _bridgeDisplayPending = true; } }
+    private void OnBridgeViewRequested(string view)
+    { lock (_pendingLock) _pendingBridgeView = view; }
+
+    private SpatialLoadAudit? GetBridgeAudit(string? caseId)
+    {
+        var store = CalculationResultStore.Instance;
+        if (_inputData.dimension != 3 || store.CurrentInputRevision != _inputData.CalculationInputRevision)
+            return null;
+        return store.Current?.ResultSet.Results.OfType<StaticAnalysisResult>()
+            .FirstOrDefault(r => r.CaseId == caseId)?.Diagnostics.SpatialLoads;
+    }
+
+    private void ApplyBridgeView(string view)
+    {
+        if (_inputData.dimension != 3 || _scene.CurrentCamera is not { } camera) return;
+        if (_inputBridge.GetSnapshot().Panels.Count == 0 || _bridge.Errors.Count > 0) return;
+        var frame = _bridge.ViewFrame();
+        var direction = view == "iso"
+            ? frame.Normal.Clone().Add(frame.Up.Clone().MultiplyScalar(-.65f))
+                .Add(new Vector3().CrossVectors(frame.Up, frame.Normal).MultiplyScalar(.8f)).Normalize()
+            : frame.Normal;
+        float fov = camera.Fov > 0 ? camera.Fov : 70;
+        var right = new Vector3().CrossVectors(frame.Up, direction).Normalize();
+        var up = new Vector3().CrossVectors(direction, right).Normalize();
+        float tangent = MathF.Tan(fov * MathF.PI / 360);
+        float distance = frame.Points.Max(point => {
+            var relative = point.Clone().Sub(frame.Center);
+            return Math.Max(Math.Abs(relative.Dot(right)) / Math.Max(.1f, camera.Aspect),
+                Math.Abs(relative.Dot(up))) / tangent + relative.Dot(direction);
+        }) * 1.22f + frame.Radius * .2f;
+        camera.Up.Copy(up);
+        camera.Position.Copy(frame.Center).AddScaledVector(direction, distance);
+        camera.Near = Math.Max(.0001f, distance * .001f); camera.Far = Math.Max(1000, distance * 10);
+        camera.LookAt(frame.Center); camera.UpdateProjectionMatrix(); camera.UpdateMatrixWorld(true);
+        _scene.controls?.Target.Copy(frame.Center);
     }
 
     private void OnConstraintEdited(object? sender, EventArgs e)
@@ -336,7 +424,7 @@ internal sealed class ThreeService : IDisposable
         {
             if (_disposed) return;
             _pendingEntities |= PendingEntity.Constraints | PendingEntity.Loads |
-                PendingEntity.Results;
+                PendingEntity.Results | PendingEntity.Bridge;
             _pendingMode = _routing.ActiveModeKey;
             _pendingResultPage = null;
             _pendingDerivedFsec.Clear();
@@ -478,6 +566,8 @@ internal sealed class ThreeService : IDisposable
         (string Kind, int? Id, string? Axis)? selection;
         (string Kind, float Value)? scale;
         long revision;
+        string? bridgeView;
+        bool bridgeDisplay;
         lock (_pendingLock)
         {
             if (_disposed)
@@ -502,12 +592,19 @@ internal sealed class ThreeService : IDisposable
             scale = _pendingScale;
             _pendingScale = null;
             revision = _pendingRevision;
+            bridgeView = _pendingBridgeView; _pendingBridgeView = null;
+            bridgeDisplay = _bridgeDisplayPending; _bridgeDisplayPending = false;
         }
 
         if (revision != _inputData.DocumentRevision)
         {
             replace = true;
             entities = PendingEntity.All;
+        }
+        if (_bridgeInputRevision != _inputData.CalculationInputRevision)
+        {
+            _bridgeInputRevision = _inputData.CalculationInputRevision;
+            entities |= PendingEntity.Bridge;
         }
 
         // Load glyphs bake their display scale into geometry, so apply it before rebuilding.
@@ -554,6 +651,13 @@ internal sealed class ThreeService : IDisposable
                     displayMembers.ToDictionary(item => item.Key,
                         item => new LoadMemberFrame(item.Value.Ni, item.Value.Nj, item.Value.Cg)),
                     _nodes.BaseScale, _inputData.dimension);
+            if ((entities & (PendingEntity.Bridge | PendingEntity.Panels | PendingEntity.Results | PendingEntity.Loads)) != 0)
+            {
+                _bridge.Select(_inputBridge.Selection);
+                _bridge.ReplaceAll(_inputBridge.GetSnapshot(), displayNodes, _inputPanels.GetDisplayPanels(),
+                    _inputData.dimension, caseId ?? _inputLoads.SelectedCaseId,
+                    GetBridgeAudit(caseId ?? _inputLoads.SelectedCaseId));
+            }
             if (replace || ids.Length > 0 || entities.HasFlag(PendingEntity.Members) ||
                 entities.HasFlag(PendingEntity.Panels))
                 _results.SetTopology(displayNodes, displayMembers,
@@ -576,8 +680,15 @@ internal sealed class ThreeService : IDisposable
             _loads.SetCase(caseId);
         else if (replace)
             _loads.SetCase(_inputLoads.SelectedCaseId);
+        if (caseId != null || replace)
+            _bridge.SetCase(caseId ?? _inputLoads.SelectedCaseId, GetBridgeAudit(caseId ?? _inputLoads.SelectedCaseId));
         if (mode != null)
             ApplyMode(mode);
+        if (bridgeDisplay)
+            _bridge.SetView(_visibleMode is "bridge_load" or "load", _inputBridge.ShowMesh,
+                _inputBridge.ShowLabels, _visibleMode == "bridge_load" && _inputBridge.ShowEquivalentLoads);
+        if (bridgeView != null)
+            ApplyBridgeView(bridgeView);
         if (ResultsMatchDimension)
             foreach (var derived in derivedFsec)
                 _results.SetDerivedFsec(derived.Mode, derived.Cases, derived.SourceRevision);
@@ -621,6 +732,8 @@ internal sealed class ThreeService : IDisposable
     private void ApplyMode(string? mode)
     {
         _visibleMode = mode;
+        foreach (var helper in _scene.scene.Children.Where(item => item is GridHelper or AxesHelper))
+            helper.Visible = mode != "bridge_load";
         // JS ChangeMode uses plural "nodes"/"members" and "panel"; sidebar keys
         // are singular and "shell". This map also clears hidden selection on route exit.
         _nodes.SetNodeMode(mode == "node");
@@ -634,6 +747,8 @@ internal sealed class ThreeService : IDisposable
         _constraints.SetMode(displayMode);
         _members.HighlightRelated(null);
         _loads.SetVisible(mode == "load");
+        _bridge.SetView(mode is "bridge_load" or "load", _inputBridge.ShowMesh,
+            _inputBridge.ShowLabels, mode == "bridge_load" && _inputBridge.ShowEquivalentLoads);
         string resultMode = ResultsMatchDimension ? ResultMode(mode) : "";
         string? defaultCase = resultMode switch
         {
@@ -720,6 +835,16 @@ internal sealed class ThreeService : IDisposable
         int? id = null;
         switch (mode)
         {
+            case "bridge_load":
+                var bridgeHit = _bridge.Pick(raycaster, _inputBridge.Selection?.Kind);
+                if (bridgeHit != null)
+                {
+                    _bridge.Select(bridgeHit);
+                    _inputBridge.SelectEntity(bridgeHit);
+                    SelectedKind = "bridge_" + bridgeHit.Kind;
+                    id = bridgeHit.Id;
+                }
+                break;
             case "node":
                 id = _nodes.Pick(raycaster);
                 if (id.HasValue) { _nodes.Select(id); SelectedKind = "node"; }
@@ -845,6 +970,10 @@ internal sealed class ThreeService : IDisposable
         InputNoticePointsService.Instance.Changed -= OnConstraintEdited;
         _inputLoads.LoadsEdited -= OnLoadsEdited;
         _inputLoads.SelectedCaseChanged -= OnCaseChanged;
+        _inputBridge.Changed -= OnBridgeEdited;
+        _inputBridge.DisplayChanged -= OnBridgeDisplayChanged;
+        _inputBridge.SelectionChanged -= OnBridgeSelected;
+        _inputBridge.ViewRequested -= OnBridgeViewRequested;
         ResultDisgService.Instance.Changed -= OnResultEdited;
         ResultReacService.Instance.Changed -= OnResultEdited;
         ResultFsecService.Instance.Changed -= OnResultEdited;
@@ -858,6 +987,7 @@ internal sealed class ThreeService : IDisposable
             UnbindGridComponent(component);
         _results.Dispose();
         _loads.Dispose();
+        _bridge.Dispose();
         _constraints.Dispose();
         _panels.Dispose();
         _members.Dispose();

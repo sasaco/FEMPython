@@ -71,8 +71,10 @@ public sealed class PrintLibraryTests
         Assert.Single(parsed.Pages);
     }
 
-    [Fact]
-    public void DirectGeneratorEmbedsLegacyThreeDimensionalDiagram()
+    [Theory]
+    [InlineData("print_load")]
+    [InlineData("print_bridge_load")]
+    public void DirectGeneratorEmbedsLegacyThreeDimensionalDiagram(string mode)
     {
         var png = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "PrintLibraryLogo.png"));
         var job = Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -84,7 +86,7 @@ public sealed class PrintLibraryTests
             {
                 new
                 {
-                    mode = "print_load",
+                    mode,
                     title1 = "荷重図",
                     result = new[]
                     {

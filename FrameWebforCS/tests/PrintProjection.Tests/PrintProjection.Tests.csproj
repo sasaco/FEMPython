@@ -16,5 +16,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\FrameWebforCS.csproj" />
     <Compile Include="..\PrintProjectionTests.cs" Link="PrintProjectionTests.cs" />
+    <Compile Include="..\BridgeLoadPrintTests.cs" Link="BridgeLoadPrintTests.cs" />
   </ItemGroup>
 </Project>

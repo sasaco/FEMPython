@@ -184,7 +184,29 @@ interface ForceBearingResult {
 
 export interface StaticAnalysisResult extends ForceBearingResult {
   readonly state: { readonly kind: "static"; readonly index: 0 };
-  readonly diagnostics: { readonly warnings: readonly string[] };
+  readonly diagnostics: { readonly warnings: readonly string[]; readonly spatial_loads?: SpatialLoadAudit };
+}
+
+interface SpatialAuditTotals {
+  readonly resultant: Vector3;
+  readonly moment: Vector3;
+  readonly nodal_resultant: Vector3;
+  readonly nodal_moment: Vector3;
+  readonly force_error: number;
+  readonly moment_error: number;
+}
+
+export interface SpatialLoadItemAudit extends SpatialAuditTotals {
+  readonly load_id: number;
+  readonly panel_id: number;
+  readonly feature: "spatial_line" | "spatial_area";
+  readonly integrated_length: number;
+  readonly clipped_area: number;
+}
+
+export interface SpatialLoadAudit extends SpatialAuditTotals {
+  readonly node_loads: readonly { readonly node_id: string; readonly force: Vector3 }[];
+  readonly loads: readonly SpatialLoadItemAudit[];
 }
 
 export interface NonlinearStepAnalysisResult extends ForceBearingResult {
@@ -377,6 +399,48 @@ function validateNamedNumbers(value: unknown, keys: readonly string[], path: str
 
 function validateWarnings(value: unknown, path: string): void {
   validateStringArray(value, path);
+}
+
+function validateSpatialAudit(value: unknown, topology: ResultTopology, path: string): void {
+  const audit = objectAt(value, path);
+  const vectors = ["resultant", "moment", "nodal_resultant", "nodal_moment"];
+  const errors = ["force_error", "moment_error"];
+  const totals = [...vectors, ...errors];
+  const nonnegative = (value: unknown, label: string) => {
+    if (finiteAt(value, label) < 0) fail(label, "non-negative value required");
+  };
+  const validateTotals = (item: JsonObject, label: string) => {
+    vectors.forEach(key => validateVector3(item[key], `${label}.${key}`));
+    errors.forEach(key => nonnegative(item[key], `${label}.${key}`));
+  };
+  exactKeys(audit, [...totals, "node_loads", "loads"], path);
+  validateTotals(audit, path);
+  const nodes = new Set(topology.nodes.map(node => node.node_id));
+  const ids = arrayAt(audit.node_loads, `${path}.node_loads`).map((value, index) => {
+    const label = `${path}.node_loads[${index}]`;
+    const item = objectAt(value, label);
+    exactKeys(item, ["node_id", "force"], label);
+    const id = stringAt(item.node_id, `${label}.node_id`, true);
+    if (!nodes.has(id)) fail(`${label}.node_id`, "unknown topology node");
+    validateVector3(item.force, `${label}.force`);
+    return id;
+  });
+  assertUnique(ids, `${path}.node_loads`);
+  const loads = arrayAt(audit.loads, `${path}.loads`);
+  if (!ids.length || !loads.length) fail(path, "spatial audit requires loads and node_loads");
+  const loadIds = loads.map((value, index) => {
+    const label = `${path}.loads[${index}]`;
+    const item = objectAt(value, label);
+    exactKeys(item, [...totals, "load_id", "panel_id", "feature", "integrated_length", "clipped_area"], label);
+    ["load_id", "panel_id"].forEach(key => {
+      if (!Number.isInteger(finiteAt(item[key], `${label}.${key}`))) fail(`${label}.${key}`, "integer required");
+    });
+    literalAt(item.feature, ["spatial_line", "spatial_area"], `${label}.feature`);
+    ["integrated_length", "clipped_area"].forEach(key => nonnegative(item[key], `${label}.${key}`));
+    validateTotals(item, label);
+    return String(item.load_id);
+  });
+  assertUnique(loadIds, `${path}.loads`);
 }
 
 function assertOrderedCoverage(actual: readonly string[], expected: readonly string[], path: string): void {
@@ -681,8 +745,9 @@ function validateResults(value: unknown, cases: readonly ResultCase[], topology:
       if (stateIndex !== 0) fail(`${path}.state.index`, "static index must be zero");
       validateForceFields(result, resultCase, topology, path);
       const diagnostics = objectAt(result.diagnostics, `${path}.diagnostics`);
-      exactKeys(diagnostics, ["warnings"], `${path}.diagnostics`);
+      exactKeys(diagnostics, "spatial_loads" in diagnostics ? ["warnings", "spatial_loads"] : ["warnings"], `${path}.diagnostics`);
       validateWarnings(diagnostics.warnings, `${path}.diagnostics.warnings`);
+      if ("spatial_loads" in diagnostics) validateSpatialAudit(diagnostics.spatial_loads, topology, `${path}.diagnostics.spatial_loads`);
     } else if (kind === "load_step") {
       if (resultCase.analysis_type !== "material_nonlinear") fail(path, "load_step state does not match case analysis_type");
       exactKeys(result, ["case_id", "state", "node_displacements", "support_reactions", "member_section_forces", "shell_results", "solid_results", "diagnostics"], path);

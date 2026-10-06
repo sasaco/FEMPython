@@ -4,6 +4,7 @@ import nonlinearSteps from "../../../../FrameWeb/tests/data/contracts/positive/n
 import multipleNonlinear from "../../../../FrameWeb/tests/data/contracts/positive/multiple-nonlinear.json";
 import modal from "../../../../FrameWeb/tests/data/contracts/positive/modal.json";
 import emptyTopology from "../../../../FrameWeb/tests/data/contracts/positive/empty-topology.json";
+import bridgeStatic from "../../../../FrameWeb/tests/data/contracts/positive/bridge-static.json";
 import duplicateIds from "../../../../FrameWeb/tests/data/contracts/negative/duplicate-ids.json";
 import duplicateCoordinates from "../../../../FrameWeb/tests/data/contracts/negative/duplicate-coordinates.json";
 import forbiddenFields from "../../../../FrameWeb/tests/data/contracts/negative/forbidden-fields.json";
@@ -29,7 +30,37 @@ describe("AnalysisResultSet v1", () => {
     ["multiple nonlinear", multipleNonlinear],
     ["modal", modal],
     ["empty topology", emptyTopology],
+    ["bridge static with assembly audit", bridgeStatic],
   ];
+
+  it("validates spatial audit node references, values, and exact fields", () => {
+    const mutations = [
+      (a: any) => a.node_loads[0].node_id = "unknown",
+      (a: any) => a.node_loads.push(a.node_loads[0]),
+      (a: any) => a.loads.push(a.loads[0]),
+      (a: any) => a.resultant.z = Infinity,
+      (a: any) => a.force_error = -1,
+      (a: any) => a.loads[0].feature = "unknown",
+      (a: any) => a.loads[0].clipped_area = -1,
+      (a: any) => a.extra = 1,
+    ];
+    mutations.forEach(mutate => {
+      const fixture = JSON.parse(JSON.stringify(bridgeStatic));
+      mutate(fixture.results[0].diagnostics.spatial_loads);
+      expect(() => validateAndIndexAnalysisResultSet(fixture)).toThrowError(AnalysisResultSetValidationError);
+    });
+  });
+
+  it("rejects null or nonstatic spatial audits", () => {
+    const fixture = JSON.parse(JSON.stringify(bridgeStatic));
+    fixture.results[0].diagnostics.spatial_loads = null;
+    expect(() => validateAndIndexAnalysisResultSet(fixture)).toThrowError(AnalysisResultSetValidationError);
+    [modal, nonlinearSteps].forEach(source => {
+      const value = JSON.parse(JSON.stringify(source));
+      value.results[0].diagnostics.spatial_loads = bridgeStatic.results[0].diagnostics.spatial_loads;
+      expect(() => validateAndIndexAnalysisResultSet(value)).toThrowError(AnalysisResultSetValidationError);
+    });
+  });
 
   positiveFixtures.forEach(([name, fixture]) => {
     it(`accepts shared positive fixture: ${name}`, () => {

@@ -33,6 +33,10 @@ internal sealed class PrintDialogForm : Form
         (PrintOption.PickupSectionDiagram, "PICKUP 断面力図"),
         (PrintOption.DisplacementDiagram, "3D 変位図"),
         (PrintOption.LoadDiagram, "荷重図"),
+        (PrintOption.BridgeDefinitions, "橋面定義・載荷ライン"),
+        (PrintOption.BridgeLoads, "橋面荷重"),
+        (PrintOption.BridgeLoadDiagram, "橋面荷重図"),
+        (PrintOption.BridgeAudit, "橋面荷重の分配確認（解析結果）"),
     ];
 
     private static readonly string[] DisplacementChoices = ExpandModes(
@@ -46,6 +50,10 @@ internal sealed class PrintDialogForm : Form
     private readonly CheckedListBox _options = new() { Name = "printOptions", Dock = DockStyle.Fill, CheckOnClick = true };
     private readonly HashSet<int> _unavailableOptions = [];
     private readonly CheckedListBox _cases = new() { Dock = DockStyle.Fill, CheckOnClick = true };
+    private readonly CheckedListBox _inputCases = new() { Name = "bridgeInputCases", Dock = DockStyle.Fill, CheckOnClick = true };
+    private readonly CheckedListBox _bridgeViews = new() { Name = "bridgeDiagramViews", Dock = DockStyle.Fill, CheckOnClick = true };
+    private readonly CheckBox _bridgeMesh = new() { Text = "荷重分配メッシュ", Checked = true, AutoSize = true };
+    private readonly CheckBox _bridgeLabels = new() { Text = "番号・強度ラベル", Checked = true, AutoSize = true };
     private readonly CheckedListBox _derived = new() { Dock = DockStyle.Fill, CheckOnClick = true };
     private readonly CheckedListBox _displacementComponents = new() { Name = "displacementComponents", Dock = DockStyle.Fill, CheckOnClick = true };
     private readonly CheckedListBox _reactionComponents = new() { Name = "reactionComponents", Dock = DockStyle.Fill, CheckOnClick = true };
@@ -129,6 +137,14 @@ internal sealed class PrintDialogForm : Form
         };
         AddRow(settings, selectAll, 32);
         AddSection(settings, "計算ケース (未選択時は全件)", _cases, 115);
+        if (InputDataService.Instance.dimension == 3)
+        {
+            AddSection(settings, "橋面の入力ケース (未選択時は全件・解析不要)", _inputCases, 105);
+            AddSection(settings, "橋面荷重図の表示方向", _bridgeViews, 55);
+            var bridgeDisplay = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false };
+            bridgeDisplay.Controls.AddRange([_bridgeMesh, _bridgeLabels]);
+            AddRow(settings, bridgeDisplay, 30);
+        }
         AddSection(settings, "COMBINE / PICKUP ケース (未選択時は全件)", _derived, 100);
         AddSection(settings, "変位成分・最大/最小 (未選択時は全成分)", _displacementComponents, 105);
         AddSection(settings, "反力成分・最大/最小 (未選択時は全成分)", _reactionComponents, 105);
@@ -183,6 +199,8 @@ internal sealed class PrintDialogForm : Form
         var availability = PrintProjection.GetAvailability().ToDictionary(item => item.Option);
         foreach (var (option, label) in Choices)
         {
+            if (BridgePrintProjection.IsBridgeOption(option) && InputDataService.Instance.dimension != 3)
+                continue;
             bool unavailable = !availability[option].IsAvailable;
             int index = _options.Items.Add(new ChoiceItem<PrintOption>(option,
                 unavailable ? label + " (" + (option switch
@@ -190,11 +208,22 @@ internal sealed class PrintDialogForm : Form
                     PrintOption.DisplacementDiagram when InputDataService.Instance.dimension != 3
                         => "3D のみ",
                     PrintOption.LoadDiagram => "荷重ケースなし",
+                    PrintOption.BridgeDefinitions => "橋面定義なし",
+                    PrintOption.BridgeLoads or PrintOption.BridgeLoadDiagram => "橋面荷重なし",
                     _ => "該当する計算結果なし",
                 }) + ")" : label));
             if (option == PrintOption.Input) _options.SetItemChecked(index, true);
             if (unavailable) _unavailableOptions.Add(index);
         }
+        if (JsonSerializer.SerializeToNode(InputDataService.Instance.GetSaveJson()) is JsonObject saved &&
+            saved["bridge_loads"]?["cases"] is JsonObject bridgeCases)
+            foreach (var entry in bridgeCases.Where(entry => entry.Value is JsonArray { Count: > 0 }))
+            {
+                string name = saved["load"]?[entry.Key]?["name"]?.ToString() ?? "";
+                _inputCases.Items.Add(new ChoiceItem<string>(entry.Key, $"{entry.Key} {name}".Trim()));
+            }
+        _bridgeViews.Items.Add(new ChoiceItem<string>("plan", "平面図"), true);
+        _bridgeViews.Items.Add(new ChoiceItem<string>("iso", "鳥瞰図"));
         if (presentation is not null)
         {
             foreach (var page in presentation.Pages)
@@ -231,6 +260,9 @@ internal sealed class PrintDialogForm : Form
             SectionForceComponents: CheckedComponents(_sectionComponents),
             DiagramComponents: CheckedComponents(_diagramComponents),
             LoadDiagramComponents: CheckedComponents(_loadDiagramComponents),
+            InputCaseIds: CheckedValues(_inputCases),
+            BridgeDiagramViews: CheckedValues(_bridgeViews),
+            BridgeShowMesh: _bridgeMesh.Checked, BridgeShowLabels: _bridgeLabels.Checked,
             Layout: (PrintLayout)_layout.SelectedItem!,
             Orientation: (PrintOrientation)_orientation.SelectedItem!,
             Paper: (PrintPaper)_paper.SelectedItem!, ScaleX: scaleX, ScaleY: scaleY,

@@ -317,12 +317,51 @@ public sealed record ModeResultState(
 
 public sealed class WarningDiagnostics
 {
-    public WarningDiagnostics(IEnumerable<string> warnings)
+    public WarningDiagnostics(IEnumerable<string> warnings, SpatialLoadAudit? spatialLoads = null)
     {
         Warnings = Frozen.List(warnings, nameof(warnings));
+        SpatialLoads = spatialLoads;
     }
 
     public IReadOnlyList<string> Warnings { get; }
+
+    public SpatialLoadAudit? SpatialLoads { get; }
+}
+
+public sealed record SpatialNodalLoad(string NodeId, Vector3Value Force);
+
+public sealed record SpatialLoadItemAudit(
+    int LoadId, int PanelId, string Feature,
+    Vector3Value Resultant, Vector3Value Moment,
+    Vector3Value NodalResultant, Vector3Value NodalMoment,
+    double ForceError, double MomentError, double IntegratedLength, double ClippedArea);
+
+public sealed class SpatialLoadAudit
+{
+    public SpatialLoadAudit(
+        Vector3Value resultant, Vector3Value moment,
+        Vector3Value nodalResultant, Vector3Value nodalMoment,
+        double forceError, double momentError,
+        IEnumerable<SpatialNodalLoad> nodeLoads, IEnumerable<SpatialLoadItemAudit> loads)
+    {
+        Resultant = resultant;
+        Moment = moment;
+        NodalResultant = nodalResultant;
+        NodalMoment = nodalMoment;
+        ForceError = forceError;
+        MomentError = momentError;
+        NodeLoads = Frozen.List(nodeLoads, nameof(nodeLoads));
+        Loads = Frozen.List(loads, nameof(loads));
+    }
+
+    public Vector3Value Resultant { get; }
+    public Vector3Value Moment { get; }
+    public Vector3Value NodalResultant { get; }
+    public Vector3Value NodalMoment { get; }
+    public double ForceError { get; }
+    public double MomentError { get; }
+    public IReadOnlyList<SpatialNodalLoad> NodeLoads { get; }
+    public IReadOnlyList<SpatialLoadItemAudit> Loads { get; }
 }
 
 public sealed record IterationDiagnostic(

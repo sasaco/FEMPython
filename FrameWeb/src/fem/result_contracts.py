@@ -381,7 +381,12 @@ def _validate_static_result(value: Mapping[str, Any], path: str, case: dict[str,
     if case["analysis_type"] != "static":
         _fail(path, "static result does not match owning case analysis_type")
     _validate_physical_arrays(result, path, case, topology)
-    _warnings(result["diagnostics"], f"{path}.diagnostics")
+    diagnostics = result['diagnostics']
+    fields = {'warnings', 'spatial_loads'} if isinstance(diagnostics, Mapping) and 'spatial_loads' in diagnostics else {'warnings'}
+    _object(diagnostics, f'{path}.diagnostics', fields)
+    _string_array(diagnostics['warnings'], f'{path}.diagnostics.warnings')
+    if 'spatial_loads' in diagnostics:
+        _spatial_audit(diagnostics['spatial_loads'], f'{path}.diagnostics.spatial_loads', topology['node_ids'])
     return cast(dict[str, Any], result)
 
 
@@ -546,6 +551,47 @@ def _node_references(value: Any, path: str, node_ids: set[str], count: int) -> N
 def _warnings(value: Any, path: str) -> None:
     diagnostics = _object(value, path, {"warnings"})
     _string_array(diagnostics["warnings"], f"{path}.warnings")
+
+
+def _spatial_audit(value: Any, path: str, topology_nodes: Sequence[str]) -> None:
+    vectors = {'resultant', 'moment', 'nodal_resultant', 'nodal_moment'}
+    scalars = {'force_error', 'moment_error'}
+    totals = vectors | scalars
+    audit = _object(value, path, totals | {'node_loads', 'loads'})
+
+    def validate_totals(item, item_path):
+        for field in vectors:
+            _vector3(item[field], f'{item_path}.{field}')
+        for field in scalars:
+            _finite(item[field], f'{item_path}.{field}', minimum=0)
+
+    validate_totals(audit, path)
+    topology_node_ids = set(topology_nodes)
+    node_ids = []
+    for index, value in enumerate(_array(audit['node_loads'], f'{path}.node_loads')):
+        item_path = f'{path}.node_loads[{index}]'
+        item = _object(value, item_path, {'node_id', 'force'})
+        node_id = _id(item['node_id'], f'{item_path}.node_id')
+        if node_id not in topology_node_ids:
+            _fail(f'{item_path}.node_id', 'references an unknown topology node')
+        node_ids.append(node_id)
+        _vector3(item['force'], f'{item_path}.force')
+    _unique(node_ids, f'{path}.node_loads', 'node_id')
+    loads = _array(audit['loads'], f'{path}.loads')
+    if not loads or not node_ids:
+        _fail(path, 'spatial audit requires loads and node_loads')
+    load_ids = []
+    for index, value in enumerate(loads):
+        item_path = f'{path}.loads[{index}]'
+        item = _object(value, item_path, totals | {'load_id', 'panel_id', 'feature', 'integrated_length', 'clipped_area'})
+        load_ids.append(_integer(item['load_id'], f'{item_path}.load_id'))
+        _integer(item['panel_id'], f'{item_path}.panel_id')
+        if item['feature'] not in ('spatial_line', 'spatial_area'):
+            _fail(f'{item_path}.feature', 'must be spatial_line or spatial_area')
+        for field in ('integrated_length', 'clipped_area'):
+            _finite(item[field], f'{item_path}.{field}', minimum=0)
+        validate_totals(item, item_path)
+    _unique(load_ids, f'{path}.loads', 'load_id')
 
 
 def _string_array(value: Any, path: str) -> None:

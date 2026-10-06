@@ -43,6 +43,11 @@ namespace FrameWebforCS.providers
             }
             InputNoticePointsService.Instance.Changed += (_, _) => CalculationInputRevision++;
             InputLoadService.Instance.LoadsEdited += () => CalculationInputRevision++;
+            InputBridgeLoadService.Instance.Changed += () =>
+            {
+                CalculationInputRevision++;
+                InputLoadService.Instance.NotifyBridgeCasesChanged();
+            };
             InputCombineService.Instance.RowsChanged += (_, _) => CalculationInputRevision++;
             for (int type = 1; type <= InputElementsService.TypeCount; type++)
                 InputElementsService.Instance.GetRows(type).ListChanged += (_, _) =>
@@ -137,6 +142,7 @@ namespace FrameWebforCS.providers
                 ["fix_member"] = InputFixMemberService.Instance.getFixMemberJson(),
                 ["notice_points"] = InputNoticePointsService.Instance.getNoticePointsJson(),
                 ["load"] = InputLoadService.Instance.getLoadJson(),
+                ["bridge_loads"] = InputBridgeLoadService.Instance.GetSaveJson(),
             };
             return JsonSerializer.Serialize(snapshot);
         }
@@ -244,6 +250,7 @@ namespace FrameWebforCS.providers
             InputFixMemberService.ValidateAgainstGeometry(preparedFixMembers, preparedMembers, preparedNodes);
             var preparedJoints = InputJointService.ParseJointJson(rootElement);
             var preparedLoads = InputLoadService.ParseLoadData(rootElement);
+            var preparedBridge = InputBridgeLoadService.Parse(rootElement);
             var preparedNoticePoints = InputNoticePointsService.ParseNoticePointsJson(rootElement);
             var preparedCombine = InputCombineService.ParseCombineJson(rootElement);
             bool hasResult = rootElement.TryGetProperty("result", out var resultElement);
@@ -318,6 +325,7 @@ namespace FrameWebforCS.providers
                 InputFixMemberService.Instance.ApplyFixMember(preparedFixMembers);
                 InputJointService.Instance.ApplyJoint(preparedJoints);
                 InputLoadService.Instance.ApplyLoads(preparedLoads);
+                InputBridgeLoadService.Instance.Apply(preparedBridge);
                 InputNoticePointsService.Instance.ApplyNoticePoints(preparedNoticePoints);
                 InputCombineService.Instance.ApplyCombine(preparedCombine.Combine,
                     preparedCombine.Define, preparedCombine.Pickup);
@@ -385,6 +393,7 @@ namespace FrameWebforCS.providers
                 ["fix_member"] = InputFixMemberService.Instance.getFixMemberJson(),
                 ["joint"] = InputJointService.Instance.getJointJson(),
                 ["load"] = InputLoadService.Instance.getLoadJson(),
+                ["bridge_loads"] = InputBridgeLoadService.Instance.GetSaveJson(),
                 ["notice_points"] = InputNoticePointsService.Instance.getNoticePointsJson(),
                 ["define"] = InputCombineService.Instance.getDefineJson(),
                 ["combine"] = InputCombineService.Instance.getCombineJson(),

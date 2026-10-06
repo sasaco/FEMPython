@@ -150,7 +150,34 @@
     "strain3d": {"type": "object", "additionalProperties": false, "required": ["ex", "ey", "ez", "gxy", "gyz", "gzx"], "properties": {"ex": {"$ref": "#/$defs/number"}, "ey": {"$ref": "#/$defs/number"}, "ez": {"$ref": "#/$defs/number"}, "gxy": {"$ref": "#/$defs/number"}, "gyz": {"$ref": "#/$defs/number"}, "gzx": {"$ref": "#/$defs/number"}}},
     "solidResultLocation": {"type": "object", "additionalProperties": false, "required": ["location_id", "stress", "strain"], "properties": {"location_id": {"$ref": "#/$defs/id"}, "stress": {"$ref": "#/$defs/stress3d"}, "strain": {"$ref": "#/$defs/strain3d"}}},
     "solidResult": {"type": "object", "additionalProperties": false, "required": ["element_id", "locations"], "properties": {"element_id": {"$ref": "#/$defs/id"}, "locations": {"type": "array", "items": {"$ref": "#/$defs/solidResultLocation"}}}},
-    "warningsDiagnostics": {"type": "object", "additionalProperties": false, "required": ["warnings"], "properties": {"warnings": {"type": "array", "items": {"type": "string"}}}},
+    "spatialNodalLoad": {
+      "type": "object", "additionalProperties": false, "required": ["node_id", "force"],
+      "properties": {"node_id": {"$ref": "#/$defs/id"}, "force": {"$ref": "#/$defs/vector3"}}
+    },
+    "spatialLoadItemAudit": {
+      "type": "object", "additionalProperties": false,
+      "required": ["load_id", "panel_id", "feature", "resultant", "moment", "nodal_resultant", "nodal_moment", "force_error", "moment_error", "integrated_length", "clipped_area"],
+      "properties": {
+        "load_id": {"type": "integer"}, "panel_id": {"type": "integer"},
+        "feature": {"enum": ["spatial_line", "spatial_area"]},
+        "resultant": {"$ref": "#/$defs/vector3"}, "moment": {"$ref": "#/$defs/vector3"},
+        "nodal_resultant": {"$ref": "#/$defs/vector3"}, "nodal_moment": {"$ref": "#/$defs/vector3"},
+        "force_error": {"$ref": "#/$defs/number", "minimum": 0}, "moment_error": {"$ref": "#/$defs/number", "minimum": 0},
+        "integrated_length": {"$ref": "#/$defs/number", "minimum": 0}, "clipped_area": {"$ref": "#/$defs/number", "minimum": 0}
+      }
+    },
+    "spatialLoadAudit": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resultant", "moment", "nodal_resultant", "nodal_moment", "force_error", "moment_error", "node_loads", "loads"],
+      "properties": {
+        "resultant": {"$ref": "#/$defs/vector3"}, "moment": {"$ref": "#/$defs/vector3"},
+        "nodal_resultant": {"$ref": "#/$defs/vector3"}, "nodal_moment": {"$ref": "#/$defs/vector3"},
+        "force_error": {"$ref": "#/$defs/number", "minimum": 0}, "moment_error": {"$ref": "#/$defs/number", "minimum": 0},
+        "node_loads": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/spatialNodalLoad"}},
+        "loads": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/spatialLoadItemAudit"}}
+      }
+    },
+    "warningsDiagnostics": {"type": "object", "additionalProperties": false, "required": ["warnings"], "properties": {"warnings": {"type": "array", "items": {"type": "string"}}, "spatial_loads": {"$ref": "#/$defs/spatialLoadAudit"}}},
     "iteration": {"type": "object", "additionalProperties": false, "required": ["index", "residual_norm", "correction_norm", "converged"], "properties": {"index": {"type": "integer", "minimum": 0}, "residual_norm": {"type": "number", "$ref": "#/$defs/number", "minimum": 0}, "correction_norm": {"type": "number", "$ref": "#/$defs/number", "minimum": 0}, "converged": {"type": "boolean"}}},
     "loadStepDiagnostics": {"type": "object", "additionalProperties": false, "required": ["warnings", "iterations"], "properties": {"warnings": {"type": "array", "items": {"type": "string"}}, "iterations": {"type": "array", "items": {"$ref": "#/$defs/iteration"}}}},
     "modalDiagnostics": {"type": "object", "additionalProperties": false, "required": ["warnings", "normalization", "eigenvalue_tolerance", "degeneracy_relative_tolerance"], "properties": {"warnings": {"type": "array", "items": {"type": "string"}}, "normalization": {"const": "mass"}, "eigenvalue_tolerance": {"type": "number", "$ref": "#/$defs/number", "minimum": 0}, "degeneracy_relative_tolerance": {"const": 1e-8}}},

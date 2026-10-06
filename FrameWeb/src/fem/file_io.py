@@ -57,6 +57,15 @@ def read_model(file_path: str) -> Dict[str, Any]:
 def _read_json_model(data: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(data, dict) or not (data.get('node') or data.get('nodes')):
         raise ValueError('Model must contain nodes')
+    if data.get('dimension') == 2:
+        cases = data.get('load', {})
+        spatial_inputs = [data.get('spatial_loads')]
+        if isinstance(cases, dict):
+            for case in cases.values():
+                if isinstance(case, dict):
+                    spatial_inputs.extend((case.get('spatial_loads'), case.get('load_inf')))
+        if any(value for value in spatial_inputs):
+            raise ValueError('Bridge spatial loads require a 3D model (dimension 3)')
     model_data = {
         'mesh': MeshModel(),
         'boundary': BoundaryCondition(),

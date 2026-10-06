@@ -186,8 +186,19 @@ public static class AnalysisResultSetJson
             value.MemberSectionForces.Select(Map),
             value.ShellResults.Select(Map),
             value.SolidResults.Select(Map),
-            new WarningDiagnostics(value.Diagnostics.Warnings));
+            new WarningDiagnostics(value.Diagnostics.Warnings,
+                value.Diagnostics.SpatialLoads.ValueKind == JsonValueKind.Undefined
+                    ? null : MapSpatialAudit(DeserializeElement<SpatialLoadAuditWire>(value.Diagnostics.SpatialLoads))));
     }
+
+    private static SpatialLoadAudit MapSpatialAudit(SpatialLoadAuditWire value) => new(
+        Map(value.Resultant), Map(value.Moment), Map(value.NodalResultant), Map(value.NodalMoment),
+        value.ForceError, value.MomentError,
+        value.NodeLoads.Select(node => new SpatialNodalLoad(node.NodeId, Map(node.Force))),
+        value.Loads.Select(item => new SpatialLoadItemAudit(
+            item.LoadId, item.PanelId, item.Feature,
+            Map(item.Resultant), Map(item.Moment), Map(item.NodalResultant), Map(item.NodalMoment),
+            item.ForceError, item.MomentError, item.IntegratedLength, item.ClippedArea)));
 
     private static LoadStepAnalysisResult MapLoadStep(LoadStepResultWire value)
     {
@@ -931,6 +942,55 @@ public static class AnalysisResultSetJson
     {
         [JsonPropertyName("warnings")]
         public required List<string> Warnings { get; init; }
+
+        [JsonPropertyName("spatial_loads")]
+        public JsonElement SpatialLoads { get; init; }
+    }
+
+    private abstract class SpatialAuditTotalsWire
+    {
+        [JsonPropertyName("resultant")]
+        public required Vector3Wire Resultant { get; init; }
+        [JsonPropertyName("moment")]
+        public required Vector3Wire Moment { get; init; }
+        [JsonPropertyName("nodal_resultant")]
+        public required Vector3Wire NodalResultant { get; init; }
+        [JsonPropertyName("nodal_moment")]
+        public required Vector3Wire NodalMoment { get; init; }
+        [JsonPropertyName("force_error")]
+        public required double ForceError { get; init; }
+        [JsonPropertyName("moment_error")]
+        public required double MomentError { get; init; }
+    }
+
+    private sealed class SpatialLoadAuditWire : SpatialAuditTotalsWire
+    {
+        [JsonPropertyName("node_loads")]
+        public required List<SpatialNodalLoadWire> NodeLoads { get; init; }
+        [JsonPropertyName("loads")]
+        public required List<SpatialLoadItemAuditWire> Loads { get; init; }
+    }
+
+    private sealed class SpatialNodalLoadWire
+    {
+        [JsonPropertyName("node_id")]
+        public required string NodeId { get; init; }
+        [JsonPropertyName("force")]
+        public required Vector3Wire Force { get; init; }
+    }
+
+    private sealed class SpatialLoadItemAuditWire : SpatialAuditTotalsWire
+    {
+        [JsonPropertyName("load_id")]
+        public required int LoadId { get; init; }
+        [JsonPropertyName("panel_id")]
+        public required int PanelId { get; init; }
+        [JsonPropertyName("feature")]
+        public required string Feature { get; init; }
+        [JsonPropertyName("integrated_length")]
+        public required double IntegratedLength { get; init; }
+        [JsonPropertyName("clipped_area")]
+        public required double ClippedArea { get; init; }
     }
 
     private sealed class IterationDiagnosticWire

@@ -1,0 +1,535 @@
+{
+  "kind": "analysis_result_set",
+  "schema_version": "1.0",
+  "units": {
+    "system": "consistent_user_defined",
+    "length": "unspecified",
+    "force": "unspecified",
+    "mass": "unspecified",
+    "time": "unspecified"
+  },
+  "coordinate_system": {
+    "name": "global_cartesian",
+    "handedness": "right",
+    "axes": [
+      "x",
+      "y",
+      "z"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "1",
+      "name": "1",
+      "symbol": "1",
+      "analysis_type": "static",
+      "support_node_ids": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    }
+  ],
+  "topology": {
+    "nodes": [
+      {
+        "node_id": "1",
+        "coordinates": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "source_node_id": "1",
+        "generated": false
+      },
+      {
+        "node_id": "2",
+        "coordinates": {
+          "x": 2.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "source_node_id": "2",
+        "generated": false
+      },
+      {
+        "node_id": "3",
+        "coordinates": {
+          "x": 2.0,
+          "y": 2.0,
+          "z": 0.0
+        },
+        "source_node_id": "3",
+        "generated": false
+      },
+      {
+        "node_id": "4",
+        "coordinates": {
+          "x": 0.0,
+          "y": 2.0,
+          "z": 0.0
+        },
+        "source_node_id": "4",
+        "generated": false
+      }
+    ],
+    "members": [
+      {
+        "member_id": "1",
+        "node_i": "1",
+        "node_j": "2",
+        "local_frame": {
+          "origin": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "x_axis": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "y_axis": {
+            "x": 0.0,
+            "y": 1.0,
+            "z": 0.0
+          },
+          "z_axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "stations": [
+          {
+            "station_id": "S0",
+            "position": 0.0
+          },
+          {
+            "station_id": "S1",
+            "position": 2.0
+          }
+        ]
+      },
+      {
+        "member_id": "2",
+        "node_i": "2",
+        "node_j": "3",
+        "local_frame": {
+          "origin": {
+            "x": 2.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "x_axis": {
+            "x": 0.0,
+            "y": 1.0,
+            "z": 0.0
+          },
+          "y_axis": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "z_axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "stations": [
+          {
+            "station_id": "S0",
+            "position": 0.0
+          },
+          {
+            "station_id": "S1",
+            "position": 2.0
+          }
+        ]
+      },
+      {
+        "member_id": "3",
+        "node_i": "3",
+        "node_j": "4",
+        "local_frame": {
+          "origin": {
+            "x": 2.0,
+            "y": 2.0,
+            "z": 0.0
+          },
+          "x_axis": {
+            "x": -1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "y_axis": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "z_axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "stations": [
+          {
+            "station_id": "S0",
+            "position": 0.0
+          },
+          {
+            "station_id": "S1",
+            "position": 2.0
+          }
+        ]
+      },
+      {
+        "member_id": "4",
+        "node_i": "4",
+        "node_j": "1",
+        "local_frame": {
+          "origin": {
+            "x": 0.0,
+            "y": 2.0,
+            "z": 0.0
+          },
+          "x_axis": {
+            "x": 0.0,
+            "y": -1.0,
+            "z": 0.0
+          },
+          "y_axis": {
+            "x": 1.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "z_axis": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 1.0
+          }
+        },
+        "stations": [
+          {
+            "station_id": "S0",
+            "position": 0.0
+          },
+          {
+            "station_id": "S1",
+            "position": 2.0
+          }
+        ]
+      }
+    ],
+    "shell_elements": [],
+    "solid_elements": []
+  },
+  "results": [
+    {
+      "case_id": "1",
+      "state": {
+        "kind": "static",
+        "index": 0
+      },
+      "node_displacements": [
+        {
+          "node_id": "1",
+          "components": {
+            "dx": 0.0,
+            "dy": 0.0,
+            "dz": 0.0,
+            "rx": 0.0,
+            "ry": 0.0,
+            "rz": 0.0
+          }
+        },
+        {
+          "node_id": "2",
+          "components": {
+            "dx": 0.0,
+            "dy": 0.0,
+            "dz": 0.0,
+            "rx": 0.0,
+            "ry": 0.0,
+            "rz": 0.0
+          }
+        },
+        {
+          "node_id": "3",
+          "components": {
+            "dx": 0.0,
+            "dy": 0.0,
+            "dz": 0.0,
+            "rx": 0.0,
+            "ry": 0.0,
+            "rz": 0.0
+          }
+        },
+        {
+          "node_id": "4",
+          "components": {
+            "dx": 0.0,
+            "dy": 0.0,
+            "dz": 0.0,
+            "rx": 0.0,
+            "ry": 0.0,
+            "rz": 0.0
+          }
+        }
+      ],
+      "support_reactions": [
+        {
+          "node_id": "1",
+          "components": {
+            "fx": 0.0,
+            "fy": 0.0,
+            "fz": -16.562500000000004,
+            "mx": 0.0,
+            "my": 0.0,
+            "mz": 0.0
+          }
+        },
+        {
+          "node_id": "2",
+          "components": {
+            "fx": 0.0,
+            "fy": 0.0,
+            "fz": -3.770833333333335,
+            "mx": 0.0,
+            "my": 0.0,
+            "mz": 0.0
+          }
+        },
+        {
+          "node_id": "3",
+          "components": {
+            "fx": 0.0,
+            "fy": 0.0,
+            "fz": -19.895833333333343,
+            "mx": 0.0,
+            "my": 0.0,
+            "mz": 0.0
+          }
+        },
+        {
+          "node_id": "4",
+          "components": {
+            "fx": 0.0,
+            "fy": 0.0,
+            "fz": -6.770833333333334,
+            "mx": 0.0,
+            "my": 0.0,
+            "mz": 0.0
+          }
+        }
+      ],
+      "member_section_forces": [
+        {
+          "member_id": "1",
+          "segments": [
+            {
+              "segment_id": "S0-S1",
+              "station_i": "S0",
+              "station_j": "S1",
+              "length": 2.0,
+              "i_end": {
+                "fx": -0.0,
+                "fy": 0.0,
+                "fz": 0.0,
+                "mx": -0.0,
+                "my": -0.0,
+                "mz": 0.0
+              },
+              "j_end": {
+                "fx": 0.0,
+                "fy": -0.0,
+                "fz": -0.0,
+                "mx": 0.0,
+                "my": 0.0,
+                "mz": -0.0
+              }
+            }
+          ]
+        },
+        {
+          "member_id": "2",
+          "segments": [
+            {
+              "segment_id": "S0-S1",
+              "station_i": "S0",
+              "station_j": "S1",
+              "length": 2.0,
+              "i_end": {
+                "fx": -0.0,
+                "fy": 0.0,
+                "fz": 0.0,
+                "mx": -0.0,
+                "my": -0.0,
+                "mz": 0.0
+              },
+              "j_end": {
+                "fx": 0.0,
+                "fy": -0.0,
+                "fz": -0.0,
+                "mx": 0.0,
+                "my": 0.0,
+                "mz": -0.0
+              }
+            }
+          ]
+        },
+        {
+          "member_id": "3",
+          "segments": [
+            {
+              "segment_id": "S0-S1",
+              "station_i": "S0",
+              "station_j": "S1",
+              "length": 2.0,
+              "i_end": {
+                "fx": -0.0,
+                "fy": 0.0,
+                "fz": 0.0,
+                "mx": -0.0,
+                "my": -0.0,
+                "mz": 0.0
+              },
+              "j_end": {
+                "fx": 0.0,
+                "fy": -0.0,
+                "fz": -0.0,
+                "mx": 0.0,
+                "my": 0.0,
+                "mz": -0.0
+              }
+            }
+          ]
+        },
+        {
+          "member_id": "4",
+          "segments": [
+            {
+              "segment_id": "S0-S1",
+              "station_i": "S0",
+              "station_j": "S1",
+              "length": 2.0,
+              "i_end": {
+                "fx": -0.0,
+                "fy": 0.0,
+                "fz": 0.0,
+                "mx": -0.0,
+                "my": -0.0,
+                "mz": 0.0
+              },
+              "j_end": {
+                "fx": 0.0,
+                "fy": -0.0,
+                "fz": -0.0,
+                "mx": 0.0,
+                "my": 0.0,
+                "mz": -0.0
+              }
+            }
+          ]
+        }
+      ],
+      "shell_results": [],
+      "solid_results": [],
+      "diagnostics": {
+        "warnings": [],
+        "spatial_loads": {
+          "resultant": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 50.000000000000014
+          },
+          "moment": {
+            "x": 53.33333333333334,
+            "y": -53.33333333333336,
+            "z": 0.0
+          },
+          "nodal_resultant": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 50.00000000000002
+          },
+          "nodal_moment": {
+            "x": 53.33333333333336,
+            "y": -53.33333333333336,
+            "z": 0.0
+          },
+          "force_error": 7.105427357601002e-15,
+          "moment_error": 1.4210854715202004e-14,
+          "node_loads": [
+            {
+              "node_id": "1",
+              "force": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 16.562500000000004
+              }
+            },
+            {
+              "node_id": "2",
+              "force": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 6.770833333333335
+              }
+            },
+            {
+              "node_id": "3",
+              "force": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 19.895833333333343
+              }
+            },
+            {
+              "node_id": "4",
+              "force": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 6.770833333333334
+              }
+            }
+          ],
+          "loads": [
+            {
+              "load_id": 1,
+              "panel_id": 7,
+              "feature": "spatial_area",
+              "integrated_length": 0.0,
+              "clipped_area": 2.0,
+              "resultant": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 50.000000000000014
+              },
+              "moment": {
+                "x": 53.33333333333334,
+                "y": -53.33333333333336,
+                "z": 0.0
+              },
+              "nodal_resultant": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 50.00000000000002
+              },
+              "nodal_moment": {
+                "x": 53.33333333333336,
+                "y": -53.33333333333336,
+                "z": 0.0
+              },
+              "force_error": 7.105427357601002e-15,
+              "moment_error": 1.4210854715202004e-14
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

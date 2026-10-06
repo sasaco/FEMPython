@@ -27,6 +27,7 @@ namespace PDF_Manager.Printing.Diagram3D
                         printTitle(mc);
                     }
                     var graphic = result[i];
+                    bool bridge = graphic.Mode == "print_bridge_load";
                     XFont font = new XFont("MS Gothic", printManager.FontSize - 3, XFontStyle.Bold);
                    
                     mc.gfx.DrawString(graphic.Title, font, XBrushes.Black, new XPoint(mc.currentPos.X + 50, mc.currentPos.Y + 8));
@@ -44,11 +45,11 @@ namespace PDF_Manager.Printing.Diagram3D
                             }
                             var rs = graphic.Result[p];
                             XFont fontTt = new XFont("MS Mincho", printManager.FontSize - 3, XFontStyle.Regular);
-                            mc.gfx.DrawString(rs.title, fontTt, XBrushes.Black, new XPoint(mc.currentPos.X + 50 , mc.currentPos.Y + 30 + distance));
+                            if (!bridge) mc.gfx.DrawString(rs.title, fontTt, XBrushes.Black, new XPoint(mc.currentPos.X + 50 , mc.currentPos.Y + 30 + distance));
 
 
-                            mc.gfx.DrawString(rs.type == null? "" : rs.type, font, XBrushes.Black, new XPoint(mc.currentPos.X + 50 , mc.currentPos.Y + 45 + distance));
-                            if (!graphic.Mode.Contains("print_load"))
+                            if (!bridge) mc.gfx.DrawString(rs.type == null? "" : rs.type, font, XBrushes.Black, new XPoint(mc.currentPos.X + 50 , mc.currentPos.Y + 45 + distance));
+                            if (!bridge && !graphic.Mode.Contains("print_load"))
                             {
                                 mc.gfx.DrawString($"Max: {rs.max_three}", font, XBrushes.Black, new XPoint(mc.currentPos.X + 50, mc.currentPos.Y + 60 + distance));
                                 mc.gfx.DrawString($"Min: {rs.min_three}", font, XBrushes.Black, new XPoint(mc.currentPos.X + 50, mc.currentPos.Y + 75 + distance));
@@ -71,7 +72,18 @@ namespace PDF_Manager.Printing.Diagram3D
                                 throw new InvalidOperationException("Diagram image exceeds the pixel limit.");
                             using var contents = new MemoryStream(source);
                             using XImage image = XImage.FromStream(() => contents);
-                            mc.gfx.DrawImage(image, mc.currentPos.X + 50, mc.currentPos.Y + 110 + distance, 400, 200);
+                            if (bridge)
+                            {
+                                double top = mc.currentPos.Y + 35;
+                                double availableWidth = mc.currentPageSize.Width - 20;
+                                double availableHeight = mc.currentPage.Height.Point - mc.Margine.Bottom - top - 20;
+                                double scale = Math.Min(availableWidth / info.Width, availableHeight / info.Height);
+                                double width = info.Width * scale;
+                                double height = info.Height * scale;
+                                mc.gfx.DrawImage(image, mc.Margine.Left + (mc.currentPageSize.Width - width) / 2,
+                                    top, width, height);
+                            }
+                            else mc.gfx.DrawImage(image, mc.currentPos.X + 50, mc.currentPos.Y + 110 + distance, 400, 200);
                             distance += 300;                            
                         }
                     }                   

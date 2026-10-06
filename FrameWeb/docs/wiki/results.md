@@ -130,6 +130,25 @@ iterationはstepごとに0から始まり、累積履歴を別のresultへ重複
 
 modal diagnosticsは `normalization: mass`、solverと同じpositive-eigenvalue tolerance、`degeneracy_relative_tolerance: 1e-8` を持ちます。modeは固有値昇順、質量正規化、縮退部分空間と符号の決定規則を適用済みです。モード形は実荷重による変位ではありません。
 
+### 橋面荷重の配分確認
+
+橋面の線荷重・面荷重がある静解析では、`diagnostics.spatial_loads`を追加します。
+橋面荷重がない結果ではこのキーを省略し、非線形step・modal結果には含めません。
+各値はそのケースの実際のソルバー荷重組立から取得します。
+
+| キー | 内容 |
+|---|---|
+| `resultant`, `moment` | 積分した合力、全体座標原点回りのモーメント。`{x,y,z}` |
+| `nodal_resultant`, `nodal_moment` | 配分後の節点力から確認した合力とモーメント。`{x,y,z}` |
+| `force_error`, `moment_error` | 積分値と配分後の値の差の最大絶対成分 |
+| `node_loads` | `{node_id, force:{x,y,z}}`の配列。節点番号は共有topologyの公開ID |
+| `loads` | 荷重ごとの`load_id`, `panel_id`, `feature`、上記4ベクトル・2誤差、`integrated_length`, `clipped_area` |
+
+`feature`は`spatial_line`または`spatial_area`です。長さ・面積・力・モーメントはモデルで宣言した整合単位を使います。
+`node_loads`は通常荷重を含めず、生成節点も公開IDで参照します。全体座標の並進荷重で、節点偶力はありません。
+これは入力へ再投入する荷重ではなく、表示・印刷のための配分確認値です。
+未知キー、重複荷重ID・節点ID、存在しないtopology節点、非有限値、負の長さ・面積・誤差は不正な診断として拒否します。
+
 ## 読み取り例
 
 ```python

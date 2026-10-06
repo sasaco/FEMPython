@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="PrintProjection.Tests\**;PrintUi.Tests\**;PrintViewportSmoke\**" />
+    <Compile Remove="PrintProjection.Tests\**;PrintUi.Tests\**;PrintViewportSmoke\**;BridgeLoadSmoke\**" />
   </ItemGroup>
 
   <ItemGroup>

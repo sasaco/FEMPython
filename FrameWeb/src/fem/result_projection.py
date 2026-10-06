@@ -69,10 +69,41 @@ def project_analysis_results(
             ),
             "shell_results": _project_shell_results(model, snapshot.values, topology),
             "solid_results": _project_solid_results(model, snapshot.values, topology),
-            "diagnostics": snapshot.diagnostics,
+            "diagnostics": _project_static_diagnostics(model, snapshot, node_map),
         }
         for snapshot in snapshots
     ]
+
+
+def _project_static_diagnostics(model, snapshot, node_map):
+    diagnostics = dict(snapshot.diagnostics)
+    contribution = getattr(model.solver, 'spatial_load_contribution', None)
+    if snapshot.state['kind'] != 'static' or contribution is None:
+        return diagnostics
+    vector_fields = ('resultant', 'moment', 'nodal_resultant', 'nodal_moment')
+    scalar_fields = ('force_error', 'moment_error')
+
+    def totals(value):
+        return {
+            **{name: _named(_triple(getattr(value, name), name), ('x', 'y', 'z'))
+               for name in vector_fields},
+            **{name: _finite(getattr(value, name), name) for name in scalar_fields},
+        }
+
+    node_loads = []
+    for index, node in enumerate(contribution.node_ids):
+        if node not in node_map:
+            raise ValueError(f'Spatial audit node {node} is missing from public topology')
+        force = contribution.dof_loads[index*contribution.stride:index*contribution.stride+3]
+        node_loads.append({'node_id': node_map[node], 'force': _named(_triple(force, 'node force'), ('x', 'y', 'z'))})
+    diagnostics['spatial_loads'] = {
+        **totals(contribution),
+        'node_loads': node_loads,
+        'loads': [dict(load_id=item.load_id, panel_id=item.panel_id, feature=item.feature,
+                       integrated_length=item.integrated_length, clipped_area=item.clipped_area,
+                       **totals(item)) for item in contribution.loads],
+    }
+    return diagnostics
 
 
 def _project_node_values(

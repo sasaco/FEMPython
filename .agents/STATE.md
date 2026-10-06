@@ -437,3 +437,24 @@ Rolling progress summary (latest 5 checkpoints): [PROGRESS.md](../PROGRESS.md)
 - Full desktop suite: 385 passed, 3 failed, 388 total. Failures remain `CombinedPagePublishesWhenInitiallyShownAfterRouteSelection`, `TwoDCameraPanAndWheelZoomKeepZParallelViewWhileRotationIsDisabled`, and `CameraRoundTripRestoresPerspectivePoseAndRotationControl`, matching the known result-page/camera baseline.
 - Final native independent review: PASS. Nested read-only CLI plan consultations timed out; no CLI validation PASS is claimed. Plan shape/artifact gates and git diff --check pass.
 - Agent infrastructure tests/contracts pass; aggregate check fails only scope-isolation for separate concurrent FramePrintPDF files. Evidence: .agents/logs/check-20261005T150539276Z-25644.log.
+
+---
+
+## Current Feature: 3D Bridge Deck Loads
+<!-- orchestra:block-id: bridge-deck-loads-3d -->
+
+### Status and Scope
+
+Implemented the owner-approved 3D-only fixed bridge line/area loads in the current .NET 10 WinForms/THREE.NET/pythonnet application. Added a three-tab FarPoint editor, structural transfer topology and independent loading meshes, case-local calculation projection, original and actual equivalent-load graphics, input-only and solver-audit PDF reports. Bridge data survives save/reload and 3D/2D round trips; 2D hides the feature and rejects incompatible calculation/printing. See docs/plans/bridge-deck-loads-3d.md.
+
+### Contracts and Review
+
+Desktop persistence is bridge_loads version 1, projected into each selected legacy load case's spatial_loads. Case-local shell references are public shell IDs; root normalized imports translate unified IDs back. Spatial-load diagnostics are optional static-result audit data and never become duplicate input forces. Independent holes use loading-node IDs; normal direction follows structural connectivity. Reviews resolved these namespace/orientation defects, invalid display geometry, and unbounded PDF wrapping. Input-revision checks prevent stale audit display and printing.
+
+### Validation
+
+Lead: desktop focused 108 passed; print projection 32 passed; bridge-case Python 22 passed; solution build passed; native save/reload -> pythonnet -> GL/PDF smoke passed with independent case reactions 40/30/7. Team: relevant Python 189 passed; PDF library 55 passed; print UI 8 passed; TypeScript contract validator 19 runtime checks passed. Native smoke project: FrameWebforCS/tests/BridgeLoadSmoke. Generated six-page PDF and screenshots: .tmp/bridge-deck-smoke/. Review reports: docs/research/review-{security,quality,tests}-bridge-deck-loads-3d.md.
+
+### Verification Limits
+
+Angular full gate could not run: node_modules and package-lock.json are absent. No dependency files were changed. Broad Python suite was interrupted after six existing benchmark-consumer errors; narrow reproductions fail on metadata / node_displacements keys because benchmark tools still expect the old result shape while HEAD FemModel.run returns AnalysisResultSet. Relevant bridge suites passed; no whole-suite pass is claimed. Fixed loads are supported; vehicle motion and worst-position search remain outside the approved scope.
