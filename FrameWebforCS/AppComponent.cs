@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
@@ -11,6 +13,7 @@ namespace FrameWebforCS
 {
     public partial class AppComponent : Form
     {
+        private const Keys ViewportCaptureShortcut = Keys.Control | Keys.Shift | Keys.F12;
         private ThreeComponent three;
         private bool _calculationClosed;
         private bool _closePending;
@@ -31,6 +34,58 @@ namespace FrameWebforCS
             using var dialog = new components.printing.PrintDialogForm(requests => three.CapturePrintDiagrams(requests));
             dialog.ShowDialog(this);
             if (!IsDisposed) Activate();
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == ViewportCaptureShortcut)
+            {
+                CaptureVisibleViewport();
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        private void CaptureVisibleViewport()
+        {
+            if (WindowState == FormWindowState.Minimized || !glControl1.Visible ||
+                !glControl1.IsHandleCreated || glControl1.ClientSize.Width == 0 ||
+                glControl1.ClientSize.Height == 0)
+            {
+                MessageBox.Show(this, "表示中のビューポートがありません。", "画面キャプチャ");
+                return;
+            }
+
+            var bounds = glControl1.RectangleToScreen(glControl1.ClientRectangle);
+            if (!Screen.AllScreens.Any(screen => screen.Bounds.Contains(bounds)))
+            {
+                MessageBox.Show(this, "ビューポート全体を画面内に表示してから再実行してください。", "画面キャプチャ");
+                return;
+            }
+
+            var path = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, ".tmp", "glControl1-screen.png"));
+            try
+            {
+                SaveViewportScreenshot(bounds, path);
+                MessageBox.Show(this, $"画面キャプチャを保存しました。\n{path}", "画面キャプチャ");
+            }
+            catch (Exception error)
+            {
+                MessageBox.Show(this, $"画面キャプチャを保存できませんでした。\n{error.Message}", "画面キャプチャ");
+            }
+        }
+
+        private static void SaveViewportScreenshot(Rectangle bounds, string path)
+        {
+            using var bitmap = new Bitmap(bounds.Width, bounds.Height);
+            using (var graphics = Graphics.FromImage(bitmap))
+            {
+                graphics.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size);
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            bitmap.Save(path, ImageFormat.Png);
         }
 
         private async void OnFormClosing(object? sender, FormClosingEventArgs e)

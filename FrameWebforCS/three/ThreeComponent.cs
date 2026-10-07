@@ -17,6 +17,7 @@ namespace FrameWebforCS.three
     {
         public SceneService threeInstance = null;
         private ThreeService? _threeService;
+        private readonly ViewportTextLabels.GlOverlay _textOverlay = new();
         private bool _disposed;
         private Point? _mouseDownPosition;
         private Panel? _viewportControls;
@@ -75,10 +76,10 @@ namespace FrameWebforCS.three
             // changes here instead of JS SceneService's immediate render calls.
             _threeService?.FlushPending();
             threeInstance.render();
-            this.glControl.SwapBuffers();
             if (_threeService != null)
-                ViewportTextLabels.Draw(glControl, threeInstance.CurrentCamera,
-                    _threeService.GetVisibleLabels());
+                _textOverlay.Draw(threeInstance.CurrentCamera,
+                    _threeService.GetVisibleLabels(), glControl.ClientSize);
+            this.glControl.SwapBuffers();
             RefreshViewportControls();
         }
 
@@ -406,6 +407,7 @@ namespace FrameWebforCS.three
                 if (threeInstance != null && !glControl.IsDisposed)
                 {
                     glControl.MakeCurrent();
+                    _textOverlay.Dispose();
                 }
                 _threeService?.Dispose();
                 if (threeInstance != null)
