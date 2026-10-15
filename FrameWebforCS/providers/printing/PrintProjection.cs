@@ -225,7 +225,10 @@ internal static class PrintProjection
                 (key is "rigid" or "notice_points" ? new JsonArray() : new JsonObject());
 
         if (choice.Options.Any(IsTableResult) || choice.Options.Any(IsResultDiagram))
+        {
             AddResults(root, snapshot);
+            PrintResultMetadata.Apply(root, saved, snapshot);
+        }
         BridgePrintProjection.AddTables(root, saved, snapshot);
         AddVectorDiagrams(root, snapshot);
         AddCapturedDiagrams(root, snapshot.DiagramRequests, images);
@@ -375,7 +378,7 @@ internal static class PrintProjection
             {
                 cases.Add(page.Key, MovingEnvelope(family,
                     [movingParent, .. page.MovingChildren], selection, members,
-                    presentation.Dimension));
+                    presentation.Dimension, presentation.ResultSet.Units.Length));
                 names.Add(new JsonArray(JsonValue.Create(page.Key), JsonValue.Create(page.Label)));
                 continue;
             }
@@ -390,10 +393,16 @@ internal static class PrintProjection
                 };
                 foreach (NodeDisplacement item in source.Where(item =>
                     selection.NodeIds is null || selection.NodeIds.Contains(item.NodeId)))
-                    rows.Add(new JsonObject { ["id"] = item.NodeId, ["dx"] = item.Components.Dx,
-                        ["dy"] = item.Components.Dy, ["dz"] = item.Components.Dz,
-                        ["rx"] = item.Components.Rx, ["ry"] = item.Components.Ry,
-                        ["rz"] = item.Components.Rz });
+                {
+                    double[] values = DisplayComponents(family,
+                        [item.Components.Dx, item.Components.Dy, item.Components.Dz,
+                         item.Components.Rx, item.Components.Ry, item.Components.Rz],
+                        presentation.Dimension, presentation.ResultSet.Units.Length,
+                        page.Result is not ModalAnalysisResult);
+                    rows.Add(new JsonObject { ["id"] = item.NodeId, ["dx"] = values[0],
+                        ["dy"] = values[1], ["dz"] = values[2],
+                        ["rx"] = values[3], ["ry"] = values[4], ["rz"] = values[5] });
+                }
             }
             else if (page.Result is ForceAnalysisResult force)
             {
@@ -422,7 +431,8 @@ internal static class PrintProjection
                             rows.Add(new JsonObject { ["m"] = member.MemberId, ["n"] = stationId,
                                 ["l"] = positions[stationId], ["fx"] = value.Fx, ["fy"] = value.Fy,
                                 ["fz"] = value.Fz, ["mx"] = value.Mx, ["my"] = value.My,
-                                ["mz"] = value.Mz, ["dummy"] = false });
+                                ["mz"] = presentation.Dimension == 2 ? -value.Mz : value.Mz,
+                                ["dummy"] = false });
                         }
                     }
             }
@@ -441,9 +451,32 @@ internal static class PrintProjection
     private sealed record MovingRow(string EntityId, string? StationId, double Location,
         double[] Components, string CaseId);
 
+    // This legacy print boundary labels physical displacements mm/mrad. Unspecified
+    // legacy saved-document lengths use metres; canonical/export values stay raw.
+    // Only 2D reports use the explicitly chosen clockwise rotation/Mz convention.
+    private static double[] DisplayComponents(string family, double[] values,
+        int dimension, string length, bool physical = true)
+    {
+        if (!physical) return values;
+        if (family == "disg")
+        {
+            double scale = length switch
+            {
+                "m" or "unspecified" => 1000,
+                "cm" => 10,
+                "mm" => 1,
+                _ => throw new PrintProjectionException(
+                    $"Cannot print displacement in mm from length unit '{length}'."),
+            };
+            for (int i = 0; i < 6; i++) values[i] *= i < 3 ? scale : 1000;
+        }
+        if (dimension == 2 && family is "disg" or "fsec") values[5] = -values[5];
+        return values;
+    }
+
     private static JsonObject MovingEnvelope(string family,
         IReadOnlyList<StaticAnalysisResult> sources, PrintSelection selection,
-        IReadOnlyDictionary<string, TopologyMember> members, int dimension)
+        IReadOnlyDictionary<string, TopologyMember> members, int dimension, string length)
     {
         var candidates = new List<MovingRow>();
         foreach (StaticAnalysisResult source in sources)
@@ -452,8 +485,10 @@ internal static class PrintProjection
                 foreach (NodeDisplacement row in source.NodeDisplacements.Where(row =>
                     selection.NodeIds is null || selection.NodeIds.Contains(row.NodeId)))
                     candidates.Add(new(row.NodeId, null, 0,
-                        [row.Components.Dx, row.Components.Dy, row.Components.Dz,
-                         row.Components.Rx, row.Components.Ry, row.Components.Rz], source.CaseId));
+                        DisplayComponents(family,
+                            [row.Components.Dx, row.Components.Dy, row.Components.Dz,
+                             row.Components.Rx, row.Components.Ry, row.Components.Rz],
+                            dimension, length), source.CaseId));
             else if (family == "reac")
                 foreach (SupportReaction row in source.SupportReactions.Where(row =>
                     selection.NodeIds is null || selection.NodeIds.Contains(row.NodeId)))
@@ -476,7 +511,9 @@ internal static class PrintProjection
                     {
                         if (!seen.Add(stationId)) return;
                         candidates.Add(new(member.MemberId, stationId, positions[stationId],
-                            [force.Fx, force.Fy, force.Fz, force.Mx, force.My, force.Mz], source.CaseId));
+                            DisplayComponents(family,
+                                [force.Fx, force.Fy, force.Fz, force.Mx, force.My, force.Mz],
+                                dimension, length), source.CaseId));
                     }
                 }
         }
@@ -584,8 +621,9 @@ internal static class PrintProjection
                 var caseObject = new JsonObject();
                 foreach (var (mode, rows) in modes)
                 {
-                    string legacyMode = property == "reac" ? mode.Replace("fx", "tx")
-                        .Replace("fy", "ty").Replace("fz", "tz") : mode;
+                    string displayMode = DisplayMode(mode, property, snapshot.Result.Dimension);
+                    string legacyMode = property == "reac" ? displayMode.Replace("fx", "tx")
+                        .Replace("fy", "ty").Replace("fz", "tz") : displayMode;
                     if (!SelectsMode(FamilyComponents(snapshot.Selection, property), legacyMode,
                         legacyMode[..legacyMode.IndexOf('_')])) continue;
                     if (property == "fsec")
@@ -593,7 +631,8 @@ internal static class PrintProjection
                         var values = new JsonArray();
                         foreach (CalculationDerivedRow row in rows.Where(row =>
                             snapshot.Selection.MemberIds is null || snapshot.Selection.MemberIds.Contains(row.EntityId)))
-                            values.Add(DerivedRow(row, property, components, stations));
+                            values.Add(DerivedRow(row, property, components, stations,
+                                snapshot.Result));
                         if (values.Count > 0) caseObject[legacyMode] = values;
                     }
                     else
@@ -601,7 +640,8 @@ internal static class PrintProjection
                         var values = new JsonObject();
                         foreach (CalculationDerivedRow row in rows.Where(row =>
                             snapshot.Selection.NodeIds is null || snapshot.Selection.NodeIds.Contains(row.EntityId)))
-                            values[row.EntityId] = DerivedRow(row, property, components, stations);
+                            values[row.EntityId] = DerivedRow(row, property, components, stations,
+                                snapshot.Result);
                         if (values.Count > 0) caseObject[legacyMode] = values;
                     }
                 }
@@ -616,7 +656,8 @@ internal static class PrintProjection
     }
 
     private static JsonObject DerivedRow(CalculationDerivedRow row, string family, string[] components,
-        IReadOnlyDictionary<string, Dictionary<string, double>> stations)
+        IReadOnlyDictionary<string, Dictionary<string, double>> stations,
+        CalculationResultPresentation presentation)
     {
         var value = new JsonObject { [family == "fsec" ? "m" : "id"] = row.EntityId,
             ["case"] = row.SourceCaseId, ["comb"] = row.Provenance };
@@ -628,13 +669,24 @@ internal static class PrintProjection
             value["n"] = row.StationId;
             value["l"] = location;
         }
+        double[] displayed = DisplayComponents(family,
+            components.Select(component => row.Components[component]).ToArray(),
+            presentation.Dimension, presentation.ResultSet.Units.Length);
         for (int index = 0; index < components.Length; index++)
         {
             string source = components[index];
             string target = family == "reac" && index < 3 ? new[] { "tx", "ty", "tz" }[index] : source;
-            value[target] = row.Components[source];
+            value[target] = displayed[index];
         }
         return value;
+    }
+
+    internal static string DisplayMode(string mode, string family, int dimension)
+    {
+        bool reversed = dimension == 2 &&
+            (family == "disg" && mode.StartsWith("rz_", StringComparison.Ordinal) ||
+             family == "fsec" && mode.StartsWith("mz_", StringComparison.Ordinal));
+        return reversed ? mode[..^3] + (mode.EndsWith("max", StringComparison.Ordinal) ? "min" : "max") : mode;
     }
 
     private static void AddVectorDiagrams(JsonObject root, PrintSnapshot snapshot)

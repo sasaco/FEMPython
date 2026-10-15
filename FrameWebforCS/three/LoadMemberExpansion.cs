@@ -32,7 +32,7 @@ internal static class LoadMemberExpansion
         {
             // JS replaces load1[0].L1 before getEnableLoad filters rows.
             var input = index == 0 && firstL1.HasValue
-                ? source[index] with { L1 = firstL1.Value } : source[index];
+                ? source[index] with { L1 = firstL1.Value, RelativeStart = firstL1.Value < 0 } : source[index];
             if (input.Mark is not (1 or 2 or 9 or 11) ||
                 input.Mark != 9 && string.IsNullOrWhiteSpace(input.Direction) ||
                 !float.IsFinite(input.L1) || !float.IsFinite(input.L2) ||
@@ -42,7 +42,7 @@ internal static class LoadMemberExpansion
                 row = input.Row, m1 = input.MemberStart, m2 = input.MemberEnd,
                 direction = input.Mark == 9 ? "x" : input.Direction.Trim().ToLowerInvariant(),
                 mark = input.Mark, L1 = input.L1, L2 = input.L2,
-                P1 = input.P1, P2 = input.P2, negativeL1 = input.L1 < 0
+                P1 = input.P1, P2 = input.P2, negativeL1 = input.L1 < 0 || input.RelativeStart
             };
             if (item.m1 == 0) item.m1 = item.m2;
             if (item.m2 == 0) item.m2 = item.m1;

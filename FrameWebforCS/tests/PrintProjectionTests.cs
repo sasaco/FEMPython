@@ -184,7 +184,8 @@ public sealed class PrintProjectionTests
             DisplacementComponents: ["dx_max"], ReactionComponents: ["tx_max"],
             SectionForceComponents: ["fx_max"]), presentation);
         JsonObject root = JsonNode.Parse(PrintProjection.Build(snapshot))!.AsObject();
-        Assert.Equal(0.02, root["disgCombine"]!["C1"]!["dx_max"]!["2"]!["dx"]!.GetValue<double>());
+        Assert.Equal(20, root["disgCombine"]!["C1"]!["dx_max"]!["2"]!["dx"]!.GetValue<double>());
+        Assert.Equal(0.02, displacement["dx"]); // Print conversion preserves raw derived values.
         Assert.Equal(12, root["reacCombine"]!["C1"]!["tx_max"]!["1"]!["tx"]!.GetValue<double>());
         Assert.Equal(1, root["fsecCombine"]!["C1"]!["fx_max"]![0]!["l"]!.GetValue<double>());
         Assert.Equal("D", root["fsecPickup"]!["C1"]!["fx_max"]![0]!["case"]!.GetValue<string>());

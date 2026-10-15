@@ -53,7 +53,12 @@ namespace FrameWebforCS.components.input
     internal sealed record LoadNodeDisplay(int Row, int NodeId, bool IsDisplacement,
         float Tx, float Ty, float Tz, float Rx, float Ry, float Rz);
     internal sealed record LoadMemberDisplay(int Row, int MemberStart, int MemberEnd,
-        string Direction, int Mark, float L1, float L2, float P1, float P2);
+        string Direction, int Mark, float L1, float L2, float P1, float P2)
+    {
+        // The editor's "-0" is a relative distributed-load start, even though
+        // its numeric distance is zero. Keep this detached display metadata.
+        internal bool RelativeStart { get; init; }
+    }
     internal sealed record LoadCaseDisplay(string Symbol,
         IReadOnlyList<LoadNodeDisplay> NodeLoads, IReadOnlyList<LoadMemberDisplay> MemberLoads,
         float? LLPitch = null);
@@ -400,7 +405,8 @@ namespace FrameWebforCS.components.input
                             out float l2)) l2 = 0;
                     memberLoads.Add(new LoadMemberDisplay(row.row, start, end,
                         row.direction?.Trim().ToLowerInvariant() ?? "", mark, l1, l2,
-                        row.P1 ?? 0, row.P2 ?? 0));
+                        row.P1 ?? 0, row.P2 ?? 0)
+                    { RelativeStart = row.L1?.TrimStart().StartsWith("-", StringComparison.Ordinal) == true });
                 }
                 result.Add(id, new LoadCaseDisplay(item.symbol ?? "", nodeLoads, memberLoads,
                     item.LL_pitch));

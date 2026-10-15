@@ -159,16 +159,27 @@ namespace PDF_Manager.Printing
         }
     }
 
-    internal class ResultDisgCombine : PrintableBaseC
+    internal class ResultDisgCombine : PrintableBaseC, IPrintable
     {
         public const string KEY = "disgCombine";
 
         private Dictionary<string, DisgCombine> disgs = new Dictionary<string, DisgCombine>();
         private Dictionary<string, string> disgnames = new Dictionary<string, string>();
         private Dictionary<string, string> disgcasenames = new Dictionary<string, string>();
+        private readonly HashSet<string> ordinaryCombinations = new HashSet<string>();
+        private readonly bool referenceLayout;
+        private readonly Dictionary<string, object> sourceRoot;
+        private readonly string sourceKey;
 
         public ResultDisgCombine(Dictionary<string, object> value, string key = ResultDisgCombine.KEY)
         {
+            sourceRoot = value;
+            sourceKey = key;
+            referenceLayout = ReferenceResultLayout.Enabled(value);
+            // The same composer is delegated true moving-load envelopes under KEY.
+            // Only the projection can declare a combination to have one physical vector.
+            if (key == KEY && value.TryGetValue("ordinaryDisplacementCombinations", out var ordinary))
+                foreach (var id in JArray.FromObject(ordinary)) ordinaryCombinations.Add(id.ToString());
             if (!value.ContainsKey(key))
                 return;
 
@@ -515,8 +526,9 @@ namespace PDF_Manager.Printing
                     j++;
                     if(item.caseStr != null)
                     {
-                        int len = item.caseStr.Length;
-                        var str = item.caseStr;
+                        var provenance = ReferenceResultLayout.Provenance(item.caseStr, item.comb);
+                        int len = provenance.Length;
+                        var str = provenance;
 
                         if(len > 24)
                         {
@@ -535,7 +547,7 @@ namespace PDF_Manager.Printing
                         }
                         else
                         {
-                            table[r, j] = printManager.toString(item.caseStr, 4);
+                            table[r, j] = provenance;
                             table.AlignX[r, j] = "L";
                             r++;
                         }
@@ -570,8 +582,9 @@ namespace PDF_Manager.Printing
                     j = 5;
                     if (item.caseStr != null)
                     {
-                        int len = item.caseStr.Length;
-                        var str = item.caseStr;
+                        var provenance = ReferenceResultLayout.Provenance(item.caseStr, item.comb);
+                        int len = provenance.Length;
+                        var str = provenance;
 
                         if (len > 50)
                         {
@@ -590,7 +603,7 @@ namespace PDF_Manager.Printing
                         }
                         else
                         {
-                            table[r, j] = printManager.toString(item.caseStr, 4);
+                            table[r, j] = provenance;
                             table.AlignX[r, j] = "L";
                             r++;
                         }
@@ -603,6 +616,41 @@ namespace PDF_Manager.Printing
         }
 
         #region PrintableBaseC.printPDF()用メソッド定義
+        public new void printPDF(PdfDocument mc, PrintData data, ref int indexPage)
+        {
+            if (!referenceLayout || data.dimension != 2 || ordinaryCombinations.Count == 0)
+            { base.printPDF(mc, data, ref indexPage); return; }
+            List<Disg> Vector(DisgCombine value) => Enumerable.Range(0, 6)
+                .Select(value.getValue2).First(rows => rows.Any());
+            string Caption(string id, List<Disg> rows) =>
+                "MIX. " + id + " " + disgnames[id] + " " + (rows[0].comb ?? "");
+            for (int i = 0; i < disgs.Count; i++)
+            {
+                var left = disgs.ElementAt(i);
+                if (!ordinaryCombinations.Contains(left.Key))
+                {
+                    // A genuine envelope between ordinary cases keeps all selected modes.
+                    var root = new Dictionary<string, object>
+                    {
+                        [sourceKey] = new JObject { [left.Key] = JObject.FromObject(sourceRoot[sourceKey])[left.Key].DeepClone() },
+                        [sourceKey + "Name"] = new JArray { new JArray(left.Key, disgnames[left.Key]) },
+                    };
+                    new ResultDisgCombine(root, sourceKey).printPDF(mc, data, ref indexPage);
+                    continue;
+                }
+                List<Disg> a = Vector(left.Value);
+                List<Disg> b = new List<Disg>();
+                string rightCaption = "";
+                if (i + 1 < disgs.Count && ordinaryCombinations.Contains(disgs.ElementAt(i + 1).Key))
+                {
+                    var right = disgs.ElementAt(++i);
+                    b = Vector(right.Value);
+                    rightCaption = Caption(right.Key, b);
+                }
+                ReferenceResultLayout.Displacements(mc, data, ref indexPage, Caption(left.Key, a), a, rightCaption, b);
+            }
+        }
+
         protected readonly struct DisgContext : IContext
         {
             public DisgContext(ResultDisgCombine instance, int j)
@@ -630,9 +678,10 @@ namespace PDF_Manager.Printing
 
                     var table = instance.getPageContents(tmp0);
                     table[0, 0] = caseNo + " " + caseName;
-                    table[1, 0] = valueKey[k];
+                    table[1, 0] = instance.ordinaryCombinations.Contains(caseNo) ? "" : valueKey[k];
 
                     yield return table;
+                    if (instance.ordinaryCombinations.Contains(caseNo)) yield break;
                 }
             }
 

@@ -91,7 +91,7 @@ namespace PDF_Manager.Printing
 
     }
 
-    class ResultFsecCombine : PrintableBaseC
+    class ResultFsecCombine : PrintableBaseC, IPrintable
     {
         public const string KEY = "fsecCombine";
 
@@ -101,6 +101,8 @@ namespace PDF_Manager.Printing
 
         public ResultFsecCombine(Dictionary<string, object> value, string key = ResultFsecCombine.KEY)
         {
+            referenceLayout = ReferenceResultLayout.Enabled(value);
+            reportPrefix = key == "fsecPickup" ? "PICK UP " : "COMBINE ";
             if (!value.ContainsKey(key))
                 return;
 
@@ -161,6 +163,9 @@ namespace PDF_Manager.Printing
 
                     fs.n = dataManager.toString(item["n"]);
                     fs.m = dataManager.toString(item["m"]);
+                    fs.stationLabel = dataManager.toString(item["stationLabel"]);
+                    fs.memberCaption = dataManager.toString(item["memberCaption"]);
+                    fs.occurrence = dataManager.parseInt(item["occurrence"]);
                     fs.l = dataManager.parseDouble(item["l"]);
                     fs.fx = dataManager.parseDouble(item["fx"]);
                     fs.fy = dataManager.parseDouble(item["fy"]);
@@ -472,8 +477,9 @@ namespace PDF_Manager.Printing
                     j++;
                     if (item.caseStr != null)
                     {
-                        int len = item.caseStr.Length;
-                        var str = item.caseStr;
+                        var provenance = ReferenceResultLayout.Provenance(item.caseStr, item.comb);
+                        int len = provenance.Length;
+                        var str = provenance;
 
                         if (len > 10)
                         {
@@ -485,14 +491,14 @@ namespace PDF_Manager.Printing
                             }
                             foreach (var n in lines)
                             {
-                                table[r, j] = printManager.toString(n);
+                                table[r, j] = n;
                                 table.AlignX[r, j] = "R";
                                 r++;
                             }
                         }
                         else
                         {
-                            table[r, j] = printManager.toString(item.caseStr);
+                            table[r, j] = provenance;
                             table.AlignX[r, j] = "R";
                             r++;
                         }
@@ -529,8 +535,9 @@ namespace PDF_Manager.Printing
                     j++;
                     if (item.caseStr != null)
                     {
-                        int len = item.caseStr.Length;
-                        var str = item.caseStr;
+                        var provenance = ReferenceResultLayout.Provenance(item.caseStr, item.comb);
+                        int len = provenance.Length;
+                        var str = provenance;
 
                         if (len > 30)
                         {
@@ -542,14 +549,14 @@ namespace PDF_Manager.Printing
                             }
                             foreach (var n in lines)
                             {
-                                table[r, j] = printManager.toString(n);
+                                table[r, j] = n;
                                 table.AlignX[r, j] = "L";
                                 r++;
                             }
                         }
                         else
                         {
-                            table[r, j] = printManager.toString(item.caseStr);
+                            table[r, j] = provenance;
                             table.AlignX[r, j] = "L";
                             r++;
                         }
@@ -564,6 +571,41 @@ namespace PDF_Manager.Printing
         }
 
         #region PrintableBaseC.printPDF()用メソッド定義
+        private readonly bool referenceLayout;
+        private readonly string reportPrefix;
+        public new void printPDF(PdfDocument mc, PrintData data, ref int indexPage)
+        {
+            if (!referenceLayout || data.dimension != 2)
+            { base.printPDF(mc, data, ref indexPage); return; }
+            bool nextGroup = false;
+            foreach (var entry in Fsecs)
+            {
+                // Reference order is bending moment, shear, then axial force.
+                foreach (var focus in new[] { (Name: "MOMENT", Max: 4), (Name: "SHARE", Max: 2), (Name: "AXIAL", Max: 0) })
+                {
+                    var max = entry.Value.getValue2(focus.Max);
+                    var min = entry.Value.getValue2(focus.Max + 1);
+                    if (!max.Any() && !min.Any()) continue;
+                    if (ReferenceResultLayout.Portrait(mc))
+                    {
+                        foreach (var extremum in new[] { (Rows: max, Name: " MAX."), (Rows: min, Name: " MIN.") })
+                        {
+                            if (!extremum.Rows.Any()) continue;
+                            ReferenceResultLayout.SingleForces(mc, data, ref indexPage,
+                                reportPrefix + entry.Key + " " + fsecnames[entry.Key] + " " + focus.Name + extremum.Name,
+                                extremum.Rows, true, nextGroup);
+                            nextGroup = true;
+                        }
+                        continue;
+                    }
+                    ReferenceResultLayout.Forces(mc, data, ref indexPage,
+                        reportPrefix + entry.Key + " " + fsecnames[entry.Key] + " " + focus.Name + " MAX.", max,
+                        focus.Name + " MIN.", min, envelope: true, newGroup: nextGroup);
+                    nextGroup = true;
+                }
+            }
+        }
+
         protected readonly struct FsecContext : IContext
         {
             public FsecContext(ResultFsecCombine instance, int j)

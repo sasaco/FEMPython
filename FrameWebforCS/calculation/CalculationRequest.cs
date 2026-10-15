@@ -16,7 +16,7 @@ internal sealed class CalculationRequestException(string message) : Exception(me
 internal static class CalculationRequestBuilder
 {
     private static readonly string[] OptionalSections =
-        ["fix_node", "fix_member", "joint", "shell", "notice_points"];
+        ["fix_node", "fix_member", "joint", "shell"];
     private static readonly string[] LoadComponents = ["tx", "ty", "tz", "rx", "ry", "rz"];
 
     internal static CalculationRequest FromSavedJson(string savedJson)
@@ -40,6 +40,20 @@ internal static class CalculationRequestBuilder
         foreach (string section in OptionalSections)
             if (saved[section] is JsonObject value && value.Count > 0)
                 result[section] = value.DeepClone();
+        if (saved.ContainsKey("notice_points"))
+        {
+            if (saved["notice_points"] is not JsonArray notices)
+                throw new CalculationRequestException("notice_points must be an array.");
+            foreach (var value in notices)
+            {
+                if (value is not JsonObject notice || Number(notice["m"]) is not double memberId ||
+                    memberId <= 0 || memberId != Math.Truncate(memberId) ||
+                    notice["Points"] is not JsonArray points ||
+                    points.Any(point => Number(point) is not double position || !double.IsFinite(position)))
+                    throw new CalculationRequestException("notice_points requires member IDs and numeric Points arrays.");
+            }
+            result["notice_points"] = notices.DeepClone();
+        }
         var savedLoads = Object(result, "load");
         foreach (var (caseId, spatial) in bridgeCases)
         {
@@ -256,6 +270,8 @@ internal static class CalculationRequestBuilder
                 ["P2"] = mark == 9 ? Number(row["P1"]) ?? 0 : Number(row["P2"]) ?? 0,
                 ["row"] = (int?)row["row"] ?? 0
             };
+            if (row["_relativeZeroLength"]?.GetValue<bool>() == true)
+                projected["_relativeZeroLength"] = true;
             yield return projected;
         }
     }
@@ -263,11 +279,15 @@ internal static class CalculationRequestBuilder
     private static IEnumerable<JsonObject> NormalizeRelativeMemberRows(JsonArray source,
         JsonObject members, JsonObject nodes, string caseId)
     {
-        double previousEnd = 0;
+        double previousPhysicalEndMm = 0;
+        double previousNumericEndMm = 0;
         int previousRow = -1;
+        int previousMember = 0;
         foreach (var value in source.OfType<JsonObject>().OrderBy(row => (int?)row["row"] ?? 0))
         {
             var row = (JsonObject)value.DeepClone();
+            // This transient marker is derived below, never trusted from saved input.
+            row.Remove("_relativeZeroLength");
             int rowNumber = (int?)row["row"] ?? 0;
             double? markValue = Number(row["mark"]);
             if (markValue != 0 && markValue != 1 && markValue != 2 && markValue != 9 && markValue != 11)
@@ -279,37 +299,74 @@ internal static class CalculationRequestBuilder
             if ((Number(row["m1"]) == null && Number(row["m2"]) == null) ||
                 new[] { "L1", "L2", "P1", "P2" }.All(key => Number(row[key]) == null))
                 continue;
-            double rawStart = Number(row["L1"]) ?? 0;
-            double rawEnd = Number(row["L2"]) ?? 0;
-            bool continuation = previousRow + 1 == rowNumber;
-            double start = !continuation ? rawStart :
-                rawStart < 0 ? previousEnd + Math.Abs(rawStart) : rawStart;
-            double end = rawEnd < 0 ? start + Math.Abs(rawEnd) : rawEnd;
-            previousRow = rowNumber;
             int mark = (int)(Number(row["mark"]) ?? 0);
+            bool lexicalNegativeStart = String(row["L1"]).TrimStart().StartsWith("-", StringComparison.Ordinal);
+            // Angular rounds each input distance before carrying it to the next
+            // row. Point rows round signed values; physical distributed spans
+            // round their magnitudes, retaining the original relative sign.
+            double inputStart = Number(row["L1"]) ?? 0, inputEnd = Number(row["L2"]) ?? 0;
+            double signedStartMm = JsRound(inputStart * 1000), signedEndMm = JsRound(inputEnd * 1000);
+            double rawStartMm = LoadDistanceMillimetres(inputStart, mark == 2);
+            double rawEndMm = LoadDistanceMillimetres(inputEnd, mark == 2);
+            bool relativePhysicalEnd = inputEnd < 0;
+            row["L1"] = rawStartMm / 1000;
+            row["L2"] = rawEndMm / 1000;
             int member = (int)Math.Abs(Number(row["m2"]) ?? Number(row["m1"]) ?? 0);
+            int firstMember = (int)Math.Abs(Number(row["m1"]) ?? Number(row["m2"]) ?? 0);
+            if (firstMember == 0) firstMember = member;
+            if (member == 0) member = firstMember;
+            bool sameMemberRange = previousMember >= Math.Min(firstMember, member) &&
+                previousMember <= Math.Max(firstMember, member);
+            // Point rows use Angular's numeric row carry; distributed rows use
+            // the physical member carry, whose lexical sign includes "-0".
+            bool relativeStart = (rawStartMm < 0 || mark == 2 && rawStartMm == 0 &&
+                lexicalNegativeStart) &&
+                (mark != 2 || sameMemberRange);
+            bool continuation = previousRow + 1 == rowNumber;
+            // checkIntoMemberL1 carries signed raw L2 even for distributed rows;
+            // getL1Position/getL2Position carry the actual physical member end.
+            double numericStartMm = continuation && signedStartMm < 0
+                ? previousNumericEndMm + Math.Abs(signedStartMm) : signedStartMm;
+            double numericEndMm = signedEndMm < 0 ? numericStartMm + Math.Abs(signedEndMm) : signedEndMm;
+            previousNumericEndMm = numericEndMm;
+            double startMm = mark is 1 or 11 ? numericStartMm :
+                continuation && relativeStart ? previousPhysicalEndMm + Math.Abs(rawStartMm) : rawStartMm;
+            double endMm = mark is 1 or 11 ? numericEndMm :
+                relativePhysicalEnd ? startMm + Math.Abs(rawEndMm) : rawEndMm;
+            previousRow = rowNumber;
             // Angular's next relative L1 starts at the previous load's actual end.
             // For a distributed load, L2 is the right margin from the member end.
-            previousEnd = mark is 1 or 11 || member == 0 || rawEnd < 0
-                ? end : MemberLength(member.ToString(CultureInfo.InvariantCulture), members, nodes) - end;
+            previousPhysicalEndMm = mark is 1 or 11 || member == 0 || relativePhysicalEnd
+                ? endMm : JsRound(MemberLength(member.ToString(CultureInfo.InvariantCulture), members, nodes) * 1000) - endMm;
+            previousMember = member;
             if (mark is 1 or 11)
             {
-                if (start < 0) { row["P1"] = 0; start = 0; }
-                row["L1"] = start;
-                row["L2"] = end;
+                if (startMm < 0) { row["P1"] = 0; startMm = 0; }
+                row["L1"] = startMm / 1000;
+                row["L2"] = endMm / 1000;
             }
-            else if (mark == 2 && start < 0)
+            else if (mark == 2 && (numericStartMm < 0 || startMm < 0))
             {
-                double distance = Math.Abs(start) + Math.Abs(end);
+                double clipStartMm = numericStartMm < 0 ? numericStartMm : startMm;
+                double clipEndMm = numericStartMm < 0 ? numericEndMm : endMm;
+                double distance = Math.Abs(clipStartMm) + Math.Abs(clipEndMm);
                 double p1 = Number(row["P1"]) ?? 0;
                 double p2 = Number(row["P2"]) ?? 0;
                 row["_originalP1"] = p1;
-                if (distance > 0) row["P1"] = p1 + Math.Abs(start) * (p2 - p1) / distance;
+                if (distance > 0) row["P1"] = p1 + Math.Abs(clipStartMm) * (p2 - p1) / distance;
                 row["L1"] = 0;
-                row["L2"] = -end;
+                row["L2"] = -clipEndMm / 1000;
+                previousPhysicalEndMm = clipEndMm > 0 ? clipEndMm :
+                    JsRound(MemberLength(member.ToString(CultureInfo.InvariantCulture), members, nodes) * 1000) + clipEndMm;
             }
-            else if (rawStart < 0 && continuation)
-                row["L1"] = start;
+            else if (relativeStart && continuation)
+                row["L1"] = startMm / 1000;
+            // A negative fractional span can round to zero. Keep its original
+            // numeric sign until each expanded member converts it to a margin.
+            // Numeric-stage clipping above intentionally replaces that meaning.
+            if (mark == 2 && relativePhysicalEnd && rawEndMm == 0 &&
+                numericStartMm >= 0 && startMm >= 0)
+                row["_relativeZeroLength"] = true;
             yield return row;
         }
     }
@@ -362,7 +419,7 @@ internal static class CalculationRequestBuilder
                 if (start < 0 || start > length) { start = 0; row["P1"] = 0; }
                 if (end < 0 || end > length) { end = 0; row["P2"] = 0; }
             }
-            else if (end < 0)
+            else if (end < 0 || row["_relativeZeroLength"]?.GetValue<bool>() == true)
                 end = Math.Max(0, length - start - Math.Abs(end));
             else if (start + end > length)
             {
@@ -374,6 +431,7 @@ internal static class CalculationRequestBuilder
             row["L2"] = JsRound(end * 1000) / 1000;
             row["P1"] = JsRound((Number(row["P1"]) ?? 0) * 100) / 100;
             row["P2"] = JsRound((Number(row["P2"]) ?? 0) * 100) / 100;
+            row.Remove("_relativeZeroLength");
             if ((Number(row["P1"]) ?? 0) != 0 || (Number(row["P2"]) ?? 0) != 0)
                 output.Add(row);
         }
@@ -546,6 +604,9 @@ internal static class CalculationRequestBuilder
 
     private static double[] Sub(double[] a, double[] b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
     private static double JsRound(double value) => Math.Floor(value + 0.5);
+    private static double LoadDistanceMillimetres(double value, bool physical) => physical
+        ? Math.CopySign(JsRound(Math.Abs(value) * 1000), value)
+        : JsRound(value * 1000);
     private static JsonObject Object(JsonObject parent, string key) => parent[key] as JsonObject ??
         throw new CalculationRequestException($"{key} must be an object.");
     private static string Id(JsonNode? node) => node == null ? "" : node.ToString();

@@ -460,8 +460,19 @@ namespace PDF_Manager.Printing
         /// 断面力を印字する
         /// </summary>
         /// <param name="fsec"></param>
+        internal static List<Fsec> DrawingRows(List<Fsec> rows)
+        {
+            var drawing = new List<Fsec>(rows.Count);
+            foreach (var row in rows)
+                if (row.occurrence <= 1) drawing.Add(row);
+            return drawing;
+        }
+
         private void printFsec(List<Fsec> fsec, string key)
         {
+            // Tables retain both report occurrences. Draw each canonical occurrence once;
+            // unmarked legacy rows and distinct envelope/one-sided vectors remain intact.
+            fsec = DrawingRows(fsec);
             // 断面力の描写用のペン設定
             this.Frame.canvas.mc.xpen = new XPen(XColors.Blue, 0.2);
 

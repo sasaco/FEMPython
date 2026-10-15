@@ -458,3 +458,32 @@ Lead: desktop focused 108 passed; print projection 32 passed; bridge-case Python
 ### Verification Limits
 
 Angular full gate could not run: node_modules and package-lock.json are absent. No dependency files were changed. Broad Python suite was interrupted after six existing benchmark-consumer errors; narrow reproductions fail on metadata / node_displacements keys because benchmark tools still expect the old result shape while HEAD FemModel.run returns AnalysisResultSet. Relevant bridge suites passed; no whole-suite pass is claimed. Fixed loads are supported; vehicle motion and worst-position search remain outside the approved scope.
+
+---
+
+## Current Verification: Transverse Analysis and Printing
+<!-- orchestra:block-id: transverse-analysis-print-verification -->
+
+The user approved the plan on 2026-10-15. Fresh current FrameWebforCS/pythonnet analysis of the supplied transverse model completed once for all 10 cases, with no skipped cases or solver warnings. All three generated reports differ from the supplied PDFs: 30/60/34 pages versus 15/45/4, with numerical, sign, station, provenance and layout differences. Report: [docs/research/transverse-analysis-print-verification-report.md](docs/research/transverse-analysis-print-verification-report.md).
+
+Concrete input conversion findings: CalculationRequestBuilder drops the saved notice_points array (member 5 at 0.566 is missing), and numeric comparison of L1 loses the relative continuation meaning of the string "-0", overlapping CASE 10 pile load intervals at the I end. Raw displacement components are printed under mm/mmrad labels without display conversion, and force signs/PICKUP selections differ from the references. COMBINE displacement repeats each vector six times and formats comma-separated source IDs as a number. No product fixes were made.
+
+Verification evidence: all 188 PDF pages extracted/rasterized with zero unaccounted decimal/placeholder tokens; unresolved coincident force-row associations remain explicit. Independent derived arithmetic passed 124,200 component checks and source/provenance checks; 56 focused product tests passed. Private reproducible harness, results, PDFs, all-row diffs and visual evidence: `.tmp/transverse-analysis-print-verification/20261015T182603/`. Preserve this gitignored directory if evidence is needed later. External originals and frozen copies retain their approved hashes. Repairs and a corrected-result rerun require a separate task; the historical input used for the reference PDFs remains unknown.
+
+### Next Session Request
+
+The user now requests correction of these findings in the next session. [HANDOFF.md](../HANDOFF.md) is the standalone work request: create a new correction plan in `.agents/docs/plans/` first, implement through `.agents/skills/tdd/SKILL.md`, update the same plan whenever progress/new findings/design rationale/Tips emerge, mark verified completed items with ✅, and prohibit unsupported speculation or completion claims. The previous PICKUP-export handoff is preserved at `docs/research/handoff-pickup-node-result-exports-20261005.md`. No correction implementation was started in this handoff session.
+
+### Correction Implementation — Verified Corrections; Exact Reference Parity Incomplete
+
+The user approved implementation, selected UPDATEDK:PDFs30/60/2portrait pages, and confirmed identical CASE10 pile pressure profiles. Current correction [plan](docs/plans/transverse-analysis-print-corrections.md), [report](docs/research/transverse-analysis-print-corrections-report.md) and rootHANDOFF supersede historical verification paragraphs above.
+
+Implemented notice retention/validation, lexicalnegative-zero request/display continuation, integer-mm per-stage rounding with distinctraw/physicalcarry and signednegative-subhalf spans, physicalprintmm/mrad and explicit2DMz/Rz signs, semanticordinary/envelope metadata, weightedtextprovenance, orientation-awarecomposer/pagination and atomicnumericwrapping. Newboundedfoundationoccurrencesrequire compatibleactivesheets/exactdeclaredposition/exactallsixsidesinallstaticcases; rawcanonical/exportunchanged. Optionaloccurrence1/2 keepsIDs/vectors/source, actualdiagramrendererfiltersaddedcopiesonly. Internalreservedmarkerinputcollision fixed withregressions. Independentreviews completed.
+
+CorrectedCOPY `.tmp/transverse-analysis-print-corrections/20261015T193610/residual-investigation/corrected-input-row-labels-layout.json`, SHA`60dcb754088a58f2008696e76b982c787a61592fdd8fba426d47d40fc5751ad3`, changes11rowIDs+11layoutrefs only; actualservice save/reload/display andindependentreviewPASS. OriginalK:JSON andallpressurevalues/slots/order/othercases unchanged; no productionautosymmetry.
+
+Finalstage `.tmp/transverse-analysis-print-corrections/20261015T193610/stages/final-9/` all10casesonce/no warnings,67nodes11members, source-stable; PDFs30/60/2pages. ALL4040rowsmatched950/2850/240, missing/extra/ambiguous0. Numericvectors904/950,2470/2850,173/240; numericcomponents56/553/122differ, selectedPICKUPsourceIDs215differ, namesabsent. ExactparityFALSE. Independent140400component/rawsource/provenance/occurrenceauditPASS,maxAbs1.1368683772161603e-13, currentfsumdiagnostics0; old7diagnosticsretained. Lead237nativepassed78input/73projection/85PDF/1headless,0fail/skip,coverageunmeasured. Finalbuild/AgentOnly/ownership/cleanup inreport+manifest.
+
+All92pagesrasterized, all24contacts+sevenfullpages independentlyreviewed andleadthreefullpages;85pagescontact-only. Final9rasterequivalence toreviewed8 checked. Protected313originalartifacts+manifest/frozeninputs/referenceversionspreserved; originalJSON/currentselectedreferencehashesverified; ownedchildrenreaped, temporaryprojectsource/exclusionremoved, evidence/cachesretained. No upload/stage/commit.
+
+Remainingacceptance:numerical/source/formattingsdifferences andauthoritativeabsentnames. Baselineactive2DdiagramusesConvert.ToInt32(canonicalcasekey) andInputNode(canonicalstationn), so generaldiagramPDFcorrectnessunverified; no newfailurefromoccurrencefilterclaimed. ContinuefromHANDOFF with exactfixture/evidence; no tolerances/forcedties/fabricatednames. Historical7rowambiguityandextrarowsareRESOLVEDby8/9, notcurrentwork.
