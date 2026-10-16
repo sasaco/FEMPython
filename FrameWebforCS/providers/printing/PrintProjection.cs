@@ -368,7 +368,7 @@ internal static class PrintProjection
 
     private static void AddBaseFamily(JsonObject root, string family,
         IReadOnlyList<CalculationResultPage> pages, PrintSelection selection,
-        CalculationResultPresentation presentation)
+        CalculationResultPresentation presentation, bool preserveSegmentSides = false)
     {
         var cases = new JsonObject();
         var names = new JsonArray();
@@ -380,7 +380,7 @@ internal static class PrintProjection
             {
                 cases.Add(page.Key, MovingEnvelope(family,
                     [movingParent, .. page.MovingChildren], selection, members,
-                    presentation.Dimension, presentation.ResultSet.Units.Length));
+                    presentation.Dimension, presentation.ResultSet.Units.Length, preserveSegmentSides));
                 names.Add(new JsonArray(JsonValue.Create(page.Key), JsonValue.Create(page.Label)));
                 continue;
             }
@@ -429,7 +429,7 @@ internal static class PrintProjection
                         }
                         void AddStation(string stationId, ForceComponents value)
                         {
-                            if (!seen.Add(stationId)) return;
+                            if (!preserveSegmentSides && !seen.Add(stationId)) return;
                             rows.Add(new JsonObject { ["m"] = member.MemberId, ["n"] = stationId,
                                 ["l"] = positions[stationId], ["fx"] = value.Fx, ["fy"] = value.Fy,
                                 ["fz"] = value.Fz, ["mx"] = value.Mx, ["my"] = value.My,
@@ -451,7 +451,7 @@ internal static class PrintProjection
     }
 
     private sealed record MovingRow(string EntityId, string? StationId, double Location,
-        double[] Components, string CaseId);
+        double[] Components, string CaseId, string? Endpoint = null);
 
     // This legacy print boundary labels physical displacements mm/mrad. Unspecified
     // legacy saved-document lengths use metres; canonical/export values stay raw.
@@ -462,23 +462,26 @@ internal static class PrintProjection
         if (!physical) return values;
         if (family == "disg")
         {
-            double scale = length switch
-            {
-                "m" or "unspecified" => 1000,
-                "cm" => 10,
-                "mm" => 1,
-                _ => throw new PrintProjectionException(
-                    $"Cannot print displacement in mm from length unit '{length}'."),
-            };
+            double scale = DisplacementLengthScale(length);
             for (int i = 0; i < 6; i++) values[i] *= i < 3 ? scale : 1000;
         }
         if (dimension == 2 && family is "disg" or "fsec") values[5] = -values[5];
         return values;
     }
 
+    internal static double DisplacementLengthScale(string length) => length switch
+    {
+        "m" or "unspecified" => 1000,
+        "cm" => 10,
+        "mm" => 1,
+        _ => throw new PrintProjectionException(
+            $"Cannot print displacement in mm from length unit '{length}'."),
+    };
+
     private static JsonObject MovingEnvelope(string family,
         IReadOnlyList<StaticAnalysisResult> sources, PrintSelection selection,
-        IReadOnlyDictionary<string, TopologyMember> members, int dimension, string length)
+        IReadOnlyDictionary<string, TopologyMember> members, int dimension, string length,
+        bool preserveSegmentSides = false)
     {
         var candidates = new List<MovingRow>();
         foreach (StaticAnalysisResult source in sources)
@@ -506,16 +509,16 @@ internal static class PrintProjection
                     var seen = new HashSet<string>();
                     foreach (MemberSegmentResult segment in member.Segments)
                     {
-                        AddStation(segment.StationI, segment.IEnd);
-                        AddStation(segment.StationJ, segment.JEnd);
+                        AddStation(segment.StationI, segment.IEnd, segment.SegmentId + "/i");
+                        AddStation(segment.StationJ, segment.JEnd, segment.SegmentId + "/j");
                     }
-                    void AddStation(string stationId, ForceComponents force)
+                    void AddStation(string stationId, ForceComponents force, string endpoint)
                     {
-                        if (!seen.Add(stationId)) return;
+                        if (!preserveSegmentSides && !seen.Add(stationId)) return;
                         candidates.Add(new(member.MemberId, stationId, positions[stationId],
                             DisplayComponents(family,
                                 [force.Fx, force.Fy, force.Fz, force.Mx, force.My, force.Mz],
-                                dimension, length), source.CaseId));
+                                dimension, length), source.CaseId, preserveSegmentSides ? endpoint : null));
                     }
                 }
         }
@@ -534,7 +537,7 @@ internal static class PrintProjection
         {
             string mode = focusNames[component] + (maximum ? "_max" : "_min");
             if (!SelectsMode(FamilyComponents(selection, family), mode, focusNames[component])) continue;
-            var selectedRows = candidates.GroupBy(row => (row.EntityId, row.StationId));
+            var selectedRows = candidates.GroupBy(row => (row.EntityId, row.StationId, row.Endpoint));
             if (family == "fsec")
             {
                 var rows = new JsonArray();
@@ -721,12 +724,47 @@ internal static class PrintProjection
             if (choice.ScaleY is { } sy) details["scaleY"] = 1 / sy;
             var diagram = new JsonObject { [config] = details,
                 ["pageOrientation"] = choice.Orientation.ToString() };
-            if (option == PrintOption.SectionDiagram && selected.Contains("disg") &&
-                root["disg"] is { } displacements)
+            string[] diagramForces = selected.Where(ForceNames.Contains).ToArray();
+            PrintSelection forceSelection = choice with
             {
-                diagram["disg"] = displacements.DeepClone();
-                diagram["disgName"] = root["disgName"]?.DeepClone();
+                SectionForceComponents = diagramForces.Length > 0 ? diagramForces : ["fx", "fy", "mz"],
+            };
+            if (option == PrintOption.SectionDiagram)
+            {
+                var presentation = snapshot.Result!;
+                var pages = presentation.Pages.Where(page => root["fsec"]!.AsObject()
+                    .ContainsKey(page.Key)).ToArray();
+                var geometry = new JsonObject();
+                // Tables retain one row per station. Diagram slopes and point-load
+                // jumps need both adjacent element ends at the same station.
+                AddBaseFamily(geometry, "fsec", pages, forceSelection, presentation, preserveSegmentSides: true);
+                diagram["fsec"] = geometry["fsec"]!.DeepClone();
+                if (selected.Contains("disg"))
+                {
+                    // Node selection limits table rows and diagram labels, while
+                    // complete endpoint vectors are needed to draw connected members.
+                    AddBaseFamily(geometry, "disg", pages, choice with
+                    {
+                        NodeIds = null, DisplacementComponents = null, Components = null,
+                    }, presentation);
+                    diagram["disg"] = geometry["disg"]!.DeepClone();
+                    diagram["disgName"] = root["disgName"]?.DeepClone();
+                }
             }
+            else if (option is PrintOption.CombinedSectionDiagram or PrintOption.PickupSectionDiagram)
+            {
+                // Diagram focus controls are independent of the neighboring table's
+                // extrema selection; regenerate only the diagram's private family.
+                var geometry = new JsonObject();
+                var diagramSnapshot = new PrintSnapshot(forceSelection with { Options = [option] },
+                    snapshot.InputJson, snapshot.DocumentRevision, snapshot.InputRevision,
+                    snapshot.Result, snapshot.Derived, [], snapshot.ResultInputRevision);
+                AddDerivedFamilies(geometry, diagramSnapshot);
+                string family = option == PrintOption.CombinedSectionDiagram ? "fsecCombine" : "fsecPickup";
+                diagram[family] = geometry[family]!.DeepClone();
+            }
+            if (config == "diagramResult")
+                PrintDiagramProjection.Apply(root, diagram, details, snapshot, option);
             root[key] = diagram;
         }
     }

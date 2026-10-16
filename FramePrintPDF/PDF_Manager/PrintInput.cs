@@ -321,7 +321,7 @@ public class PrintInput
                     }
                 }
 
-                if (printScreens.Count > 0)
+                if (printScreens.Count > 0 && !PrintData.IsCanonicalDiagram(printScreens.First().Value))
                 {
                     mc.NewPage(ref indexPage);
                 }
@@ -345,8 +345,12 @@ public class PrintInput
                     }
                     else
                     {
-                        if (hasPreviousData)
+                        bool canonicalDiagram = PrintData.IsCanonicalDiagram(printScreens.ElementAt(i).Value);
+                        // A table can finish on its first page without advancing indexPage.
+                        // Its occupied position still requires a separate diagram page.
+                        if (hasPreviousData || canonicalDiagram && !mc.currentPos.Equals(mc.initialPos))
                         {
+                            if (canonicalDiagram) mc.TitleArea = new PdfSharpCore.Drawing.XPoint();
                             mc.NewPage(ref indexPage);
                             prevIndexPage = indexPage;
                         }
@@ -360,7 +364,7 @@ public class PrintInput
                             DiagramResult diaFsec = (DiagramResult)dataChild.printDatas[DiagramResult.KEY];
                             diaFsec.printPDF(mc, dataChild, ref indexPage);
 
-                            if (prevIndexPage != indexPage)
+                            if (canonicalDiagram || prevIndexPage != indexPage)
                             {
                                 prevIndexPage = indexPage;
                                 hasPreviousData = true;

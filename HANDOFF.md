@@ -1,159 +1,61 @@
-# Handoff: Fix Transverse Analysis and Print Parity
+# Handoff: Rail Transverse Numeric Differences and Print Layout
 
-Date: 2026-10-15
-Repository: `C:\Users\sasai\Documents\structural-mcp\FEMPython`
-Verification HEAD: `08aac8fd4b64b8513047adc575d87893a38fe818`
-
-The user approved implementation on 2026-10-15. Input conversion, print display/provenance and report composition corrections are now implemented and tested. **Complete reference parity is still incomplete.** Continue from the maintained [correction plan](.agents/docs/plans/transverse-analysis-print-corrections.md) and [before/after report](.agents/docs/research/transverse-analysis-print-corrections-report.md); do not restart the completed input/display repairs. The previous PICKUP-export handoff is preserved byte-for-byte in [.agents/docs/research/handoff-pickup-node-result-exports-20261005.md](.agents/docs/research/handoff-pickup-node-result-exports-20261005.md).
-
-## Latest implementation status
-
-- User selected UPDATED K: references30/60/2portrait pages and confirmed identical CASE10 pile pressure distributions. OriginalJSON remains unchanged; corrected22-edit COPY SHA256`60dcb754088a58f2008696e76b982c787a61592fdd8fba426d47d40fc5751ad3` is at `.tmp/transverse-analysis-print-corrections/20261015T193610/residual-investigation/corrected-input-row-labels-layout.json`.
-- ✅ Code-proven input/display/provenance/composer corrections, integer-mm stage rounding and bounded continuous foundation TABLE occurrences implemented with observed native TDD. Lead237 native tests passed,0fail/skip; coverage unmeasured. Internal-marker collision and mixed diagram duplicate rendering fixed; independent bounded reviews completed.
-- ✅ Final shared stage `.tmp/transverse-analysis-print-corrections/20261015T193610/stages/final-9/`: all10cases once/no warnings,67nodes/11members, source stable; PDFs30/60/2pages. ALL4040rows associated:950basic/2850PICKUP/240displacement, missing/extra/ambiguous ALL0. Independent140400component audit and exact occurrence proof pass.
-- **Exact reference parity remains incomplete:** numericvectors904/950basic,2470/2850PICKUP,173/240displacement; numericalcomponents56/553/122 differ. Selected PICKUP source IDs differ215rows; source-only member names absent. No arbitrary numerical/tie/name corrections were made.
-- Existing baseline2Dvector-diagram case-key and station-node mapping defects are documented separately. New occurrence filter is native-tested at actualparser/render-listboundary; general diagramPDF correctness is NOT claimed.
-- Final report/manifest link commands, hashes, row/token ledgers, tests, visual and cleanup evidence. Final8 is preserved; final9 removes reserved-marker collision without changing actual sample outputs. Earlier7extra/ambiguous counts are historical, now resolved. Both reference versions and all prior evidence remain preserved.
+Date: 2026-10-16
+Repository HEAD during verification: 018d0d0ee9453464b0b541a5344ce5a6c0acdfc6
+Previous handoff (preserved byte for byte): .agents/docs/research/handoff-transverse-analysis-print-corrections-20261015.md
 
 ## Goal
 
-Correct the current FrameWebforCS saved-document analysis and printing pipeline so the supplied transverse model reproduces the requested numerical results, case/member/node/station associations, PICKUP source selections, and report presentation of the three reference PDFs. Fix the causes in the application, not the verifier or reference data. Run a fresh end-to-end comparison after corrections and publish reproducible evidence.
-
-## Constraints
-
-### Mandatory working method from the user
-
-1. **Create the correction plan first in `.agents/docs/plans/`, before changing product code.** Use a new plan for corrections; preserve the completed verification plan as historical evidence. A suitable English title is `Transverse Analysis Print Corrections`. Resolve the path with the shared workspace helper and use its returned `paths.plan_doc` verbatim:
-
-   ```powershell
-   uv run --project FrameWeb --locked --extra dev python .agents/skills/_shared/workspace.py --skill plan --title "Transverse Analysis Print Corrections" --create
-   ```
-
-   If that document already exists, read and revise it rather than overwriting it blindly. Include Goal, Constraints, Acceptance criteria, dependency-ordered tasks, test cases, open questions and verification commands.
-
-2. **Update the same plan as soon as progress occurs.** Record status, new findings, design principles and their background/rationale, rejected approaches, Tips, commands/log paths, remaining risks and information another worker needs. Mark verified completed items with **✅**. Keep unfinished or blocked items visibly unfinished. A written implementation or a passing build alone is not proof that the relevant acceptance criterion passed.
-
-3. **Implement with `.agents/skills/tdd/SKILL.md`.** Read that skill and follow Red → Green → Refactor, one small failure-driven change at a time. Record the failing assertion, minimal correction, passing run and retained regression evidence for each cycle. Do not implement first and add a test afterward. Follow its ownership/delegation and lead-verification requirements for nontrivial cycles.
-
-4. **Unsupported speculation and assertions are prohibited.** Separate observed facts, source-proven transformations, hypotheses and unknowns. Every cause or completion claim needs file:line evidence, a reproducible test, or exact before/after artifacts. Say what is unproven. Do not claim all results match from HTTP/process success, test-suite success, a PDF signature, a few matching rows or arithmetic consistency alone.
-
-### Scope and invariants
-
-- Start with `AGENTS.md`, `.agents/skills/context-loader/SKILL.md`, `.agents/INDEX.md`, the rule read plan, STATE and DESIGN. Communicate with the user in Japanese. Use repository-root PowerShell and the locked component environments.
-- Inspect current git status and relevant diffs. This verification's documentation is currently uncommitted; preserve it and all concurrent work. The verification made no product code changes.
-- Primary correction areas are `FrameWebforCS/` and `FramePrintPDF/`. Investigate `FrameWeb/` when evidence locates an engine/input-contract issue there. Angular is useful evidence for the original input semantics; do not change Angular or `FrameGConverter/` as incidental cleanup.
-- Preserve the canonical `AnalysisResultSet` contract and raw-unit/result boundary. Do not globally negate moments or multiply results by 1000 merely to match one PDF. Establish the intended unit, axis and sign conventions at each boundary, including rotations, before changing them. Keep existing section-force/CSV exports correct.
-- Do not alter the supplied K: JSON/PDFs, frozen originals, reference values or this completed verification run. Do not hardcode this sample's IDs/results, synthesize missing cases as zeros, skip problematic rows, weaken tests, add arbitrary tolerances, or rename a mismatch as accepted.
-- Put each new run in a new private directory with its own input/source hashes and commands. Detailed client artifacts stay local; no upload is authorized. `.tmp/` is gitignored, not an archive: preserve the original run directory.
-- The source JSON is newer than the reference PDFs. Their historical input/software identity is unknown. Fix code-proven defects, then investigate any residual differences; do not invent historical equivalence or force output to match an unknown older model.
-
-## Acceptance criteria
-
-- [x] ✅ Notice-point arrays survive saved JSON → actual solver request → canonical topology → force aggregation → printing. The sample's three records are present, including member 5 at DIST 0.566, with appropriate labels/results.
-- [x] ✅ Relative member-load positions preserve the lexical meaning of `"-0"` and negative offsets. CASE 10 load intervals continue as intended instead of all starting at the I end. Cover ordinary zero, negative zero, consecutive/nonconsecutive rows, changing members, and the supported load marks with evidenced expectations.
-- [x] ✅ A documented and tested force/rotation/unit display contract maps canonical results to the reference-facing display without mutating canonical results. Both ordinary and COMBINE displacement display correct values and units. PICKUP selects signed extrema in the intended convention and retains the full correlated vector and correct source.
-- [ ] Source expressions remain text: reference COMBINE/CASE relationships are legible and correct, not rendered as numeric digit sequences such as `12345.0000`. Case/member/end/station labels, notice/rigid boundaries and required extrema rows are represented correctly.
-- [ ] Basic and PICKUP force reports, and base + COMBINE displacement reports, reproduce the requested case ordering, components, row multiplicity, provenance and page composition. COMBINE displacement does not repeat each ordinary combination vector six times. The reference geometry is A4 landscape, 842 × 595 pt; observed reference page counts are 15/45/4. Any remaining layout/page-count difference must be recorded, not silently waived.
-- [x] ✅ Re-run the actual shared application pipeline, not Python alone or saved cached results. Compare all reference/current pages and all numerical rows, account for missing/extra/duplicate rows, resolve or explicitly retain ambiguous station-side mappings, and inspect rasterized output. Comparison is complete; complete reference parity remains open.
-- [x] ✅ Regression tests include observed Red and Green runs for each corrected behavior; affected component tests/builds and the agent-infrastructure gate pass. AgentOnly uses the approved exact product-path scope and skips its product gates; separate native gates are recorded in the report. Coverage is unmeasured.
-- [x] ✅ Deliver the maintained correction plan, changes/tests, new manifest, raw/projection results, generated PDFs, row diffs, visual evidence, and a before/after verification report. STATE and HANDOFF contain the explicit incomplete parity status and continuation evidence.
+Continue the owner's rail transverse report parity work. Keep numerical discrepancies separate from layout differences. The owner has named FrameGConverter as the intended place to correct print layout. Verify component ownership before editing: for the supplied saved JSON, the observed production route goes directly through FrameWebforCS print projection and FramePrintPDF PDF composition; FrameGConverter is not called. Correct the layout at the responsible source, or establish and test a concrete upstream conversion effect before changing FrameGConverter. Do not mask numerical differences with layout changes.
 
 ## Current Progress
 
-### Completed verification — facts
+- The approved fresh run used the unchanged K: saved JSON, SHA-256 c2798b3c8aa687f7b2220aa57f31dd6ad91f9f66a41685edae450386b7ae6553. It solved all 10 base cases once with zero warnings. Reference and generated reports have 30/60/2 A4 portrait pages. Full report: .agents/docs/research/rail-transverse-print-parity-report.md. Run manifest: .tmp/rail-transverse-print-parity/20261016T041428Z/manifest.json.
+- This is the original JSON, not the earlier 22-edit corrected private COPY used by final-9. The prior COPY had 67 topology nodes; the original run has 70. Do not transfer final-9 row parity conclusions to this original-input run.
+- Case counts below compare **printed numeric vectors in unambiguously paired PDF rows**. They do not prove an independent FEM engine defect. A value differing only by 0.0001 is one last displayed digit, with the underlying unrounded reference unavailable.
 
-- ✅ Approved verification plan executed: [.agents/docs/plans/transverse-analysis-print-verification.md](.agents/docs/plans/transverse-analysis-print-verification.md).
-- ✅ Full report: [.agents/docs/research/transverse-analysis-print-verification-report.md](.agents/docs/research/transverse-analysis-print-verification-report.md). Read it and the security/quality/test review reports linked from it before planning repairs.
-- ✅ Original run: `.tmp/transverse-analysis-print-verification/20261015T182603/`. Its `manifest.json` records input hashes, environment and final artifact inventory. All four external originals and four frozen copies matched their hashes after verification.
-- ✅ Actual current application pipeline solved all 10 sample cases once, with no skipped cases or solver warnings. A separate known axial fixture checked `dx=0.0004` and stale saved-result exclusion.
-- ✅ Reference/current PDFs: 15/30 basic-force pages, 45/60 PICKUP pages, 4/34 displacement pages. All 188 pages were extracted and rasterized; zero unaccounted decimal/placeholder tokens.
-- ✅ Independent aggregation checks: 124,200 components and 20,700 correlated rows/source/provenance checks passed against the current canonical base. Maximum arithmetic delta was 2.2737367544323206e-13. This establishes aggregation consistency, not base-solver or reference correctness.
-- ✅ Existing focused product tests: 56 passed (Headless 1, print projection 21, PDF 34); infrastructure 57 passed. Three independent evidence reviews passed. Product code coverage was not measured.
-- This section records the original verification before corrections. Its defect list below is historical evidence; the latest status and correction report supersede its implementation status.
+| ID | Basic force differing / paired rows | Base displacement differing / paired nodes | COMBINE displacement differing / paired nodes |
+|---|---:|---:|---:|
+| 1 | 0 / 72 | 4 / 12 | 2 / 12 |
+| 2 | 0 / 72 | 3 / 12 | 0 / 12 |
+| 3 | 0 / 72 | 0 / 12 | 0 / 12 |
+| 4 | 0 / 72 | 0 / 12 | 4 / 12 |
+| 5 | 0 / 72 | 4 / 12 | 12 / 12 |
+| 6 | 0 / 72 | 2 / 12 | 3 / 12 |
+| 7 | 0 / 72 | 0 / 12 | 1 / 12 |
+| 8 | 0 / 72 | 2 / 12 | 4 / 12 |
+| 9 | 0 / 72 | 0 / 12 | 2 / 12 |
+| 10 | **60 / 72** | **12 / 12** | **12 / 12** |
 
-### Inputs
-
-Input:
-`K:\レールウェイコンサルタント\26_ピット\計算書\02_pre\05_線路直角方向の計算\線路直角方向.json`
-
-References:
-- Basic section forces: `K:\レールウェイコンサルタント\26_ピット\計算書\03_analysis\05_線路直角方向の計算\基本.pdf`
-- PICKUP section forces: `K:\レールウェイコンサルタント\26_ピット\計算書\03_analysis\05_線路直角方向の計算\PICK UP.pdf`
-- Base + COMBINE displacement: `K:\レールウェイコンサルタント\26_ピット\計算書\03_analysis\05_線路直角方向の計算\変位量.pdf`
-
-Input SHA-256: `c2798b3c8aa687f7b2220aa57f31dd6ad91f9f66a41685edae450386b7ae6553`. Reference hashes are in the verification plan and run manifest. Frozen copies are in the original run's `preflight/inputs/` directory.
-
-### Original problems, evidence, and first regression targets (baseline)
-
-1. **Dropped notice-point array — source/data proven.** `FrameWebforCS/calculation/CalculationRequest.cs:40–42` copies optional sections only when they are JsonObject. The supplied notice_points is a three-record JsonArray, and the actual request omits it. Member 5 has only stations 0 and 1.132; 0.566 is missing. Use `audit/feature-stations.json`, saved input/request and `CalculationRequestTests.cs`. Test array/absent/empty/malformed handling and actual resulting station coverage, not just key presence.
-
-2. **Negative-zero continuation — source/data proven.** `CalculationRequest.cs:282–286` converts L1 to numeric and tests `<0`; `"-0"` loses continuation semantics. Angular's `FrameWebforJS/src/app/components/input/input-load/input-load.service.ts:950–964` uses `sL1.includes("-")`. The actual CASE 10 request has 23 nonzero patches per pile all starting at zero, including 22 negative-zero continuation rows. Length is 23.95 but these intervals overlap within the first 2.2. Inspect `audit/case10-load-extents.json`. This is a concrete cause candidate for the large CASE 10 mismatch; no corrected solve was run to quantify causality.
-
-3. **Displacement display conversion and rotation signs — observed; full contract still needs proof.** `PrintProjection.cs:391–397` passes raw values to `ResultDisg.cs`, which labels mm/mmrad and formats without scaling; COMBINE does likewise. CASE 1/node 1 Y is raw -0.0015542503589541191, printed -0.0016, reference -1.5543. Canonical metadata says units unspecified. Legacy display/docs support an m/rad interpretation, but do not declare all raw inputs SI without evidence. Multiplying rotation by 1000 would still have the opposite sign in the example. See `audit/mapping-unit-audit.md` and existing display formatters.
-
-4. **Force signs and PICKUP selection — observed; locate the correct boundary before fixing.** CASE 1/member 3/J end DIST 0.881: reference M=-22.82 versus current +22.82, while S=-51.80 matches. PICKUP 1/M MAX/member 1/I end: reference COMBINE 6, M=10.41, S=21.45; current COMBINE 1, M=-7.40, S=15.30. Canonical I/J sign rules are explicit in `FrameWeb/src/fem/result_projection.py:192–199`; projection currently passes components unchanged. Test signed maxima/minima and correlated sources, not absolute-value approximations.
-
-5. **CASE 10 large numerical difference — observed; rerun after input fixes.** CASE 10/member 10/DIST 0 N: reference 13.52 versus current 1538.53. CASE 10/node 1 Dx: reference printed 19.0393 versus current 0.3250; a universal ×1000 does not reconcile it. Its contribution reaches COMBINE 5/10 and PICKUP 5. Keep this regression distinct from generic display scaling.
-
-6. **Provenance text/labels/stations — observed.** For COMBINE 1, reference expression is `1+2+3+4+5`, projected case source string is `1,2,3,4,5`, and PDF prints `12345.0000`. Separate weighted comb text also exists in the projection. Inspect `ResultDisgCombine.cs:238–239,:593` and `Printing/Comon/printManager.cs:67–77`; do not parse source identifiers as numeric measurements. PICKUP prints source COMBINE ID but omits constituent expression. Current basic captions use `1/Static/0`, force labels use S0... and omit reference member/end names, rigid/notice labels and the M-MAX row.
-
-7. **Report composition — observed.** Ordinary COMBINE displacement is printed once per dx/dy/rz max/min mode, yielding six identical vectors for every one of 120 combination/node groups and 600 extra rows. `ResultDisgCombine.cs:620–637` iterates the modes. Force tables use `Table.OneUpInfo` (`ResultFsec.cs:499–506`). `PrintLayout` is consumed only for diagrams (`PrintProjection.cs:653–669`), so toggling that enum cannot fix table layout. Test the true composer/parsed PDF, not merely projected JSON.
-
-### Comparison limitations to keep visible
-
-Reference/current row counts are 951/680 basic force, 2850/2040 PICKUP, and 240/840 displacement. Of these, 300 basic-force and 900 PICKUP rows have unambiguous one-to-one joins. There are 180 basic-force and 540 PICKUP coincident-position groups without a proven side correspondence. Preserve and resolve these groups; never count them as matches by selecting a convenient row. In the current fresh result the 460 deduplicated segment-end occurrences differ only by floating-point roundoff, so a significant lost force jump was not demonstrated in this run. Historical reference input identity remains unknown.
+- Basic force CASE 1-9 paired rows match numerically. For each of those cases, eight ambiguous same-position groups (16 rows per side) have equal numeric multisets, but their side-by-side physical pairing is unproved. Every base CASE has 7 reference-only and 10 generated-only force rows, all at different stations of member 10. Thus CASE 1-9 are not complete report parity.
+- The base-displacement differences in CASE 1-9 and COMBINE differences in MIX 1-4 and 6-9 are all 0.0001 in the final printed digit. Base CASE 10 and COMBINE MIX 5/10 differ by up to 1.5281 mm; all 12 nodes differ in each. MIX 5 and 10 both include CASE 10 in the printed formula. Propagation from CASE 10 is plausible but not independently proved.
+- Basic CASE 10 example: member 4, distance 0.000, printed M is reference +8.45 versus generated -28.38 (page 28 on both). Base displacement CASE 10/node 9 X is +18.6157 versus +20.1438 mm. These are substantive printed differences.
+- PICKUP MIX 1-5 are envelope/selection reports, not base analysis CASE 1-10. Each has 432 paired rows; their numeric differing-row counts are respectively 20, 20, 4, 27, 360. For MIX 1-4, every numeric-different row also has a different selected source ID, and the printed selected formula does not contain CASE 10. For MIX 5, all 360 numeric-different rows have CASE 10 in the printed formula; only 6 of these rows have a different source ID. Investigate source selection separately from the base CASE 10 values.
+- Source evidence: .tmp/rail-transverse-print-parity/20261016T041428Z/reference-refresh/comparison-original/row-differences.json and summary.json. The 50 basic CASE 10 keys in numeric-by-case.json merge coincident printed occurrences; the correct row count is 60/72.
+- All 92 reference and 92 generated pages were rendered. All pages were reviewed in contact sheets and representative pages at full rendered size. The reference has a narrower/right-shifted table, different type, spacing, captions and page-break positions. Generated displacement expressions wrap and shift the table. Visual evidence: .tmp/rail-transverse-print-parity/20261016T041428Z/visual/. Original-size review was representative, not an exhaustive subtle-glyph audit of 184 pages.
+- Focused tests passed: headless real-process smoke 1/1; transverse projection 41/41; PDF composition 27/27. Independent internal component audit passed 145800 checks. These are internal consistency checks, not external parity.
+- Layout ownership evidence: FrameWebforCS/components/print/PrintDialogForm.cs:332-334 builds PrintProjection and calls PDF_Manager.DirectPdfGenerator.Generate. FramePrintPDF/PDF_Manager/Printing/PrintResult/ReferenceResultLayout.cs and ResultFsec.cs, ResultFsecCombine.cs, ResultDisg.cs, ResultDisgCombine.cs, plus Printing/Table.cs and Printing/Comon/printManager.cs define the report layout. FrameGConverter/Convert_Manager/ConvertManager.cs:16-121 reads LZH/FRD data and serializes JSON; it does not render the supplied saved-JSON PDFs. Its Function1.cs has a legacy FramePrintPDF namespace/string placeholder but is not in this verified route.
 
 ## What Worked
 
-- Shared production path: saved JSON → CalculationRequestBuilder → PythonCalculationRuntime → strict AnalysisResultSet → CalculationDerivedPresenter → PrintProjection → DirectPdfGenerator. Python alone omits essential application processing.
-- Private C# harness: `harness/Verification.csproj` and `harness/Program.cs` in the original run. It uses `net10.0-windows`, x64, UseWindowsForms, desktop ProjectReference and existing friend assembly name FrameWebforCS.Tests. Retain repository-relative executable placement for Python environment discovery; isolate outputs from real test assemblies.
-- Inspect `harness/output/run-summary.json` for the exact build/run/test commands, versions and source/artifact hashes. Output includes saved-input.json, request.json, canonical.json, derived.json, settings-*.json, print-*.json and three PDFs. Reuse/adapt in a NEW run directory after changes; never overwrite old evidence. The old harness hardcodes the verified input hash and a 12-original-node assertion, so check its assumptions explicitly.
-- `comparison/compare_pdfs.py` extracts by page-rotation-aware coordinates, preserves row multiplicity, compares semantic components despite M/S/N versus N/S/M ordering, and records unpaired/ambiguous rows. Six mutation checks exercise the row comparator. Adapt parser templates as corrected report layouts change; keep independent reference extraction and negative controls.
-- `audit/checker.py` independently checks current coefficients, correlated vectors, sources, unit projection and mappings. It pins sample-specific coefficients and validates them against saved input. Use it as an independent diagnostic, not as proof the FEM base solution is correct.
-- `visual/render_pages.py` rasterizes every page and makes contact sheets. Reference PDFs use rotation 90; transform text boxes with page.rotation_matrix before comparing visual coordinates. Full report acceptance also needs detailed checks of affected pages.
+- Re-running the exact original JSON through CalculationRequestBuilder, PythonCalculationRuntime, strict AnalysisResultSet, CalculationDerivedPresenter, PrintProjection and DirectPdfGenerator gives traceable fresh artifacts.
+- Frozen input/reference hashes, parser controls, all-token accounting, row-difference ledger and original/current page images make the finding reproducible. The manifest records commands and hashes.
+- Counting paired rows by report and CASE, then separating missing/extra/ambiguous rows, gives a case-specific answer without forcing coincident stations to pair.
+- The independent arithmetic audit confirms that current print/derived values are internally consistent with the current canonical result, while leaving reference correctness open.
 
 ## What Didn't Work
 
-- Passing the 56 existing product tests did not establish reference parity; actual three-report comparison failed. Add regressions for the newly observed behaviors.
-- The Headless CLI does not expose CombinedDisplacement or all required print settings. Its five available PDF section names alone cannot reproduce this task; the private harness calls existing APIs directly.
-- PrintLayout changes do not affect these table reports; they affect diagrams only. Do not spend a correction cycle on an unsupported layout assumption.
-- Global sign flips, absolute values, rounding tolerances, dropping rows, or treating scaled values as equivalent would hide real differences. None is an approved shortcut.
-- Legacy reference PDF bytes cannot prove unrounded historic values; report printed equality separately from fresh arithmetic consistency. No historical oracle input was recovered.
-- PowerShell default encoding corrupts Japanese text piped to Python; use UTF-8 script files or explicitly set OutputEncoding and PYTHONIOENCODING. Use `uv run --project FrameWeb --locked --extra dev python`, not global Python.
-- Nested Windows npm Codex shims truncated multiline argv prompts; a single-line prompt referencing a UTF-8 file worked. A broad CLI adequacy review timed out and left descendants holding output handles; a bounded document-only review succeeded. Do not treat CLI exit 0 or empty output as a review PASS.
+- Treating the earlier final-9 corrected-copy result as a run of the original JSON: its row IDs and layout references differ.
+- Treating visual layout, missing names, source formulas or negative zero as an FEM numerical difference.
+- Treating all numerical differences as CASE 10: PICKUP MIX 1-4 have distinct source-selection discrepancies that do not print CASE 10.
+- Treating FrameGConverter as the PDF layout engine for this sample. Editing it alone cannot alter PDFs printed from the already saved JSON on the observed route.
+- Passing focused tests or matching page counts alone did not establish reference parity. Historical reference input/software identity and unrounded values remain unknown.
 
-## Completed implementation sequence (historical)
+## Next Steps
 
-1. Load shared context and inspect current git status/diff, this handoff, verification report and private manifest. Confirm all cited files still exist and line numbers are current. Verify source hashes before assuming K: input is unchanged. PROGRESS.md was absent; do not fabricate prior progress.
-2. Create the correction plan under `.agents/docs/plans/` FIRST. Record the user instructions above, observed failure cases, unknown unit/sign contracts, dependency order, ownership, test framework/tooling and final all-row/all-page acceptance. Begin its ongoing status/findings/rationale/Tips log immediately.
-3. Read `.agents/skills/tdd/SKILL.md`. Inspect `.agents/skills/_shared/run_tests.py` before invoking it: it currently resolves pytest and classifies pytest exits; it is not demonstrated to accept arbitrary dotnet test invocations. Preserve the skill's checked Red/Green invariant. For C# tests, provide a minimal scoped pytest bridge to real dotnet/xUnit tests and inspect TRX/assertion outcomes if needed; compilation/restore/collection failures are invalid Red. Do not silently claim the existing wrapper validates native .NET failures or rewrite shared infrastructure opportunistically. Record the chosen runner in the plan.
-4. Implement tested input-conversion repairs first: notice_points array retention and lexical negative-zero continuation, including boundary/negative/error cases. Pin physical projected load intervals in assertions; do not stop at JSON shape. Then regenerate the actual sample, inspect CASE 10, and update the plan with measured before/after results.
-5. Establish and test the force/rotation/unit contract, then repair the correct transformation layer and verify signed PICKUP source/vector semantics. Keep raw canonical contracts and unrelated exports intact. Investigate remaining numerical differences with intermediate-stage evidence.
-6. Repair provenance text, case/member/end/station labels, required extrema/notice rows, ordinary COMBINE repetition and table composition using real parsed/rasterized PDF regressions. Avoid merely making projected dictionaries look plausible.
-7. Rerun the preserved comparison process in a new run directory, improve any template/side mapping with evidence, and evaluate EVERY acceptance item. Update the plan with ✅ only after successful relevant verification. Record unresolved mismatches and causal uncertainty honestly.
-8. Run relevant component tests/builds, source/diff checks, agent gate, and independent review where needed. Deliver final before/after artifacts and the maintained plan. Continue until the requested repair is complete, or document the precise unresolved blocker rather than reporting partial parity as success.
-
-## Next continuation steps
-
-1. Read current correction report/plan and final manifest. Preserve uncommitted product work, original313artifacts+manifest and both reference sets; check hashes before edits.
-2. Use corrected22-edit COPY, not old11-edit candidate. OriginalK:JSON stays untouched; no production auto-symmetry rule exists.
-3. Start residual investigation at `reference-refresh/comparison-final-9/` and final all-paired residual/source ledgers. Row multiplicity/missing/extra/ambiguity are resolved. Do not repeat completed station repairs or force source ties/numeric joins.
-4. Establish exact reference input/software identity or independent numerical evidence before changing residual values/strict extrema. Recover absent names only from an authoritative source.
-5. Separate baseline vector-diagram case-key/node-mapping defects from the passing table/occurrence work. A future diagram repair needs actual canonical diagramPDF TDD, not only the renderer list helper.
-6. Any further product correction requires observed Red/Green and a fresh uniquely named pipeline/comparison/audit. Preserve final-9, update plan/report/STATE/HANDOFF, and keep complete parity open until demonstrated.
-
-### Existing verification commands to reuse selectively
-
-```powershell
-$env:PYTHONIOENCODING='utf-8'
-dotnet test FrameWebforCS/Headless/tests/FrameWebforCS.Headless.Tests.csproj -c Release --filter FullyQualifiedName~RealProcessRecalculatesAndEmitsRequestedArtifacts
-dotnet test FrameWebforCS/tests/PrintProjection.Tests/PrintProjection.Tests.csproj -c Release
-dotnet test FramePrintPDF/PDF_Manager.Tests/PDF_Manager.Tests.csproj -c Release --filter "FullyQualifiedName~PrintNumericFormatOracleTests|FullyQualifiedName~DisplacementNodeIdLayoutTests|FullyQualifiedName~PrintLibraryTests"
-dotnet build FrameWeb.sln
-# Relevant if backend topology/projection is changed or investigated:
-uv --directory FrameWeb run --locked --extra dev python -m pytest tests/integration/test_result_projection.py -q
-# Infrastructure/document changes; run the relevant product gates separately:
-& .agents/check.ps1 -AgentOnly
-```
-
-Additional source anchors: `FrameWebforCS/tests/CalculationRequestTests.cs`, `CalculationDerivedPresenterTests.cs`, `PrintProjectionTests.cs`; `FramePrintPDF/PDF_Manager.Tests/PrintNumericFormatOracleTests.cs`, `DisplacementNodeIdLayoutTests.cs`. Resolve their current project files before choosing test commands. Do not assume a test project path from an older handoff exists.
+1. Read root AGENTS.md, context-loader output, this handoff, the current parity report, the manifest and current git status/diff. Preserve the two already untracked plan/report documents, the archived handoff and all private run evidence. Confirm the K: input and reference hashes before any new rerun.
+2. For numerical investigation, start with base CASE 10 request/canonical/derived/print payloads and reference rows; examine the member-10 station differences separately. Test any suspected input-history or solver cause against independent data. Then inspect PICKUP MIX 1-4 source-ID decisions without attributing them to CASE 10. Keep one-digit displacement rounding discrepancies separate.
+3. For layout, use the reference/current PNGs and PDF text boxes to define measurable page acceptance: A4 portrait, table x/y bounds, column widths, type size, captions, wrapping and page breaks. Compare representative basic pages 1/30, PICKUP 1/49/60, displacement 1/2 first, then review every affected page.
+4. Respect the owner's FrameGConverter direction but verify a data conversion path before editing that component. If the work is physical PDF arrangement for this saved JSON, implement in the actual FramePrintPDF/FrameWebforCS path and explain the ownership finding. Do not alter conversion data to simulate margin/font changes.
+5. Add focused parsed-PDF and visual regression checks for layout changes, then rerun the exact original JSON in a NEW private run. Preserve numeric row values/source IDs while changing presentation, and compare all reference/generated rows and pages. Use relevant dotnet gates and .agents/check.ps1 -AgentOnly for agent-document edits.
+6. Record verified findings and remaining uncertainty in the maintained plan/report. Do not claim full parity until numeric, source, row and visual comparisons all pass. No product source was changed in this handoff task.

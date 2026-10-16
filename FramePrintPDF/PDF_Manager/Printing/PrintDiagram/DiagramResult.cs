@@ -27,6 +27,7 @@ namespace PDF_Manager.Printing
 
         // 出力情報
         private List<string> output = new List<string>() { "mz", "fy", "fx", "disg" };
+        private CanonicalSectionDiagram canonical;
 
         public DiagramResult(Dictionary<string, object> value) 
         {
@@ -35,6 +36,8 @@ namespace PDF_Manager.Printing
 
             //荷重図の設定データを取得する
             var target = JObject.FromObject(value[KEY]).ToObject<Dictionary<string, object>>();
+            if (CanonicalSectionDiagram.Enabled(target))
+                canonical = new CanonicalSectionDiagram(target, value);
 
             // 骨組の描画クラスを生成する
             this.Frame = new DiagramFrame(target);
@@ -67,6 +70,11 @@ namespace PDF_Manager.Printing
         /// <param name="class_set">入力データ</param>
         public void printPDF(PdfDocument mc, PrintData data, ref int indexPage)
         {
+            if (canonical != null)
+            {
+                canonical.Print(mc, data, ref indexPage);
+                return;
+            }
             this.Frame.printInit(mc, data);
             this.Frame.SetLayout(mc);
             this.Frame.CalculateDiagramRect(out var topLeft, out var bottomRight);

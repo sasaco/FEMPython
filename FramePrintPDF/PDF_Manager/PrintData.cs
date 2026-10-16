@@ -192,8 +192,9 @@ namespace PDF_Manager
 
                 if (data.ContainsKey(InputLoad.KEY))
                     printDiagramData.Add(InputLoad.KEY, data[InputLoad.KEY]);
-                if (data.ContainsKey(ResultFsec.KEY))
+                if (!printDiagramData.ContainsKey(ResultFsec.KEY) && data.ContainsKey(ResultFsec.KEY))
                     printDiagramData.Add(ResultFsec.KEY, data[ResultFsec.KEY]);
+                CopyDiagramMetadata(data, printDiagramData, ResultFsec.KEY);
 
                 this.printScreens.Add(printDiagram, printDiagramData);
             }
@@ -213,8 +214,9 @@ namespace PDF_Manager
 
                 if (data.ContainsKey(InputCombine.KEY))
                     printCombDiagramData.Add(InputCombine.KEY, data[InputCombine.KEY]);
-                if (data.ContainsKey(ResultFsecCombine.KEY))
+                if (!printCombDiagramData.ContainsKey(ResultFsecCombine.KEY) && data.ContainsKey(ResultFsecCombine.KEY))
                     printCombDiagramData.Add(ResultFsecCombine.KEY, data[ResultFsecCombine.KEY]);
+                CopyDiagramMetadata(data, printCombDiagramData, ResultFsecCombine.KEY);
 
                 this.printScreens.Add(printCombDiagram, printCombDiagramData);
 
@@ -235,8 +237,9 @@ namespace PDF_Manager
 
                 if (data.ContainsKey(InputPickup.KEY))
                     printPickDiagramData.Add(InputPickup.KEY, data[InputPickup.KEY]);
-                if (data.ContainsKey(ResultFsecPickup.KEY))
+                if (!printPickDiagramData.ContainsKey(ResultFsecPickup.KEY) && data.ContainsKey(ResultFsecPickup.KEY))
                     printPickDiagramData.Add(ResultFsecPickup.KEY, data[ResultFsecPickup.KEY]);
+                CopyDiagramMetadata(data, printPickDiagramData, ResultFsecPickup.KEY);
 
                 this.printScreens.Add(printPickDiagram, printPickDiagramData);
             }
@@ -252,6 +255,21 @@ namespace PDF_Manager
                 this.hasPrintCalculation = bool.Parse(data["hasPrintCalculation"].ToString() ?? "false");
             else
                 this.hasPrintCalculation = false;
+        }
+
+        // Diagram-local values (notably raw displacement geometry) take precedence over table values.
+        private static void CopyDiagramMetadata(Dictionary<string, object> source,
+            Dictionary<string, object> diagram, string forceKey)
+        {
+            foreach (string key in new[] { forceKey + "Name", "notice_points" })
+                if (!diagram.ContainsKey(key) && source.TryGetValue(key, out var value)) diagram.Add(key, value);
+        }
+
+        internal static bool IsCanonicalDiagram(object value)
+        {
+            var diagram = JObject.FromObject(value);
+            return diagram[DiagramResult.KEY] is JObject settings &&
+                settings["canonicalStations"]?.Value<bool>() == true;
         }
 
         #region 他のモジュールのヘルパー関数

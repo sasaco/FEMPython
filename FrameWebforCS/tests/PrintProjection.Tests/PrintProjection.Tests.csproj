@@ -20,5 +20,6 @@
     <Compile Include="..\TransverseDisplayProjectionTests.cs" Link="TransverseDisplayProjectionTests.cs" />
     <Compile Include="..\TransversePrintMetadataTests.cs" Link="TransversePrintMetadataTests.cs" />
     <Compile Include="..\TransverseFoundationPrintTests.cs" Link="TransverseFoundationPrintTests.cs" />
+    <Compile Include="..\SectionDiagramProjectionTests.cs" Link="SectionDiagramProjectionTests.cs" />
   </ItemGroup>
 </Project>

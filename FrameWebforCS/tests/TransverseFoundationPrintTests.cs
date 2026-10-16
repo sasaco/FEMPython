@@ -212,6 +212,26 @@ public sealed class TransverseFoundationPrintTests
         for (int i = 0; i < locations.Length; i++)
         {
             stations.Add(new JsonObject { ["station_id"] = "S" + i, ["position"] = locations[i] });
+            if (i > 0 && i < locations.Length - 1)
+            {
+                // The real topology producer also exposes a solved node at every
+                // interior station; diagram interpolation needs those vectors.
+                string nodeId = "foundation-station-" + i;
+                fixture["topology"]!["nodes"]!.AsArray().Add(new JsonObject
+                {
+                    ["node_id"] = nodeId, ["source_node_id"] = null, ["generated"] = true,
+                    ["coordinates"] = new JsonObject { ["x"] = locations[i], ["y"] = 0, ["z"] = 0 },
+                });
+                JsonNode displacement = fixture["results"]![0]!["node_displacements"]![1]!.DeepClone();
+                displacement["node_id"] = nodeId;
+                foreach (string component in new[] { "dx", "dy", "dz", "rx", "ry", "rz" })
+                {
+                    double start = fixture["results"]![0]!["node_displacements"]![0]!["components"]![component]!.GetValue<double>();
+                    double end = displacement["components"]![component]!.GetValue<double>();
+                    displacement["components"]![component] = start + (end - start) * locations[i];
+                }
+                fixture["results"]![0]!["node_displacements"]!.AsArray().Add(displacement);
+            }
             if (i == 0) continue;
             JsonNode segment = original.DeepClone();
             segment["segment_id"] = $"S{i - 1}-S{i}";

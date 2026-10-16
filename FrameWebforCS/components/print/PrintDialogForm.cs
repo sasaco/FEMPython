@@ -63,8 +63,8 @@ internal sealed class PrintDialogForm : Form
     private readonly TextBox _nodes = new() { Dock = DockStyle.Fill, PlaceholderText = "空欄: 全ノード。例: 1, 2" };
     private readonly TextBox _members = new() { Dock = DockStyle.Fill, PlaceholderText = "空欄: 全部材。例: 1, 2" };
     private readonly TextBox _title = new() { Dock = DockStyle.Fill };
-    private readonly TextBox _scaleX = new() { Dock = DockStyle.Fill, Text = "1" };
-    private readonly TextBox _scaleY = new() { Dock = DockStyle.Fill, Text = "1" };
+    private readonly TextBox _scaleX = new() { Dock = DockStyle.Fill, Text = "1", PlaceholderText = "空欄: 自動調整" };
+    private readonly TextBox _scaleY = new() { Dock = DockStyle.Fill, Text = "1", PlaceholderText = "空欄: 自動調整" };
     private readonly ComboBox _paper = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _orientation = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _layout = new() { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
@@ -87,6 +87,10 @@ internal sealed class PrintDialogForm : Form
     private int _pageNumber;
     private bool _webReady;
     private bool _closing;
+    private bool _updatingDiagramDefaults;
+    private bool _layoutEdited;
+    private bool _scaleXEdited;
+    private bool _scaleYEdited;
 
     internal PrintDialogForm(Func<IReadOnlyList<PrintDiagramRequest>, IReadOnlyList<PrintDiagramImage>> capture)
     {
@@ -100,9 +104,23 @@ internal sealed class PrintDialogForm : Form
         FormBorderStyle = FormBorderStyle.Sizable;
         BuildControls();
         PopulateChoices();
+        _layout.SelectedIndexChanged += (_, _) =>
+        {
+            if (!_updatingDiagramDefaults) _layoutEdited = true;
+        };
+        _layout.SelectionChangeCommitted += (_, _) => _layoutEdited = true;
+        _scaleX.TextChanged += (_, _) =>
+        {
+            if (!_updatingDiagramDefaults) _scaleXEdited = true;
+        };
+        _scaleY.TextChanged += (_, _) =>
+        {
+            if (!_updatingDiagramDefaults) _scaleYEdited = true;
+        };
         _options.ItemCheck += (_, args) =>
         {
             if (_unavailableOptions.Contains(args.Index)) args.NewValue = args.CurrentValue;
+            UpdateDiagramDefaults(args);
         };
         Shown += async (_, _) => await InitializePreviewAsync();
         FormClosing += (_, _) => { _closing = true; _generation?.Cancel(); };
@@ -113,6 +131,25 @@ internal sealed class PrintDialogForm : Form
     internal byte[]? DisplayedPdf => _displayedPdf;
     internal string StatusText => _status.Text;
     internal string? PreviewDirectory => _tempFolder;
+
+    private void UpdateDiagramDefaults(ItemCheckEventArgs change)
+    {
+        // ItemCheck runs before CheckedItems reflects the requested change.
+        bool sectionDiagram = InputDataService.Instance.dimension == 2 &&
+            Enumerable.Range(0, _options.Items.Count).Any(index =>
+                (index == change.Index ? change.NewValue == CheckState.Checked : _options.GetItemChecked(index)) &&
+                ((ChoiceItem<PrintOption>)_options.Items[index]).Value is
+                    PrintOption.SectionDiagram or PrintOption.CombinedSectionDiagram or PrintOption.PickupSectionDiagram);
+        _updatingDiagramDefaults = true;
+        try
+        {
+            if (!_layoutEdited)
+                _layout.SelectedItem = sectionDiagram ? PrintLayout.SplitHorizontal : PrintLayout.Single;
+            if (!_scaleXEdited) _scaleX.Text = sectionDiagram ? "" : "1";
+            if (!_scaleYEdited) _scaleY.Text = sectionDiagram ? "" : "1";
+        }
+        finally { _updatingDiagramDefaults = false; }
+    }
 
     private void BuildControls()
     {
@@ -157,8 +194,8 @@ internal sealed class PrintDialogForm : Form
         AddSection(settings, "用紙", _paper, 28);
         AddSection(settings, "向き", _orientation, 28);
         AddSection(settings, "図面配置", _layout, 28);
-        AddSection(settings, "X 倍率", _scaleX, 28);
-        AddSection(settings, "Y 倍率", _scaleY, 28);
+        AddSection(settings, "X 倍率 (空欄: 自動調整)", _scaleX, 28);
+        AddSection(settings, "Y 倍率 (空欄: 自動調整)", _scaleY, 28);
         AddSection(settings, "言語", _language, 28);
 
         var right = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
@@ -250,8 +287,8 @@ internal sealed class PrintDialogForm : Form
         var options = _options.CheckedItems.Cast<ChoiceItem<PrintOption>>()
             .Select(item => item.Value).ToArray();
         if (options.Length == 0) throw new InvalidOperationException("印刷項目を選択してください。");
-        double scaleX = ReadScale(_scaleX.Text, "X");
-        double scaleY = ReadScale(_scaleY.Text, "Y");
+        double? scaleX = ReadScale(_scaleX.Text, "X");
+        double? scaleY = ReadScale(_scaleY.Text, "Y");
         return new PrintSelection(options,
             CaseIds: CheckedValues(_cases), DerivedIds: CheckedValues(_derived),
             NodeIds: ParseIds(_nodes.Text), MemberIds: ParseIds(_members.Text),
@@ -286,8 +323,9 @@ internal sealed class PrintDialogForm : Form
         return ids.Distinct(StringComparer.Ordinal).ToArray();
     }
 
-    private static double ReadScale(string input, string axis)
+    private static double? ReadScale(string input, string axis)
     {
+        if (string.IsNullOrWhiteSpace(input)) return null;
         if (!double.TryParse(input, NumberStyles.Float, CultureInfo.CurrentCulture, out double scale) ||
             !double.IsFinite(scale) || scale <= 0 || scale > 1_000_000)
             throw new InvalidOperationException($"{axis} 倍率は 0 より大きい数を入力してください。");
