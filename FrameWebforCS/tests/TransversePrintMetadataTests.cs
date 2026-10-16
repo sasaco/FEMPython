@@ -101,6 +101,19 @@ public sealed class TransversePrintMetadataTests
         Assert.Null(input["referenceResultLayout"]);
     }
 
+    [Fact]
+    public void TwoDimensionalInputOnlyProjectionWithoutResultsUsesReferencePortraitStyle()
+    {
+        JsonObject saved = Saved();
+        var selection = new PrintSelection([PrintOption.Input],
+            Orientation: PrintOrientation.Vertical, Paper: PrintPaper.A4);
+        JsonObject root = JsonNode.Parse(PrintProjection.Build(new PrintSnapshot(
+            selection, saved.ToJsonString(), 1, 1, null, null, [])))!.AsObject();
+
+        Assert.True(root["referenceResultLayout"]!.GetValue<bool>());
+        Assert.False(root["hasPrintCalculation"]!.GetValue<bool>());
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

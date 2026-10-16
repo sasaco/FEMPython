@@ -117,7 +117,7 @@ namespace PDF_Manager
                     }
 
                     //set font 
-                    var font = data.language.Equals("cn") ? mc.font_simsun : mc.font_mic;
+                    var font = mc.TableFont(data.language);
 
                     // 表の印刷
                     printManager.printTableContents(mc, subtable, titles, requiresPageTitle, font);

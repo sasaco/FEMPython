@@ -14,6 +14,7 @@ namespace PDF_Manager.Printing
 {
     internal class PdfDocument : IDisposable
     {
+        internal const double ReferencePortraitFontSize = 9.572;
         private PdfSharpCore.Pdf.PdfDocument document;
         private readonly int maxPages;
         private readonly CancellationToken cancellationToken;
@@ -39,6 +40,7 @@ namespace PDF_Manager.Printing
         private PageSize pageSize;
         private PageOrientation pageOrientation;        
         private string title;   // 全ページ共通 左上に印字するタイトル
+        private readonly bool referenceResultLayout;
                                 // private string casename;    //  左上に印字するケース名
 
         /// <summary>
@@ -52,6 +54,14 @@ namespace PDF_Manager.Printing
 
         public XPoint TitleArea;
         public XPoint CaseArea;
+
+        internal XFont TableFont(string language)
+        {
+            if (!referenceResultLayout || pageOrientation != PageOrientation.Portrait)
+                return language == "cn" ? font_simsun : font_mic;
+            return new XFont(language == "cn" ? "simsun" : "MS Mincho",
+                ReferencePortraitFontSize, XFontStyle.Regular);
+        }
 
         /// <summary>
         /// コンストラクタ
@@ -83,6 +93,7 @@ namespace PDF_Manager.Printing
             this.font_simsun = new XFont("simsun", printManager.FontSize, XFontStyle.Regular);
 
             this.title = pd.title;
+            this.referenceResultLayout = pd.dimension == 2 && pd.referenceResultLayout;
 
             // 新しいページを作成する
             this.NewPage(pd.pageSize, pd.pageOrientation, ref indexPage);
@@ -192,6 +203,18 @@ namespace PDF_Manager.Printing
             this.currentPos = new XPoint(Margine.Left, Margine.Top);
             this.currentPos.Y += printManager.titlePos.Y;
             this.currentPos.X += printManager.titlePos.X;
+
+            if (referenceResultLayout && this.pageOrientation == PageOrientation.Portrait)
+            {
+                this.currentPos = new XPoint(71.6, 70.7);
+                if (this.title != null)
+                    Text.PrtText(this, string.Format("TITLE : {0}", this.title),
+                        new XFont("MS Mincho", ReferencePortraitFontSize, XFontStyle.Regular));
+                this.currentPos = new XPoint(Margine.Left, 88.7);
+                this.initialPos = this.currentPos;
+                indexPage++;
+                return;
+            }
 
             // タイトルの印字
             if (this.title != null)

@@ -53,6 +53,9 @@ namespace PDF_Manager
             else
                 this.pageOrientation = "Vertical"; // or Horizontal
 
+            this.referenceResultLayout = data.TryGetValue("referenceResultLayout", out var referenceLayout)
+                && Convert.ToBoolean(referenceLayout);
+
             // タイトル
             if (data.ContainsKey("title"))
                 this.title = data["title"].ToString();
@@ -279,6 +282,8 @@ namespace PDF_Manager
         public string pageSize { get; }
 
         public string pageOrientation { get; }
+
+        public bool referenceResultLayout { get; }
 
         public string title { get; }
 

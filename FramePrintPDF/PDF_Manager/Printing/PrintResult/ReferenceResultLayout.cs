@@ -78,7 +78,8 @@ namespace PDF_Manager.Printing
         internal static bool Portrait(PdfDocument document) => document.currentPage.Width < document.currentPage.Height;
 
         private static XFont ReportFont(PdfDocument document, PrintData data) =>
-            new XFont(data.language == "cn" ? "SimSun" : "MS Mincho", Portrait(document) ? 9.572 : 10);
+            new XFont(data.language == "cn" ? "SimSun" : "MS Mincho",
+                Portrait(document) ? PdfDocument.ReferencePortraitFontSize : 10);
 
         internal static bool Enabled(Dictionary<string, object> root) =>
             root.TryGetValue("referenceResultLayout", out var enabled) && Convert.ToBoolean(enabled);
@@ -104,8 +105,34 @@ namespace PDF_Manager.Printing
             // The portrait basic-force reference keeps the compact table viewport;
             // its tall paper does not expand that report's vertical composition.
             double pageHeight = squareViewport ? Math.Min(document.currentPage.Height, document.currentPage.Width) : (double)document.currentPage.Height;
-            double scale = document.currentPageSize.Width / widths.Sum();
-            widths = widths.Select(width => width * scale).ToArray();
+            bool referenceBasic = data.referenceResultLayout && Portrait(document) && squareViewport;
+            bool referencePickup = data.referenceResultLayout && Portrait(document) &&
+                (title.StartsWith("PICK UP ", StringComparison.Ordinal) || title.StartsWith("COMBINE ", StringComparison.Ordinal));
+            bool referenceDisplacement = data.referenceResultLayout && Portrait(document) && title == "Displacement";
+            double bottomMargin = referenceDisplacement ? 15 : document.Margine.Bottom;
+            if (referenceBasic)
+            {
+                widths = new double[] { 137, 69, 58, 58, 58 };
+                headers = new[] { headers[1], headers[0] };
+                wrapFirstHeader = false;
+            }
+            else if (referencePickup)
+            {
+                widths = new double[] { 79.3, 68.7, 54.1, 54.2, 37.8, 144.3 };
+                headers = new[] { headers[0], headers[1] };
+                wrapFirstHeader = false;
+            }
+            else if (referenceDisplacement)
+            {
+                widths = new double[] { 59, 58, 50, 67, 16, 59, 58, 50, 67 };
+                headers = headers.Select(row => row.ToArray()).ToArray();
+                headers[0][0] = headers[0][5] = "";
+            }
+            else
+            {
+                double scale = document.currentPageSize.Width / widths.Sum();
+                widths = widths.Select(width => width * scale).ToArray();
+            }
             // A case caption can include a long load name and a weighted expression.
             // Wrap within each panel so it cannot overwrite its neighbour's caption.
             var starts = panelStarts ?? Enumerable.Range(0, widths.Length).Where(column => !string.IsNullOrEmpty(headers[0][column])).ToArray();
@@ -118,7 +145,8 @@ namespace PDF_Manager.Printing
             var captionHeights = rows.Where(row => row.IsCaption).GroupBy(row => row.Caption)
                 .ToDictionary(group => group.Key, group => group.First().Height);
             rows = rows.SelectMany(row => row.IsCaption
-                ? captions[row.Caption].Select(cells => new Row(cells, row.Caption, true, row.Height))
+                ? captions[row.Caption].Select((cells, index) =>
+                    new Row(cells, row.Caption, true, index == 0 ? row.Height : lineHeight))
                 : new[] { row }).ToArray();
             double Height(Row row) => row.Height > 0 ? row.Height : lineHeight;
             int CaptionRows(int index) => rows.Skip(index).TakeWhile(row => row.IsCaption &&
@@ -129,12 +157,15 @@ namespace PDF_Manager.Printing
                 document.CheckBudget();
                 bool titleRequired = document.currentPos.Equals(document.initialPos);
                 string[][] pageHeaders = headersOnlyAtPageStart && !titleRequired ? new string[0][] : headers;
-                double available = pageHeight - document.Margine.Bottom - document.currentPos.Y
+                double available = pageHeight - bottomMargin - document.currentPos.Y
                     - (titleRequired ? printManager.LineSpacing2 : 0) - pageHeaders.Length * lineHeight;
                 bool continued = !rows[next].IsCaption && rows[next].Caption != null;
                 double captionHeight = continued ? captionHeights[rows[next].Caption] : 0;
                 if (captionHeight <= 0) captionHeight = lineHeight;
-                double minimumHeight = continued ? captions[rows[next].Caption].Count * captionHeight + Height(rows[next]) :
+                var continuationRows = continued ? captions[rows[next].Caption]
+                    .Select((cells, index) => new Row(cells, rows[next].Caption, true,
+                        index == 0 ? captionHeight : lineHeight)).ToArray() : Array.Empty<Row>();
+                double minimumHeight = continued ? continuationRows.Sum(Height) + Height(rows[next]) :
                     rows[next].IsCaption ? rows.Skip(next).Take(CaptionRows(next) + 1).Sum(Height) : Height(rows[next]);
                 if (available < minimumHeight)
                 {
@@ -146,9 +177,8 @@ namespace PDF_Manager.Printing
                 var pageRows = new List<Row>();
                 if (continued)
                 {
-                    foreach (var continuationCells in captions[rows[next].Caption])
-                        pageRows.Add(new Row(continuationCells, height: captionHeight));
-                    available -= captions[rows[next].Caption].Count * captionHeight;
+                    pageRows.AddRange(continuationRows);
+                    available -= continuationRows.Sum(Height);
                 }
                 while (next < rows.Count)
                 {
@@ -161,7 +191,7 @@ namespace PDF_Manager.Printing
                             int captionRows = CaptionRows(next);
                             var block = rows.Skip(next).Take(captionRows).Concat(rows.Skip(next + captionRows).TakeWhile(row => !row.IsCaption));
                             double blockHeight = block.Sum(Height);
-                            double emptyAvailable = pageHeight - document.Margine.Bottom - document.initialPos.Y
+                            double emptyAvailable = pageHeight - bottomMargin - document.initialPos.Y
                                 - printManager.LineSpacing2 - headers.Length * lineHeight;
                             if (blockHeight <= emptyAvailable && blockHeight > available) break;
                         }
@@ -173,16 +203,88 @@ namespace PDF_Manager.Printing
                 if (pageRows.Count == 0) { document.NewPage(ref page); continue; }
                 var table = new Table(pageHeaders.Length + pageRows.Count, widths.Length) { LineSpacing3 = lineHeight };
                 for (int column = 0; column < widths.Length; column++) table.ColWidth[column] = widths[column];
+                if (referenceBasic && pageHeaders.Length == 2)
+                {
+                    table.RowHeight[0] = 11.6;
+                    table.RowHeight[1] = 11.6;
+                }
+                if (referencePickup && pageHeaders.Length == 2)
+                {
+                    table.RowHeight[0] = 13.5;
+                    table.RowHeight[1] = 13.4;
+                }
                 for (int row = 0; row < pageRows.Count; row++) table.RowHeight[pageHeaders.Length + row] = Height(pageRows[row]);
                 var cells = pageHeaders.Concat(pageRows.Select(row => row.Cells)).ToArray();
                 for (int row = 0; row < cells.Length; row++)
                 for (int column = 0; column < cells[row].Length; column++)
                 {
-                    table[row, column] = cells[row][column];
-                    table.AlignX[row, column] = row < pageHeaders.Length || starts.Contains(column) ? "L" : "R";
+                    bool stationLabel = (referenceBasic || referencePickup) && column == 0 &&
+                        row >= pageHeaders.Length && !pageRows[row - pageHeaders.Length].IsCaption;
+                    bool basicCaption = referenceBasic && column == 0 &&
+                        (row == 1 || row >= pageHeaders.Length && pageRows[row - pageHeaders.Length].IsCaption);
+                    table[row, column] = stationLabel || basicCaption ? "" : cells[row][column];
+                    table.AlignX[row, column] = (referenceBasic || referencePickup) && column == 0 &&
+                        row >= pageHeaders.Length && !pageRows[row - pageHeaders.Length].IsCaption ? "R"
+                        : (referenceBasic || referencePickup) ? "L"
+                        : referenceDisplacement && row >= pageHeaders.Length &&
+                        !pageRows[row - pageHeaders.Length].IsCaption && (column == 0 || column == 5) ? "C"
+                        : row < pageHeaders.Length || starts.Contains(column) ? "L" : "R";
                 }
-                printManager.printTableContents(document, table, new[] { title }, titleRequired, font);
-                document.addCurrentY(5 - printManager.LineSpacing1);
+                if (referenceBasic || referencePickup || referenceDisplacement)
+                {
+                    if (titleRequired)
+                    {
+                        document.currentPos.X = referencePickup ? 91.9 : 115.7;
+                        Text.PrtText(document, referenceDisplacement ? "変 位 量" : title, font);
+                        document.addCurrentY(referenceBasic ? -0.8 : referencePickup ? -0.1 : 13.4);
+                    }
+                    double tableStartX = referenceBasic ? 115.7 : referencePickup ? 91.9 : 75.1;
+                    document.currentPos.X = tableStartX;
+                    double tableStartY = document.currentPos.Y;
+                    table.PrintTable(document, font);
+                    if (referenceBasic || referencePickup || referenceDisplacement && pageHeaders.Length == 2)
+                    {
+                        var tableEnd = document.currentPos;
+                        if (referenceBasic || referencePickup)
+                        {
+                            double baselineY = tableStartY;
+                            for (int row = 0; row < cells.Length; row++)
+                            {
+                                baselineY += table.RowHeight[row] > 0 ? table.RowHeight[row] : lineHeight;
+                                if (referenceBasic && row == 1)
+                                {
+                                    document.currentPos = new XPoint(132.6, baselineY);
+                                    Text.PrtText(document, cells[row][0], font);
+                                }
+                                if (row < pageHeaders.Length) continue;
+                                if (referenceBasic && pageRows[row - pageHeaders.Length].IsCaption)
+                                {
+                                    document.currentPos = new XPoint(146.1, baselineY);
+                                    Text.PrtText(document, cells[row][0], font);
+                                }
+                                else if (!pageRows[row - pageHeaders.Length].IsCaption &&
+                                    !string.IsNullOrEmpty(cells[row][0]))
+                                {
+                                    document.currentPos = new XPoint(tableStartX + widths[0] - 20, baselineY);
+                                    Text.PrtText(document, cells[row][0], font, XStringFormats.BottomRight);
+                                }
+                            }
+                        }
+                        if (referenceDisplacement && pageHeaders.Length == 2)
+                        foreach (double x in new[] { 89.8, 339.8 })
+                        {
+                            document.currentPos = new XPoint(x, tableStartY + table.RowHeight[0]);
+                            Text.PrtText(document, "JOINT", font);
+                            document.currentPos = new XPoint(x, tableStartY + table.RowHeight[0] + table.RowHeight[1]);
+                            Text.PrtText(document, "NO.", font);
+                        }
+                        document.currentPos = tableEnd;
+                    }
+                    document.addCurrentY(printManager.LineSpacing1);
+                }
+                else
+                    printManager.printTableContents(document, table, new[] { title }, titleRequired, font);
+                document.addCurrentY((referenceDisplacement ? 0 : 5) - printManager.LineSpacing1);
                 if (next < rows.Count) document.NewPage(ref page);
             }
         }
@@ -200,7 +302,7 @@ namespace PDF_Manager.Printing
             if (Portrait(document))
             {
                 caption = new[] { leftTitle, "", "", "", "", rightTitle, "", "", "" };
-                rows.Add(new Row(caption, caption, true, 13.5));
+                rows.Add(new Row(caption, caption, true, data.referenceResultLayout ? 17.9 : 13.5));
             }
             for (int i = 0; i < Math.Max(left.Count, right.Count); i++)
                 rows.Add(new Row(DisplacementCells(i < left.Count ? left[i] : null)
@@ -313,7 +415,8 @@ namespace PDF_Manager.Printing
         {
             double[] widths = envelope ? new double[] { 50, 45, 50, 50, 50, 130 } : new double[] { 50, 50, 75, 75, 75 };
             var font = ReportFont(document, data);
-            double sourceWidth = widths.Last() * document.currentPageSize.Width / widths.Sum() - 4;
+            double sourceWidth = envelope && data.referenceResultLayout && Portrait(document) ? 143
+                : widths.Last() * document.currentPageSize.Width / widths.Sum() - 4;
             var rows = new List<Row>();
             string member = null;
             string[] memberCaption = null;
@@ -338,10 +441,21 @@ namespace PDF_Manager.Printing
                 }
             }
             var heading = new string[widths.Length];
-            heading[0] = caption;
+            string reportTitle = "MEMBER FORCES";
+            if (envelope && data.referenceResultLayout && Portrait(document))
+            {
+                var match = Regex.Match(caption, @"^(.*)\s+((?:MOMENT|SHARE|AXIAL) (?:MAX|MIN)\.)$");
+                if (match.Success)
+                {
+                    reportTitle = match.Groups[1].Value;
+                    heading[2] = "     " + match.Groups[2].Value;
+                }
+                else heading[0] = caption;
+            }
+            else heading[0] = caption;
             var columns = envelope ? new[] { "", "DIST.", "M", "S", "N", "COM: CASE" } : new[] { "", "DIST.", "M", "S", "N" };
             var units = envelope ? new[] { "", "(m)", "(kN m)", "(kN)", "(kN)", "" } : new[] { "", "(m)", "(kN m)", "(kN)", "(kN)" };
-            Print(document, data, ref page, "MEMBER FORCES", new[] { heading, columns, units }, widths, rows,
+            Print(document, data, ref page, reportTitle, new[] { heading, columns, units }, widths, rows,
                 newGroup, new[] { 0 }, keepMemberTogether: !envelope, squareViewport: !envelope);
         }
     }
