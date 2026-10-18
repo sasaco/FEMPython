@@ -1,0 +1,9 @@
+{
+  "decisions": [
+    {
+      "decision": "Honor configured paper orientation inside the private 2D reference result composer. Retain paired landscape case/max-min reports; use one-case basic portrait flows with whole-member retention and a page-short-side-bounded table viewport, sequential portrait PICKUP focus/extremum flows, and paired portrait base/ordinary displacement panels. Preserve every row and readable wrapped captions/provenance rather than forcing page counts or reproducing reference caption collisions.",
+      "rationale": "The user replaced the final reference target with portrait 30/60/2-page PDFs. The 92-page inventory shows basic reports leave the portrait bottom unused while PICKUP uses full height; the short-side viewport is an explicit inferred presentation policy, not a recovered historical implementation. Orientation-aware layout preserves existing landscape/3D behavior and keeps geometry choices separate from canonical/raw numerical contracts and missing/extra station accounting. Native parsed-PDF regressions cover long/impossible captions, oversized member splits, filtered minimum-only envelopes and complete wrapped provenance across pages.",
+      "alternatives": "Force portrait globally; disable semantic reference metadata and lose provenance/ordinary handling; hardcode sample case/member IDs or page counts; omit rows or copy overlapping reference captions."
+    }
+  ]
+}

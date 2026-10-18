@@ -24,6 +24,16 @@ internal static class HeadlessCalculation
             ? dimensionValue.GetInt32() : 3;
         if (options.GeneratePik && dimension != 2)
             throw new RunnerException("PIK_REQUIRES_2D", "PIK output requires a 2D model; disable PIK for a 3D calculation.");
+        if (options.GeneratePdf && options.PdfSections.Contains(RunOptions.LoadDiagramSection))
+        {
+            if (dimension != 2)
+                throw new RunnerException("LOAD_DIAGRAM_REQUIRES_2D", "The load diagram is drawn for a 2D model only.");
+            if (!saved.RootElement.TryGetProperty("load", out JsonElement loads) ||
+                loads.ValueKind != JsonValueKind.Object || !loads.EnumerateObject().Any())
+                throw new RunnerException("LOAD_DIAGRAM_REQUIRES_LOADS", "The load diagram requires at least one load case.");
+        }
+        if (options.LoadDiagramOnly)
+            return await LoadDiagramAsync(options, savedJson, saved.RootElement, cancellationToken);
         var rows = InputCombineService.ParseCombineJson(saved.RootElement);
         bool needsSectionForcePickup = options.GeneratePik ||
             options.GeneratePdf && options.PdfSections.Contains("pickup_section_force");
@@ -90,23 +100,8 @@ internal static class HeadlessCalculation
             outputs.Add(("pickup.pik", "pik", "text/plain; charset=utf-8", Utf8.GetBytes(pik)));
         }
         if (options.GeneratePdf)
-        {
-            var selection = new PrintSelection(options.PdfSections.Select(section => section switch
-            {
-                "input" => PrintOption.Input,
-                "section_force" => PrintOption.SectionForce,
-                "pickup_section_force" => PrintOption.PickupSectionForce,
-                "displacement" => PrintOption.Displacement,
-                "pickup_displacement" => PrintOption.PickupDisplacement,
-                _ => throw new RunnerException("INVALID_ARGUMENT", "Unsupported PDF section."),
-            }).ToArray());
-            var printSnapshot = new PrintSnapshot(selection, savedJson, 0, 0, presentation, derived, []);
-            byte[] pdf = await Task.Run(() => DirectPdfGenerator.Generate(
-                PrintProjection.Build(printSnapshot), cancellationToken), cancellationToken).WaitAsync(cancellationToken);
-            if (pdf.Length < 8 || !pdf.AsSpan(0, 5).SequenceEqual("%PDF-"u8))
-                throw new RunnerException("INVALID_PDF", "PDF generation returned an invalid document.", "output");
-            outputs.Add(("report.pdf", "pdf", "application/pdf", pdf));
-        }
+            outputs.Add(("report.pdf", "pdf", "application/pdf",
+                await PdfAsync(options, savedJson, presentation, derived, cancellationToken)));
         if (options.GeneratePickupDisplacementCsv)
             outputs.Add(("pickup-displacement.csv", "pickup-displacement", "text/csv; charset=utf-8",
                 Utf8.GetBytes(PickupNodeExportFormatter.Format(presentation, PickupNodeQuantity.Displacement))));
@@ -135,11 +130,60 @@ internal static class HeadlessCalculation
         IReadOnlyList<RunnerArtifact> artifacts = Publish(options.OutputDirectory, outputs, cancellationToken);
         return RunnerEnvelope.Create(true, new
         {
-            dimension, nodes = result.Topology.Nodes.Count, members = result.Topology.Members.Count,
+            dimension, calculated = true, nodes = result.Topology.Nodes.Count, members = result.Topology.Members.Count,
             cases = result.Cases.Count, results = result.Results.Count, pickups = derived.Pickups.Count,
             skippedLoadCases = skippedLoadIds.Length,
             pdfSections = options.GeneratePdf ? options.PdfSections : [],
         }, artifacts, messages);
+    }
+
+    /// <summary>The load diagram alone: the saved loads are drawn without a calculation.</summary>
+    private static async Task<RunnerEnvelope> LoadDiagramAsync(RunOptions options, string savedJson,
+        JsonElement saved, CancellationToken cancellationToken)
+    {
+        byte[] pdf = await PdfAsync(options, savedJson, null, null, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        IReadOnlyList<RunnerArtifact> artifacts = Publish(options.OutputDirectory,
+            [("report.pdf", "pdf", "application/pdf", pdf)], cancellationToken);
+        int Count(string key) => saved.TryGetProperty(key, out JsonElement value) &&
+            value.ValueKind == JsonValueKind.Object ? value.EnumerateObject().Count() : 0;
+        return RunnerEnvelope.Create(true, new
+        {
+            dimension = 2, calculated = false, nodes = Count("node"), members = Count("member"),
+            cases = Count("load"), results = 0, pickups = 0, skippedLoadCases = 0,
+            pdfSections = options.PdfSections,
+        }, artifacts);
+    }
+
+    private static async Task<byte[]> PdfAsync(RunOptions options, string savedJson,
+        CalculationResultPresentation? presentation, CalculationDerivedPresentation? derived,
+        CancellationToken cancellationToken)
+    {
+        var selection = new PrintSelection(options.PdfSections.Select(section => section switch
+        {
+            "input" => PrintOption.Input,
+            "section_force" => PrintOption.SectionForce,
+            "pickup_section_force" => PrintOption.PickupSectionForce,
+            "displacement" => PrintOption.Displacement,
+            "pickup_displacement" => PrintOption.PickupDisplacement,
+            RunOptions.LoadDiagramSection => PrintOption.LoadDiagram,
+            _ => throw new RunnerException("INVALID_ARGUMENT", "Unsupported PDF section."),
+        }).ToArray(),
+            Layout: options.LoadDiagramLayout switch
+            {
+                "split_horizontal" => PrintLayout.SplitHorizontal,
+                "split_vertical" => PrintLayout.SplitVertical,
+                _ => PrintLayout.Single,
+            },
+            Orientation: options.PdfOrientation == "horizontal" ? PrintOrientation.Horizontal : PrintOrientation.Vertical,
+            Paper: options.PdfPaper == "A3" ? PrintPaper.A3 : PrintPaper.A4,
+            LoadDiagramComponents: options.LoadDiagramAxis ? ["axis", "load"] : ["load"]);
+        var printSnapshot = new PrintSnapshot(selection, savedJson, 0, 0, presentation, derived, []);
+        byte[] pdf = await Task.Run(() => DirectPdfGenerator.Generate(
+            PrintProjection.Build(printSnapshot), cancellationToken), cancellationToken).WaitAsync(cancellationToken);
+        if (pdf.Length < 8 || !pdf.AsSpan(0, 5).SequenceEqual("%PDF-"u8))
+            throw new RunnerException("INVALID_PDF", "PDF generation returned an invalid document.", "output");
+        return pdf;
     }
 
     internal static string ReadInput(string path)

@@ -42,7 +42,26 @@ output. `--generate-pdf` and `--generate-pik` default to `true`; section selecti
 all five names shown above. Optional `--generate-pickup-displacement-csv` and
 `--generate-pickup-reaction-csv` default to `false`. Flags accept exactly `true` or `false`; repeated and
 unknown options/sections fail. PDF sections may be any nonempty distinct subset
-of those five names. Sections are rendered in the existing PDF composer's order.
+of those five names and `load_diagram`. Sections are rendered in the existing PDF composer's order.
+`--pdf-paper` (`A4` or `A3`, default `A4`) and `--pdf-orientation` (`vertical` or
+`horizontal`, default `vertical`) apply to the whole PDF and require PDF output.
+
+The `load_diagram` section draws the saved load cases of a 2D model (every case in
+`load`, in order). `--load-diagram-layout` (`single`, `split_horizontal` for two cases
+per page one above the other, or `split_vertical`; default `single`) and
+`--load-diagram-axis` (`true` draws the axis page first; default `true`) require it.
+When the load diagram is the only output (`--pdf-sections load_diagram`,
+`--generate-pik false`, no node CSV), the runner neither starts Python nor calculates:
+it validates the document, draws `report.pdf`, publishes no `result.json`, and reports
+`summary.calculated: false`. A 3D document fails with `LOAD_DIAGRAM_REQUIRES_2D` and a
+document without load cases with `LOAD_DIAGRAM_REQUIRES_LOADS`.
+
+```powershell
+& FrameWebforCS/Headless/bin/Release/net10.0-windows/FrameWebforCS.Headless.exe run `
+  --input 'C:\jobs\input.json' --output-dir 'C:\jobs\output' `
+  --generate-pik false --pdf-sections load_diagram --pdf-paper A4 --pdf-orientation vertical `
+  --load-diagram-layout split_horizontal --load-diagram-axis false
+```
 
 To request only the calculation result and both node PICKUP CSVs (2D or 3D):
 
@@ -60,7 +79,7 @@ data for a requested quantity fails the entire job before publication.
 
 Input is the complete FrameWebforCS saved JSON document, encoded as UTF-8 (an
 optional UTF-8 BOM is accepted). Saved calculation results are ignored and every
-request is recalculated. Duplicate JSON properties, malformed documents, missing
+request is recalculated, except a load-diagram-only request, which draws the input without a calculation. Duplicate JSON properties, malformed documents, missing
 PICKUP definitions when requested, and unresolved derived-result references fail
 before output publication. A `.pik` requires dimension 2; for dimension 3, use
 `--generate-pik false`. The existing 3D CSV formatter is not exposed as `.pik`.

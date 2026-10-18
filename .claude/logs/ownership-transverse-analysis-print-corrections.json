@@ -1,0 +1,39 @@
+{
+  "owners": {
+    "lead": [
+      "HANDOFF.md",
+      ".agents/STATE.md",
+      ".agents/docs/DESIGN.md",
+      ".agents/docs/plans/transverse-analysis-print-corrections.md",
+      ".agents/docs/research/transverse-analysis-print-corrections-report.md"
+    ],
+    "native_tdd_bridge": [
+      "FrameWebforCS/tests/TransverseParity/**"
+    ],
+    "input_corrections": [
+      "FrameWebforCS/calculation/CalculationRequest.cs",
+      "FrameWebforCS/components/input/InputLoadService.cs",
+      "FrameWebforCS/three/LoadMemberExpansion.cs",
+      "FrameWebforCS/three/LoadCaseExpansion.cs",
+      "FrameWebforCS/tests/TransverseInputCorrectionTests.cs"
+    ],
+    "display_projection": [
+      "FrameWebforCS/providers/printing/PrintProjection.cs",
+      "FrameWebforCS/tests/TransverseDisplayProjectionTests.cs",
+      "FrameWebforCS/tests/PrintProjectionTests.cs",
+      "FrameWebforCS/tests/PrintProjection.Tests/PrintProjection.Tests.csproj",
+      "FrameWebforCS/providers/printing/PrintResultMetadata.cs",
+      "FrameWebforCS/tests/TransversePrintMetadataTests.cs",
+      "FrameWebforCS/providers/printing/PrintFoundationOccurrences.cs",
+      "FrameWebforCS/tests/TransverseFoundationPrintTests.cs"
+    ],
+    "composer": [
+      "FramePrintPDF/PDF_Manager/Printing/PrintResult/ResultDisg*.cs",
+      "FramePrintPDF/PDF_Manager/Printing/PrintResult/ResultFsec*.cs",
+      "FramePrintPDF/PDF_Manager/Printing/PrintResult/ReferenceResultLayout.cs",
+      "FramePrintPDF/PDF_Manager.Tests/TransverseReportCompositionTests.cs",
+      "FramePrintPDF/PDF_Manager/Printing/PrintDiagram/DiagramResult.cs",
+      "FramePrintPDF/PDF_Manager.Tests/TransverseFoundationDiagramTests.cs"
+    ]
+  }
+}

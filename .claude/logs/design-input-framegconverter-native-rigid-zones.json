@@ -1,0 +1,9 @@
+{
+  "decisions": [
+    {
+      "decision": "Export FrameG FRD rigid zones as native rigid records (m, Ilength, Jlength, e) for FrameWebforCS, preserving the original input nodes, members, and references. Supersede converter-side rigid-zone splitting, including the earlier pile-spring splitting path.",
+      "rationale": "FrameWebforCS already loads, edits, saves, displays, and forwards rigid records, and the FEM engine performs the required internal subdivisions. Keeping FRD topology preserves original member and node identifiers, spring intervals, loads, supports, joints, and notice points while retaining the FRD rigid-section properties in element tables.",
+      "alternatives": "Continue inserting explicit input nodes and members at rigid boundaries; infer rigid zones later from already split converted members."
+    }
+  ]
+}

@@ -58,6 +58,35 @@ public sealed class RunnerTests
         Assert.Equal(RunOptions.DefaultSections, options.PdfSections);
     }
 
+    [Fact]
+    public void LoadDiagramOptionsAreParsed()
+    {
+        var options = RunOptions.Parse(["run", "--input", "C:\\input.json", "--output-dir", "C:\\output",
+            "--generate-pik", "false", "--pdf-sections", "load_diagram", "--pdf-paper", "A3",
+            "--pdf-orientation", "horizontal", "--load-diagram-layout", "split_horizontal", "--load-diagram-axis", "false"]);
+        Assert.True(options.LoadDiagramOnly);
+        Assert.Equal(("A3", "horizontal", "split_horizontal", false),
+            (options.PdfPaper, options.PdfOrientation, options.LoadDiagramLayout, options.LoadDiagramAxis));
+        var defaults = RunOptions.Parse(["run", "--input", "C:\\input.json", "--output-dir", "C:\\output",
+            "--pdf-sections", "input,load_diagram"]);
+        Assert.False(defaults.LoadDiagramOnly);
+        Assert.Equal(("A4", "vertical", "single", true),
+            (defaults.PdfPaper, defaults.PdfOrientation, defaults.LoadDiagramLayout, defaults.LoadDiagramAxis));
+    }
+
+    [Theory]
+    [InlineData("--pdf-sections", "input", "--load-diagram-layout", "single")]
+    [InlineData("--generate-pdf", "false", "--load-diagram-axis", "false")]
+    [InlineData("--generate-pdf", "false", "--pdf-paper", "A4")]
+    [InlineData("--pdf-sections", "load_diagram", "--load-diagram-layout", "split_horizontal3")]
+    [InlineData("--pdf-sections", "load_diagram", "--pdf-orientation", "portrait")]
+    [InlineData("--pdf-sections", "load_diagram", "--pdf-paper", "a4")]
+    public void InvalidLoadDiagramOptionsAreRejected(string key, string value, string option, string choice)
+    {
+        Assert.Throws<RunnerException>(() => RunOptions.Parse(
+            ["run", "--input", "C:\\input.json", "--output-dir", "C:\\output", key, value, option, choice]));
+    }
+
     [Theory]
     [InlineData("{\"dimension\":2,\"dimension\":3}")]
     [InlineData("{\"dimension\":4}")]
@@ -123,6 +152,41 @@ public sealed class RunnerTests
         var response = await Run(job, "--generate-pdf", "false", "--generate-pik", "false");
         Assert.Equal(0, response.ExitCode);
         Assert.Equal(new[] { "result.json" }, Directory.GetFiles(job.Output).Select(Path.GetFileName));
+    }
+
+    [Fact]
+    public async Task LoadDiagramAloneIsDrawnWithoutCalculation()
+    {
+        // An invalid COMBINE reference fails a calculation; the load diagram never reaches it.
+        using var job = new Job(SavedModel.Replace("\"combine\":{\"1\":{\"row\":1,\"C1\":1}}",
+            "\"combine\":{\"1\":{\"row\":1,\"C1\":1,\"C99\":1}}", StringComparison.Ordinal));
+        var response = await Run(job, "--generate-pik", "false", "--pdf-sections", "load_diagram",
+            "--load-diagram-layout", "split_horizontal", "--load-diagram-axis", "false");
+        Assert.Equal(0, response.ExitCode);
+        using var envelope = JsonDocument.Parse(response.Stdout);
+        var root = envelope.RootElement;
+        Assert.True(root.GetProperty("ok").GetBoolean(), response.Stderr);
+        Assert.False(root.GetProperty("summary").GetProperty("calculated").GetBoolean());
+        Assert.Equal(1, root.GetProperty("summary").GetProperty("cases").GetInt32());
+        Assert.Equal(new[] { "report.pdf" }, Directory.GetFiles(job.Output).Select(Path.GetFileName));
+        byte[] pdf = File.ReadAllBytes(Path.Combine(job.Output, "report.pdf"));
+        Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(pdf)), root.GetProperty("artifacts")[0].GetProperty("sha256").GetString());
+        // One case without the axis page is one page: no blank page before the diagram.
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(Encoding.Latin1.GetString(pdf), @"/Type\s*/Page(?![s\w])"));
+    }
+
+    [Theory]
+    [InlineData("{\"dimension\":3,\"load\":{\"1\":{}}}", "LOAD_DIAGRAM_REQUIRES_2D")]
+    [InlineData("{\"dimension\":2,\"load\":{}}", "LOAD_DIAGRAM_REQUIRES_LOADS")]
+    [InlineData("{\"dimension\":2}", "LOAD_DIAGRAM_REQUIRES_LOADS")]
+    public async Task LoadDiagramRequiresTwoDimensionalLoads(string input, string code)
+    {
+        using var job = new Job(input);
+        var response = await Run(job, "--generate-pik", "false", "--pdf-sections", "load_diagram");
+        Assert.NotEqual(0, response.ExitCode);
+        using var document = JsonDocument.Parse(response.Stdout);
+        Assert.Equal(code, document.RootElement.GetProperty("errors")[0].GetProperty("code").GetString());
+        Assert.False(Directory.Exists(job.Output));
     }
 
     [Theory]

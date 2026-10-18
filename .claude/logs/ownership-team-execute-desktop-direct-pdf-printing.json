@@ -1,0 +1,37 @@
+{
+  "owners": {
+    "print-library": [
+      "FramePrintPDF/PDF_Manager/**",
+      "FramePrintPDF/PDF_Manager.Tests/**",
+      "FrameWebforCS/FrameWebforCS.csproj",
+      "FrameWebforCS/tests/FrameWebforCS.Tests.csproj",
+      "FrameWebforCS/tests/PrintLibrary*",
+      "FrameWeb.sln"
+    ],
+    "print-projection": [
+      "FrameWebforCS/providers/printing/**",
+      "FrameWebforCS/tests/PrintProjection*",
+      "FrameWebforCS/tests/PrintProjection.Tests/**",
+      "FrameWebforCS/tests/PrintParity*",
+      ".agents/docs/research/print-parity-desktop-direct-pdf-printing.md"
+    ],
+    "print-viewport": [
+      "FrameWebforCS/three/ThreeComponent.cs",
+      "FrameWebforCS/three/ThreeMembersService.cs",
+      "FrameWebforCS/three/ThreeResultsService.cs",
+      "FrameWebforCS/three/ThreeService.cs",
+      "FrameWebforCS/three/ViewportTextLabels.cs",
+      "FrameWebforCS/three/PrintViewportCapture.cs",
+      "FrameWebforCS/tests/PrintViewport*",
+      "FrameWebforCS/tests/PrintViewportSmoke/**"
+    ],
+    "print-ui": [
+      "FrameWebforCS/components/print/**",
+      "FrameWebforCS/components/menu/MenuComponent.cs",
+      "FrameWebforCS/components/menu/MenuComponent.Designer.cs",
+      "FrameWebforCS/AppComponent.cs",
+      "FrameWebforCS/tests/PrintUi*",
+      "FrameWebforCS/tests/PrintUi.Tests/**"
+    ]
+  }
+}

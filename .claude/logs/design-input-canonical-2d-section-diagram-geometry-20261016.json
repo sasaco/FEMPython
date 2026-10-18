@@ -1,0 +1,9 @@
+{
+  "decisions": [
+    {
+      "decision": "Use a private canonical 2D section-diagram boundary with full case/state keys, member-distance force positions, one-sided basic segment endpoints, raw model-unit displacement geometry, and explicit label-unit metadata. Resolve interior displacement stations to unique canonical nodes by validated member-frame coordinates; preserve explicit endpoint IDs and reject unproved associations. Node label selection must not remove required geometry vectors.",
+      "rationale": "The legacy renderer treated composite case keys as integers and station IDs as input-node IDs, causing exceptions or empty curves. Reusing deduplicated table rows loses point-load shear jumps; interpolating only original member endpoints contradicts solved internal pile displacement. Diagram-local metadata and values preserve canonical results, table values and export contracts while supporting physically continuous piecewise geometry and source-aware envelope rendering.",
+      "alternatives": "Renumber canonical IDs; mutate shared table vectors or signs; reverse displayed mm/mrad values back into geometry; infer node identity from generated-ID text; silently bridge missing or ambiguous station associations."
+    }
+  ]
+}

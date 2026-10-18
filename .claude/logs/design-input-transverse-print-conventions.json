@@ -1,0 +1,14 @@
+{
+  "decisions": [
+    {
+      "decision": "Keep canonical and derived engineering values raw; apply explicit mm/mrad conversion and the supplied-reference-facing 2D clockwise rotation/Mz convention only at the desktop legacy print boundary. Convert declared m/mm/cm lengths, use the documented legacy metre fallback for unspecified saved input, exclude dimensionless modal shapes, reject unknown physical units, and preserve 3D signs. Transform moving candidates before selection and remap sign-reversed derived display modes to the matching opposite raw mode.",
+      "rationale": "Canonical beam results are right handed and exports already promise raw correlated vectors. The supplied 2D reference and legacy display evidence establish a distinct report convention; performing it at print projection prevents double conversion or changes to raw .pik/CSV selections. Native regressions cover units, modal exclusion, 2D/3D, moving ties, reversed filters and export byte preservation. This does not assert a universal historical convention or certify reference parity.",
+      "alternatives": "Negate solver/canonical moments globally; scale raw derived values or exports; print raw physical values beneath fixed mm/mrad headers; infer 3D or historical conventions from one sample."
+    },
+    {
+      "decision": "Identify ordinary displacement combinations using contributing DEFINE/LL source semantics and complete equal unfiltered vectors before display filtering. Pass an optional ordinaryDisplacementCombinations list and a 2D referenceResultLayout flag only across the private desktop print projection boundary; absent metadata preserves legacy genuine-envelope behavior. Keep station identity separate from display labels and retain raw weighted provenance when printing proven expanded base-case expressions.",
+      "rationale": "The same legacy composer handles ordinary COMBINE, PICKUP and delegated moving-load envelopes, and a COMBINE itself may contain DEFINE envelopes. A key-name or chosen-mode heuristic would suppress legitimate correlated extrema. Private semantic metadata supports paired case/mode reports without changing AnalysisResultSet or the raw aggregation/export contract; uncertain provenance remains explicit rather than being fabricated.",
+      "alternatives": "Collapse every COMBINE to one hardcoded mode; infer ordinary status after filtering; mutate canonical station/source identities to carry labels; change shared numeric-string formatting for provenance cells."
+    }
+  ]
+}

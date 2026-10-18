@@ -1,0 +1,247 @@
+diff --git a/.agents/docs/plans/transverse-analysis-print-verification.md b/.agents/docs/plans/transverse-analysis-print-verification.md
+new file mode 100644
+index 0000000..c8266c3
+--- /dev/null
++++ b/.agents/docs/plans/transverse-analysis-print-verification.md
+@@ -0,0 +1,119 @@
++## Implementation Plan: Transverse Analysis Print Verification
++
++### Purpose
++Recalculate the supplied transverse-direction model through the current FrameWebforCS application pipeline, generate its three requested reports, and compare all reference values, entity/case associations, provenance, and page presentation. Deliver an evidence-backed verification report; correcting discrepancies is a separate task.
++
++The user confirmed this scope on 2026-10-15. This document is a verification plan, not a claim that the analysis or PDFs already match. The primary target is the current .NET 10 FrameWebforCS application and its shared Python/printing implementation.
++
++### Scope
++- New files after approval: a private verification harness (`Verification.csproj`, `Program.cs`), PDF inventory/comparison script (`compare_pdfs.py`), manifests, mapping tables, canonical/derived results, three generated PDFs, row differences, and page images under `.tmp/transverse-analysis-print-verification/{run-id}/`; durable findings in `.agents/docs/research/transverse-analysis-print-verification-report.md`.
++- Modified files: this plan during review. No product source, dependency manifest/lock, sample JSON, or reference PDF changes are required. The verification harness must call existing production methods rather than reproduce their calculation or print logic.
++- Source files to reuse: `FrameWebforCS/calculation/{CalculationRequest,PythonCalculationRuntime,CalculationResultJson,CalculationDerivedPresenter}.cs`, `FrameWebforCS/components/input/InputCombineService.cs`, `FrameWebforCS/providers/printing/PrintProjection.cs`, and `FramePrintPDF/PDF_Manager/DirectPdfGenerator.cs`. Use `FrameWebforCS/Headless/HeadlessCalculation.cs` as the complete pipeline example.
++- Dependencies: Windows x64, .NET 10 Desktop runtime/SDK, repository-managed `FrameWeb/.venv`, current desktop/PDF project references and installed Japanese print fonts. PDF inspection can use ephemeral `uv run --project FrameWeb --locked --extra dev --with pymupdf python ...`; this command was checked successfully without changing project dependencies. Run from the repository root in PowerShell and keep Japanese script files UTF-8.
++- Out of scope: discrepancy fixes, solver/aggregation semantics changes, new production CLI options, Angular/converter changes, dependency upgrades, deployment, physical printing, and structural design certification.
++
++#### Inputs and confirmed preflight
++
++All four supplied files were accessible. Root: `K:\レールウェイコンサルタント\26_ピット\計算書`.
++
++| Role | Relative path | Bytes | SHA-256 |
++|---|---|---:|---|
++| Saved input | `02_pre\05_線路直角方向の計算\線路直角方向.json` | 44097 | `c2798b3c8aa687f7b2220aa57f31dd6ad91f9f66a41685edae450386b7ae6553` |
++| Section forces | `03_analysis\05_線路直角方向の計算\基本.pdf` | 39816 | `eff765fa119b2ab25f982355d9a77741a8fe3e1591b765e842bb217d38246727` |
++| PICKUP section forces | `03_analysis\05_線路直角方向の計算\PICK UP.pdf` | 109457 | `6aed77f12d8d60ec8abc04ba79279d48966e84b7abe2157c2e66e6f6eeb438b8` |
++| Base and COMBINE displacement | `03_analysis\05_線路直角方向の計算\変位量.pdf` | 16167 | `24d840047de627d0baa3f09776ff41ed4e8b30a52703e910e659f71c8049bf49` |
++
++Preflight HEAD: `08aac8fd4b64b8513047adc575d87893a38fe818`; initial working tree was clean. The JSON has dimension 2, 12 input nodes, 11 members, 4 rigid-zone records, 3 notice-point records, 10 saved load cases, 10 DEFINEs, 10 COMBINEs, and 5 PICKUPs. These input counts are not assertions about solver-generated nodes or analyzed cases.
++
++| Reference | Pages | Confirmed content |
++|---|---:|---|
++| `基本.pdf` | 15 | Basic CASE 1–10 in paired columns; M/S/N, DIST, I-TAN/J-TAN, rigid boundaries, notice points, and an M-MAX row |
++| `PICK UP.pdf` | 45 | PICKUP 1–5, MOMENT/SHARE/AXIAL focus, signed maximum/minimum correlated M/S/N and COM:CASE source labels |
++| `変位量.pdf` | 4 | Pages 1–2: CASE 1–10; pages 3–4: MIX 1–10; 12 nodes per case; X/Y displacement in mm and rotation in mRad |
++
++All reference page rectangles are 842 × 595 pt (A4 landscape); the producer is Acrobat Distiller 5.0.5. Force and DIST displays use 2 and 3 decimal places, and displacement uses 4. The JSON was modified on October 15, after the October 14 PDFs: historical input identity is unproven. Reference inventory and first-page images were inspected during planning and are temporarily available in `.tmp/transverse-analysis-print-verification/preflight/`.
++
++#### Current implementation evidence
++
++- `FrameWebforCS/Headless/HeadlessCalculation.cs:27`–`:63` illustrates derived-input parsing, saved-document request projection, Python analysis, strict result parsing, and derived presentation. `Headless/README.md:61` documents fresh recalculation; `Headless/tests/RunnerTests.cs:74` covers stale saved results.
++- `FrameWebforCS/components/menu/MenuComponent.cs:230` and `components/print/PrintDialogForm.cs:326` use the shared application calculation/printing path. `calculation/PythonCalculationRuntime.cs:233` invokes `build_analysis_result_set`.
++- `Headless/RunOptions.cs:14` and `:40` do not accept COMBINE displacement; `HeadlessCalculation.cs:94` maps its limited selection. Therefore the existing CLI alone cannot cover this request.
++- `providers/printing/PrintProjection.cs:13`, `:26`, and `:550` provide `CombinedDisplacement`, explicit paper/orientation/entity selection, and `disgCombine` projection. Defaults are A4 portrait; use `PrintPaper.A4` and `PrintOrientation.Horizontal` explicitly. The private harness can access existing internal APIs through the already declared `FrameWebforCS.Tests` friend assembly (`FrameWebforCS.csproj:33`).
++- `FrameWeb/src/fem/result_topology.py:113` produces generated station/node identities. `result_projection.py:192` applies endpoint sign rules. `CalculationDerivedPresenter.cs:265` and `PrintProjection.cs:413` deduplicate stations, so discontinuity sides and row multiplicity need explicit checks.
++- `CalculationDerivedPresenter.cs:138`, `:180`, and `:234` implement DEFINE, COMBINE, and PICKUP; strict extrema comparison preserves first candidate on ties. `PrintProjection.cs:618` emits source IDs and provenance. Printed numeric formatting is exercised by `FramePrintPDF/PDF_Manager.Tests/PrintNumericFormatOracleTests.cs` and `DisplacementNodeIdLayoutTests.cs`.
++
++### Implementation Steps
++
++Execute the following stages in order after approval. Each stage retains its evidence for the next stage and has an explicit completion check.
++
++#### Step 1: Freeze evidence and build the reference inventory
++- [ ] Recheck git status/relevant diffs and record current HEAD, dirty-path hashes, SDK/Python versions, culture, and font environment. Create a unique private run directory; never reuse a previous run's outputs.
++- [ ] Rehash the four external files and compare with the planning hashes. If changed, record a new baseline explicitly and reassess the inventory; do not silently continue using the previous hashes. Capture modification/PDF creation timestamps without treating timestamps as proof of input equivalence.
++- [ ] Extract text with coordinates from every reference page. Inventory report/case/COMBINE/PICKUP/focus IDs, member/node IDs, station labels/distances, units, printed precision, column positions, and row counts. Retain original page/column/bounding-box evidence for every parsed row.
++- [ ] Establish a parser coverage ledger: parsed data rows, recognized headers/footers/non-numeric placeholders, and unresolved tokens/rows. Preserve repeated rows, signed zero, M-MAX, I/J labels, and discontinuity sides. Visually check column parsing against each distinct template and page transition.
++**Verification**: Exactly 15/45/4 reference pages are inventoried under the recorded hashes. Base/COMBINE displacement each covers 10 cases × 12 nodes × 3 displayed components. All numeric rows are accounted for; unresolved extraction prevents a complete-match verdict.
++
++#### Step 2: Prove the fresh application pipeline and entity mapping
++- [ ] Create a private `net10.0-windows` x64 console harness with `UseWindowsForms=true`, assembly name `FrameWebforCS.Tests`, and a project reference to the desktop project. Keep its executable beneath the repository so existing Python-environment discovery works. Isolate the output so it cannot collide with the actual test assembly.
++- [ ] Before running the client model, smoke-test the harness with the existing small known-displacement fixture used by `Headless/tests/RunnerTests.cs`. Confirm its independently known axial displacement and PDF output through the same shared path; an executed process or nonempty PDF alone is insufficient.
++- [ ] Call `CalculationRequestBuilder.FromSavedJson`, the shared Python runtime, `AnalysisResultSetJson.Deserialize`, `InputCombineService.ParseCombineJson`, `CalculationDerivedInputSnapshot.Capture`, and `CalculationDerivedPresenter.Build`; retain the resulting `CalculationResultPresentation`. Read the supplied JSON once and perform one fresh solve for all three reports. Dispose the runtime and report stage failures explicitly.
++- [ ] Persist the actual solver request, canonical AnalysisResultSet, derived definitions/combinations/pickups, skipped-case list and diagnostics. Distinguish 12 input nodes from generated topology nodes; map original member/station location, I/J direction, rigid boundaries, notice points, spring subdivisions, and any coincident discontinuity sides.
++- [ ] Audit 10 saved case IDs against projected/analyzed IDs. Explain every omission through the actual request rules and flag any absent reference case; do not synthesize zeros. Verify DEFINE/COMBINE references and all five PICKUP candidate sets.
++- [ ] Build an explicit unit/axis table from saved input, result metadata, shared print projection, and reference labels. Confirm how translations and rotations reach mm/mRad and M/S/N; do not infer undeclared raw units or apply a compensating multiplier merely to match the reference.
++**Verification**: A real calculation succeeds with strict canonical parsing; every analyzed/omitted case is explained, every referenced original node/member maps unambiguously or is flagged, and no saved result is substituted. Run the existing stale-result regression in `Headless/tests/RunnerTests.cs` as a targeted smoke; inability to calculate is reported as blocked verification with its failing stage.
++
++#### Step 3: Generate the three reports through the existing PDF path
++- [ ] Construct three `PrintSelection`s from the same fresh presentation: `[SectionForce]`, `[PickupSectionForce]`, and `[Displacement, CombinedDisplacement]`. Explicitly set Japanese language, title `線路直角方向`, A4 landscape, and record layout/scale/component selections.
++- [ ] Use original 12 node IDs for the reference displacement scope after Step 2 mapping. Record the unfiltered entity inventory and justify every output filter by the requested reference scope; never remove an input case, member, reference station, or discrepancy to force agreement. Keep generated topology and unfiltered results in evidence.
++- [ ] Call `PrintSnapshot` → `PrintProjection.Build` → `DirectPdfGenerator.Generate` for each selection and retain each projected print JSON and exact PDF bytes. Save privately as `section-force.pdf`, `pickup-section-force.pdf`, and `displacement-and-combine.pdf`.
++- [ ] Verify PDF signatures, readable page trees, section/case presence, no empty report, and correspondence between the shared fresh result, projected rows, and generated PDF. Record actual page geometry/count without forcing reference pagination by editing output or templates.
++**Verification**: Three real product PDFs are generated; the third contains both basic and COMBINE displacement with no PICKUP displacement. Each uses the same calculation identity and explicit settings; hashes and byte counts are in the manifest. Page/content differences remain reportable findings.
++
++#### Step 4: Compare every printed value and independently check derived results
++- [ ] Parse all generated PDF pages using the same coverage contract as the references. Join semantic row multisets by report/case or PICKUP/focus/extremum, original node/member, station identity/distance/side, and component. Trace all joins to page/column/row; report missing, extra, duplicate, ambiguous, and unsupported rows.
++- [ ] Compare base M/S/N and displacement displays, signs, station positions, IDs/names and component order. Compare PICKUP M/S/N as correlated vectors from the selected max/min COMBINE, including both COMBINE IDs and constituent-case/provenance labels. Treat the reference's extra M-MAX rows explicitly rather than dropping them.
++- [ ] Compare printed decimal tokens first. Use rounding intervals at the reference's precision only to explain raw-versus-printed differences (half of 0.01 force, 0.001 DIST, or 0.0001 mm/mRad display unit with a documented floating-point epsilon); do not use a broad relative tolerance to approve different printed values. Record signed-zero/formatting differences separately.
++- [ ] Independently recompute this sample's single-case DEFINEs and weighted COMBINE vectors from unrounded fresh base results, then independently choose PICKUP signed extrema and correlated vectors. Check all 10 COMBINEs and all 5 PICKUPs; do not sum rounded reference cells or call the production derived presenter as its own oracle. Record ties and source-selection differences.
++- [ ] Distinguish fresh-solver/reference differences, derived aggregation differences, print-projection/display differences, mapping/parser gaps, and historical input uncertainty using the saved intermediate stages. A mismatch does not by itself establish a code defect.
++- [ ] Prove the comparer detects failures using private extracted-row copies: change one numeric value and one source ID, remove/add/duplicate a row, and retain coincident stations on opposite sides. Require the expected specific differences without touching reference or generated PDFs.
++**Verification**: Produce row-level CSV/JSON with compared counts, exact display matches, numeric differences, missing/extra/ambiguous rows, source mismatches, and examples linked to original evidence. All reference numeric rows and all generated numeric rows are accounted for. Any gap blocks an unqualified match statement.
++
++#### Step 5: Compare page presentation and publish the verification result
++- [ ] Rasterize every reference/generated page at the same fixed resolution. Match report content before page alignment, especially if pagination differs. Review all pages for blank pages, clipping, overlaps, missing glyphs, unreadable values, and lost rows; inspect side-by-side each template plus every numeric/content/layout discrepancy page.
++- [ ] Report page sizes/counts, column/table composition, headings/units, row order, line/page breaks, source labels and fonts. Use overlays/crops as evidence where useful; no arbitrary pixel threshold or automatic font/pagination waiver is allowed. PDF metadata/byte differences alone do not prove a content mismatch.
++- [ ] Publish `.agents/docs/research/transverse-analysis-print-verification-report.md` with one result per reference: complete match, differences found, or verification incomplete. State numeric, mapping/provenance, and presentation outcomes separately, include totals and largest discrepancies, and identify any remaining input-history or extraction uncertainty.
++- [ ] Link the report to retained manifests, raw request/results/projections, generated PDFs, all row differences and relevant page images. Rehash the external originals and confirm they are unchanged; inspect final git status/diff and run the agent-infrastructure gate for the added documentation.
++**Verification**: The durable report covers all three requested PDFs with reproducible commands and complete evidence. A full-match verdict requires complete row coverage, matching values and associations, and matching presentation within explicitly accepted tolerances; otherwise describe the actual differences or incomplete stage. Repairs are proposed separately.
++
++#### Relevant commands and gates
++
++```powershell
++# Existing targeted coverage; select relevant methods rather than rerunning unrelated suites.
++dotnet build FrameWebforCS/Headless/FrameWebforCS.Headless.csproj -c Release
++dotnet test FrameWebforCS/Headless/tests/FrameWebforCS.Headless.Tests.csproj -c Release --filter FullyQualifiedName~RunnerTests
++dotnet test FrameWebforCS/tests/PrintProjection.Tests/PrintProjection.Tests.csproj -c Release
++dotnet test FramePrintPDF/PDF_Manager.Tests/PDF_Manager.Tests.csproj -c Release --filter "FullyQualifiedName~PrintNumericFormatOracleTests|FullyQualifiedName~DisplacementNodeIdLayoutTests|FullyQualifiedName~PrintLibraryTests"
++# Use if station mapping/sign behavior needs clarification; no solver changes are planned.
++uv --directory FrameWeb run --locked --extra dev python -m pytest tests/integration/test_result_projection.py -q
++& .agents/check.ps1 -AgentOnly
++```
++
++The private harness and comparer must record their exact build/run commands in the run manifest once created. Build or test failures are reported separately from sample/reference mismatches. Solution tests alone do not cover the separate Headless and focused PrintProjection test projects.
++
++### Risks & Considerations
++- The latest JSON may differ materially from the input that produced the PDFs. Preserve the supplied version and compare it as requested; explain mismatches without asserting historic equivalence or silently restoring older files.
++- Existing CLI options cannot select COMBINE displacement or all required print settings. A private friend-assembly harness uses existing APIs without widening product scope; a small known-case smoke and shared-pipeline trace guard against a harness-only result.
++- Generated topology IDs, rigid zones, spring intervals, coincident station sides, and legacy M-MAX rows can cause omissions or ambiguous joins. Preserve row multiplicity and explicitly report unresolved mappings.
++- A legacy PDF can contain rounded values only. Printed agreement cannot certify equal unrounded solver values. Raw independent derived checks and display comparisons answer separate questions.
++- Current projection deduplication can discard same-station sides; the verifier must expose the difference rather than normalize it away. PICKUP must retain correlated vectors and provenance, including same-value ties.
++- Reference PDFs use a legacy composer. A4 landscape settings can match paper geometry but do not guarantee identical typography or pagination. Record differences; do not modify product layout in this task.
++- Machine culture and installed Japanese fonts affect rendering/formatting. Record and fix the verification environment, and distinguish environment failures from solver/print discrepancies.
++- K: may be unavailable or files may change between runs. Stop dependent comparison on changed/missing inputs until a new baseline is explicitly recorded. Keep original hashes and all diagnostics.
++- Client documents and detailed result artifacts stay in the private evidence directory; durable documentation should contain only the minimum evidence needed and links. Do not upload files or send them to third parties.
++- Repository `PROGRESS.md` is absent. Existing historical state/design sections contain superseded architectures; current source and the later pythonnet/direct-PDF decisions govern this verification.
++
++### Open Questions
++- No additional purpose/scope answer is required: the user confirmed verification of values, associations, and presentation, with fixes separate. The plan still requires the user's approval before execution under the invoked `plan` skill.
++- The historical input/version used for the October 14 PDFs is unknown. This does not block comparison of the supplied files; it limits causal attribution if differences are found.
++- No display/layout tolerance has been authorized. Report all observed differences, including rounding, fonts and pagination; do not waive them. If there are differences, obtain any acceptance decision against the concrete verification report.
++
+diff --git a/.agents/docs/research/transverse-analysis-print-verification-report.md b/.agents/docs/research/transverse-analysis-print-verification-report.md
+new file mode 100644
+index 0000000..ac223ed
+--- /dev/null
++++ b/.agents/docs/research/transverse-analysis-print-verification-report.md
+@@ -0,0 +1,116 @@
++# Transverse Analysis and Print Verification
++
++## Result
++
++**The current FrameWebforCS recalculation and printed reports do not reproduce any of the three supplied reference PDFs.** Differences include numerical values, force signs, selected PICKUP sources, output stations, displacement display scaling, and report structure. This verification changed no product code or external input/reference files; repairs are outside the approved scope.
++
++Run: `20261015T182603`. Approved plan: [transverse-analysis-print-verification.md](../plans/transverse-analysis-print-verification.md). HEAD: `08aac8fd4b64b8513047adc575d87893a38fe818`. The supplied JSON and all three PDFs matched the plan's SHA-256 baselines. Their original locations/hashes, versions and environment are recorded in the [run manifest](../../../.tmp/transverse-analysis-print-verification/20261015T182603/manifest.json).
++
++| Requested report | Reference pages | Generated pages | Result |
++|---|---:|---:|---|
++| Basic section forces (`基本.pdf`) | 15 | 30 | Numerical, station and presentation differences |
++| PICKUP section forces (`PICK UP.pdf`) | 45 | 60 | Numerical, selected-source, station and presentation differences |
++| Base + COMBINE displacement (`変位量.pdf`) | 4 | 34 | Numerical/display differences and repeated COMBINE tables |
++
++All 64 reference pages and 124 generated pages were extracted and rasterized. Every decimal/placeholder token in the target tables was accounted for. Ambiguous coincident force stations are retained as groups and are not assigned an artificial one-to-one match; the unequivocal differences below already disprove overall agreement.
++
++## Recalculation and evidence
++
++The private Windows x64 .NET 10 harness calls the same implementation as the current application:
++
++`CalculationRequestBuilder.FromSavedJson` → `PythonCalculationRuntime.CalculateAsync` → `build_analysis_result_set` → strict `AnalysisResultSetJson.Deserialize` → `CalculationDerivedPresenter.Build` → `CalculationResultPresentation` → `PrintSnapshot` → `PrintProjection.Build` → `DirectPdfGenerator.Generate`.
++
++The sample was solved once, with all three reports generated from that same fresh result. A separate small known axial fixture first verified displacement `dx = 0.0004` and exclusion of deliberately stale saved results. There were 10 saved/projected/analyzed cases, no skipped cases, and no solver warnings. Canonical topology contains the original 12 nodes plus 46 generated nodes, and all 11 original members. Displacement printing selects exactly the original 12 nodes.
++
++The harness fixes `ja-JP`, Japanese report language, title `線路直角方向`, and A4 landscape. The canonical unit metadata is `consistent_user_defined` with all named units `unspecified`; no compensating unit or sign conversion was applied by the harness. Runtime versions include .NET SDK 10.0.402, .NET runtime 10.0.13, Python 3.13.11, NumPy 2.4.1 and SciPy 1.17.0.
++
++Primary evidence:
++
++- [Harness source and reproducible call chain](../../../.tmp/transverse-analysis-print-verification/20261015T182603/harness/Program.cs), [run summary, commands, source/artifact hashes](../../../.tmp/transverse-analysis-print-verification/20261015T182603/harness/output/run-summary.json).
++- [Actual solver request](../../../.tmp/transverse-analysis-print-verification/20261015T182603/harness/output/request.json), [canonical result](../../../.tmp/transverse-analysis-print-verification/20261015T182603/harness/output/canonical.json), [derived result](../../../.tmp/transverse-analysis-print-verification/20261015T182603/harness/output/derived.json).
++- Generated PDFs: [section forces](../../../.tmp/transverse-analysis-print-verification/20261015T182603/harness/output/section-force.pdf), [PICKUP section forces](../../../.tmp/transverse-analysis-print-verification/20261015T182603/harness/output/pickup-section-force.pdf), [base + COMBINE displacement](../../../.tmp/transverse-analysis-print-verification/20261015T182603/harness/output/displacement-and-combine.pdf).
++- The output directory also retains `print-*.json` and `settings-*.json` for all three reports, frozen saved input, smoke output and stage diagnostics. Reference copies are retained under `preflight/inputs/`.
++
++## Confirmed differences
++
++### Numerical examples
++
++Values below are the actual printed values. They are not normalized to remove sign or scale differences.
++
++| Location / quantity | Reference | Current PDF | Reference / current page |
++|---|---:|---:|---|
++| Basic CASE 1, member 3, J end, DIST 0.881, M | −22.82 | +22.82 | 1 / 1 |
++| Basic CASE 10, member 10, DIST 0.000, N | +13.52 | +1538.53 | 14 / 28 |
++| PICKUP 1, MOMENT MAX, member 1, DIST 0.000, M | +10.41 | −7.40 | 1 / 8 |
++| Same PICKUP row, S | +21.45 | +15.30 | 1 / 8 |
++| Same PICKUP row, selected COMBINE | 6 (`1+4+5+6`) | 1 (constituent formula absent) | 1 / 8 |
++| PICKUP 5, MOMENT MAX, member 6, DIST 0.059, S | −315.89 | −1850.49 | 37 / 57 |
++| Basic CASE 1, node 1, Y displacement, header mm | −1.5543 | −0.0016 | 1 / 1 |
++| Basic CASE 10, node 1, X displacement, header mm | +19.0393 | +0.3250 | 2 / 4 |
++| COMBINE/MIX 5, node 2, X displacement, header mm | +38.0541 | +0.3440 | 3 / 17 |
++
++Full details include reference/current values, semantic keys, page/column/bounding boxes, missing/extra rows and ambiguous groups: [row differences CSV](../../../.tmp/transverse-analysis-print-verification/20261015T182603/comparison/row-differences.csv), [full JSON](../../../.tmp/transverse-analysis-print-verification/20261015T182603/comparison/row-differences.json), [comparison notes](../../../.tmp/transverse-analysis-print-verification/20261015T182603/comparison/audit-notes.md).
++
++### Saved input is not preserved completely in the solver request
++
++Two concrete conversion defects were observed in the supplied model. These findings concern the current saved-document-to-request conversion; no repaired analysis was run.
++
++1. **Notice points are dropped.** `FrameWebforCS/calculation/CalculationRequest.cs:38`–`:40` copies optional sections only when they are `JsonObject`s. The supplied `notice_points` is an array with three records, so the actual request has no `notice_points`. The member 5 midpoint at 0.566 is absent from canonical stations, which contain only 0 and 1.132 for that member. Some other requested locations survive accidentally because they coincide with existing load boundaries. Evidence: [feature/station ledger](../../../.tmp/transverse-analysis-print-verification/20261015T182603/audit/feature-stations.json).
++
++2. **Negative-zero continuation loses its meaning in CASE 10 member loads.** `CalculationRequest.cs:282`–`:286` converts L1 to a number and tests `rawStart < 0`; the string `"-0"` therefore follows the absolute-zero branch. In contrast, `FrameWebforJS/src/app/components/input/input-load/input-load.service.ts:950`–`:957` recognizes the original string's minus sign as continuation. In the actual request, 23 nonzero patches on each pile all start at 0, including 22 rows originally using `"-0"`. For example, a later `L1="-0", L2="-2.2"` row becomes a physical interval [0, 2.2] instead of continuing from the previous interval; another `"-0", "-0.7"` row becomes [0, 0.7]. The pile length is 23.95, but all these projected intervals overlap within the first 2.2. Evidence: [CASE 10 original/request interval ledger](../../../.tmp/transverse-analysis-print-verification/20261015T182603/audit/case10-load-extents.json).
++
++The second finding is a concrete cause candidate for CASE 10's large discrepancy, which propagates into COMBINE 5/10 and PICKUP 5. Quantifying the repaired result requires a separate authorized correction and rerun. It is not established merely by comparing two outputs.
++
++### Signs, display units and source labels
++
++- The current print projection carries canonical force components directly (`PrintProjection.cs:413`–`:425`, `:618`–`:635`). Reference M and current canonical/display M use different signs in clear examples such as CASE 1/member 3. PICKUP selection is consistent with the current signed components, but therefore need not select the same maximum-source combination as the reference. A blanket absolute-value comparison would hide this discrepancy and was not used.
++- Basic and COMBINE displacement projection passes raw displacement/rotation components unchanged (`PrintProjection.cs:391`–`:397`). The PDF parser/formatter also keeps them unchanged while labeling the columns mm and mmrad (`ResultDisg.cs:98`–`:103`, `:312`–`:314`, `:438`–`:442`; corresponding COMBINE parsing/formatting in `ResultDisgCombine.cs`). For CASE 1/node 1, canonical Y is −0.0015542503589541191 and the printed result is −0.0016, while the reference is −1.5543. The magnitude suggests a missing legacy display conversion, but unit metadata is unspecified, and conversion alone cannot reconcile CASE 10 or rotation signs. No unit multiplier was introduced to force agreement.
++- The current basic case caption is a canonical page label such as `1/Static/0 1`, rather than the reference case name such as `固定死荷重`. I-TAN/J-TAN/rigid labels, member endpoint IDs and member names are replaced/omitted in favor of station IDs `S0`, `S1`, etc.
++- The PICKUP PDF prints only the selected COMBINE ID, without the reference's constituent-case expression. The COMBINE displacement PDF renders a source expression such as `1+2+3+4+5` as numeric text `12345.0000`; the original expression remains traceable in the captured projections.
++
++### Page structure and visual review
++
++All 188 pages were rasterized at 120 dpi and reviewed in labeled contact sheets, including every discrepancy page. Reference reports use paired cases or paired maximum/minimum columns. Current force/PICKUP reports use a single vertical table; current base displacement splits one case's nodes across two columns, and COMBINE displacement prints six separate focus/extremum tables per case. All 120 COMBINE/node groups repeat the same vector six times. This explains 840 generated displacement rows versus 240 reference rows and much of the 34-page output.
++
++Changing the harness's diagram layout cannot fix this table layout: `PrintProjection.cs:653`–`:669` applies `PrintLayout` only to diagrams, while table printers use `Table.OneUpInfo` (for example `ResultFsec.cs:499`–`:506`; COMBINE displacement mode loop `ResultDisgCombine.cs:620`–`:637`). The original 12-node displacement filter is working.
++
++The reviewed pages show no blank pages, obvious clipped text, replacement-glyph boxes or page-boundary overflow. This limited rendering check does not establish parity: table order, grouping, headings, labels, pagination and values are visibly different. Rotation-aware word-box checks found zero words outside the page rectangle. Evidence: [reference render manifest](../../../.tmp/transverse-analysis-print-verification/20261015T182603/visual/reference-render-summary.json), [generated render manifest](../../../.tmp/transverse-analysis-print-verification/20261015T182603/visual/generated-render-summary.json), and all page PNGs/contact sheets in their linked report directories.
++
++## Coverage and limits of matching
++
++The comparer uses page-rotation-aware coordinates and semantic keys, not PDF text-stream order. It preserves repeated positions, labels, source IDs, printed decimal tokens and M-MAX placeholders. It neither flips signs nor converts units before comparison. Six private mutation checks verified detection of numeric/source changes, removed/added/duplicated rows and opposite sides at the same position.
++
++| Report | Reference rows | Generated rows | Unambiguous pairs | Reference-only rows | Generated-only rows | Ambiguous groups (reference / current rows) |
++|---|---:|---:|---:|---:|---:|---|
++| Basic section force | 951 | 680 | 300 | 291 | 200 | 180 (360 / 180) |
++| PICKUP section force | 2850 | 2040 | 900 | 870 | 600 | 540 (1080 / 540) |
++| Displacement, including COMBINE | 240 | 840 | 240 | 0 | 600 | 0 |
++
++These partitions account for every extracted row. Reference-only and generated-only mean absent from the opposite PDF at that report/case/member/position key; they are not all attributed to the same defect. Coincident reference rows cannot always be mapped to the current single station ID, so they remain explicitly ambiguous rather than being reported as numerical matches. For example, two reference pile rows at DIST 10.640 map to one current S14 location.
++
++Among the unambiguous pairs, complete numeric vectors agree by decimal equality in 99/300 basic force rows, 152/900 PICKUP rows and 0/240 displacement rows. Labels/source associations are separate checks; this is not a percentage of the entire reference. In the 900 unambiguous PICKUP pairs, 433 selected COMBINE IDs differ and all 900 lack the printed reference constituent formula. Zero complete rows match all requested numeric/label/source fields. See [coverage](../../../.tmp/transverse-analysis-print-verification/20261015T182603/comparison/coverage.json), [summary](../../../.tmp/transverse-analysis-print-verification/20261015T182603/comparison/summary.json), [mutation checks](../../../.tmp/transverse-analysis-print-verification/20261015T182603/comparison/mutation-tests.json).
++
++## Independent checks and validation
++
++From the fresh canonical base results, an independent Python checker recomputed this sample's DEFINEs, all 10 weighted COMBINEs, all 5 PICKUPs, per-focus signed extrema, correlated six-component vectors and selected-source/provenance data across displacement, reaction and force families. It performed 124,200 component comparisons with zero arithmetic/source errors; maximum absolute numerical difference was 2.2737367544323206e-13. This confirms current aggregation consistency with current base results, not agreement with the external reference or correctness of request conversion.
++
++The checker also traced raw components into print projection, original/generated entity mappings and all cases. For the fresh result, 460 dropped coincident segment endpoints differ by at most 8.88e-16 (none above 1e-10); station deduplication is not demonstrated to discard a significant force jump in this particular run. Reference duplicate station rows nevertheless remain a report/mapping difference. [Audit summary](../../../.tmp/transverse-analysis-print-verification/20261015T182603/audit/summary.json), [checker](../../../.tmp/transverse-analysis-print-verification/20261015T182603/audit/checker.py), [unit and mapping investigation](../../../.tmp/transverse-analysis-print-verification/20261015T182603/audit/mapping-unit-audit.md).
++
++Executed existing focused tests:
++
++- Headless real-process/stale-cache/artifact regression: 1 passed.
++- Print projection suite: 21 passed.
++- PDF numeric-format/node-ID/library checks: 34 passed.
++- Agent infrastructure: 57 tests passed and all other `AgentOnly` checks passed. Full product Python/Angular suites were not required or claimed.
++
++Exact commands/logs are in the harness run summary and team work logs under `.agents/logs/agent-teams/team-execute-transverse-analysis-print-verification/`. Independent evidence reviews and final file-integrity checks are recorded in the closeout below.
++
++## Interpretation and next correction scope
++
++The requested hypothesis of identical results is disproved. The verification identified input conversion defects and display/provenance differences that should be addressed in a separate task, in dependency order: preserve notice-point arrays and negative-zero continuation, reestablish the legacy force/rotation/unit display contract, regenerate current results, then repair report stations/source expressions and table composition before repeating this full comparison.
++
++The JSON was modified after the reference PDFs were created, and the historical input/software version that produced them is unknown. This limits attribution of every numerical difference to a particular code defect. It does not change the observed mismatch of the supplied current input/current code against the supplied references. No structural design acceptance is certified by this comparison.
++
++## Closeout
++
++Final independent reviews, source-integrity rehashes, work-log validation and ownership/gate evidence will be added here after review. The numerical mismatch verdict is already established by the retained artifacts.

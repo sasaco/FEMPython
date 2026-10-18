@@ -1,0 +1,7 @@
+{
+  "owners": {
+    "input-implementer": ["FrameWebforCS/components/input/*Component.cs", "FrameWebforCS/components/input/PrintNumberCellType.cs"],
+    "result-implementer": ["FrameWebforCS/components/result/**", "FrameWebforCS/calculation/CalculationResultTableWriter.cs"],
+    "tester": ["FrameWebforCS/tests/SpreadPrintNumericFormatTests.cs", "FrameWebforCS/tests/ResultCombineFsecCtParityTests.cs", "FrameWebforCS/tests/CalculationResultContractTests.cs", "FramePrintPDF/PDF_Manager.Tests/PrintNumericFormatOracleTests.cs"]
+  }
+}

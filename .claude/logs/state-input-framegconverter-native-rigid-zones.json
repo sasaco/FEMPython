@@ -1,0 +1,14 @@
+{
+  "title": "FrameGConverter Native Rigid Zones",
+  "id": "framegconverter-native-rigid-zones",
+  "sections": [
+    {
+      "heading": "Context",
+      "content": "- User approved exporting FRD rigid zones through the native FrameWebforCS rigid schema instead of inserting input nodes and members.\n- ConvertManager emits rigid records with original member IDs, I/J lengths, and integer material IDs; gouiki no longer splits topology or remaps attached data. This supersedes the rigid-zone splitting described in the earlier FrameGConverter Pile Springs block.\n- Preserve original nodes, members, loads, joints, notice points, pile interval springs, and J-end supports. Rigid-section A/Iz come from FRD; E/Xp are retained per material TYPE. Material ID reuse requires a match in every TYPE.\n- Negative, nonfinite, overlapping, or overlength rigid lengths and missing active-zone references produce explicit conversion errors. Zero/missing zones remain valid; exact full-length zones are supported."
+    },
+    {
+      "heading": "Validation",
+      "content": "- Converter Release suite: 39 passed, including three real FRD archives, original topology/reference comparison, sloping piles, both rigid ends, full-length zones, and TYPE material reuse.\n- FrameWebforCS filtered Release tests (RigidZoneConversionTests, InputFileLoaderTests, CalculationRequestTests): 19 passed. Native rigid records survive desktop import, save/reload, and calculation request creation.\n- Existing Python rigid/load/notice/spring boundary integration test: 1 passed. Converter solution Release build passed with the existing netcoreapp3.1 warning.\n- Desktop integration test replaces the pile fixture's unsupported mark-14 loads with one supported test load to isolate this feature; no claim of full pile-fixture analysis acceptance."
+    }
+  ]
+}

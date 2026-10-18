@@ -1,0 +1,30 @@
+{
+    "owners":  {
+                   "derived-audit":  [
+                                         ".tmp/transverse-analysis-print-verification/20261015T182603/audit/**"
+                                     ],
+                   "lead":  [
+                                ".agents/docs/plans/transverse-analysis-print-verification.md",
+                                ".agents/docs/research/transverse-analysis-print-verification-report.md",
+                                ".tmp/transverse-analysis-print-verification/20261015T182603/preflight/**",
+                                ".tmp/transverse-analysis-print-verification/20261015T182603/visual/**",
+                                ".tmp/transverse-analysis-print-verification/20261015T182603/manifest.json",
+                                ".agents/STATE.md"
+                            ],
+                   "analysis-harness":  [
+                                            ".tmp/transverse-analysis-print-verification/20261015T182603/harness/**"
+                                        ],
+                   "pdf-comparison":  [
+                                          ".tmp/transverse-analysis-print-verification/20261015T182603/comparison/**"
+                                      ],
+                   "security-reviewer":  [
+                                             ".agents/docs/research/review-security-transverse-analysis-print-verification.md"
+                                         ],
+                   "quality-reviewer":  [
+                                            ".agents/docs/research/review-quality-transverse-analysis-print-verification.md"
+                                        ],
+                   "test-reviewer":  [
+                                         ".agents/docs/research/review-tests-transverse-analysis-print-verification.md"
+                                     ]
+               }
+}

@@ -1,0 +1,9 @@
+{
+  "decisions": [
+    {
+      "decision": "Show same-member spring rows in Spread WinForms row outlines",
+      "rationale": "The member-spring editor must use SheetView row outlines to fold adjacent rows of the same member. A compact sorted presentation preserves canonical source row IDs for calculation, persistence, row operations, and viewport selection. Collapsed summaries show full geometric length and masked spring values.",
+      "alternatives": "GroupDataModel data grouping was implemented initially but was corrected by the user on 2026-10-01; Spread does not support combining that model with row outlines."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+    "owners":  {
+                   "backend":  [
+                                   "FrameWeb/src/**",
+                                   "FrameWeb/tests/**",
+                                   "FrameWeb/docs/**",
+                                   "FrameWebforCS/calculation/CalculationResultModels.cs",
+                                   "FrameWebforCS/calculation/CalculationResultJson.cs",
+                                   "FrameWebforCS/calculation/CalculationResultValidator.cs",
+                                   "FrameWebforCS/tests/BridgeLoadAuditTests.cs",
+                                   "FrameWebforJS/src/app/providers/analysis-result*",
+                                   "FrameWebforCS/three/BridgeLoadValidation.cs",
+                                   "FrameWebforCS/tests/BridgeLoadGeometryValidationTests.cs"
+                               ],
+                   "input":  [
+                                 "FrameWebforCS/components/input/**",
+                                 "FrameWebforCS/providers/InputDataService.cs",
+                                 "FrameWebforCS/AppRoutingModule.cs",
+                                 "FrameWebforCS/components/menu/SidebarComponent.cs",
+                                 "FrameWebforCS/calculation/CalculationRequest.cs",
+                                 "FrameWebforCS/tests/BridgeLoadInputTests.cs",
+                                 "FrameWebforCS/tests/BridgeLoadUiTests.cs"
+                             ],
+                   "pdf":  [
+                               "FrameWebforCS/providers/printing/**",
+                               "FrameWebforCS/components/print/**",
+                               "FramePrintPDF/**",
+                               "FrameWebforCS/tests/BridgeLoadPrintTests.cs",
+                               "FrameWebforCS/tests/PrintProjection.Tests/**",
+                               "FrameWebforCS/tests/PrintUi.Tests/**"
+                           ],
+                   "lead":  [
+                                "FrameWebforCS/tests/BridgeLoadThreeTests.cs",
+                                "FrameWebforCS/tests/BridgeLoadEndToEndTests.cs",
+                                ".agents/docs/**",
+                                ".agents/STATE.md",
+                                "FrameWebforCS/calculation/CalculationResultPresentation.cs",
+                                "FrameWebforCS/tests/BridgeLoadSmoke/**",
+                                "FrameWebforCS/tests/FrameWebforCS.Tests.csproj",
+                                "FrameWebforCS/three/BridgeLoadGeometry.cs",
+                                "FrameWebforCS/three/ThreeBridgeLoadsService.cs",
+                                "FrameWebforCS/three/ThreeService.cs",
+                                "FrameWebforCS/three/ViewportTextLabels.cs"
+                            ]
+               }
+}

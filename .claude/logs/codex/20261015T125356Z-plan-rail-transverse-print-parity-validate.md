@@ -1,0 +1,11 @@
+NEEDS_REVISION
+
+- **Blocker — SHA-256 が誤記されています。** [計画:13](C:/Users/sasai/Documents/structural-mcp/FEMPython/.agents/docs/plans/rail-transverse-print-parity.md:13) の変位量PDFハッシュは63文字です。保存済み証拠の正値は `67871f0298b11ae2060ac368ac180573d25ef557bdb169593220b80eb52bfbb0` です（[snapshot-manifest.json:85](C:/Users/sasai/Documents/structural-mcp/FEMPython/.tmp/transverse-analysis-print-corrections/20261015T193610/reference-refresh/snapshot-manifest.json:85)）。現状ではStep 1の指定ハッシュ一致が必ず失敗します。
+
+- **High — 印刷条件が固定されていません。** Step 2は用紙・向き等を「記録する」だけです（[計画:30](C:/Users/sasai/Documents/structural-mcp/FEMPython/.agents/docs/plans/rail-transverse-print-parity.md:30)）。再利用元ハーネスはA4横向きをハードコードしており（[Program.cs:52](C:/Users/sasai/Documents/structural-mcp/FEMPython/.tmp/transverse-analysis-print-verification/20261015T182603/harness/Program.cs:52)）、修正版ハーネスも既定は横向きです（[Program.cs:15](C:/Users/sasai/Documents/structural-mcp/FEMPython/.tmp/transverse-analysis-print-corrections/20261015T193610/harness/Program.cs:15)）。A4縦、日本語、各帳票の正確な`PrintOption`、節点・部材・成分フィルターを合否条件として明記する必要があります。
+
+- **High — 既存証拠を保護する実行方法が未定義です。** 計画は既存runを変更禁止としています（[計画:10](C:/Users/sasai/Documents/structural-mcp/FEMPython/.agents/docs/plans/rail-transverse-print-parity.md:10)）が、再実行対象の比較器は既定で既存correctionディレクトリへ書き込み、製品テンプレートも`landscape`です（[compare_updated.py:4](C:/Users/sasai/Documents/structural-mcp/FEMPython/.tmp/transverse-analysis-print-corrections/20261015T193610/reference-refresh/compare_updated.py:4)、[compare_updated.py:17](C:/Users/sasai/Documents/structural-mcp/FEMPython/.tmp/transverse-analysis-print-corrections/20261015T193610/reference-refresh/compare_updated.py:17)）。旧監査器も自身のrunへ固定出力します（[checker.py:16](C:/Users/sasai/Documents/structural-mcp/FEMPython/.tmp/transverse-analysis-print-verification/20261015T182603/audit/checker.py:16)）。新runへのコピーまたは明示的な入力・出力先と`portrait`指定をStep 3へ追加すべきです。
+
+- **Medium — 回帰ゲートが曖昧です。** 「必要な狭い印刷回帰テスト」では対象を一意に選べません（[計画:32](C:/Users/sasai/Documents/structural-mcp/FEMPython/.agents/docs/plans/rail-transverse-print-parity.md:32)）。またHeadlessの公開PDF項目には`CombinedDisplacement`がありません（[HeadlessCalculation.cs:94](C:/Users/sasai/Documents/structural-mcp/FEMPython/FrameWebforCS/Headless/HeadlessCalculation.cs:94)）。三帳票の判定経路は私設ハーネス、Headlessはプロセス／成果物スモークに限定すると明記し、具体的な既存テスト名・フィルターを固定する必要があります。
+
+元JSONと修正コピーの分離、全行・全トークンの計上、未説明差異があれば完全一致を禁止する方針は妥当です。ファイルは編集していません。

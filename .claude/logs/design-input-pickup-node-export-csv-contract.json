@@ -1,0 +1,9 @@
+{
+  "decisions": [
+    {
+      "decision": "Export FrameWebforCS PICKUP displacement and support reactions as separate 17-column UTF-8 CSV files in both 2D and 3D, using committed Derived.Pickups with selected max/min COMBINE IDs and all six correlated components.",
+      "rationale": "Node results have no established .pik schema. Explicit per-component raw result units, rad rotations, force*length moments, invariant round-trip numbers, and topology node order preserve provenance and precision. Validate node/support eligibility, source IDs, complete finite vectors and matching extrema before atomically saving.",
+      "alternatives": "Reuse the member/station-specific fixed-width section-force .pik schema; export rounded display strings or omit out-of-plane correlated components in 2D."
+    }
+  ]
+}

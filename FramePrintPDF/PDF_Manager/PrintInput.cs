@@ -321,7 +321,9 @@ public class PrintInput
                     }
                 }
 
-                if (printScreens.Count > 0 && !PrintData.IsCanonicalDiagram(printScreens.First().Value))
+                // Break only after printed tables; a diagram-only document starts on the first page.
+                if (printScreens.Count > 0 && (data.hasPrintInputData || data.hasPrintCalculation) &&
+                    !PrintData.IsCanonicalDiagram(printScreens.First().Value))
                 {
                     mc.NewPage(ref indexPage);
                 }

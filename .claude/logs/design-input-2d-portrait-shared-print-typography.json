@@ -1,0 +1,9 @@
+{
+    "decisions":  [
+                      {
+                          "alternatives":  "Limit the style to results; change physical margins and diagram text globally.",
+                          "rationale":  "A print job uses one PdfDocument across input, results, and diagrams. Input-only jobs previously omitted the style flag, and standard table bases still rendered at 11 pt. Fixed-width input tables and diagram canvas calculations depend on physical margins, so those margins must remain stable.",
+                          "decision":  "Apply the private 2D reference portrait PDF style to all desktop selected print items, including input-only jobs: share the 9.572 pt table font and page-title placement while preserving report-specific table grids, physical 25/35/25/25 margins, 8 pt diagram labels, and legacy landscape/3D styling."
+                      }
+                  ]
+}

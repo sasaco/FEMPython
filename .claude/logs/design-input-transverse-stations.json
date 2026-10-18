@@ -1,0 +1,14 @@
+{
+  "decisions": [
+    {
+      "decision": "Quantize relative member-load distances at the same integer-millimetre stages as the Angular input contract. Preserve the original relative-length sign through quantization, and keep numeric raw-L2 carry separate from physical distributed-end carry. Point and distributed loads retain their distinct signed rounding and clipping rules.",
+      "rationale": "Late rounding created an extra physical station when a distributed endpoint should coincide exactly with an explicit foundation join. Independent source execution also identified fractional negative lengths whose rounded value is zero. Stage-specific conversion fixes request topology without altering geometry, solver tolerances, or result rows.",
+      "alternatives": "Round only final margins; merge nearby geometry stations with a new tolerance; filter an unwanted result row; share one accumulator for raw preprocessing and physical distributed spans."
+    },
+    {
+      "decision": "Expand explicit foundation interval joins into two print-table occurrences only for selected 2D force tables after compatible active-sheet geometry, exact declared-decimal/canonical position agreement, and exact equality of all six canonical adjacent endpoint components across every static case are proved. Keep canonical station IDs and vectors; use optional print-only occurrence IDs and proof diagnostics. Unproved routes retain unique rows. Diagram rendering excludes only explicitly added occurrences.",
+      "rationale": "The user-selected references contain two labelled table occurrences at explicit interval joins, including joins with unchanged stiffness. Exact continuity proof permits safe table multiplicity without inventing a general one-sided force-jump contract. Shared table/diagram payloads require the renderer to avoid drawing the added occurrence twice. Existing notice-label association is reused only for label preservation, never to approve a foundation join.",
+      "alternatives": "Duplicate every mesh station; infer boundaries from stiffness changes; match numerical values or use a new coordinate tolerance; alter canonical aggregation/export schemas; let mixed table/diagram rendering consume added table rows."
+    }
+  ]
+}

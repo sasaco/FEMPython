@@ -1,0 +1,31 @@
+{
+  "phase": "before",
+  "base": "main",
+  "head": "aca2f4be2cce8cadf7b8e764eb47e8b97f6a7771",
+  "scope": [
+    "FrameWebforCS/AppComponent.cs",
+    "FrameWebforCS/three/ThreeComponent.cs",
+    "FrameWebforCS/three/ViewportTextLabels.cs"
+  ],
+  "allow_no_gates": false,
+  "overall_before": "pass",
+  "gates_before": {
+    "scope-isolation": "pass",
+    "agent pytest": "pass",
+    "repository detector": "pass",
+    "STATE contract": "pass",
+    "DESIGN contract": "pass",
+    "plan contract": "pass",
+    "live script references resolve": "pass",
+    "foreign project references absent": "pass",
+    "agent caches absent": "pass",
+    "git diff --check": "pass",
+    "product gates": "skipped"
+  },
+  "pre_existing_changes": [
+    "FrameWebforCS/AppComponent.cs",
+    "FrameWebforCS/three/ThreeComponent.cs",
+    "FrameWebforCS/three/ViewportTextLabels.cs"
+  ],
+  "verify_log": ".agents/logs/check-20261007T001215887Z-42120.log"
+}

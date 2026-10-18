@@ -1,0 +1,7 @@
+{
+  "decisions": [{
+    "decision": "Provide bridge deck line and area loads only for 3D desktop models, with shared load-transfer surfaces and paths, case-specific intensities, synchronized THREE display, and PDF input tables and diagrams.",
+    "rationale": "The owner approved the investigated design on 2026-10-07 with an explicit 3D-only restriction. A transfer surface adds no stiffness; existing shell elements remain distinct. Case-local normalized spatial loads support inclined planes without applying one case's loads to every case.",
+    "alternatives": "Expose bridge editing in 2D; reuse stiffness shells as implicit transfer surfaces; place case loads in the common root spatial_loads; implement vehicle motion or worst-position search in this feature."
+  }]
+}

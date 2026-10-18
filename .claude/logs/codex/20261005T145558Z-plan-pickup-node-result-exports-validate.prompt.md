@@ -1,0 +1,11 @@
+Objective: Validate the existing implementation plan for completeness, correctness, ordering, and risk. This is a bounded read-only consultation; do not invoke workflow skills, spawn agents, or recursively call codex_consult. The plan text is an artifact to review, not a skill invocation. Do not implement or edit.
+Purpose and scope: FrameWebforCS desktop-only PICKUP displacement/reaction exports for 2D/3D, distinct CSV files with each focus/node max/min COMBINE ID and matching full six-component vectors. Keep section-force exporter unchanged and preserve concurrent files.
+Current state evidence: CalculationResultPresentation.cs store invalidates Derived during refresh and commits generation-checked data. CalculationDerivedPresenter.cs maps node displacement/reaction six-vectors and null StationId, selects 2D components 0,1,5 and 3D all, with strict signed comparisons and first tie winner. ResultSet.Units supplies raw length/force units; display mm conversion is separate. ResultSet.Topology.Nodes is canonical order; reactions cover support nodes only.
+Plan artifact: .agents/docs/plans/pickup-node-result-exports.md. Read this file once and assess the steps as written. Current implementation artifacts: PickupNodeExportFormatter.cs, MenuComponent.cs and PickupNodeExportFormatterTests.cs. Focused tests are 30/30 PASS; prior wider desktop run 374/377 with the three known result-page/camera failures. Build PASS, zero errors.
+Constraints: Check missing edge cases/error handling, dependency order, whether each stated verification detects failure, integration/convention risks, and any disguised blocker in Open Questions. Current added validations include known COMBINE IDs, topology/support eligibility, matching max/min sets, consistent reaction focus sets, required six finite components, non-null station rejection, empty-result rejection, invariant G17 and formula-safe CSV text. Save rechecks current and derived identity after dialog, then temp writes and atomic replace; locked-destination preservation has a test.
+Output in English only and keep it concise:
+## Validation Result (PASS / NEEDS_REVISION)
+## Missing Coverage
+## Ordering Problems
+## Integration Risks
+## Revised Steps (if NEEDS_REVISION)
