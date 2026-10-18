@@ -59,6 +59,20 @@ Only when explicitly needed:
 - Update API docs
 - Add code comments for complex logic
 
+FrameWeb solver features usually *do* need these, and they have mechanical
+checks:
+- `src/fem/capabilities.json` is the source of the support tables; regenerate
+  `README.md` and `docs/wiki/elements.md` with
+  `tools/validation/render_capabilities.py` instead of editing the tables.
+- `tools.validation.check_wiki` parses each ```` ```json ```` fence as exactly
+  one JSON document — put two examples in two fences, not one.
+- Theory-manual files under `docs/理論マニュアル/` use CRLF; keep it, and add
+  the new section to `01_目次.md`. Wiki anchors are heading text, so verify a
+  link target heading exists after renaming.
+- Record new tests in `docs/plans/test_inventory.md` / `test_items.md`, and
+  keep any runnable example in `docs/examples/` pinned by a test that compares
+  it with the builder that generates it.
+
 ## Dependency Ordering
 
 Order tasks by dependencies:

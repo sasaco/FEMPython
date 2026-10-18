@@ -159,6 +159,23 @@ uv run ty check src/
 - **Diagnosis**: Trace type flow through call chain
 - **Fix pattern**: Type hints, runtime validation, strict contracts
 
+### 6. Numerical / Nonlinear Solver Bugs
+- **Symptom**: Newton iteration stalls just above tolerance; a branch test
+  fires on infinity; `-0.0` leaks into output; load control "unexpectedly"
+  converges
+- **Diagnosis**:
+  - Stall: check the stiffness ratio. A "rigid" member (e.g. `E=1e10` next to a
+    soft spring) leaves a relative residual at round-off level (~1e-10) that
+    never meets the default tolerance. It is conditioning, not the law.
+  - ulp/near-equality helpers return true for `inf` vs anything huge — guard
+    with `math.isfinite` before treating it as a tie.
+  - A test path that lands exactly on a kink (e.g. reaching the yield force at
+    exactly `x1`) takes the next slope instead of the plateau, so an expected
+    zero-tangent failure never happens.
+- **Fix pattern**: choose a stiffness ratio around 1e5 and a matching tolerance
+  in the test (document why); guard infinities explicitly; normalize `-0.0` to
+  `0.0`; pick test inputs clearly inside the branch being tested
+
 ## Severity Classification
 
 | Severity | Criteria | Response |

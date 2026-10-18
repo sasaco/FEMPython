@@ -268,3 +268,24 @@ exited `0`; mark nothing complete on the strength of having written it.
 - Prioritize **working code** over perfection
 - Where the production code belongs follows the project's existing layout — that
   is a design decision, not a derived path
+- **Pin before you reroute.** Before refactoring a shared seam (e.g. turning a
+  single-law call into a registry), write characterization tests against the
+  *unchanged* code — output values, input hash, error wording, serialized
+  form — and confirm they pass there first. They are the proof that the
+  existing behavior survived; a test written after the refactor proves nothing.
+- **Monkeypatch seams are contracts.** An existing test that replaces a
+  module-level name (`monkeypatch.setattr(module, "func", ...)`) only works if
+  the production code still looks that name up on the module at call time. When
+  rerouting through a table or registry, keep that lookup for the old path
+  (`func = module_func if kind == old else table[kind]`) instead of editing the
+  test.
+- **Expected values come from outside the product.** Use hand tables, closed
+  forms, an independent parallel model (e.g. `P = k·u + F(u)`), or frozen
+  external results — never values printed by the code under test. When a hand
+  table leaves a case undetermined (a tie between two limits, a kink), decide it
+  from the stated rule (e.g. the one-sided derivative in the direction of
+  travel), assert it explicitly, and record the decision in the plan or report.
+- **Check the test's own arithmetic when a Red/Green surprises you.** In this
+  repo several "failures" were wrong expectations (a start point, a boundary
+  case that exactly hits a kink). Recompute by hand before changing production
+  code, and pick boundary inputs that land clearly inside the branch you mean.

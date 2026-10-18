@@ -776,6 +776,25 @@ Use `.agents/skills/_shared/gather_diff.py --base {ref}` when you want the full
 patch to read: `scope_empty: true` with exit `2` means the delegated run changed
 nothing at all — a failed implementation, not a clean one.
 
+**3. Failures outside the change (baseline, not excuse):**
+
+The FrameWeb full gate
+(`uv --directory FrameWeb run --locked --extra dev python -m tools.validation.check_test_results`)
+takes over an hour — run it in the background. When it fails only in files the
+change did not touch, do not call them "pre-existing" until you have proven it
+at the starting commit:
+
+```powershell
+git worktree add ..\_baseline {start ref}
+uv --directory ..\_baseline\FrameWeb run --locked --extra dev python -m pytest {failing test files} -q
+git worktree remove ..\_baseline
+```
+
+Same tests failing for the same reason at the start ref → report them
+separately as a baseline failure (count, files, cause) in the report and the
+handoff, and leave them unfixed unless they are in scope. Different result →
+it is a regression of this change.
+
 #### Route A: SIMPLE (1-3 files, <50 LOC) — Codex Direct
 
 Codex implements directly. Write the prompt body below to
