@@ -17,6 +17,7 @@
 | メッシュ収束・適用範囲 4.1, 7.8 | 梁、DKT、MITC4、Hexa8の滑らかな非一様変形に対する変位・応力／モーメント・エネルギー誤差、歪み・アスペクト比・板厚・ポアソン比。`validation/test_mesh_convergence.py` | 検証済み（PQ-09記載問題）。特異点、曲面シェル、三角形Mindlin、Tetra/Wedge/二次ソリッド、Hexa8の`nu>=0.49`は保証外 |
 | 単位換算と収束判定 3.2, 7.6, 7.11 | N–m、N–mm、kN–mの同一モデルについて、材料骨格、断面、密度、荷重・モーメント、並進・回転ばね、強制変位、曲率、循環載荷、荷重／変位制御、固有値を比較。`validation/test_unit_invariance.py` | 検証済み（PQ-10記載モデル）。入力値の自動換算、単位宣言からの換算、座標spanのない低水準合成モデルは保証外 |
 | 材料 2.1, 7.9 | 線形構成則はパッチ・エネルギー・独立剛性で部分確認。`postprocess`, `elements` | 一部。独立した全材料 API、異方性、温度依存物性は未検証 |
+| JRSNAP互換 支持ばね（理論7.22） | 手計算表、骨格、劣化記憶、遮断・軟化、経路分割不変、散逸、接線、厳格パーサ、JRSNAP 5.2-L03 goldenとの照合（正側の力1e-12、勾配区分、変位制御の全体解1e-4 kN）、6方向・両制御、機構停止とrollback、入力3経路・hash、混在要素・2次元、HTTP。`materials/test_jrsnap_support_hysteresis.py`, `solvers/test_jrsnap_supports.py`, `io/test_jrsnap_support_input.py`, `io/test_support_law_registry.py`, `integration/test_jrsnap_support_mixed.py`, `regression/test_jrsnap_support_history.py` | 検証済み（記載範囲）。反転を含む履歴とJRSNAPの一致、JRSNAPの負側報告値、荷重増分の不釣合い力は再現・保証しない |
 | JR 非線形 2.2, 3.2, 7.9 | 骨格・β・正負・反転・ネスト履歴・仕事・接線・trial/commit/rollback・非有限拒否。`materials/test_jr_hysteresis.py`, `elements/beam/test_nonlinear.py` | 検証済み（JR モデル）。クリープ・緩和等の一般材料モデルは将来 |
 | 線形ソルバー 3.1, 7.6, 7.7, 7.11, 10.8, 11.1–11.3 | スケーリング、特異系拒否、微小積、精度保持。`solvers/test_linear.py` | 一部。Cholesky・反復前処理・疎行列の全演算・性能は未検証 |
 | Newton 3.2, 7.6, 7.11, 10.8 | 独立三次／耐力上限ばね、JR の制御・残差・収束・失敗復元。`solvers/test_nonlinear.py`, `integration/test_jr_beam_history.py` | 一部。弧長・分岐・後座屈・ラインサーチ評価は将来／未検証 |

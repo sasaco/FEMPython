@@ -24,6 +24,14 @@ force = result["support_response"][30]["x"]["force"]
 `material_nonlinear`を選び、明示`static`・`modal`は拒否します。再実行時は支持履歴も初期化します。
 [完全なJSON例](../examples/slip-support-history.json)・[履歴則](nonlinear-analysis.md#スリップ支持ばね)も参照してください。
 
+JRSNAP互換の支持ばねは、JSONと同じ定義を`add_nonlinear_spring_support()`へ渡します（スリップの定義も渡せます）。
+
+```python
+model.add_nonlinear_spring_support(30, "x", {"type":"jrsnap_trilinear","K1_pos":1000,"F1_pos":10,"K2_pos":200,"F2_pos":14,"K3_pos":-100,"F1_neg":5,"F2_neg":7})
+```
+
+定義の検査・競合・原子性は`add_slip_spring_support()`と同じです。[入力規則](data-structures.md#jrsnap互換-支持ばねの指定)を参照してください。
+
 指定位置の線荷重・面荷重は`fem.spatial_loads`の不変定義型を作り、
 `model.set_spatial_loads(definitions)`で設定して`model.run("static")`で解析します。
 線の強度は力/長さ、面の強度は力/長さ²、省略時の正方向は全体+Zです。

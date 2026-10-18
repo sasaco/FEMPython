@@ -47,7 +47,7 @@ class BoundaryDofs:
     @classmethod
     def from_boundary(cls, boundary, size, stride, node_start):
         """Resolve external node IDs and the legacy abs(value)>1000 convention."""
-        from .nonlinear.hysteresis.slip import parse_slip_spring
+        from .nonlinear.support_laws import parse_support_law
         if stride not in (3, 6):
             raise ValueError('max_dof_per_node must be 3 or 6')
         prescribed, springs = {}, {}
@@ -94,7 +94,7 @@ class BoundaryDofs:
                 dof = base + SPRING_DIRECTIONS[direction]
                 if dof in prescribed or dof in springs or dof in nonlinear:
                     raise ValueError(f'{location}: conflicting restraint or spring at same DOF')
-                nonlinear[dof] = (node_id, direction, parse_slip_spring(definition, location=location))
+                nonlinear[dof] = (node_id, direction, parse_support_law(definition, location=location))
         return cls(size, stride, prescribed, springs, nonlinear)
 
     def add_spring_stiffness(self, tangent, u=None, *, direction_hint=None):

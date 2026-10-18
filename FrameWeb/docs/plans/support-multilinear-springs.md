@@ -1,6 +1,6 @@
 ## Implementation Plan: JRSNAP互換 バイリニア・トリリニア支持ばね（弾塑性除荷）
 
-作成日: 2026-10-18 / 調査時HEAD: `7488c8f`（ブランチ `sasa/calc`） / 改訂1: 独立レビュー（NEEDS_REVISION）を反映 / 改訂2: JRSNAP golden（Step 0）の結果をStep 1〜2へ反映
+作成日: 2026-10-18 / 調査時HEAD: `7488c8f`（ブランチ `sasa/calc`） / 改訂1: 独立レビュー（NEEDS_REVISION）を反映 / 改訂2: JRSNAP golden（Step 0）の結果をStep 1〜2へ反映 / 実装完了: 2026-10-18（Step 1〜8。[実装記録](../report/jrsnap-support-implementation.md)）
 
 ### Purpose
 
@@ -96,17 +96,17 @@ FrameWebの非線形支点は、現在スリップばね（理論マニュアル
 - 全体解・荷重制御: JRSNAPの不釣合い力の分だけ変位が異なる。そのため参考比較に留め、合否には使わない。
 
 #### Step 1: 仕様の確定とユーザー承認（最も不確実。承認されるまでStep 2へ進まない）
-- [ ] 下記の履歴則を、理論マニュアル7.22「JRSNAP互換 多直線支持ばね（弾塑性）」の草稿として書く。冒頭に「JRSNAPに記載がない除荷則はFrameWebが補った仕様である」と明記する。
-- [ ] 手計算表を作る: トリリニア16点（下表）、バイリニア完全弾塑性の非対称例、軟化してゼロ力に至る経路、片側遮断（制限値0）の経路、閉ループの仕事。閉ループには、表の`δ=−.05`（p=−.036、m±=±.05）から`−.02`へ進み（`δ=−.026`で上限F1+=10に達する）、`−.05`へ戻る（`E=−10`が`L=−7`に当たる）経路を含める。この閉ループは経験最大点の内側に収まるが、両側で降伏するため仕事は正になる。
+- [x] 下記の履歴則を、理論マニュアル7.22「JRSNAP互換 多直線支持ばね（弾塑性）」の草稿として書く。冒頭に「JRSNAPに記載がない除荷則はFrameWebが補った仕様である」と明記する。
+- [x] 手計算表を作る: トリリニア16点（下表）、バイリニア完全弾塑性の非対称例、軟化してゼロ力に至る経路、片側遮断（制限値0）の経路、閉ループの仕事。閉ループには、表の`δ=−.05`（p=−.036、m±=±.05）から`−.02`へ進み（`δ=−.026`で上限F1+=10に達する）、`−.05`へ戻る（`E=−10`が`L=−7`に当たる）経路を含める。この閉ループは経験最大点の内側に収まるが、両側で降伏するため仕事は正になる。
 - [x] 承認が必要な仕様決定。2026-10-18に(a)〜(e)すべてを推奨案どおりユーザーが承認した。
   - (a) 劣化記憶D±を持つ（軟化後に耐力を回復させない）。
   - (b) 反対側の第1折れ点より手前で降伏した場合は第1制限値で平坦にする（K2を後方へ延長する移動硬化型は採らない）。
   - (c) 型名・キー名は上表のとおりとする。
   - (d) `jrsnap_bilinear`はJRSNAPの「通常の支点ばね」に限定する。
   - (e) 0の扱い（下記の入力制約）。
-- [ ] 正側の単調載荷の骨格は、Step 0のgoldenでJRSNAPの実計算と一致を確認済みである。理論マニュアルにはその根拠（ケース名、相対誤差2e-16）を記す。
-- [ ] 負側の骨格は、正側と同じ式を負側のパラメータへ当てはめたものとする。JRSNAPが報告するF_neg(2|dx|)は再現しない。理論マニュアルには「JRSNAPの負側の報告値とは異なる。JRSNAPの負側の挙動は提供元へ確認中」と明記する。
-- [ ] 除荷・反転と劣化記憶D±は、JRSNAPのgoldenでは検証できない（JRSNAPは単調載荷のプッシュオーバー解析）。FrameWebが補った仕様として、手計算表だけで検証する。
+- [x] 正側の単調載荷の骨格は、Step 0のgoldenでJRSNAPの実計算と一致を確認済みである。理論マニュアルにはその根拠（ケース名、相対誤差2e-16）を記す。
+- [x] 負側の骨格は、正側と同じ式を負側のパラメータへ当てはめたものとする。JRSNAPが報告するF_neg(2|dx|)は再現しない。理論マニュアルには「JRSNAPの負側の報告値とは異なる。JRSNAPの負側の挙動は提供元へ確認中」と明記する。
+- [x] 除荷・反転と劣化記憶D±は、JRSNAPのgoldenでは検証できない（JRSNAPは単調載荷のプッシュオーバー解析）。FrameWebが補った仕様として、手計算表だけで検証する。
 
 **入力制約（側s∈{+,−}ごと）**
 
@@ -147,9 +147,9 @@ FrameWebの非線形支点は、現在スリップばね（理論マニュアル
 **Verification**: 手計算表がコードから独立に導出されている。拒否条件のそれぞれに定式化上の理由がある。(a)〜(e)をユーザーが明示的に承認している。
 
 #### Step 2: 純粋なばね則モジュール（技術リスク最大、TDD）
-- [ ] 先に`tests/materials/test_jrsnap_support_hysteresis.py`を作り、失敗を確認する。
-- [ ] `jrsnap_support.py`を実装する。`jrsnap_bilinear`は`x2=x1`、`K3=0`の特殊ケースとして同じ評価関数を使う。
-- [ ] 厳格パーサ: Step 1の入力制約とキー集合に従い、位置付きのエラーにする。`K*_neg`は省略しても明示しても同じ正規形になる。
+- [x] 先に`tests/materials/test_jrsnap_support_hysteresis.py`を作り、失敗を確認する。
+- [x] `jrsnap_support.py`を実装する。`jrsnap_bilinear`は`x2=x1`、`K3=0`の特殊ケースとして同じ評価関数を使う。
+- [x] 厳格パーサ: Step 1の入力制約とキー集合に従い、位置付きのエラーにする。`K*_neg`は省略しても明示しても同じ正規形になる。
 
 **Verification**:
 - 手計算表の全行が一致する。単位倍率（1、1e-3、1e3）でパラメータ化して確認する。
@@ -168,15 +168,15 @@ FrameWebの非線形支点は、現在スリップばね（理論マニュアル
   - goldenの期待値は製品コードから作らない。JRSNAPの値をそのまま使う。
 
 #### Step 3: スリップの特性固定とレジストリ化
-- [ ] 先にスリップの現状を固定する試験を書く: snapshot辞書、`model_to_jsonable`、`support_models==['slip_v1']`、例題の入力ハッシュ、エラー位置、`:44`と`:72`の文言（既存の正規表現と一致すること）。
-- [ ] `support_laws.py`を追加し、`support_springs.py`、`boundary_dofs.py`、`file_io.py`をレジストリ経由に切り替える。`commit`の型検査は「各ばねの則の状態型」で行う。
-- [ ] snapshotの`type`と`support_models`の一般化もこの段階で行う。後のStep 4〜5のFemModel実行で誤った`['slip_v1']`が出ないようにするためである。
-- [ ] `support_response`の共通キー（`type`、`deformation`、`force`、`tangent`、`branch`）と、jrsnap則の枝名を次の7種に限定する: `elastic`、`plateau_pos`／`plateau_neg`（第1制限値の平坦部）、`skeleton_pos`／`skeleton_neg`（骨格の第2・第3勾配）、`zero_pos`／`zero_neg`（遮断側、または軟化して力0の側）。劣化記憶D±で頭打ちになった平坦部は`plateau_pos`／`plateau_neg`として報告する。
+- [x] 先にスリップの現状を固定する試験を書く: snapshot辞書、`model_to_jsonable`、`support_models==['slip_v1']`、例題の入力ハッシュ、エラー位置、`:44`と`:72`の文言（既存の正規表現と一致すること）。
+- [x] `support_laws.py`を追加し、`support_springs.py`、`boundary_dofs.py`、`file_io.py`をレジストリ経由に切り替える。`commit`の型検査は「各ばねの則の状態型」で行う。
+- [x] snapshotの`type`と`support_models`の一般化もこの段階で行う。後のStep 4〜5のFemModel実行で誤った`['slip_v1']`が出ないようにするためである。
+- [x] `support_response`の共通キー（`type`、`deformation`、`force`、`tangent`、`branch`）と、jrsnap則の枝名を次の7種に限定する: `elastic`、`plateau_pos`／`plateau_neg`（第1制限値の平坦部）、`skeleton_pos`／`skeleton_neg`（骨格の第2・第3勾配）、`zero_pos`／`zero_neg`（遮断側、または軟化して力0の側）。劣化記憶D±で頭打ちになった平坦部は`plateau_pos`／`plateau_neg`として報告する。
 
 **Verification**: 特性固定試験と既存スリップ試験5ファイルが無変更で成功する。未知の`type`は位置付きのエラーになる。他の則の状態を混ぜた`commit`を拒否する。jrsnapを含むモデルの`support_models`が正しい。
 
 #### Step 4: Solverとの結合（収束リスク）
-- [ ] `BoundaryCondition`に生のdictを入れる方式（既存のスリップ試験と同じ）で、入出力の作業より先に荷重制御と変位制御を確認する。
+- [x] `BoundaryCondition`に生のdictを入れる方式（既存のスリップ試験と同じ）で、入出力の作業より先に荷重制御と変位制御を確認する。
 
 **Verification**（`tests/solvers/test_jrsnap_supports.py`）:
 - 並列梁で`P = kb·u + F(u)`を6方向・両方の制御で独立に解き、変位・反力・部材力と一致する。
@@ -191,8 +191,8 @@ FrameWebの非線形支点は、現在スリップばね（理論マニュアル
 収束に問題が出たら、共通反復（`equilibrium.py`）の変更は別途承認を得る。
 
 #### Step 5: 入力経路とPython API
-- [ ] 旧`fix_node`のオブジェクトセル、正規化JSON、`add_nonlinear_spring_support`を同じ正規化定義に揃える。
-- [ ] 保存と再読込、FW3保存の拒否（既存の汎用処理）を確認する。
+- [x] 旧`fix_node`のオブジェクトセル、正規化JSON、`add_nonlinear_spring_support`を同じ正規化定義に揃える。
+- [x] 保存と再読込、FW3保存の拒否（既存の汎用処理）を確認する。
 
 **Verification**（`tests/io/test_jrsnap_support_input.py`）:
 - 3つの経路の定義が一致し、等価比較で等しい。
@@ -204,22 +204,22 @@ FrameWebの非線形支点は、現在スリップばね（理論マニュアル
 - 旧アプリ経路（`app/components/support.py:39`、`app/inputDataUtils.py:576`、`fem/models/fa_support.py:42`）の拒否試験にjrsnapのdictを加える。
 
 #### Step 6: 対応範囲と生成文書
-- [ ] `capabilities.json`に`jrsnap_bilinear`と`jrsnap_trilinear`を追加する。Step 7の完了までは`implemented`、完了後に`verified`とする。
-- [ ] `render_capabilities.py:50`の説明文を一般化し、READMEとWikiを再生成する。
+- [x] `capabilities.json`に`jrsnap_bilinear`と`jrsnap_trilinear`を追加する。Step 7の完了までは`implemented`、完了後に`verified`とする。
+- [x] `render_capabilities.py:50`の説明文を一般化し、READMEとWikiを再生成する。
 
 **Verification**: `tests/solvers/test_capabilities.py`の陳腐化検査が成功する。
 
 #### Step 7: 混在要素と公開経路の検証
-- [ ] 例題`docs/examples/jrsnap-trilinear-support.json`を作る（下降域は変位制御で追跡する）。
-- [ ] `tests/integration/test_jrsnap_support_mixed.py`で、線形梁・JR梁・シェル・テトラとの混在と2次元モデル（`tx`／`ty`／`rz`）を確認する。
-- [ ] `tests/regression/test_jrsnap_support_history.py`で、HTTP（平文・gzip）、ファイル再読込、ハッシュ、例題の履歴を確認する。
+- [x] 例題`docs/examples/jrsnap-trilinear-support.json`を作る（下降域は変位制御で追跡する）。
+- [x] `tests/integration/test_jrsnap_support_mixed.py`で、線形梁・JR梁・シェル・テトラとの混在と2次元モデル（`tx`／`ty`／`rz`）を確認する。
+- [x] `tests/regression/test_jrsnap_support_history.py`で、HTTP（平文・gzip）、ファイル再読込、ハッシュ、例題の履歴を確認する。
 
 **Verification**: 各ステップの反力が`−F`と一致する。再読込したモデルの履歴が同一になる。例題が実行できる。
 
 #### Step 8: 説明と全件回帰
-- [ ] 理論マニュアル7.22（式、補完仕様、JRSNAPとの差異、手計算値）を書く。
-- [ ] Wiki 5ファイル、試験台帳2ファイル、実装記録`docs/report/jrsnap-support-implementation.md`を書く。
-- [ ] 全件回帰を実行する: `uv --directory FrameWeb run --locked --extra dev python -m tools.validation.check_test_results`（全件のpytestを含む）
+- [x] 理論マニュアル7.22（式、補完仕様、JRSNAPとの差異、手計算値）を書く。
+- [x] Wiki 5ファイル、試験台帳2ファイル、実装記録`docs/report/jrsnap-support-implementation.md`を書く。
+- [x] 全件回帰を実行する: `uv --directory FrameWeb run --locked --extra dev python -m tools.validation.check_test_results`（全件のpytestを含む）
 
 **Verification**: 全件が成功する。参照値・許容差の変更がない。`git diff --check`が通る。
 

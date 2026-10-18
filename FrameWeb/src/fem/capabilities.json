@@ -20,6 +20,26 @@
       "parameters": ["K1", "K2", "delta_1"],
       "result": "support_response",
       "note": "Global grounded symmetric slip spring. K1>0, delta_1>0, 0<=K2<=K1. Rotations require 6 DOFs. Other element combinations follow the material_nonlinear element registry; dedicated verification is listed above."
+    },
+    "jrsnap_bilinear": {
+      "label_ja": "JRSNAP互換 バイリニア支持ばね",
+      "status": "verified",
+      "analysis_types": ["material_nonlinear"],
+      "directions": ["x", "y", "z", "rx", "ry", "rz"],
+      "verified_elements": ["bar", "nonlinear_bar", "shell", "tetra"],
+      "parameters": ["K1", "F1_pos", "F1_neg"],
+      "result": "support_response",
+      "note": "Global grounded spring equivalent to a JRSNAP BLOCK6 normal nodal spring: shared K1>0 and force limits F1_pos, F1_neg>=0 (0 cuts off that side; not both), elastic-perfectly plastic. Elasto-plastic unloading is a FrameWeb specification (theory manual 7.22). Rotations require 6 DOFs."
+    },
+    "jrsnap_trilinear": {
+      "label_ja": "JRSNAP互換 トリリニア支持ばね",
+      "status": "verified",
+      "analysis_types": ["material_nonlinear"],
+      "directions": ["x", "y", "z", "rx", "ry", "rz"],
+      "verified_elements": ["bar", "nonlinear_bar", "shell", "tetra"],
+      "parameters": ["K1_pos", "F1_pos", "K2_pos", "F2_pos", "K3_pos", "K1_neg", "F1_neg", "K2_neg", "F2_neg", "K3_neg"],
+      "result": "support_response",
+      "note": "Global grounded asymmetric force-limit tri-linear spring equivalent to JRSNAP BLOCK6 (+SP1/±RMiT1/+SP2/±RMiT2/+SP3/-SP1..3). K1,K2>0, K2,K3<=K1 (K3 may be 0 or negative), 0<=F1<=F2; omitted K*_neg take the positive values. F1=0 with F2=0 and K3<=0 cuts off a side. Positive monotone skeleton verified against JRSNAP 5.2-L03; unloading and degradation memory are FrameWeb specifications (theory manual 7.22). Descending branches need displacement control. Rotations require 6 DOFs."
     }
   },
   "load_types": {

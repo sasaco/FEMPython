@@ -79,6 +79,21 @@ componentsは全体座標の `dx,dy,dz,rx,ry,rz` です。
 
 `support_reactions` は所有caseの `support_node_ids` だけを同じ順序でcoverします。2D化のために自動追加した補助拘束はcase supportに含みません。
 
+### 非線形支持ばねの履歴結果
+
+スリップ・JRSNAP互換の支持ばねを持つ節点も `support_node_ids` に含まれ、その方向の反力はばね力 $F$ の符号を反転した $-F$ です。
+HTTP結果には、ばねの内部状態を追加しません。
+
+Pythonの`model.run()`の結果では、各ステップと最終結果の`support_response[節点][方向]`に確定状態が入ります。
+共通のキーは`type`・`deformation`・`force`・`tangent`・`branch`・`direction`です。
+
+| `type` | 追加のキー | `branch` |
+|---|---|---|
+| `slip` | `delta_max_pos/neg`、`force_at_max_pos/neg`、`zero_pos/neg`、`yielded_pos/neg` | `elastic`、`skeleton_*`、`unload_*`、`reload_*`、`slip` |
+| `jrsnap_bilinear`、`jrsnap_trilinear` | `zero_position`、`delta_max_pos/neg` | `elastic`、`plateau_*`、`skeleton_*`、`zero_*` |
+
+`metadata.analysis.support_models`は、使っている則のモデルID（`slip_v1`、`jrsnap_bilinear_v1`、`jrsnap_trilinear_v1`）を昇順・重複なしで並べます。
+
 ### 元部材の断面力
 
 ```json

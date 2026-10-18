@@ -1,7 +1,7 @@
 # Handoff: JRSNAP互換 バイリニア・トリリニア支持ばね（FrameWeb）
 
 Date: 2026-10-18
-Branch: `sasa/calc`（HEAD `6be6a2d`）
+Branch: `sasa/nonli`（HEAD `639fcb4`、Steps 1–8 are uncommitted on top of it）
 Previous handoff (different workstream, preserved byte for byte, SHA-256 `fe88928b…5ada`): `FrameWeb/docs/plans/archive/handoff-rail-transverse-print-parity-20261016.md`
 
 ## Goal
@@ -19,27 +19,13 @@ Add JRSNAP-compatible nonlinear **support springs** to the FrameWeb Python solve
 
 ## Current Progress
 
-- **The plan is written and reviewed.**
-  - It passes the `plan-doc` shape validator.
-  - An independent reviewer approved it after two revisions; the reviewer was a Plan agent, because the Codex CLI failed (see below).
-  - On 2026-10-18 the user approved Step 1 decisions (a)–(e) exactly as recommended:
-    - (a) degradation memory D± (no strength recovery after softening);
-    - (b) plateau at the first limit force before the opposite side's x1;
-    - (c) names `jrsnap_bilinear`/`jrsnap_trilinear` and keys `K1_pos…F2_neg`; `K*_neg` defaults to the positive value; `F*_neg` is required;
-    - (d) `jrsnap_bilinear` means only JRSNAP's "normal" spring (shared K1, zero slope after the limit);
-    - (e) reject K=0; F1=0 means a cut-off side (trilinear also needs F2=0 and K3≤0); reject both sides cut off; no artificial stiffness.
-  - Step 1's remaining work is writing the theory-manual draft (7.22) and the hand tables. The decisions themselves are closed.
-- **Step 0, the JRSNAP golden, is done (uncommitted).**
-  - `FrameWeb/tests/data/jrsnap_golden/` holds three cases and four frozen runs from JRSNAP 5.2-L03, with `.ndu`/`.ndt` and a README of facts, column meanings and regeneration commands.
-    - `support_trilinear01`: positive side, load increment, n=100 and n=1000.
-    - `support_trilinear02_neg`: negative side, load increment.
-    - `support_trilinear03_softening`: +SP3=−20, displacement increment.
-  - `FrameWeb/tools/jrsnap_golden/` holds:
-    - `make_cases.py`, which reproduces the frozen `.ndu` byte for byte;
-    - `extract_db1.ps1`, a SNAPDBLib dump that must run in 32-bit PowerShell;
-    - `freeze.py`.
-  - `FrameWeb/tests/harness/test_jrsnap_golden.py` passes 29 tests; `tests/harness`, `tests/io` and `tests/materials` pass 1027.
-- **Steps 2–8 (implementation) have not started.** No product source has changed. `slip.py`, `equilibrium.py` and `solver.py` are untouched.
+- **Steps 0–8 are implemented (2026-10-18), uncommitted.** Ask the user before committing. The record is `FrameWeb/docs/report/jrsnap-support-implementation.md`; the plan's checkboxes are ticked.
+  - Law: `src/fem/nonlinear/hysteresis/jrsnap_support.py`. Registry: `src/fem/nonlinear/support_laws.py`. Generic API: `FemModel.add_nonlinear_spring_support()`.
+  - Theory manual §7.22 (and the TOC), Wiki (data-structures, nonlinear-analysis, python-api, file-formats, results), capabilities (`verified`), test ledgers and the example `docs/examples/jrsnap-trilinear-support.json` are written.
+  - New tests: 6 files, 126 cases. The JRSNAP goldens match: positive-side force to rel 1e-12 and the segments; the case 03 global displacement-control solution within 1e-4 kN, both spring-only and with a 2D rigid member.
+  - Slip is unchanged: the example hash `ee070fb7…`, `support_models==['slip_v1']`, and the existing slip test files pass unmodified. Slip still resolves `evaluate_slip` through `support_springs`, because one existing test monkeypatches it.
+- Full gate (`check_test_results`): 3,484 passed, 6 failed, 4 errors. All 10 are in `tests/validation` (mesh_convergence, performance, unit_invariance): a `KeyError` on `node_displacements`/`metadata` from `model.run()` results. They fail identically at HEAD `639fcb4`, as does `check_wiki` `examples.md / distributed-beam`. This is pre-existing and unrelated to supports, and has not been fixed.
+- One hand-table row was settled during implementation: the second `.02` is `plateau_pos` with tangent 0, because D+ = Q+(.02) = 12 and the cap is flat beyond it. The forces are as planned.
 
 ## Key Facts Learned (see golden README for numbers)
 
@@ -82,23 +68,8 @@ Add JRSNAP-compatible nonlinear **support springs** to the FrameWeb Python solve
 
 ## Next Steps
 
-1. Read `FrameWeb/docs/plans/support-multilinear-springs.md` (Steps 0–8, Risks, Open Questions) and `FrameWeb/tests/data/jrsnap_golden/README.md`. Check `git status`. The golden, tools and test are untracked and the plan has uncommitted edits; ask the user before committing.
-2. **Finish Step 1.**
-   - Draft theory manual §7.22 "JRSNAP互換 多直線支持ばね（弾塑性）", appended after 7.21; do not renumber.
-   - Include the formulas, the FrameWeb-supplied unloading rule, the negative-side note and the hand tables (16-point trilinear table already in the plan; bilinear EPP; softening to zero; cut-off; the positive-work closed loop).
-3. **Step 2 (TDD).** First write `tests/materials/test_jrsnap_support_hysteresis.py` with the hand tables and the golden replay:
-   - feed node-2 `dx` paths from case 01 (n100/n1000) and case 03;
-   - assert force = `jiban_hanryoku` (rel 1e-12) and branch ↔ `bane_flg`;
-   - for case 02, check segment switch positions only.
-
-   Then implement `src/fem/nonlinear/hysteresis/jrsnap_support.py`. Leave `slip.py` unchanged.
-4. Continue with Steps 3–8 as the plan describes:
-   - Step 3: pin slip with characterization tests, then add the registry `support_laws.py`.
-   - Step 4: solver tests, including case 03 global displacement-control comparison.
-   - Step 5: input paths.
-   - Step 6: capabilities.
-   - Step 7: integration/regression.
-   - Step 8: docs and full `uv --directory FrameWeb run --locked --extra dev python -m tools.validation.check_test_results`.
-5. **Optional follow-ups** (plan Open Questions 3–4):
+1. Review the diff (`git status`; all changes are under `FrameWeb/`) and ask the user whether to commit.
+2. **Optional follow-ups** (plan Open Questions 1, 3, 4):
    - ask RTRI about the negative-side F_neg(2|dx|) and −RMiT1=0;
-   - add direct `.ndt` input to JRSNAPHeadless to test convergence flag F=1.
+   - add direct `.ndt` input to JRSNAPHeadless to test convergence flag F=1;
+   - add a JRSNAP run with reversals, if one becomes available.

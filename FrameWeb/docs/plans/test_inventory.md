@@ -9,6 +9,10 @@
 同日の[スリップ支持ばね実装](../report/slip-support-implementation.md)で5テストファイル・95ケースを追加。
 履歴28、入力36、ソルバー17、混在要素6、公開履歴回帰8ケースを検証する。
 
+2026-10-18の[JRSNAP互換 支持ばね実装](../report/jrsnap-support-implementation.md)で6テストファイル・50関数・126ケースを追加
+（goldenの凍結試験`harness/test_jrsnap_golden.py`の29ケースは別）。
+ばね則・golden照合52、スリップ特性固定とレジストリ10、ソルバー14、入力29、混在要素・2次元13、公開履歴回帰8ケースを検証する。
+
 [項目表](test_items.md) / [実行方法](../../tests/README.md) / [移行・統合記録](../report/test-reorganization.md)。整理前の全 264 関数・112 ファイルの移管先と hash は [機械可読な移行記録](../report/test-reorganization-evidence.json) にある。
 
 | ファイル | 関数 | ケース | 主区分 |

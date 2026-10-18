@@ -16,7 +16,9 @@ JSONでは定義を`boundary_conditions.nonlinear_spring_supports`へ保存し�
 モデルJSONはばね定義と解析条件を保存し、再読込・再解析で履歴を再現します。
 確定履歴は結果JSONの`support_response`に保存されます。モデルを途中から再開するcheckpointではありません。
 FW3へスリップばねを含むモデルを保存しようとすると、書込み前にエラーになります。
-[履歴例](../examples/slip-support-history.json)・[結果の説明](results.md#スリップ支持の履歴結果)を参照してください。
+JRSNAP互換の支持ばね（`jrsnap_trilinear`・`jrsnap_bilinear`）も同じ場所・同じ規則で保存します。
+トリリニアは省略した`K*_neg`を正側の値で補った全キーを保存するので、省略しても明示しても入力hashは同じです。
+[履歴例](../examples/slip-support-history.json)・[結果の説明](results.md#非線形支持ばねの履歴結果)を参照してください。
 
 ## 対応形式
 

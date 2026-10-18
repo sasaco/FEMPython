@@ -301,6 +301,15 @@ class FemModel:
     def add_slip_spring_support(self, node_id: int, direction: str,
                                 K1: float, K2: float, delta_1: float) -> None:
         """Add a global grounded slip spring; all parameters use consistent units."""
+        self.add_nonlinear_spring_support(
+            node_id, direction, dict(type='slip', K1=K1, K2=K2, delta_1=delta_1))
+
+    def add_nonlinear_spring_support(self, node_id: int, direction: str, definition) -> None:
+        """Add a global grounded nonlinear support spring.
+
+        definition is the same object as in JSON (type "slip", "jrsnap_bilinear"
+        or "jrsnap_trilinear") or its parsed parameters; units are consistent.
+        """
         from .nonlinear.support_springs import add_nonlinear_support, validate_support_definitions
         location = f'nonlinear_spring_supports node {node_id} direction {direction}'
         if isinstance(node_id, (bool, np.bool_)) or not isinstance(node_id, (int, np.integer)):
@@ -308,8 +317,7 @@ class FemModel:
         if not isinstance(direction, str):
             raise ValueError(f'{location}: direction must be a string')
         candidate = deepcopy(self.boundary)
-        add_nonlinear_support(candidate, node_id, direction,
-                               dict(type='slip', K1=K1, K2=K2, delta_1=delta_1), location)
+        add_nonlinear_support(candidate, node_id, direction, definition, location)
         validate_support_definitions(candidate, self.mesh)
         self.boundary.nonlinear_spring_supports = candidate.nonlinear_spring_supports
         
@@ -466,7 +474,7 @@ class FemModel:
                 - displacement_control: node、dofとtargetまたはtargetsで指定する変位制御。
                   荷重係数を未知数として負勾配を追跡する。load_factorsとは排他。
             analysis_type省略時は入力の指定を使い、それもなければ
-            nonlinear_barまたはスリップ支持ばねを含む場合material_nonlinear、それ以外はstatic。
+            nonlinear_barまたは非線形支持ばね（スリップ・JRSNAP互換）を含む場合material_nonlinear、それ以外はstatic。
 
         Returns:
             解析結果

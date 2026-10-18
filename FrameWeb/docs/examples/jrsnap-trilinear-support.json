@@ -1,0 +1,116 @@
+{
+  "nodes": {
+    "10": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "30": [
+      2.0,
+      0.0,
+      0.0
+    ]
+  },
+  "elements": {
+    "5": {
+      "type": "bar",
+      "nodes": [
+        10,
+        30
+      ],
+      "material_id": 1,
+      "section_id": 1,
+      "shear_correction": false
+    }
+  },
+  "materials": {
+    "1": {
+      "name": "reference",
+      "E": 2000.0,
+      "nu": 0.25
+    }
+  },
+  "bar_parameters": {
+    "1": {
+      "area": 3.0,
+      "Iy": 1.0,
+      "Iz": 1.0,
+      "J": 1.0
+    }
+  },
+  "boundary_conditions": {
+    "restraints": {
+      "10": {
+        "dof": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      },
+      "30": {
+        "dof": [
+          false,
+          true,
+          true,
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    "loads": {
+      "30": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "nonlinear_spring_supports": {
+      "30": {
+        "x": {
+          "type": "jrsnap_trilinear",
+          "K1_pos": 1000.0,
+          "F1_pos": 10.0,
+          "K2_pos": 200.0,
+          "F2_pos": 14.0,
+          "K3_pos": -100.0,
+          "K1_neg": 500.0,
+          "F1_neg": 5.0,
+          "K2_neg": 100.0,
+          "F2_neg": 7.0,
+          "K3_neg": 0.0
+        }
+      }
+    }
+  },
+  "analysis_params": {
+    "displacement_control": {
+      "node": 30,
+      "dof": "dx",
+      "targets": [
+        0.005,
+        0.02,
+        0.05,
+        0.044,
+        0.038,
+        0.03,
+        0.02,
+        -0.02,
+        -0.05,
+        -0.04,
+        -0.036,
+        -0.03,
+        -0.02,
+        0.02,
+        0.03,
+        0.06
+      ]
+    }
+  }
+}

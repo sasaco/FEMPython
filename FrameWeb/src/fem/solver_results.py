@@ -74,6 +74,7 @@ def _effective_analysis_parameters(analysis_type, parameters):
 def build_result_metadata(model, analysis_type, solver_snapshot):
     """Build deterministic provenance and final solver diagnostics."""
     from .file_io import model_to_jsonable
+    from .nonlinear.support_laws import support_models
 
     declarations = normalize_model_metadata(model.model_metadata)
     model_data = {
@@ -118,7 +119,9 @@ def build_result_metadata(model, analysis_type, solver_snapshot):
         "input_sha256": hashlib.sha256(canonical).hexdigest(),
         "analysis": {
             "type": analysis_type,
-            **({'support_models': ['slip_v1']}
+            **({'support_models': support_models(
+                    params for supports in model.boundary.nonlinear_spring_supports.values()
+                    for params in supports.values())}
                if model.boundary.nonlinear_spring_supports else {}),
             **({'beam_formulation': (
                     'jr_axial_force_updated_inertia_v1'

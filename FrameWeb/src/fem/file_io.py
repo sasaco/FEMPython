@@ -18,7 +18,7 @@ from .spatial_loads.serialization import (
     to_json as spatial_loads_to_json,
 )
 from .nonlinear.component_laws import law_to_dict, laws_from_dict
-from .nonlinear.hysteresis.slip import parse_slip_spring
+from .nonlinear.support_laws import parse_support_law
 from .nonlinear.support_springs import add_nonlinear_support, validate_support_definitions
 
 
@@ -710,7 +710,7 @@ def model_to_jsonable(model_data: Dict[str, Any]) -> Dict[str, Any]:
         output_data['boundary_conditions']['spring_supports'] = getattr(boundary, 'spring_supports', {})
         if boundary.nonlinear_spring_supports:
             output_data['boundary_conditions']['nonlinear_spring_supports'] = {
-                str(node): {direction: parse_slip_spring(value).to_dict()
+                str(node): {direction: parse_support_law(value, location=f'node {node} direction {direction}').to_dict()
                             for direction, value in supports.items()}
                 for node, supports in boundary.nonlinear_spring_supports.items()
             }
