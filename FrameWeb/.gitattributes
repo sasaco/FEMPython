@@ -5,3 +5,5 @@ docs/v0/** text eol=lf
 docs/v0/**/*.pdf -text
 docs/v0/**/*.png -text
 docs/v0/**/*.xlsx -text
+tests/data/jrsnap_golden/**/*.ndu -text
+tests/data/jrsnap_golden/**/*.ndt -text
