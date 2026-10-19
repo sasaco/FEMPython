@@ -1,0 +1,32 @@
+START   52
+COUNT     support_trilinear02_neg
+     節点ばねトリリニア 負側載荷
+END
+DIMENSION
+    2    1    3
+END
+DA                            1.0
+         0     0.001  999  9999900               10        1    0
+                           100  100       100  100
+END
+JOINT
+         1     0.000    -1.000
+         2     0.000     0.000
+END
+MEMBER
+CASE-1
+         1    1    2    0           1000      1000      26.5         0         0         0    0
+END
+SUPPORT
+CASE-1
+         2    1      1000        10         5       200        14         7        50       500       100        20
+         2    2                                                                                                    
+         2    3                                                                                                    
+END
+LOAD               0         1
+CASE-1                                  水平荷重
+JOINT LOAD
+         1    1       -10                                                        
+END
+CASE END
+RUN

@@ -1,0 +1,32 @@
+START   52
+COUNT     linear01_cantilever_moment
+     線形校正 片持ち柱 先端モーメント荷重
+END
+DIMENSION
+    2    1    3
+END
+DA                            1.0
+         0     0.001  999  9999990               10        1    0
+                            10   10        10   10
+END
+JOINT
+         1     0.000    -1.000
+         2     0.000     0.000
+END
+MEMBER
+CASE-1
+         1    1    2    0         0.0007   0.00001        25         0         0         0    0
+END
+SUPPORT
+CASE-1
+         2    1                                                                                                    
+         2    2                                                                                                    
+         2    3                                                                                                    
+END
+LOAD               0         1
+CASE-1                                  荷重
+JOINT LOAD
+         1    1                            10                                    
+END
+CASE END
+RUN

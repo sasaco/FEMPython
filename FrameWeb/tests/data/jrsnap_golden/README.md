@@ -82,27 +82,64 @@ FrameWebの試験はこのJSONと比べるだけで、JRSNAPは不要である�
 
 負側のばね力と変位は、FrameWebの基準値としては使わない。JRSNAPの仕様なのか不具合なのかは、提供元への確認が必要である。
 
-## FrameWebとの比べ方（案）
+2026-10-19 の追記: 負側の変位増分（`support_trilinear04_neg_disp`）で、部材せん断力`Si`は負側の骨格F_neg(|dx|)そのもので（FrameWebの法則と1.6e-5 kN以内）、報告値`jiban_hanryoku`だけがF_neg(2|dx|)だった。構造が受ける力は正しく、報告値が2倍である。
 
-1. **ばね則（厳密に比べる）**: 正側のケース01・03で、節点2の`dx`の経路をFrameWebのばね則に与え、`jiban_hanryoku`・`bane_flg`と一致することを確認する。
-2. **全体解・変位制御（厳密に比べる）**: ケース03はJRSNAPでも不釣合い力が残らないので、FrameWebの変位制御の結果と、せん断力・ばね力の許容差（1e-4 kN）で比べられる。
-3. **全体解・荷重制御（許容差つき）**: FrameWebは力の残差をなくすNewton法なので、JRSNAPとは不釣合い力の分だけ変位が異なる。比べ方は未決定である。
-4. **負側**: 折れ点の位置（`bane_flg`）だけを参照する。
+## FrameWebとの比べ方
+
+比較の記録は[docs/report/jrsnap-frameweb-equivalence.md](../../../docs/report/jrsnap-frameweb-equivalence.md)にある。要点は次のとおり。
+
+1. **ばね則**: 節点の`dx`の経路をFrameWebのばね則に与え、`jiban_hanryoku`・`bane_flg`と比べる（相対1e-12）。負側はJRSNAPの報告値がF_neg(2|dx|)なので、代わりに部材せん断力`Si`（＝構造が実際に受ける力、F_neg(|dx|)）と比べる。
+2. **全体解・変位増分**: 荷重パターンが制御自由度と同じ方向なら、力（荷重係数×荷重、ばね力、せん断力）を1e-4 kNで比べられる。
+3. **全体解・荷重増分**: JRSNAPは速度優先でも精度優先でも不釣合い力を残す（後述）。変位が一致しないことを差とともに記録する。
+
+## 2026-10-19 に追加したケース（スキーマ `jrsnap_golden_v2`）
+
+いずれもJRSNAP 5.2-L03。`.ndu`は`tools/jrsnap_golden/make_cases.py`の`MODELS`（`_f1`の3件は凍結済みの`.ndu`そのもの）、`.ndt`は書出し器の出力（`*.writer.ndt`、または`_f1`では元の`.ndt`）に`tools/jrsnap_golden/ndt_tools.py`でDAブロックを書き換えたもの（列70の収斂方法、FTM）。v2のgoldenは、`control`、`kihon`（JRSNAPが保存した基本データ）、`member_info`、`lengths`、部材の状態項目（`SCFlg`、`Outou_M`、`Outou_FAI_Kaiseki`、`M_Kaiseki_S`…）と、各段階の入力ファイルのハッシュ・後処理の内容を持つ。`.LOG`も参考に同じフォルダーへ置いた。
+
+| フォルダー | モデル | 制御 | 列70 | 分かったこと |
+|---|---|---|---|---|
+| `linear01_cantilever` | 片持ち柱 L=1、E=25、A=0.0007、I=1e-5、先端X 10 kN、線形 | 荷重 10 | 空白 | E=25は2.5e7 kN/m²（`member_info.E`）。せん断変形なし（PL³/3EIに1.5e-12）。符号対応 (Mi,Si,Mj,Sj)=(+Mz_i,−Vy_i,−Mz_j,+Vy_j) |
+| `linear01_cantilever_moment` | 同、先端モーメント 10 kN·m | 荷重 10 | 空白 | 節点モーメント荷重は`JLoadInfo`第7項 |
+| `linear02_moment_disp` | 同、モーメント荷重パターン、先端X変位増分 0.04 m | 変位 10 | 空白 | JRSNAPは荷重パターンを整数段階（`lo_step_no`/MDV）で与え、残りを制御節点の水平力で補う |
+| `support_trilinear01_f1` | 凍結ケース01（n=100、n=1000） | 荷重 | `1` | 不釣合い力は残る（最終段階で0.143／0.146 kN） |
+| `support_trilinear02_neg_f1` | 凍結ケース02 | 荷重 100 | `1` | 報告値F_neg(2\|dx\|)は変わらない |
+| `support_trilinear04_neg_disp` / `_f1` | ケース02のばね、節点1をX=−0.1 mまで変位増分 | 変位 100 | 空白／`1` | `Si`=F_neg(\|dx\|)（FrameWebの負側の法則と1.6e-5 kN）。速度優先と精度優先は同一結果 |
+| `support_bilinear01` | 通常ばね行（SP=1000、±RmiT=10／5）、変位増分 +0.05 m | 変位 100 | `1` | 降伏後の勾配は厳密に0（`K2_S=K3_S=0`、`Rmit2_S`≈1e15）。`jrsnap_bilinear`と差0 |
+| `support_multi01` | 節点1〜3のXばね（トリリニアA、+SP3=−20のトリリニア、通常ばね）、剛部材2本、節点3を+0.1 mまで変位増分 | 変位 200 | `1` | 全ばね力・区分・軸力がFrameWebと一致（1e-5 kN）。`Ni`は引張正 |
+| `member_mphi01_moment` | 固定M–φ要素1本（M=10,16,22,14／φ=0.001,0.004,0.010,0.018、EI=M1/φ1）、先端モーメント 21 kN·m | 荷重 100 | `1` | `Outou_M`=Mi。曲率は骨格から最大0.395%ずれる（`.LOG`: 剛性低下未収斂、計算回数10）。`SCFlg`は降伏（M2）まで1、以後2 |
+| `member_mphi02_disp` | 同じ断面を基部0.1 m要素に、先端X変位増分 0.002 m | 変位 100 | `1`、FTM=1.0E-08 | `Outou_M`は端部（基部）のモーメント、`FAI`=rz2/(0.95·0.1)。頂点せん断力21.90 kN（段階48）、下降域まで到達 |
+| `member_beam001` | beam001の配置（9.8+0.1+0.1 m）、beam001.nduの固定M–φ、A=1000・I=4（EI=M1/φ1）、先端X 500 kN | 荷重 100 | `1`、FTM=1.0E-08 | `Outou_M`=Mj2=4950（P·9.9）。FrameWebの中央4925との差が変位で最大4.5% |
+| `combined01` | member_mphi01の基部に回転トリリニアばね（5000/8/1000/12/100） | 荷重 100 | `1`、FTM=1.0E-08 | 断面曲率はFrameWebと3.1e-4以内。ばね力は荷重より最大0.454 kN·m遅れる（`.LOG`: 支点状態未収斂） |
+
+FTM=1.0E-08への書換えは、結果にも`.LOG`の計算回数にも変化を与えなかった（`member_mphi01_moment`をFTM 0.001と1.0E-08で解析して比較）。効果は未確認である。
 
 ## 再生成
 
-JRSNAP 5.2-L03とJRSNAPHeadlessの`bin\Release`、Aggre-SEの`SNAPDBLib.dll`が必要である。解析中はJRSNAPを閉じておく（インストール先の共用ファイルを使うため）。コマンドは`FEMPython\FrameWeb`をカレントにして実行する。
+JRSNAP 5.2-L03とJRSNAPHeadlessの`bin\Release`（`.ndt`直接入力に対応した版）、Aggre-SEの`SNAPDBLib.dll`が必要である。解析中はJRSNAPを閉じておく（インストール先の共用ファイルを使うため）。コマンドは`FEMPython\FrameWeb`をカレントにして実行する。
 
 ```powershell
-# 1. .ndu（beam001.nduから生成。凍結済みの .ndu とバイト一致する）
+# 1. .ndu（beam001.nduから生成。凍結済みの .ndu とバイト一致する。tests/harness/test_jrsnap_tools.py が確かめる）
 uv run --locked --extra dev python -m tools.jrsnap_golden.make_cases support_trilinear01 <out>\support_trilinear01.ndu --steps 100
 #    ケース01のn=1000は --steps 1000、ケース03は --steps 200（出力名は golden と同じ .ndu 名にする）
-# 2. JRSNAPで解析
-..\..\JRSNAPHeadless\bin\Release\JRSNAP.Headless.exe run --input <out>\support_trilinear01.ndu --output-dir <out>\run --analyze true > <out>\run.envelope.json
-# 3. DB1から全段階を取り出す（32ビット PowerShell）
-& "$env:SystemRoot\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File tools\jrsnap_golden\extract_db1.ps1 -Db1 <out>\run\support_trilinear01.DB1 -OutJson <out>\raw.json
-# 4. 凍結
-uv run --locked --extra dev python -m tools.jrsnap_golden.freeze --case support_trilinear01 --run-dir <out>\run --envelope <out>\run.envelope.json --raw <out>\raw.json --ndu <out>\support_trilinear01.ndu --load-steps 100 --output <out>\golden_n100.json
+#    2026-10-19 のケースは MODELS の名前で: make_cases support_bilinear01 <out>\support_bilinear01.ndu
+# 2. 書出し（.ndt だけ作る。DA ブロックを書き換えないケースはこの .ndt をそのまま解析する）
+..\..\JRSNAPHeadless\bin\Release\JRSNAP.Headless.exe run --input <out>\support_trilinear01.ndu --output-dir <out>\writer --analyze false
+# 2'. 列70（収斂方法）や FTM を書き換える（書出し器は FTM と DSMAX を小数3桁で書くので、1E-08 などはここで入れる）
+uv run --locked --extra dev python -m tools.jrsnap_golden.ndt_tools da <out>\writer\support_trilinear01.ndt <out>\support_trilinear01_f1.ndt --convergence accuracy [--ftm 1.0E-08]
+# 3. JRSNAPで解析（.ndu を渡せば書出しと解析を続けて行う。.ndt を渡せばそのまま解析する）
+..\..\JRSNAPHeadless\bin\Release\JRSNAP.Headless.exe run --input <out>\support_trilinear01_f1.ndt --output-dir <out>\run --analyze true > <out>\run.envelope.json
+# 4. DB1から全段階を取り出す（32ビット PowerShell）
+& "$env:SystemRoot\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File tools\jrsnap_golden\extract_db1.ps1 -Db1 <out>\run\support_trilinear01_f1.DB1 -OutJson <out>\raw.json
+# 5. 凍結（v2。--control は load か displacement。DA を書き換えたときは書出し器の .ndt と内容を記録する）
+uv run --locked --extra dev python -m tools.jrsnap_golden.freeze --case support_trilinear01 --run-dir <out>\run --envelope <out>\run.envelope.json --raw <out>\raw.json --ndu <out>\support_trilinear01.ndu --steps 100 --control load --writer-ndt <out>\writer\support_trilinear01.ndt --post-processing convergence=accuracy --output <out>\golden_n100.json
 ```
 
-収斂方法を精度優先（列70の`F=1`）にする設定は`.ndu`からは指定できなかった（`DataInfo`の候補項目を変えても`.ndt`の列70は空白のまま）。精度優先での比較には、JRSNAPHeadlessに`.ndt`を直接解析する入口を足す必要がある。
+2026-10-18 の v1 golden（`jrsnap_golden_v1`、`load_factor`を持つ）は再凍結していない。2026-10-19 に凍結済みの`.ndu`をJRSNAPで再実行し、旧スクリプトの出力が凍結 golden と値レベルで同一（`provenance.runner.engineVersion`のコミット番号のみ相違）であること、新しい`extract_db1.ps1`の従来項目が同じ値になることを確かめた。
+
+書出しの仕様で分かったこと（2026-10-19、`--analyze false`の`.ndt`で確認）:
+
+- `DataInfo`の第12項は`.ndt`DA行の列32、第13項は列31に書かれる（第12〜15項を1,2,2,1にすると列31〜34は`9090`。列32が材料非線形化のフラグで、`0`で部材のM–φが働く）。
+- `SuppotNum`は支点拘束の総数で、行数より小さいとエラー612/613で解析が止まる。
+- `JLoadInfo`は「荷重ケース, 空白, 節点, LK, PX, PY, PM, 題名」。同じ節点・同じケースの行は1行にまとめられる。
+- `JibanTeikouKeisuu`は常に3行、`SesfPiIJ`と`JibanShogenInfo`は要素ごと、`MemberKUI`は全部材の後にまとめて並ぶ。
+- A・I・Eは10桁、FTMとDSMAXは小数3桁で書かれる。
