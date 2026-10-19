@@ -37,6 +37,13 @@ its executor's work logs drift apart. Exit codes: `0` resolved (and created);
 If `.agents/docs/plans/{slug}.md` already exists, the plan is a revision of that
 document — read it first and say so, rather than silently overwriting it.
 
+`workspace.py` always resolves `plan_doc` under `.agents/`. When the repository
+keeps its agent documents under `.claude/` instead (this repository since
+2026-10-19 — the handoff forbids recreating `.agents/`), write the plan to
+`.claude/docs/plans/{slug}.md`, validate it with `validate_doc.py --contract
+plan-doc --file` on that path, and remove the `.agents/docs/plans/` directory
+the script created before reporting.
+
 ### 1. Requirements Analysis
 
 First clarify with the user:

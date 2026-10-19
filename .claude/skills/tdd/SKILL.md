@@ -289,3 +289,17 @@ exited `0`; mark nothing complete on the strength of having written it.
   repo several "failures" were wrong expectations (a start point, a boundary
   case that exactly hits a kink). Recompute by hand before changing production
   code, and pick boundary inputs that land clearly inside the branch you mean.
+- **Oracle comparisons: fix the tolerance, then record, never loosen.** Write
+  the tolerance per quantity *before* the first comparison. A measured gap above
+  it is a "does not match" verdict with the gap recorded — the pinned test then
+  asserts the measured gap with a comment naming the record, not a loosened
+  tolerance. Compare under the control the oracle solves exactly (displacement
+  control when it leaves load residuals) and by equilibrium quantities (total
+  force at the control node, member end forces), not only by the oracle's
+  reported value. Example record: `FrameWeb/docs/report/jrsnap-frameweb-equivalence.md`.
+- **A vacuity check that rewrites fixtures is exclusive.** Perturbing a golden
+  on disk to prove its tests fail must not overlap any other test run that
+  reads the same files — including a background full gate. Run it before the
+  gate starts, and confirm the files are byte-identical afterwards (`git
+  status`, or the recorded hash). A gate that read a perturbed file reports the
+  perturbation as a product failure.

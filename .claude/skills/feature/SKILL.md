@@ -795,6 +795,18 @@ separately as a baseline failure (count, files, cause) in the report and the
 handoff, and leave them unfixed unless they are in scope. Different result →
 it is a regression of this change.
 
+`check_test_results` compares the JUnit report with
+`tests/regression/known_failures.json`. When that file lists no failures but the
+branch carries documented baseline failures (HANDOFF / report: "N passed + M
+known in `tests/validation`"), the script's own verdict is always a mismatch, so
+judge from the report it writes (`FrameWeb/tmp/test-results/complete.xml` and
+`baseline-comparison.json`): passed must equal the baseline plus the tests you
+added, and the failing set must be exactly the documented one. Say which it was.
+
+Start the gate only after every check that rewrites files under `tests/` (golden
+perturbation, regeneration, re-freezing) has finished, and do not touch `tests/`
+while it runs. If a run overlapped such a check, re-run it and record both runs.
+
 #### Route A: SIMPLE (1-3 files, <50 LOC) — Codex Direct
 
 Codex implements directly. Write the prompt body below to

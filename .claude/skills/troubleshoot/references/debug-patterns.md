@@ -176,6 +176,28 @@ uv run ty check src/
   in the test (document why); guard infinities explicitly; normalize `-0.0` to
   `0.0`; pick test inputs clearly inside the branch being tested
 
+### 7. External Oracle Disagreements
+- **Symptom**: the product differs from a reference program (JRSNAP, a
+  commercial solver) by a few percent on a nonlinear case
+- **Diagnosis**:
+  - Calibrate linear cases first: sign convention of end forces, units of
+    stiffness, shear deformation on/off, which element end a result is reported
+    at. Each of these alone produces a "few percent".
+  - Measure the oracle against itself: its reported spring force vs its own law
+    applied to its own displacement, and applied load vs its internal force.
+    A residual there is the oracle's convergence criterion, not the product
+    (JRSNAP keeps an unbalanced force under load increments even with its
+    accuracy-priority setting).
+  - Separate reported from structural quantities: a reported value can be
+    wrong (2× on the negative side) while the member force that the structure
+    actually carries is right — compare the latter.
+  - Check the evaluation position (element end vs midpoint) before blaming the
+    material law.
+- **Fix pattern**: do not change the product to imitate the oracle without
+  approval; record match / mismatch / unverified per quantity with the measured
+  gap and the oracle's own self-consistency; pin the comparison under the
+  control where the oracle is exact
+
 ## Severity Classification
 
 | Severity | Criteria | Response |
