@@ -32,11 +32,14 @@ internal static class HeadlessCalculation
                 loads.ValueKind != JsonValueKind.Object || !loads.EnumerateObject().Any())
                 throw new RunnerException("LOAD_DIAGRAM_REQUIRES_LOADS", "The load diagram requires at least one load case.");
         }
+        if (options.HasSectionDiagram && dimension != 2)
+            throw new RunnerException("SECTION_DIAGRAM_REQUIRES_2D", "The section diagram is drawn for a 2D model only.");
         if (options.LoadDiagramOnly)
             return await LoadDiagramAsync(options, savedJson, saved.RootElement, cancellationToken);
         var rows = InputCombineService.ParseCombineJson(saved.RootElement);
         bool needsSectionForcePickup = options.GeneratePik ||
-            options.GeneratePdf && options.PdfSections.Contains("pickup_section_force");
+            options.GeneratePdf && (options.PdfSections.Contains("pickup_section_force") ||
+                options.PdfSections.Contains(RunOptions.PickupSectionDiagramSection));
         bool needsDisplacementTable = options.GeneratePdf && options.PdfSections.Contains("pickup_displacement");
         bool needsPickup = needsSectionForcePickup || needsDisplacementTable ||
             options.GeneratePickupDisplacementCsv || options.GeneratePickupReactionCsv;
@@ -167,9 +170,12 @@ internal static class HeadlessCalculation
             "displacement" => PrintOption.Displacement,
             "pickup_displacement" => PrintOption.PickupDisplacement,
             RunOptions.LoadDiagramSection => PrintOption.LoadDiagram,
+            RunOptions.SectionDiagramSection => PrintOption.SectionDiagram,
+            RunOptions.PickupSectionDiagramSection => PrintOption.PickupSectionDiagram,
             _ => throw new RunnerException("INVALID_ARGUMENT", "Unsupported PDF section."),
         }).ToArray(),
-            Layout: options.LoadDiagramLayout switch
+            // RunOptions rejects different load and section diagram layouts in one request.
+            Layout: (options.HasSectionDiagram ? options.SectionDiagramLayout : options.LoadDiagramLayout) switch
             {
                 "split_horizontal" => PrintLayout.SplitHorizontal,
                 "split_vertical" => PrintLayout.SplitVertical,
@@ -177,6 +183,7 @@ internal static class HeadlessCalculation
             },
             Orientation: options.PdfOrientation == "horizontal" ? PrintOrientation.Horizontal : PrintOrientation.Vertical,
             Paper: options.PdfPaper == "A3" ? PrintPaper.A3 : PrintPaper.A4,
+            DiagramComponents: options.SectionDiagramComponents,
             LoadDiagramComponents: options.LoadDiagramAxis ? ["axis", "load"] : ["load"]);
         var printSnapshot = new PrintSnapshot(selection, savedJson, 0, 0, presentation, derived, []);
         byte[] pdf = await Task.Run(() => DirectPdfGenerator.Generate(

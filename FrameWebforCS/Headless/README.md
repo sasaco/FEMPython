@@ -42,7 +42,7 @@ output. `--generate-pdf` and `--generate-pik` default to `true`; section selecti
 all five names shown above. Optional `--generate-pickup-displacement-csv` and
 `--generate-pickup-reaction-csv` default to `false`. Flags accept exactly `true` or `false`; repeated and
 unknown options/sections fail. PDF sections may be any nonempty distinct subset
-of those five names and `load_diagram`. Sections are rendered in the existing PDF composer's order.
+of those five names, `load_diagram`, `section_diagram` and `pickup_section_diagram`. Sections are rendered in the existing PDF composer's order.
 `--pdf-paper` (`A4` or `A3`, default `A4`) and `--pdf-orientation` (`vertical` or
 `horizontal`, default `vertical`) apply to the whole PDF and require PDF output.
 
@@ -61,6 +61,26 @@ document without load cases with `LOAD_DIAGRAM_REQUIRES_LOADS`.
   --input 'C:\jobs\input.json' --output-dir 'C:\jobs\output' `
   --generate-pik false --pdf-sections load_diagram --pdf-paper A4 --pdf-orientation vertical `
   --load-diagram-layout split_horizontal --load-diagram-axis false
+```
+
+The `section_diagram` section draws the section-force diagrams of every calculated
+load case of a 2D model, and `pickup_section_diagram` those of every PICKUP (the maximum
+and minimum envelopes); both calculate. `--section-diagram-components` selects the
+diagrams as distinct names of `mz` (bending moment), `fy` (shear force), `fx` (axial
+force) and `disg` (displacement; drawn for load cases only, so a PICKUP diagram skips it
+and a PICKUP request needs at least one force); the default is all four.
+`--section-diagram-layout` (`single`, `split_horizontal` for two diagrams per page one
+above the other, or `split_vertical`; default `single`) places them. Both options require
+one of the two sections. The PDF has one diagram layout, so a request with `load_diagram`
+and a section diagram must give both the same layout. A 3D document fails with
+`SECTION_DIAGRAM_REQUIRES_2D`, and `pickup_section_diagram` without a PICKUP definition
+with `PICKUP_REQUIRED`.
+
+```powershell
+& FrameWebforCS/Headless/bin/Release/net10.0-windows/FrameWebforCS.Headless.exe run `
+  --input 'C:\jobs\input.json' --output-dir 'C:\jobs\output' `
+  --generate-pik true --pdf-sections section_diagram --pdf-paper A4 --pdf-orientation vertical `
+  --section-diagram-layout split_horizontal --section-diagram-components mz,fy,fx,disg
 ```
 
 To request only the calculation result and both node PICKUP CSVs (2D or 3D):

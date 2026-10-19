@@ -87,6 +87,44 @@ public sealed class RunnerTests
             ["run", "--input", "C:\\input.json", "--output-dir", "C:\\output", key, value, option, choice]));
     }
 
+    [Fact]
+    public void SectionDiagramOptionsAreParsed()
+    {
+        var options = RunOptions.Parse(["run", "--input", "C:\\input.json", "--output-dir", "C:\\output",
+            "--pdf-sections", "section_diagram,pickup_section_diagram", "--section-diagram-layout", "split_horizontal",
+            "--section-diagram-components", "mz,fy,fx,disg"]);
+        Assert.True(options.HasSectionDiagram);
+        Assert.Equal("split_horizontal", options.SectionDiagramLayout);
+        Assert.Equal(new[] { "mz", "fy", "fx", "disg" }, options.SectionDiagramComponents);
+        var defaults = RunOptions.Parse(["run", "--input", "C:\\input.json", "--output-dir", "C:\\output",
+            "--pdf-sections", "pickup_section_diagram"]);
+        Assert.Equal(("single", null), (defaults.SectionDiagramLayout, defaults.SectionDiagramComponents));
+        Assert.False(RunOptions.Parse(["run", "--input", "C:\\input.json", "--output-dir", "C:\\output"]).HasSectionDiagram);
+    }
+
+    [Theory]
+    [InlineData("input", "--section-diagram-layout", "single")]
+    [InlineData("load_diagram", "--section-diagram-components", "mz")]
+    [InlineData("section_diagram", "--section-diagram-layout", "split")]
+    [InlineData("section_diagram", "--section-diagram-components", "mz,mz")]
+    [InlineData("section_diagram", "--section-diagram-components", "mz,my")]
+    [InlineData("section_diagram", "--section-diagram-components", "")]
+    [InlineData("pickup_section_diagram", "--section-diagram-components", "disg")]
+    [InlineData("load_diagram,section_diagram", "--section-diagram-layout", "split_horizontal")]
+    public void InvalidSectionDiagramOptionsAreRejected(string sections, string option, string choice)
+    {
+        Assert.Throws<RunnerException>(() => RunOptions.Parse(
+            ["run", "--input", "C:\\input.json", "--output-dir", "C:\\output", "--pdf-sections", sections, option, choice]));
+    }
+
+    [Fact]
+    public void SectionDiagramOptionsRequirePdfOutput()
+    {
+        Assert.Throws<RunnerException>(() => RunOptions.Parse(
+            ["run", "--input", "C:\\input.json", "--output-dir", "C:\\output", "--generate-pdf", "false",
+             "--pdf-sections", "section_diagram", "--section-diagram-layout", "single"]));
+    }
+
     [Theory]
     [InlineData("{\"dimension\":2,\"dimension\":3}")]
     [InlineData("{\"dimension\":4}")]
@@ -173,6 +211,39 @@ public sealed class RunnerTests
         Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(pdf)), root.GetProperty("artifacts")[0].GetProperty("sha256").GetString());
         // One case without the axis page is one page: no blank page before the diagram.
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(Encoding.Latin1.GetString(pdf), @"/Type\s*/Page(?![s\w])"));
+    }
+
+    [Theory]
+    // One case and one PICKUP, two diagrams a page: M・S and N・displacement of the case, M・S and N of the PICKUP.
+    [InlineData("section_diagram,pickup_section_diagram", "mz,fy,fx,disg", 4)]
+    [InlineData("section_diagram", "mz,fy", 1)]
+    [InlineData("pickup_section_diagram", "mz,fy,fx,disg", 2)]
+    public async Task SectionDiagramsAreDrawnWithThePik(string sections, string components, int pages)
+    {
+        using var job = new Job(SavedModel);
+        var response = await Run(job, "--generate-pik", "true", "--pdf-sections", sections,
+            "--pdf-paper", "A4", "--pdf-orientation", "vertical",
+            "--section-diagram-layout", "split_horizontal", "--section-diagram-components", components);
+        Assert.Equal(0, response.ExitCode);
+        using var envelope = JsonDocument.Parse(response.Stdout);
+        var root = envelope.RootElement;
+        Assert.True(root.GetProperty("ok").GetBoolean(), response.Stderr);
+        Assert.True(root.GetProperty("summary").GetProperty("calculated").GetBoolean());
+        Assert.Equal(new[] { "pickup.pik", "report.pdf", "result.json" },
+            Directory.GetFiles(job.Output).Select(Path.GetFileName).Order());
+        byte[] pdf = File.ReadAllBytes(Path.Combine(job.Output, "report.pdf"));
+        Assert.Equal(pages, System.Text.RegularExpressions.Regex.Matches(Encoding.Latin1.GetString(pdf), @"/Type\s*/Page(?![s\w])").Count);
+    }
+
+    [Fact]
+    public async Task SectionDiagramRequiresTwoDimensions()
+    {
+        using var job = new Job(SavedModel.Replace("\"dimension\":2", "\"dimension\":3", StringComparison.Ordinal));
+        var response = await Run(job, "--generate-pik", "false", "--pdf-sections", "section_diagram");
+        Assert.NotEqual(0, response.ExitCode);
+        using var document = JsonDocument.Parse(response.Stdout);
+        Assert.Equal("SECTION_DIAGRAM_REQUIRES_2D", document.RootElement.GetProperty("errors")[0].GetProperty("code").GetString());
+        Assert.False(Directory.Exists(job.Output));
     }
 
     [Theory]
