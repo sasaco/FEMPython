@@ -173,8 +173,15 @@ namespace FrameWebforCS.components.input
 
         private void OnEnterCell(object? sender, EnterCellEventArgs e)
         {
-            if (_syncingSelection || e.Row < 0 || e.Column < 0 ||
-                !ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2)) return;
+            if (_syncingSelection || e.Row < 0 || e.Column < 0) return;
+            if (ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet1))
+            {
+                // LoadNames の行位置がそのままケース番号（1 始まり）。
+                _selectionRevision++;
+                _service.SelectCase((e.Row + 1).ToString(CultureInfo.InvariantCulture));
+                return;
+            }
+            if (!ReferenceEquals(fpSpread1.ActiveSheet, fpSpread1_Sheet2)) return;
             _selectionRevision++;
             clsLoadIntensityRow? row = _service.GetIntensityRowAt(e.Row);
             if (row?.IsAssigned != true) return;

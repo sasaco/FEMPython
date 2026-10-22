@@ -414,6 +414,38 @@ public sealed class InputLoadFixedRowsTests
     }
 
     [Fact]
+    public void LoadNameSheetRowSelectionSelectsThatCase()
+    {
+        LoadSheetTest.RunSta(() =>
+        {
+            var input = InputDataService.Instance;
+            using var form = LoadSheetTest.ShowSheet(out var component, out var spread);
+            try
+            {
+                using var document = JsonDocument.Parse("""
+                    {"node":{"1":{"x":0}},"load":{"1":{"load_node":[{"row":1,"n":"1","tx":3}]},
+                      "2":{"load_node":[{"row":7,"n":"1","tx":9}]}}}
+                    """);
+                input.JsonDataOpen(document.RootElement);
+                spread.ActiveSheetIndex = 0;
+                Application.DoEvents();
+                InputLoadService.Instance.SelectCase("1");
+
+                LoadSheetTest.EnterCell(spread, 1, 2);
+                Assert.Equal("2", InputLoadService.Instance.SelectedCaseId);
+                LoadSheetTest.EnterCell(spread, 0, 2);
+                Assert.Equal("1", InputLoadService.Instance.SelectedCaseId);
+            }
+            finally
+            {
+                component.Dispose();
+                using var empty = JsonDocument.Parse("{}");
+                input.JsonDataOpen(empty.RootElement);
+            }
+        });
+    }
+
+    [Fact]
     public void ThreeDSelectionUsesCaseLocalRowAfterDisplayShiftAndBlankSelectionDoesNotPublish()
     {
         LoadSheetTest.RunSta(() =>
