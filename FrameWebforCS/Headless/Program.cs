@@ -42,8 +42,10 @@ internal static class Program
         RunnerEnvelope envelope;
         try
         {
-            RunOptions options = RunOptions.Parse(args);
-            envelope = await HeadlessCalculation.RunAsync(options, cancellation.Token);
+            if (args.Length > 0 && args[0] == ExportFrdOptions.Command)
+                envelope = FrdExport.Run(ExportFrdOptions.Parse(args), cancellation.Token);
+            else
+                envelope = await HeadlessCalculation.RunAsync(RunOptions.Parse(args), cancellation.Token);
         }
         catch (Exception error)
         {

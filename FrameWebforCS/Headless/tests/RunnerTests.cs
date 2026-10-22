@@ -137,6 +137,78 @@ public sealed class RunnerTests
         Assert.Throws<RunnerException>(() => HeadlessCalculation.ValidateDocument(document.RootElement));
     }
 
+    private const string ExportModel = """
+        {"dimension":2,
+         "node":{"1":{"x":0,"y":0},"2":{"x":1,"y":0}},
+         "member":{"1":{"ni":"1","nj":"2","e":"1"}},
+         "element":{"1":{"1":{"E":10000,"Xp":0,"A":1,"Iz":1}}},
+         "fix_node":{"1":[{"row":1,"n":"1","tx":1,"ty":1,"rz":1}]},
+         "load":{"1":{"symbol":"DL","fix_node":1,"element":1,
+           "load_node":[{"row":1,"n":"2","tx":4}]}},
+         "result":{"1":{}}}
+        """;
+
+    [Fact]
+    public void ExportFrdOptionsAreParsed()
+    {
+        var options = ExportFrdOptions.Parse(["export-frd", "--input", "C:\\input.json", "--output-dir", "C:\\output", "--title", "門型"]);
+        Assert.Equal(("C:\\input.json", "C:\\output", "門型"), (options.Input, options.OutputDirectory, options.Title));
+        Assert.Null(ExportFrdOptions.Parse(["export-frd", "--input", "C:\\input.json", "--output-dir", "C:\\output"]).Title);
+        Assert.Throws<RunnerException>(() => ExportFrdOptions.Parse(
+            ["export-frd", "--input", "C:\\input.json", "--output-dir", "C:\\output", "--generate-pdf", "true"]));
+        Assert.Throws<RunnerException>(() => ExportFrdOptions.Parse(["export-frd", "--input", "input.json", "--output-dir", "C:\\output"]));
+        Assert.Throws<RunnerException>(() => ExportFrdOptions.Parse(
+            ["export-frd", "--input", "C:\\input.json", "--output-dir", "C:\\output", "--title", "a", "--title", "b"]));
+    }
+
+    [Fact]
+    public async Task ExportFrdPublishesModelFrdWithWarnings()
+    {
+        using var job = new Job(ExportModel);
+        var response = await RunCommand("export-frd", job, "--title", "門型");
+        Assert.Equal(0, response.ExitCode);
+        using var envelope = JsonDocument.Parse(response.Stdout);
+        var root = envelope.RootElement;
+        Assert.True(root.GetProperty("ok").GetBoolean(), response.Stderr);
+        Assert.Equal(("success", "not_checked"),
+            (root.GetProperty("executionStatus").GetString(), root.GetProperty("engineeringStatus").GetString()));
+        Assert.Equal((2, 1, 1), (root.GetProperty("summary").GetProperty("nodes").GetInt32(),
+            root.GetProperty("summary").GetProperty("members").GetInt32(), root.GetProperty("summary").GetProperty("loadCases").GetInt32()));
+        var artifact = Assert.Single(root.GetProperty("artifacts").EnumerateArray());
+        Assert.Equal(("frd", "application/octet-stream", "model.frd"), (artifact.GetProperty("kind").GetString(),
+            artifact.GetProperty("mediaType").GetString(), artifact.GetProperty("relativePath").GetString()));
+        byte[] frd = File.ReadAllBytes(Path.Combine(job.Output, "model.frd"));
+        Assert.Equal(frd.LongLength, artifact.GetProperty("bytes").GetInt64());
+        Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(frd)), artifact.GetProperty("sha256").GetString());
+        var warning = Assert.Single(root.GetProperty("messages").EnumerateArray());
+        Assert.Equal(("warning", "FRD_SECTION_IGNORED"), (warning.GetProperty("level").GetString(), warning.GetProperty("code").GetString()));
+
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var reread = JsonNode.Parse(new ConvertManager(new MemoryStream(frd)).getJsonString())!;
+        Assert.Equal(1.0, (double)reread["node"]!["2"]!["x"]!);
+        Assert.Equal(4.0, (double)reread["load"]!["1"]!["load_node"]![0]!["tx"]!);
+    }
+
+    [Fact]
+    public async Task ExportFrdRefusesWhatFrameGCannotRepresentAndWritesNothing()
+    {
+        using var job = new Job(ExportModel.Replace("\"dimension\":2", "\"dimension\":3"));
+        var response = await RunCommand("export-frd", job);
+        Assert.Equal(1, response.ExitCode);
+        using var envelope = JsonDocument.Parse(response.Stdout);
+        var root = envelope.RootElement;
+        Assert.False(root.GetProperty("ok").GetBoolean());
+        Assert.Equal("not_applicable", root.GetProperty("engineeringStatus").GetString());
+        var error = Assert.Single(root.GetProperty("errors").EnumerateArray());
+        Assert.Equal(("FRD_EXPORT_UNSUPPORTED", "input"), (error.GetProperty("code").GetString(), error.GetProperty("category").GetString()));
+        Assert.Contains("FRD_DIMENSION dimension", error.GetProperty("message").GetString());
+        Assert.Contains(root.GetProperty("messages").EnumerateArray(), message =>
+            message.GetProperty("level").GetString() == "error" && message.GetProperty("code").GetString() == "FRD_DIMENSION" &&
+            message.GetProperty("path").GetString() == "dimension");
+        Assert.Empty(root.GetProperty("artifacts").EnumerateArray());
+        Assert.False(Directory.Exists(job.Output) && Directory.EnumerateFileSystemEntries(job.Output).Any());
+    }
+
     [Fact]
     public async Task RealProcessRecalculatesAndEmitsRequestedArtifacts()
     {
@@ -499,7 +571,11 @@ public sealed class RunnerTests
         }
     }
 
-    private static async Task<(int ExitCode, string Stdout, string Stderr)> Run(Job job, params string[] additional)
+    private static Task<(int ExitCode, string Stdout, string Stderr)> Run(Job job, params string[] additional) =>
+        RunCommand("run", job, additional);
+
+    private static async Task<(int ExitCode, string Stdout, string Stderr)> RunCommand(string command, Job job,
+        params string[] additional)
     {
         string configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
         string runner = Path.Combine(FindRoot(), "FrameWebforCS", "Headless", "bin", configuration, "net10.0-windows", "FrameWebforCS.Headless.exe");
@@ -508,7 +584,7 @@ public sealed class RunnerTests
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true,
             RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8,
         };
-        foreach (string argument in new[] { "run", "--input", job.Input, "--output-dir", job.Output }.Concat(additional))
+        foreach (string argument in new[] { command, "--input", job.Input, "--output-dir", job.Output }.Concat(additional))
             start.ArgumentList.Add(argument);
         using var process = Process.Start(start)!;
         Task<string> stdout = process.StandardOutput.ReadToEndAsync();

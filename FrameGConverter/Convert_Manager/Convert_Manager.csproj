@@ -9,4 +9,8 @@
     <PackageReference Include="SevenZipExtractor" Version="1.0.17" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Convert_Manager.Tests" />
+  </ItemGroup>
+
 </Project>

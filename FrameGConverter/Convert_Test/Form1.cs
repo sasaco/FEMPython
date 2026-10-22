@@ -1,4 +1,5 @@
-﻿using Convert_Test;
+﻿using Convert_Manager.FrameG;
+using Convert_Test;
 using SevenZipExtractor;
 using System;
 using System.Collections.Generic;
@@ -62,6 +63,72 @@ namespace GConvert_Test
             f2.Dispose();
         }
 
+        /// <summary>
+        /// FrameWeb の 2D JSON を FrameG の .frd に変換する。元の .frd を上書きしないよう、
+        /// 同じ名前の .frd があるときは「名前_FrameWeb.frd」に書き出す。
+        /// </summary>
+        private void ExportFRD(string[] FileNames)
+        {
+            var ConvertedList = new List<resultMessage>();
+
+            foreach (var fileName in FileNames)
+            {
+                var rM = new resultMessage();
+                rM.filename = fileName;
+
+                var result = FrdExporter.Export(File.ReadAllText(fileName),
+                    new FrdExportOptions { Title = Path.GetFileNameWithoutExtension(fileName) });
+                foreach (var diagnostic in result.Diagnostics)
+                    rM.message.Add((diagnostic.Severity == FrdDiagnosticSeverity.Error ? "エラー " : "警告 ") + diagnostic);
+
+                if (result.Succeeded)
+                {
+                    string newName = Path.ChangeExtension(fileName, ".frd");
+                    if (File.Exists(newName))
+                        newName = Path.Combine(Path.GetDirectoryName(fileName),
+                            Path.GetFileNameWithoutExtension(fileName) + "_FrameWeb.frd");
+                    File.WriteAllBytes(newName, result.Frd);
+                    rM.filename = newName;
+                }
+                else
+                {
+                    rM.failed = true;
+                }
+
+                ConvertedList.Add(rM);
+            }
+
+            // 終了ダイアログ
+            var f2 = new Form2(ConvertedList);
+
+            f2.ShowDialog();
+            f2.Dispose();
+        }
+
+        /// <summary>ドロップされたファイルを拡張子で振り分けて変換する。</summary>
+        private void ConvertFiles(string[] FileNames)
+        {
+            var frd = FileNames.Where(name => Path.GetExtension(name).Equals(".frd", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var json = FileNames.Where(name => Path.GetExtension(name).Equals(".json", StringComparison.OrdinalIgnoreCase)).ToArray();
+            var others = FileNames.Except(frd).Except(json).ToArray();
+
+            if (frd.Length > 0)
+                ConvertFRD(frd);
+            if (json.Length > 0)
+                ExportFRD(json);
+            if (others.Length > 0)
+            {
+                var f2 = new Form2(others.Select(name => new resultMessage
+                {
+                    filename = name,
+                    failed = true,
+                    message = { "変換できるのは .frd と .json だけです" }
+                }).ToList());
+                f2.ShowDialog();
+                f2.Dispose();
+            }
+        }
+
         private void SaveFile(string filename, string contents)
         {
             //'書き込むファイルが既に存在している場合は、上書きする
@@ -80,6 +147,15 @@ namespace GConvert_Test
                 ConvertFRD(openFileDialog1.FileNames);
             }
 
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            DialogResult dr = openFileDialog2.ShowDialog();
+            if (dr == System.Windows.Forms.DialogResult.OK)
+            {
+                ExportFRD(openFileDialog2.FileNames);
+            }
         }
 
         //panel1のDragEnterイベントハンドラ
@@ -101,8 +177,8 @@ namespace GConvert_Test
             //ドロップされたすべてのファイル名を取得する
             string[] fileName =
                 (string[])e.Data.GetData(DataFormats.FileDrop, false);
-            //ListBoxに追加する
-            ConvertFRD(fileName);
+            //拡張子で .frd → .json と .json → .frd を振り分ける
+            ConvertFiles(fileName);
         }
 
         private void Form1_Load(object sender, EventArgs e)

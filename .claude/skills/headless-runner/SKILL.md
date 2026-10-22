@@ -1,6 +1,6 @@
 ---
 name: headless-runner
-description: FrameWebforCS の Headless runner（FrameWebforCS.Headless.exe run、FrameWebforCS/Headless）を使う・直す・作り直すときに使う。引数（--pdf-sections の input・section_force・pickup_section_force・displacement・pickup_displacement・load_diagram・section_diagram・pickup_section_diagram、--load-diagram-*・--section-diagram-layout・--section-diagram-components、PIK・ノードの CSV）、成果物（result.json・pickup.pik・report.pdf・CSV）と応答の JSON、PDF の節を足す方法（RunOptions.cs と HeadlessCalculation.cs から PrintSelection へ。描画はデスクトップの PrintProjection・FramePrintPDF のまま）、テストと exe の作り直し（bin/Release、WebPier・関内EVピットと共用）、engineVersion の読み方、PIK の書式と符号を扱う。断面力図・荷重図が runner から出ない、数表しか出ない、引数がエラーになるときにも使う。
+description: FrameWebforCS の Headless runner（FrameWebforCS.Headless.exe run・export-frd、FrameWebforCS/Headless）を使う・直す・作り直すときに使う。引数（--pdf-sections の input・section_force・pickup_section_force・displacement・pickup_displacement・load_diagram・section_diagram・pickup_section_diagram、--load-diagram-*・--section-diagram-layout・--section-diagram-components、PIK・ノードの CSV）、成果物（result.json・pickup.pik・report.pdf・CSV）と応答の JSON、PDF の節を足す方法（RunOptions.cs と HeadlessCalculation.cs から PrintSelection へ。描画はデスクトップの PrintProjection・FramePrintPDF のまま）、テストと exe の作り直し（bin/Release、WebPier・関内EVピットと共用）、engineVersion の読み方、PIK の書式と符号を扱う。保存形式の JSON を FrameG の .frd に書き出す export-frd（FRD_EXPORT_UNSUPPORTED と messages の FRD_* コード）、断面力図・荷重図が runner から出ない、数表しか出ない、引数がエラーになるときにも使う。
 ---
 
 # FrameWebforCS Headless runner
@@ -45,6 +45,15 @@ runner 側は次の3か所だけで足りる。
    PICKUP が要る節なら `needsSectionForcePickup` に足す、次元の検査。
 3. `tests/RunnerTests.cs` と `README.md`。
 
+## FrameG への書き出し（export-frd）
+
+- `export-frd --input <abs> --output-dir <abs> [--title <題名>]`。計算も Python も使わず、
+  `FrameGConverter/Convert_Manager` の `FrdExporter` で `model.frd`（kind `frd`）を1つ出す。題名の既定は入力のファイル名。
+- FrameG で表せない入力は `FRD_EXPORT_UNSUPPORTED` で失敗し、何も置かない。個々の理由は `messages[]` に
+  `level`（error/warning）・`FRD_*` のコード・JSON の `path` で入る。表せる項目・符号・番号の振り直しの決まりは
+  `.claude/docs/DESIGN.md`（2026-10-22 の行）と `FrameGConverter/README.md`。
+- 出した .frd を FrameG で開いて確かめたことはまだ無い（2026-10-22 時点。確かめる項目は DESIGN.md の TODO）。
+
 ## テストと exe の作り直し
 
 ```powershell
@@ -53,7 +62,8 @@ dotnet test FrameWebforCS/Headless/tests/FrameWebforCS.Headless.Tests.csproj -c 
 ```
 
 - テストは作り直した exe を子プロセスで動かす（`tests/bin/<構成>` の親の名前と同じ構成の exe）。WindowsBase の MSB3277 の警告は既知。
-- 1回で約40秒（61件、2026-10-19）。
+  共用の Release の exe を置き換えずに試すなら `-c Debug` で流す（`bin/Debug` の exe を使う）。
+- 1回で約40秒（64件、2026-10-22）。
 - `engineVersion`（例 `1.0.0+93d4ecc…`）は**ビルドしたときの HEAD**で、未コミットの変更は版に出ない。版で中身を区別したいなら
   コミットしてから作り直す。exe のソースがどのブランチかは engineVersion では分からないので、引数を exe で実際に試す
   （存在しない節名を渡すと `PDF sections must be distinct supported section names.`）。exe 内の引数名は

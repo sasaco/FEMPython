@@ -108,6 +108,29 @@ request projection omits them and the derived presenter ignores their contributi
 The runner reports `EMPTY_LOAD_CASE_SKIPPED` warnings, a summary count, and the
 complete `skippedLoadCases` list in `result.json`; it does not invent zero results.
 
+## FrameG export (`export-frd`)
+
+`export-frd` writes the saved 2D document as a FrameG `.frd` (the reverse of opening a
+`.frd` in FrameWebforCS) with `FrameGConverter/Convert_Manager`'s `FrdExporter`. It
+neither starts Python nor calculates.
+
+```powershell
+& FrameWebforCS/Headless/bin/Release/net10.0-windows/FrameWebforCS.Headless.exe export-frd `
+  --input 'C:\jobs\input.json' --output-dir 'C:\jobs\output' --title '門型ラーメン'
+```
+
+`--input` and `--output-dir` follow the rules of `run`; `--title` (optional) is the
+FrameG title and defaults to the input file name. Input that FrameG cannot represent
+(3D, panels, imposed displacements, moving loads, spatial loads, interval member
+springs, members that share a material with different E or Xp per sheet, values
+that overflow FrameG's fields, …) fails with `FRD_EXPORT_UNSUPPORTED` and publishes
+nothing; every exporter diagnostic is a `messages[]` entry with `level`
+(`error`/`warning`), its `FRD_*` code and the JSON `path`. A successful export
+publishes `model.frd` (kind `frd`, `application/octet-stream`) and reports what
+FrameG cannot keep (renumbered IDs, dropped 3D fields, truncated names, …) as
+warnings. `summary` counts the nodes, members, load cases, warnings and errors. The
+export contract is recorded in `.claude/docs/DESIGN.md`.
+
 ## Protocol and artifacts
 
 Stdout contains exactly one UTF-8 JSON envelope with `protocolVersion: 1`,
@@ -125,6 +148,7 @@ certifying structural design acceptance; failure uses `not_applicable`.
 | `report.pdf` | `--generate-pdf true` | `application/pdf` | Existing Japanese report composer with the requested sections |
 | `pickup-displacement.csv` | `--generate-pickup-displacement-csv true` | `text/csv; charset=utf-8` | Raw displacement PICKUP vectors, UTF-8 without BOM; artifact kind `pickup-displacement` |
 | `pickup-reaction.csv` | `--generate-pickup-reaction-csv true` | `text/csv; charset=utf-8` | Raw support-reaction PICKUP vectors, UTF-8 without BOM; artifact kind `pickup-reaction` |
+| `model.frd` | `export-frd` (the only artifact) | `application/octet-stream` | FrameG data file: an LZH (level-0, `-lh5-`/`-lh0-`) archive of Shift-JIS tables; artifact kind `frd` |
 
 Both node CSVs use 17 columns: `pickup_id,focus_component,node_id,max_combine_id,min_combine_id`,
 then six `max_*` and six `min_*` unit-bearing component columns. Displacement

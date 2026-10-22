@@ -12,6 +12,7 @@ namespace Convert_Test
     {
         public string filename = null;
         public List<string> message = new List<string>();
+        public bool failed = false; // 変換できず、ファイルを書き出していない
     }
 
     public partial class Form2 : Form
@@ -47,7 +48,9 @@ namespace Convert_Test
                 var v = value[r];
 
                 // アイコン
-                if (0 < v.message.Count)
+                if (v.failed)
+                    this.dataGridView1[0, r].Value = SystemIcons.Error;
+                else if (0 < v.message.Count)
                     this.dataGridView1[0, r].Value = SystemIcons.Warning;
                 // ファイル名
                 this.dataGridView1[1, r].Value = v.filename;

@@ -263,7 +263,7 @@ internal static class HeadlessCalculation
                 throw new RunnerException("UNSAFE_OUTPUT_PATH", "Output directory must not traverse a link or junction.", "output");
     }
 
-    private static IReadOnlyList<RunnerArtifact> Publish(string outputDirectory,
+    internal static IReadOnlyList<RunnerArtifact> Publish(string outputDirectory,
         IReadOnlyList<(string Name, string Kind, string MediaType, byte[] Bytes)> outputs, CancellationToken token)
     {
         foreach (var output in outputs)

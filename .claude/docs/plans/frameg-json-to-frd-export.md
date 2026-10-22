@@ -44,12 +44,12 @@ Add the reverse of `FrameGConverter/Convert_Manager/ConvertManager.cs`: write a 
 The LZH encoder and the record layouts, which so far are only inferred, come first. Each writer is tested by reading its output back with the existing forward reader before the archive is assembled.
 
 #### Step 1: LZH level-0 archive writer and lh5 encoder
-- [ ] Write the archive the way the samples are written:
+- [x] Write the archive the way the samples are written:
   - level-0 headers (`hsize = 25 + name length`, checksum byte, sizes in little-endian, the time field in Unix epoch seconds, attribute 0, ASCII name, CRC-16/ARC, extension bytes `20 00 00`);
   - a single `0x00` terminator;
   - `-lh0-` when compression does not shrink the file.
   - The timestamp can be supplied by the caller, so the output is deterministic.
-- [ ] Implement the `-lh5-` encoder: 8 KiB window LZSS, then Huffman-coded blocks with the C/P/T tables. Blocks of more than 65535 symbols are split.
+- [x] Implement the `-lh5-` encoder: 8 KiB window LZSS, then Huffman-coded blocks with the C/P/T tables. Blocks of more than 65535 symbols are split.
 **Verification**:
 - Encode, then decode with SevenZipExtractor (`SevenZipFormat.Lzh`, the reader the forward converter uses). Check the bytes and CRC for empty, 1-byte, highly repetitive, random and multi-block inputs, and for every entry of the four sample archives after re-packing them.
 - Check the headers and the CRC directly, without relying on SevenZipExtractor: a small header reader in the test project parses every level-0 header (size, checksum byte, method, sizes, name, CRC). The test computes CRC-16/ARC from the original bytes and compares it with the header. Another test corrupts one byte of a packed stream and checks that SevenZipExtractor reports the error.
@@ -57,40 +57,40 @@ The LZH encoder and the record layouts, which so far are only inferred, come fir
 - Decode with an independent decoder as well. Add the investigation's decoder as `FrameGConverter/tools/lzh_verify.py`, standard library only. It parses level-0 headers, decodes `-lh0-`/`-lh5-` and checks CRCs. Run it from the repository root with `uv run --project FrameWeb --locked --extra dev python FrameGConverter/tools/lzh_verify.py <archive>` on the sample archives and on the exported archives.
 
 #### Step 2: Shift-JIS fixed-width writer and the inferred record layouts
-- [ ] Add a field writer: Shift-JIS byte width, left-aligned with space padding, the sign-space number style seen in the samples (`" 1.0000"`), invariant culture, and an exception that names the field when a value does not fit. Do not silently truncate. Use a strict encoder that rejects characters with no Shift-JIS form.
-- [ ] Settle how each file is framed, as the samples show it:
+- [x] Add a field writer: Shift-JIS byte width, left-aligned with space padding, the sign-space number style seen in the samples (`" 1.0000"`), invariant culture, and an exception that names the field when a value does not fit. Do not silently truncate. Use a strict encoder that rejects characters with no Shift-JIS form.
+- [x] Settle how each file is framed, as the samples show it:
   - `$N.txt`: a count line, then tab-separated rows; every line ends in CRLF, including the last.
   - `.tmp`: fixed-length records with no separator, no final newline and no EOF byte. The byte offsets below count from the start of each record.
-- [ ] Settle the record layouts that are only inferred:
+- [x] Settle the record layouts that are only inferred:
   - `Buzai.tmp`: 244 bytes, with the member length at bytes 234-243.
   - `Buzai_G.tmp`: 56 bytes, matched to members by position, J-end length before I-end length.
   - `Kajyu.tmp`: 88 bytes, with the Int16 at bytes 71-72 written as `00 00` and a blank train-load block.
   - `K_JituBuzai.tmp`: 124 bytes, one member load and one node load per record, a blank record at the end of each case, the letter code for negative `m2` (the inverse of `load.cs:566-591`), and the 5-byte tail on even cases.
   - `Chakumoku.tmp`: 1053 bytes, with blank labels.
-- [ ] Each layout gets a test that runs the matching forward reader on a hand-made record and checks it under both `ja-JP` and `en-US` current cultures. Some forward readers parse with `Convert.ToDouble`, which depends on the culture.
+- [x] Each layout gets a test that runs the matching forward reader on a hand-made record and checks it under both `ja-JP` and `en-US` current cultures. Some forward readers parse with `Convert.ToDouble`, which depends on the culture.
 **Verification**:
 - `dotnet test FrameGConverter/Convert_Manager.Tests -c Release --filter FrdRecordWriter`: the forward reader recovers every value, and every record has the expected byte length.
 - Overflowing names and numbers raise the field error.
 - For at least one file of each kind, the whole file is compared byte for byte with a file built by hand from the sample.
 
 #### Step 3: Templates and the archive file list
-- [ ] Compare the three 4.6.3 samples and split their files into four groups: template, title-substituted, generated from the model, and pile-only.
+- [x] Compare the three 4.6.3 samples and split their files into four groups: template, title-substituted, generated from the model, and pile-only.
   - Embed the template files.
   - Generate `$10/$17/$18.txt` from the member list.
   - Write the pile tables (`$4-$8`, `$14`, `$20-$23`, `$0_kuiNum`) as the empty or `"0"` form used by the sample without piles.
   - Omit `$101/$102/$1021.TXT` (the suspected mesh cache), unless the comparison shows they are required.
-- [ ] Settle the entry order as the reverse of [`KFrame.ini`, `frvlist.txt`, `kui_opt.txt`, `$*` in ordinal upper-case order, `*.tmp` in ordinal upper-case order].
+- [x] Settle the entry order as the reverse of [`KFrame.ini`, `frvlist.txt`, `kui_opt.txt`, `$*` in ordinal upper-case order, `*.tmp` in ordinal upper-case order].
 **Verification**:
 - A test pins the file list and order against `バネ連衡なし.frd`.
 - A test checks that replacing the title in `$11.txt` keeps every other line unchanged and fits the field in bytes.
 
 #### Step 4: Normalization, pre-checks and the diagnostics contract
-- [ ] Read the saved FrameWeb JSON with Newtonsoft `JObject`.
+- [x] Read the saved FrameWeb JSON with Newtonsoft `JObject`.
   - A missing `dimension` means 3, which is an error.
   - Load cases may use `m1/m2` or `m`.
   - Notice-point rows may start at 0 or 1, so ConvertManager's own output is accepted too.
-- [ ] Define `FrdExportResult`: the `.frd` bytes, a list of diagnostics `{severity, code, jsonPath, message}`, and the mapping of renumbered IDs. If any diagnostic is an error, no bytes are returned.
-- [ ] These are **errors**:
+- [x] Define `FrdExportResult`: the `.frd` bytes, a list of diagnostics `{severity, code, jsonPath, message}`, and the mapping of renumbered IDs. If any diagnostic is an error, no bytes are returned.
+- [x] These are **errors**:
   - 3D, `shell`, a node load with a negative `n` (imposed displacement), an `LL` moving load, and `direction` z/gz/r on marks 1/2;
   - spatial loads (`CalculationRequest.cs:33`):
     - `bridge_loads` that is not empty. "Empty" is the shape a normal save writes: `version`, empty `panels` and `paths` arrays, and an empty `cases` object (`InputBridgeLoadService.cs:163`). A test covers that shape;
@@ -101,26 +101,26 @@ The LZH encoder and the record layouts, which so far are only inferred, come fir
   - numbers that overflow their field (999 for 3-byte IDs);
   - `fix_member` rows with `length`: pile interval springs. They stay outside this change; see Risks & Considerations;
   - broken references and values that are not finite.
-- [ ] These are **warnings**:
+- [x] These are **warnings**:
   - renumbering of nodes and members;
   - fields dropped because they do not affect a 2D analysis (`z`, `cg`, G/J/Iy, 3D degrees of freedom);
   - DEFINE names, the `three`, `result` and `resultDimension` sections, and `load_intensity_layout`.
-- [ ] Record the contract in `DESIGN.md`.
+- [x] Record the contract in `DESIGN.md`.
 **Verification**:
 - `FrdExporterTests`: one test per error and per warning code, asserting the code and the JSON path.
 - Every error case returns no bytes.
 
 #### Step 5: Writers for nodes, members, materials, supports, springs, joints, rigid zones and notice points
-- [ ] Renumber nodes and members to contiguous IDs from 1, in their original numeric order, only when they are not already contiguous. Update every reference. `Buzai_G.tmp` follows the same member order.
-- [ ] Expand shared materials to one material per member, with `n` blank so the forward reader does not multiply A and Iz again. Copy E and Xp from the material, and A and Iz per sheet.
-- [ ] Write a FrameG material mark (C/G/H/A1) by a fixed rule, decided in this step and recorded in `DESIGN.md`.
-- [ ] Look up the A and I of a rigid zone from the `e` of its `rigid` row. Rigid zones whose A or I differ between sheets are an error.
-- [ ] Write a support value of 1 as fixed, 0 as free, and any other value as a spring. FrameWeb uses the same meaning, so this is not an error.
+- [x] Renumber nodes and members to contiguous IDs from 1, in their original numeric order, only when they are not already contiguous. Update every reference. `Buzai_G.tmp` follows the same member order.
+- [x] Expand shared materials to one material per member, with `n` blank so the forward reader does not multiply A and Iz again. Copy E and Xp from the material, and A and Iz per sheet.
+- [x] Write a FrameG material mark (C/G/H/A1) by a fixed rule, decided in this step and recorded in `DESIGN.md`.
+- [x] Look up the A and I of a rigid zone from the `e` of its `rigid` row. Rigid zones whose A or I differ between sheets are an error.
+- [x] Write a support value of 1 as fixed, 0 as free, and any other value as a spring. FrameWeb uses the same meaning, so this is not an error.
 **Verification**:
 - Run each file through its forward reader and compare the nodes, members, materials, supports, springs, joints, rigid zones and notice points with the input, after normalizing the renumbered IDs, the 16 sheets versus 6, and whether notice-point rows start at 0 or 1.
 
 #### Step 6: Writers for loads, DEFINE, COMBINE and PICKUP
-- [ ] Gather the load-sign table into one place. It is the inverse of `load.cs:483-557`:
+- [x] Gather the load-sign table into one place. It is the inverse of `load.cs:483-557`:
 
   | FrameWeb load | FrameG mark | FrameG direction | Sign |
   |---|---|---|---|
@@ -132,12 +132,12 @@ The LZH encoder and the record layouts, which so far are only inferred, come fir
   | node load tx | — | — | kept |
   | node load ty, rz | — | — | negated |
 
-- [ ] Copy the `L1`/`L2` strings unchanged, including the `-` meaning "relative to the previous row" and a negative L2 meaning the loaded width.
-- [ ] Do not expand `m1/m2` ranges into single members: `K_JituBuzai.tmp` has its own m1/m2. They are member references with a sign that has its own meaning (`CalculationRequest.cs:245-258`). Map the absolute value through the member renumbering and keep the sign. Renumbering keeps the original order, so a range still covers the same members. A reference to a member that does not exist is an error.
-- [ ] Pair the node load and the member load that share a `row` number into one record.
-- [ ] Renumber the cases 1..N and remap the DEFINE references to match.
-- [ ] Write `Ku_Mix` and `Ku_MixName` as one blank record each.
-- [ ] Write the COMBINE rate as `1.0000` and blank symbols for COMBINE and PICKUP.
+- [x] Copy the `L1`/`L2` strings unchanged, including the `-` meaning "relative to the previous row" and a negative L2 meaning the loaded width.
+- [x] Do not expand `m1/m2` ranges into single members: `K_JituBuzai.tmp` has its own m1/m2. They are member references with a sign that has its own meaning (`CalculationRequest.cs:245-258`). Map the absolute value through the member renumbering and keep the sign. Renumbering keeps the original order, so a range still covers the same members. A reference to a member that does not exist is an error.
+- [x] Pair the node load and the member load that share a `row` number into one record.
+- [x] Renumber the cases 1..N and remap the DEFINE references to match.
+- [x] Write `Ku_Mix` and `Ku_MixName` as one blank record each.
+- [x] Write the COMBINE rate as `1.0000` and blank symbols for COMBINE and PICKUP.
 **Verification**:
 - Run the files through the forward `load`, `define`, `combine` and `pickup` readers, and check the signs, directions, ranges, row pairing, the end of each case, and the DEFINE, COMBINE and PICKUP references.
 - Test negative `m2` values (−5, −10, −14, −999) separately.
@@ -145,36 +145,36 @@ The LZH encoder and the record layouts, which so far are only inferred, come fir
 - Test member IDs with gaps together with an `m1/m2` range and a negative `m2`: after renumbering, the forward reader and `CalculationRequestBuilder` expand to the same members.
 
 #### Step 7: Archive assembly and the public API
-- [ ] Add `FrdExporter.Export(string json, FrdExportOptions options)`. The options are the title and the timestamp. The method returns `FrdExportResult`, and it never returns a partial archive.
-- [ ] Callers must register `CodePagesEncodingProvider`, as they already do for `ConvertManager`. The exporter checks for it and fails clearly if it is missing.
+- [x] Add `FrdExporter.Export(string json, FrdExportOptions options)`. The options are the title and the timestamp. The method returns `FrdExportResult`, and it never returns a partial archive.
+- [x] Callers must register `CodePagesEncodingProvider`, as they already do for `ConvertManager`. The exporter checks for it and fails clearly if it is missing.
 **Verification**:
 - `FrdExporterTests`: open the exported archive with `new ConvertManager(stream)` and check every entry's CRC. The JSON round trip (export, then forward-convert) matches the input after normalization.
 - Exporting the same input twice with the same options gives identical bytes.
 
 #### Step 8: Round trips through FrameWebforCS
-- [ ] The samples are found the way the existing tests find them: `RepositoryRoot()` walks up the directories (`InputFileLoaderTests.cs:81`). No change to the csproj is needed.
-- [ ] `FrdExportRoundTripTests`, round trip 1:
+- [x] The samples are found the way the existing tests find them: `RepositoryRoot()` walks up the directories (`InputFileLoaderTests.cs:81`). No change to the csproj is needed.
+- [x] `FrdExportRoundTripTests`, round trip 1:
   1. Open `4_2-FrameG.frd` and `バネ連衡なし.frd` with `InputFileLoader.Open`.
   2. Save the model with `GetSaveJson`.
   3. Export it to `.frd`.
   4. Open the `.frd` again.
   5. Compare the two JSON files after normalization.
   6. Compare `CalculationRequestBuilder.FromSavedJson` for the two, which checks that the analysis input is the same.
-- [ ] Round trip 2: write a 2D JSON in FrameWeb that uses features FrameG lacks (shared materials, IDs with gaps, gy loads, combine and pickup). Export it, read it back with `InputFileLoader.Open`, and compare the `CalculationRequest`.
-- [ ] Check that `バネ連衡あり.frd` and `杭2こ.lzh` now fail export with the pile-spring error code, because of the decision on pile springs.
+- [x] Round trip 2: write a 2D JSON in FrameWeb that uses features FrameG lacks (shared materials, IDs with gaps, gy loads, combine and pickup). Export it, read it back with `InputFileLoader.Open`, and compare the `CalculationRequest`.
+- [x] Check that `バネ連衡あり.frd` and `杭2こ.lzh` now fail export with the pile-spring error code, because of the decision on pile springs.
 **Verification**:
 - `dotnet test FrameWebforCS/tests -c Release --filter "FrdExportRoundTrip|InputFileLoader|RigidZoneConversion"` passes.
 - The existing tests are not changed.
 
 #### Step 9: Headless `export-frd` command
-- [ ] Add `RunOptions.Parse` support for `export-frd --input <abs> --output-dir <abs> [--title <text>]`, with its own options record. `run` keeps its arguments unchanged.
-- [ ] Publish `model.frd`, with its SHA-256, in the existing protocol v1 envelope, without changing the protocol (`Program.cs:7-23`, `Headless/README.md:115`):
+- [x] Add `RunOptions.Parse` support for `export-frd --input <abs> --output-dir <abs> [--title <text>]`, with its own options record. `run` keeps its arguments unchanged.
+- [x] Publish `model.frd`, with its SHA-256, in the existing protocol v1 envelope, without changing the protocol (`Program.cs:7-23`, `Headless/README.md:115`):
   - engine `fempython`;
   - `engineeringStatus` as now: `not_checked` on success, `not_applicable` on failure;
   - each warning as an entry of the existing `messages[]`, with the code and the JSON path in the text;
   - errors as `ok: false` with `RunnerError` code `FRD_EXPORT_UNSUPPORTED`. Its `message` lists the first diagnostics (code and JSON path) and their total count.
   - Nothing is written to the output directory on error.
-- [ ] Update the headless README and the `headless-runner` skill.
+- [x] Update the headless README and the `headless-runner` skill.
 **Verification**:
 - Add `RunnerTests` cases for:
   - success: the artifact and its SHA-256, and the warnings in `messages[]`;
@@ -184,14 +184,14 @@ The LZH encoder and the record layouts, which so far are only inferred, come fir
 - **Ask the user before building**, because `bin/Release` is shared with WebPier and 関内EVピット.
 
 #### Step 10: Convert_Test button
-- [ ] Add a "JSON → FRD" button and a `*.json` dialog to the panel, and route dropped files by extension.
-- [ ] Write the `.frd` next to the input file. Show the warnings and errors in `Form2`. On error, write nothing.
+- [x] Add a "JSON → FRD" button and a `*.json` dialog to the panel, and route dropped files by extension.
+- [x] Write the `.frd` next to the input file. Show the warnings and errors in `Form2`. On error, write nothing.
 **Verification**:
 - `dotnet build FrameGConverter/FrameGConverter.sln -c Release` succeeds; the existing NETSDK1138 warning remains.
 - Converting a JSON exported in step 8 by hand shows the warnings and produces a `.frd`. The forward button can open that `.frd` again.
 
 #### Step 11: Hand over the FrameG check
-- [ ] Write the files the user will open in FrameG to `.tmp/frd-export-check/`: the 4_2 and バネ連衡なし round trips and the JSON from round trip 2. Add a short checklist, one item per group of records written:
+- [x] Write the files the user will open in FrameG to `.tmp/frd-export-check/`: the 4_2 and バネ連衡なし round trips and the JSON from round trip 2. Add a short checklist, one item per group of records written:
   - the file opens, and its title and file date are right;
   - nodes, members, material sheets and material marks;
   - supports and spring values;
@@ -233,3 +233,29 @@ The LZH encoder and the record layouts, which so far are only inferred, come fir
 None of these blocks implementation.
 - **Material mark C/G/H/A1 (resolved in step 5; the user confirms in FrameG).** Which mark the exporter writes does not change FrameWeb's analysis. Whether it changes FrameG's checks or printouts is unknown.
 - **Version of the templates.** The templates follow FrameG 4.6.3 (`$DatVer` 4.0603). Confirm in step 11 that the user's FrameG opens a file of that version.
+
+### Completion Evidence
+Implemented on 2026-10-22 after the user's approval (「実装して」).
+
+- **Tests.**
+  - `dotnet test FrameGConverter/Convert_Manager.Tests -c Release`: 120 passed. The new tests are `LzhArchiveWriterTests`, `FrdExporterTests` and `FrdSampleRoundTripTests`.
+  - FrameWebforCS tests filtered to `FrdExportRoundTripTests|InputFileLoaderTests|RigidZoneConversionTests|CalculationRequestTests`, `-c Release`: 23 passed.
+  - `dotnet test FrameWebforCS/Headless/tests -c Debug`: 64 passed (61 existing and 3 for `export-frd`).
+  - `dotnet build FrameGConverter/FrameGConverter.sln -c Release`: 0 errors; only the known NETSDK1138 warning.
+- **Independent decoder.** `FrameGConverter/tools/lzh_verify.py` reports OK for the 4 sample archives and for the 3 exported files in `.tmp/frd-export-check/`; their SHA-256 values are in that directory's README. The Convert_Test window was launched and its layout checked from a screenshot; its buttons were not clicked.
+- **Not done.**
+  - The shared `FrameWebforCS/Headless/bin/Release` exe was not rebuilt (it is still dated 2026-10-19); rebuilding it waits for the user's confirmation. The runner tests ran on `bin/Debug`.
+  - The check in FrameG is still open (step 11; see the TODO in `DESIGN.md`).
+- **Deviations from the plan.**
+  - The settings files come from `4_2-FrameG.frd` (FrameG 4.6.2). `バネ連衡なし.frd` turned out to carry pile tables, and 4_2 is the only sample without piles.
+  - The templates are C# string constants (`FrdTemplates.cs`) rather than embedded resources, which keeps their CRLF bytes independent of Git's line-ending conversion. A test compares them byte for byte with the sample.
+  - SevenZipExtractor does not report a damaged stream; it returns the wrong bytes. The tests therefore compare the CRC of the extracted data with the header CRC.
+  - `$2.txt` is written without the space FrameG puts after the node number. ConvertManager does not trim that space, and the resulting `"11 "` makes the calculation request fail.
+  - `バネ連衡なし.frd` contains train loads (mark 14), which are refused. Its round trip runs without those rows.
+  - The material name key `name` (ConvertManager's output) is read as well as `n`. Truncated names lose their trailing spaces.
+- **Problems in the existing code, outside this change, found by the round trips:**
+  - `fix_node.cs:52` keeps the trailing space of support node numbers, so the desktop cannot build a calculation request for a `.frd` with supports; the 4_2 sample shows it.
+  - `load.cs` (exchangeData) reads FrameG mark 9 with an empty direction, which `CalculationRequest` rejects.
+  - `CalculationRequest.Complete2D` looks for joint sheets as objects, but they are arrays, so a `.frd`'s joints keep xi/yi/xj/yj = 0 (out-of-plane releases).
+
+  The tests even these out on both sides and say so in comments.
