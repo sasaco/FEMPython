@@ -13,5 +13,5 @@ tmp/
 .agents/logs/
 .tmp/
 .vs
-Batch/Batchテスト/
+Batch/tests/
 Batch/Batchマニュアル/
