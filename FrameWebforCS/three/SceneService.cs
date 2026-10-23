@@ -116,7 +116,7 @@ namespace SingleFormsDemo
             this.PerspectiveCamera.LookAt(0, 0, 0);
             if (this.input_data.dimension == 2)
             {
-                this.OrthographicCamera.Up.Set(0, -1, 0);
+                this.OrthographicCamera.Up.Set(0, 1, 0);
                 this.OrthographicCamera.Position.Set(0, 0, -10);
                 this.OrthographicCamera.LookAt(0, 0, 0);
             }
@@ -135,10 +135,10 @@ namespace SingleFormsDemo
                     _perspectiveTarget = this.controls.Target.Clone();
                 var pos = this.OrthographicCamera.Position;
                 this.camera = this.OrthographicCamera;
-                this.camera.Up.Set(0, 1, 0);
+                this.camera.Up.Set(0, -1, 0);
                 this.camera.Position.X = pos.X;
                 this.camera.Position.Y = pos.Y;
-                this.camera.Position.Z = 10;
+                this.camera.Position.Z = -10;
                 if (this.controls != null)
                     this.controls.Target.Set(pos.X, pos.Y, 0);
                 this.camera.LookAt(pos.X, pos.Y, 0);
