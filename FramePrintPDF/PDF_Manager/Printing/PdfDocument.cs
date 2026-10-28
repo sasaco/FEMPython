@@ -14,7 +14,8 @@ namespace PDF_Manager.Printing
 {
     internal class PdfDocument : IDisposable
     {
-        internal const double ReferencePortraitFontSize = 9.572;
+        // FrameG's printout (原宿ボックス 0404 sample): MS Mincho, half-width advance 4.53 pt.
+        internal const double ReferencePortraitFontSize = 9.06;
         private PdfSharpCore.Pdf.PdfDocument document;
         private readonly int maxPages;
         private readonly CancellationToken cancellationToken;

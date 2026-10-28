@@ -197,8 +197,11 @@ internal static class PrintResultMetadata
         var members = presentation.ResultSet.Topology.Members.ToDictionary(member => member.MemberId,
             member =>
             {
+                // FrameG keeps the member name on its material (sheet 1); a member name wins.
                 string name = Text(saved["member"]?[member.MemberId]?["name"]);
-                string caption = $"部材 {member.MemberId} ({member.NodeI} - {member.NodeJ})" +
+                if (string.IsNullOrWhiteSpace(name))
+                    name = Text(saved["element"]?["1"]?[Text(saved["member"]?[member.MemberId]?["e"])]?["n"]);
+                string caption = $"部 材 {member.MemberId,2} ( {member.NodeI} - {member.NodeJ} )" +
                     (string.IsNullOrWhiteSpace(name) ? "" : " " + name);
                 return (Caption: caption, Labels: StationLabels(member,
                     rigid.GetValueOrDefault(member.MemberId) ?? [],

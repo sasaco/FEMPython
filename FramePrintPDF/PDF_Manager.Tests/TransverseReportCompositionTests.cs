@@ -27,7 +27,7 @@ public sealed class TransverseReportCompositionTests
         Assert.Contains("Node Data", pdf.Text);
         Assert.Contains("TITLE : Shared Style", pdf.Text);
         Assert.DoesNotContain("Page   1", pdf.Text);
-        Assert.All(PdfFontSizes(root), size => Assert.InRange(size, 9.571, 9.573));
+        Assert.All(PdfFontSizes(root), size => Assert.InRange(size, PdfDocument.ReferencePortraitFontSize - 0.001, PdfDocument.ReferencePortraitFontSize + 0.001));
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class TransverseReportCompositionTests
         Assert.Contains("Node Data", pdf.Text);
         Assert.Contains("Supporting Reaction", pdf.Text);
         Assert.True(pdf.Pages >= 2);
-        Assert.All(PdfFontSizes(root), size => Assert.InRange(size, 9.571, 9.573));
+        Assert.All(PdfFontSizes(root), size => Assert.InRange(size, PdfDocument.ReferencePortraitFontSize - 0.001, PdfDocument.ReferencePortraitFontSize + 0.001));
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class TransverseReportCompositionTests
         Assert.Contains("Node Data", pdf.Text);
         Assert.Contains("MEMBER FORCES", pdf.Text);
         Assert.True(pdf.Pages >= 2);
-        Assert.All(PdfFontSizes(root), size => Assert.InRange(size, 9.571, 9.573));
+        Assert.All(PdfFontSizes(root), size => Assert.InRange(size, PdfDocument.ReferencePortraitFontSize - 0.001, PdfDocument.ReferencePortraitFontSize + 0.001));
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class TransverseReportCompositionTests
 
         var pdf = Pdf(root, "portrait-pickup-reaction-shared-font");
         Assert.Contains("3.00", pdf.Text);
-        Assert.All(PdfFontSizes(root), size => Assert.InRange(size, 9.571, 9.573));
+        Assert.All(PdfFontSizes(root), size => Assert.InRange(size, PdfDocument.ReferencePortraitFontSize - 0.001, PdfDocument.ReferencePortraitFontSize + 0.001));
     }
 
     [Fact]
@@ -154,21 +154,27 @@ public sealed class TransverseReportCompositionTests
                      ("S", 379d), ("N", 437d) })
             Assert.InRange(Assert.Single(first, run => run.Text == text).X, expected - 6, expected + 6);
         Assert.InRange(Assert.Single(first, run => run.Text == "DIST.").Y, 742, 746);
-        foreach (var (text, expected) in new[] { ("0.000", 252d), ("123.45", 321d),
-                     ("20.00", 379d), ("10.00", 437d) })
-            Assert.InRange(first.First(run => run.Text == text).X, expected - 6, expected + 6);
         Assert.Contains(first, run => run.Text.StartsWith("MEMBER 1 ") && run.X >= 110 && run.X <= 250);
         using (var measurement = new PdfSharpCore.Pdf.PdfDocument())
         using (var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage()))
         {
+            var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
+            double Right((string Text, double X, double Y, int Page) run) => run.X + graphics.MeasureString(run.Text, font).Width;
+            // FrameG right-aligns DIST, M, S and N on its column edges, 158.4, 222.8, 280.4
+            // and 337.9 pt from the table's left edge at 115.7 (原宿ボックス 0404).
+            foreach (var (text, expected) in new[] { ("0.000", 274.1), ("123.45", 338.5),
+                         ("20.00", 396.1), ("10.00", 453.6) })
+                Assert.InRange(Right(first.First(run => run.Text == text)), expected - 1, expected + 1);
+            // A wider value in the same column keeps the right edge, not the left one.
+            Assert.InRange(Right(pdf.Runs.First(run => run.Text == "34.000")), 273.1, 275.1);
             var station = first.First(run => run.Text == "I-TAN");
             var distance = first.First(run => run.Text == "0.000");
             Assert.InRange(station.X + graphics.MeasureString(station.Text,
-                new PdfSharpCore.Drawing.XFont("MS Mincho", 9.572)).Width, 228, 236);
+                new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize)).Width, 228, 236);
             Assert.True(distance.X - station.X - graphics.MeasureString(station.Text,
-                new PdfSharpCore.Drawing.XFont("MS Mincho", 9.572)).Width >= 15);
+                new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize)).Width >= 15);
         }
-        Assert.InRange(Assert.Single(first, run => run.Text == "CASE 1 Load1").X, 129, 136);
+        Assert.InRange(Assert.Single(first, run => run.Text == "CASE  1 : Load1").X, 129, 136);
         Assert.InRange(first.First(run => run.Text.StartsWith("MEMBER 1 ")).X, 143, 150);
         Assert.Equal(95, pdf.Runs.Count(run => run.Text == "123.45"));
     }
@@ -202,9 +208,9 @@ public sealed class TransverseReportCompositionTests
             var station = first.First(run => run.Text == "I-TAN");
             var distance = first.First(run => run.Text == "0.000");
             Assert.InRange(station.X + graphics.MeasureString(station.Text,
-                new PdfSharpCore.Drawing.XFont("MS Mincho", 9.572)).Width, 147, 155);
+                new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize)).Width, 147, 155);
             Assert.True(distance.X - station.X - graphics.MeasureString(station.Text,
-                new PdfSharpCore.Drawing.XFont("MS Mincho", 9.572)).Width >= 15);
+                new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize)).Width >= 15);
         }
         Assert.Equal(95, pdf.Runs.Count(run => run.Text == "123.45"));
     }
@@ -233,7 +239,8 @@ public sealed class TransverseReportCompositionTests
         var nodes = pdf.Runs.Where(run => run.Text == "1").OrderBy(run => run.X).ToArray();
         Assert.InRange(nodes[0].X, 98, 110);
         Assert.InRange(nodes[0].Y, 690, 693);
-        Assert.All(pdf.Runs.Where(run => run.Page == 1), run => Assert.InRange(run.X, 65, 531));
+        // Right-aligned values start further right as the 9.06 pt glyphs are narrower (right edge 559.1 unchanged).
+        Assert.All(pdf.Runs.Where(run => run.Page == 1), run => Assert.InRange(run.X, 65, 532.5));
     }
 
     [Theory]
@@ -252,7 +259,7 @@ public sealed class TransverseReportCompositionTests
         var coefficientLine = Assert.Single(pdf.Runs.Where(run => run.Text.Contains(coefficient)));
         using var measurement = new PdfSharpCore.Pdf.PdfDocument();
         using var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage());
-        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", 9.572);
+        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
         double rightEdge = coefficientLine.X + graphics.MeasureString(coefficientLine.Text, font).Width;
         Assert.InRange(rightEdge, 40, 310);
     }
@@ -273,12 +280,19 @@ public sealed class TransverseReportCompositionTests
         root["fsec"] = cases;
         root["fsecName"] = names;
         var pdf = Pdf(root, "portrait-basic-forces");
-        Assert.Equal(30, pdf.Pages);
+        // A case fills the whole portrait page (FrameG): members 1-9 on its first page, the two
+        // 35-station members 10 and 11 on its second, so each case takes two pages.
+        Assert.Equal(20, pdf.Pages);
         Assert.Equal(950, pdf.Runs.Count(run => run.Text == "123.45"));
         Assert.DoesNotContain(pdf.Runs.Where(run => run.Page == 1), run => run.Text.StartsWith("MEMBER 10 "));
+        // Member 10 could have started on page 1 (room for its caption and a row above the
+        // 25 pt bottom margin) but moved to page 2 whole.
+        Assert.True(pdf.Runs.Where(run => run.Page == 1).Min(run => run.Y) - 25 > 13.5 + 9);
         Assert.Contains(pdf.Runs.Where(run => run.Page == 2), run => run.Text.StartsWith("MEMBER 10 "));
-        Assert.DoesNotContain(pdf.Runs.Where(run => run.Page == 2), run => run.Text.StartsWith("MEMBER 11 "));
-        Assert.Contains(pdf.Runs.Where(run => run.Page == 3), run => run.Text.StartsWith("MEMBER 11 "));
+        Assert.Contains(pdf.Runs.Where(run => run.Page == 2), run => run.Text.StartsWith("MEMBER 11 "));
+        Assert.Equal(70, pdf.Runs.Count(run => run.Page == 2 && run.Text == "123.45"));
+        Assert.Contains(pdf.Runs.Where(run => run.Page == 3), run => run.Text.StartsWith("CASE  2 "));
+        Assert.DoesNotContain(pdf.Runs.Where(run => run.Page == 3), run => run.Text.StartsWith("MEMBER 10 "));
         foreach (var page in pdf.Runs.GroupBy(run => run.Page))
             Assert.Single(page.Where(run => run.Text.StartsWith("CASE ")));
     }
@@ -415,7 +429,7 @@ public sealed class TransverseReportCompositionTests
         Assert.Equal(240, pdf.Runs.Count(run => Regex.IsMatch(run.Text, @"^-\d+[.]0000$")));
         using var measurement = new PdfSharpCore.Pdf.PdfDocument();
         using var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage());
-        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", 9.572);
+        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
         var pageTwo = pdf.Runs.Where(run => run.Page == 2).ToArray();
         foreach (int id in Enumerable.Range(1, 10))
         {
@@ -494,7 +508,9 @@ public sealed class TransverseReportCompositionTests
 
     [Theory]
     [InlineData(2, 1)]
-    [InlineData(100, 3)]
+    // A full portrait page holds 71 rows of member 2 after member 1 and 75 continuation rows,
+    // so 160 rows span three pages with a middle page of continuation rows only.
+    [InlineData(160, 3)]
     public void PortraitBasicKeepsSmallBlocksAndSplitsAnOversizedMemberWithoutLosingRows(int middleRows, int pages)
     {
         var root = Root();
@@ -513,11 +529,15 @@ public sealed class TransverseReportCompositionTests
         Assert.Equal(pages, pdf.Pages);
         var values = pdf.Runs.Where(run => run.Text == "123.45").ToArray();
         Assert.Equal(middleRows + 4, values.Length);
-        // A4 portrait basic tables use the short-side viewport; text remains
-        // above its bottom margin, even when a member must span several pages.
-        Assert.All(values, run => Assert.InRange(run.Y, 270, 820));
+        // A4 portrait basic tables use the whole page (FrameG); text remains
+        // above its 25 pt bottom margin, even when a member must span several pages.
+        Assert.All(values, run => Assert.InRange(run.Y, 25, 820));
         if (middleRows > 50)
-            Assert.True(pdf.Runs.Count(run => run.Text == "MEMBER 2 (I - J) Beam") >= 2);
+        {
+            Assert.Contains(values, run => run.Y < 270);
+            Assert.Equal(pages, pdf.Runs.Where(run => run.Text == "MEMBER 2 (I - J) Beam")
+                .Select(run => run.Page).Distinct().Count());
+        }
     }
 
     [Fact]
@@ -527,7 +547,9 @@ public sealed class TransverseReportCompositionTests
         root["pageOrientation"] = "Vertical";
         root["referenceResultLayout"] = true;
         string caption = "MEMBER " + new string('荷', 120);
-        var rows = new JArray(Enumerable.Range(0, 65).Select(i => new JObject
+        // The full portrait page holds 72 rows under the four-line caption, so 130 rows continue.
+        const int stations = 130;
+        var rows = new JArray(Enumerable.Range(0, stations).Select(i => new JObject
         {
             ["m"] = "5", ["n"] = "S" + i, ["stationLabel"] = "P" + i,
             ["memberCaption"] = caption, ["l"] = i, ["fx"] = 1, ["fy"] = 2, ["mz"] = 3,
@@ -536,7 +558,7 @@ public sealed class TransverseReportCompositionTests
         root["fsecName"] = JArray.Parse("""[["1","Long member"]]""");
         var pdf = Pdf(root, "portrait-long-member-caption");
         Assert.True(pdf.Pages >= 2);
-        Assert.Equal(65, pdf.Runs.Count(run => run.Text == "3.00"));
+        Assert.Equal(stations, pdf.Runs.Count(run => run.Text == "3.00"));
         foreach (var page in pdf.Runs.GroupBy(run => run.Page))
         {
             var fragments = page.Where(run => run.Text.StartsWith("MEMBER 荷") ||

@@ -64,7 +64,7 @@ public class FrdSampleRoundTripTests
         // Member names are cut to 30 bytes; FrameG's own names carry a stray digit at byte 30.
         foreach (var sheet in ((JObject)copy["element"]!).Properties())
             foreach (var material in ((JObject)sheet.Value).Properties())
-                ((JObject)material.Value).Remove("name");
+                ((JObject)material.Value).Remove("n");
         foreach (var sheet in ((JObject)copy["fix_node"]!).Properties())
             foreach (var row in (JArray)sheet.Value)
                 row["n"] = ((string)row["n"]!).Trim();

@@ -82,11 +82,24 @@ public sealed class TransversePrintMetadataTests
             rows.Select(row => row!["stationLabel"]!.GetValue<string>()));
         Assert.Equal(new[] { "S0", "S1", "S2", "S3", "S4" },
             rows.Select(row => row!["n"]!.GetValue<string>()));
-        Assert.All(rows, row => Assert.Equal("部材 M1 (1 - 2) Beam", row!["memberCaption"]!.GetValue<string>()));
+        // FrameG's member heading (原宿ボックス 0404): "部 材", the ID in two columns, spaced node pair.
+        Assert.All(rows, row => Assert.Equal("部 材 M1 ( 1 - 2 ) Beam", row!["memberCaption"]!.GetValue<string>()));
         Assert.Equal("Dead load", root["fsecName"]![0]![1]!.GetValue<string>());
         Assert.Equal("1/Static/0", root["fsecName"]![0]![0]!.GetValue<string>());
         Assert.Equal("剛域", root["fsecPickup"]!["1"]!["mz_max"]![1]!["stationLabel"]!.GetValue<string>());
         Assert.Equal("1", root["fsecCombine"]!["1"]!["mz_max"]![2]!["stationLabel"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void MemberHeadingFallsBackToTheSheetOneElementName()
+    {
+        // FrameG keeps the member name on its section (原宿ボックス 0404: 上床版, 剛域 …).
+        JsonObject saved = Saved();
+        saved["member"] = JsonNode.Parse("""{"M1":{"ni":"1","nj":"2","e":"7"}}""");
+        saved["element"] = JsonNode.Parse("""{"1":{"7":{"E":1,"A":1,"Iz":1,"n":"上床版"}}}""");
+        JsonObject root = Project(Presentation(Fixture(), saved), saved, new([PrintOption.SectionForce]));
+        Assert.All(root["fsec"]!.AsObject().Single().Value!.AsArray(),
+            row => Assert.Equal("部 材 M1 ( 1 - 2 ) 上床版", row!["memberCaption"]!.GetValue<string>()));
     }
 
     [Fact]

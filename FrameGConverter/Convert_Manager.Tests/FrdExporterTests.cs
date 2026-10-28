@@ -137,8 +137,8 @@ public class FrdExporterTests
         Assert.Equal(0.0417, (double)sheet1["3"]!["Iz"]!);
         Assert.Equal(0.45, (double)sheet2["3"]!["A"]!);
         Assert.Equal(0.045, (double)sheet2["2"]!["Iz"]!);
-        Assert.Equal("柱", (string)sheet1["1"]!["name"]!);
-        Assert.Equal("梁", (string)sheet1["2"]!["name"]!);
+        Assert.Equal("柱", (string)sheet1["1"]!["n"]!);
+        Assert.Equal("梁", (string)sheet1["2"]!["n"]!);
 
         var rigid = Assert.Single((JArray)json["rigid"]!);
         Assert.Equal("2", (string)rigid["m"]!);

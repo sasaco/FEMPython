@@ -84,6 +84,14 @@ namespace PDF_Manager.Printing
         internal static bool Enabled(Dictionary<string, object> root) =>
             root.TryGetValue("referenceResultLayout", out var enabled) && Convert.ToBoolean(enabled);
 
+        // FrameG's case heading: the ID right-aligned in two columns, then the separator and the name.
+        internal static string FrameGCaseTitle(string key, string name, string separator)
+        {
+            int suffix = key.IndexOf("/Static/", StringComparison.Ordinal);
+            string id = suffix < 0 ? key : key.Substring(0, suffix);
+            return $"CASE {id,2}" + (name == id || string.IsNullOrEmpty(name) ? "" : separator + name);
+        }
+
         internal static string CaseTitle(string key, string name)
         {
             // Canonical lookup keys include result kind and step; report captions do not.
@@ -104,7 +112,8 @@ namespace PDF_Manager.Printing
             var font = ReportFont(document, data);
             // The portrait basic-force reference keeps the compact table viewport;
             // its tall paper does not expand that report's vertical composition.
-            double pageHeight = squareViewport ? Math.Min(document.currentPage.Height, document.currentPage.Width) : (double)document.currentPage.Height;
+            // FrameG fills the portrait page with one case's member forces (原宿ボックス 0404).
+            double pageHeight = document.currentPage.Height;
             bool referenceBasic = data.referenceResultLayout && Portrait(document) && squareViewport;
             bool referencePickup = data.referenceResultLayout && Portrait(document) &&
                 (title.StartsWith("PICK UP ", StringComparison.Ordinal) || title.StartsWith("COMBINE ", StringComparison.Ordinal));
@@ -220,9 +229,12 @@ namespace PDF_Manager.Printing
                 {
                     bool stationLabel = (referenceBasic || referencePickup) && column == 0 &&
                         row >= pageHeaders.Length && !pageRows[row - pageHeaders.Length].IsCaption;
+                    // FrameG right-aligns the basic values on its own column edges; drawn below.
+                    bool basicValue = referenceBasic && column > 0 && row >= pageHeaders.Length &&
+                        !pageRows[row - pageHeaders.Length].IsCaption;
                     bool basicCaption = referenceBasic && column == 0 &&
                         (row == 1 || row >= pageHeaders.Length && pageRows[row - pageHeaders.Length].IsCaption);
-                    table[row, column] = stationLabel || basicCaption ? "" : cells[row][column];
+                    table[row, column] = stationLabel || basicCaption || basicValue ? "" : cells[row][column];
                     table.AlignX[row, column] = (referenceBasic || referencePickup) && column == 0 &&
                         row >= pageHeaders.Length && !pageRows[row - pageHeaders.Length].IsCaption ? "R"
                         : (referenceBasic || referencePickup) ? "L"
@@ -235,7 +247,15 @@ namespace PDF_Manager.Printing
                     if (titleRequired)
                     {
                         document.currentPos.X = referencePickup ? 91.9 : 115.7;
-                        Text.PrtText(document, referenceDisplacement ? "変 位 量" : title, font);
+                        string heading = referenceDisplacement ? "変 位 量" : title;
+                        Text.PrtText(document, heading, font);
+                        if (referenceBasic)
+                        {
+                            // FrameG underlines the report title with a hairline.
+                            double width = document.gfx.MeasureString(heading, font).Width;
+                            document.gfx.DrawLine(new XPen(XColors.Black, 0.12), document.currentPos.X - 3.7,
+                                document.currentPos.Y + 2.1, document.currentPos.X + width + 6.7, document.currentPos.Y + 2.1);
+                        }
                         document.addCurrentY(referenceBasic ? -0.8 : referencePickup ? -0.1 : 13.4);
                     }
                     double tableStartX = referenceBasic ? 115.7 : referencePickup ? 91.9 : 75.1;
@@ -268,6 +288,13 @@ namespace PDF_Manager.Printing
                                     document.currentPos = new XPoint(tableStartX + widths[0] - 20, baselineY);
                                     Text.PrtText(document, cells[row][0], font, XStringFormats.BottomRight);
                                 }
+                                if (referenceBasic && !pageRows[row - pageHeaders.Length].IsCaption)
+                                    for (int column = 1; column < cells[row].Length; column++)
+                                    {
+                                        if (string.IsNullOrEmpty(cells[row][column])) continue;
+                                        document.currentPos = new XPoint(tableStartX + BasicValueRight[column - 1], baselineY);
+                                        Text.PrtText(document, cells[row][column], font, XStringFormats.BottomRight);
+                                    }
                             }
                         }
                         if (referenceDisplacement && pageHeaders.Length == 2)
@@ -288,6 +315,9 @@ namespace PDF_Manager.Printing
                 if (next < rows.Count) document.NewPage(ref page);
             }
         }
+
+        // Right edges of DIST, M, S and N from the table's left edge in FrameG's member forces.
+        private static readonly double[] BasicValueRight = { 158.4, 222.8, 280.4, 337.9 };
 
         internal static void Displacements(PdfDocument document, PrintData data, ref int page,
             string leftTitle, IReadOnlyList<Disg> left, string rightTitle, IReadOnlyList<Disg> right)

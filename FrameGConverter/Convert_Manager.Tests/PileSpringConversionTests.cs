@@ -110,7 +110,7 @@ public class PileSpringConversionTests
     {
         var elements = Assert.IsType<JObject>(json["element"]!["1"]);
         return Assert.IsType<JObject>(json["member"]).Properties()
-            .Where(p => elements[p.Value.Value<string>("e")!]!.Value<string>("name")!.Contains('杭'))
+            .Where(p => elements[p.Value.Value<string>("e")!]!.Value<string>("n")!.Contains('杭'))
             .ToArray();
     }
 }

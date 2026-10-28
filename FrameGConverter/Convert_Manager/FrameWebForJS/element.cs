@@ -16,13 +16,15 @@ namespace Convert_Manager.FrameWebForJS
         // public double J;
         //public double Iy;
         public double Iz;
+        // FrameWeb の材料名称の鍵は "n"（FrameWebforCS の保存形式）。
+        [Newtonsoft.Json.JsonProperty("n")]
         public string name;
 
         // FrameWebには無い
         [NonSerialized]
         public string mark;
         [NonSerialized]
-        public double n; // 部材数
+        public double count; // 部材数
     }
 
     public class element

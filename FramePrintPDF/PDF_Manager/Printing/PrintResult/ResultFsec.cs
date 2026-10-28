@@ -513,7 +513,7 @@ namespace PDF_Manager.Printing
                 foreach (var entry in fsecs)
                 {
                     ReferenceResultLayout.SingleForces(mc, data, ref indexPage,
-                        ReferenceResultLayout.CaseTitle(entry.Key, fsecnames[entry.Key]),
+                        ReferenceResultLayout.FrameGCaseTitle(entry.Key, fsecnames[entry.Key], " : "),
                         ((List<Fsec>)entry.Value).Where(row => !row.dummy).ToList(), false, next);
                     next = true;
                 }
