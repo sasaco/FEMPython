@@ -166,8 +166,7 @@ internal static class CalculationDerivedPresenter
                         {
                             double[] values = row.Values.Select(value => sign * value).ToArray();
                             if (!selected.TryGetValue(row.Key, out var current) ||
-                                (maximum ? values[focus] > current.Values[focus] :
-                                    values[focus] < current.Values[focus]))
+                                Beats(values[focus], current.Values[focus], maximum, laterWinsTie: true))
                                 selected[row.Key] = (row, values, source);
                         }
                     }
@@ -247,10 +246,8 @@ internal static class CalculationDerivedPresenter
                         {
                             string key = Key(row.EntityId, row.StationId);
                             if (!selected.TryGetValue(key, out var current) ||
-                                (maximum ? row.Components[componentNames[focus]] >
-                                    current.Components[componentNames[focus]] :
-                                    row.Components[componentNames[focus]] <
-                                    current.Components[componentNames[focus]]))
+                                Beats(row.Components[componentNames[focus]],
+                                    current.Components[componentNames[focus]], maximum, laterWinsTie: false))
                                 selected[key] = row with { SourceCaseId = combinationId };
                         }
                     }
@@ -261,6 +258,17 @@ internal static class CalculationDerivedPresenter
 
         return stages;
     }
+
+    // Values within TieTolerance are equal, so solver round-off alone (e.g. +T and -T on a wall's
+    // axial force) does not decide. On a tie FrameG takes the later DEFINE alternative but keeps
+    // the earlier COMBINE of a PICKUP (2026-10-29, 原宿ボックス 0404: wall N takes -T and LP, and
+    // PICKUP 5 keeps COMBINE 8 over 9).
+    private const double TieTolerance = 1e-6;
+
+    private static bool Beats(double candidate, double current, bool maximum, bool laterWinsTie) =>
+        laterWinsTie
+            ? maximum ? candidate >= current - TieTolerance : candidate <= current + TieTolerance
+            : maximum ? candidate > current + TieTolerance : candidate < current - TieTolerance;
 
     private static SourceRow[] SectionRows(StaticAnalysisResult result)
     {

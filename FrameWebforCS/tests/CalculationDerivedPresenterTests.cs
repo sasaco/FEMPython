@@ -164,6 +164,61 @@ public sealed class CalculationDerivedPresenterTests
     }
 
     [Fact]
+    public void RoundOffTiesTakeTheLaterDefineAlternativeButKeepTheEarlierPickupCombination()
+    {
+        // FrameG: a tie within solver round-off takes the later DEFINE alternative (e.g. -T over +T),
+        // but a PICKUP keeps its earlier COMBINE. Case 1's dx is 1e-9 larger than case 2's.
+        JsonObject root = JsonNode.Parse(Fixture("single-static"))!.AsObject();
+        JsonObject originalCase = root["cases"]!.AsArray()[0]!.AsObject();
+        JsonObject originalResult = root["results"]!.AsArray()[0]!.AsObject();
+        var cases = new JsonArray();
+        var results = new JsonArray();
+        foreach (var (id, dx, dy) in new[] { ("1", 3.0 + 1e-9, 1.0), ("2", 3.0, 2.0) })
+        {
+            var resultCase = (JsonObject)originalCase.DeepClone();
+            var result = (JsonObject)originalResult.DeepClone();
+            resultCase["case_id"] = id;
+            result["case_id"] = id;
+            result["node_displacements"]!.AsArray()[1]!["components"]!["dx"] = dx;
+            result["node_displacements"]!.AsArray()[1]!["components"]!["dy"] = dy;
+            cases.Add(resultCase);
+            results.Add(result);
+        }
+        root["cases"] = cases;
+        root["results"] = results;
+        var definitions = new Dictionary<int, clsCombine<int>>
+        {
+            [1] = Row("10", 1, (1, 1), (2, 2)),
+            [2] = Row("11", 2, (1, 1)),
+            [3] = Row("12", 3, (1, 2)),
+        };
+        var combinations = new Dictionary<int, clsCombine<double>>
+        {
+            [1] = Row("40", 1, (10, 1.0)),
+            [2] = Row("41", 2, (11, 1.0)),
+            [3] = Row("42", 3, (12, 1.0)),
+        };
+        var pickups = new Dictionary<int, clsCombine<int>>
+        {
+            [1] = Row("P", 1, (1, 41), (2, 42)),
+        };
+
+        var derived = CalculationDerivedPresenter.Build(AnalysisResultSetJson.Deserialize(root.ToJsonString()),
+            2, definitions, combinations, pickups);
+
+        CalculationDerivedCase define = Assert.Single(derived.Defines, item => item.Id == "10");
+        foreach (string mode in new[] { "dx_max", "dx_min" })
+        {
+            CalculationDerivedRow row = Assert.Single(define.Displacements[mode], item => item.EntityId == "2");
+            Assert.Equal("2", row.SourceCaseId);
+            Assert.Equal(2.0, row.Components["dy"]);
+        }
+        CalculationDerivedCase pickup = Assert.Single(derived.Pickups);
+        foreach (string mode in new[] { "dx_max", "dx_min" })
+            Assert.Equal("41", Assert.Single(pickup.Displacements[mode], item => item.EntityId == "2").SourceCaseId);
+    }
+
+    [Fact]
     public void NonStaticOperandIsRejectedForDefineAndFallbackCombine()
     {
         JsonObject root = JsonNode.Parse(Fixture("nonlinear-steps"))!.AsObject();
