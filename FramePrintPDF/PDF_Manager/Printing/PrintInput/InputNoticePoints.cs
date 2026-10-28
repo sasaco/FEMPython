@@ -19,6 +19,8 @@ namespace PDF_Manager.Printing
 
         private List<NoticePoint> noticepoints = new List<NoticePoint>();
 
+        internal IReadOnlyList<NoticePoint> Rows => noticepoints;
+
         // 要素情報
         private InputMember Member = null;
 

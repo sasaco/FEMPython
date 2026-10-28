@@ -99,7 +99,14 @@ public class PrintInput
                 mc = new PdfDocument(data, ref indexPage, maxPages, cancellationToken);
 
                 //CHECK HAS PRINT INPUT DATA
-                if (data.hasPrintInputData)
+                if (data.hasPrintInputData && FrameGInputLayout.Applies(mc, data))
+                {
+                    // FrameG's input copy: its own section order and layout (原宿ボックス 0404).
+                    FrameGInputLayout.Print(mc, data, ref indexPage);
+                    hasPreviousData = prevIndexPage != indexPage;
+                    prevIndexPage = indexPage;
+                }
+                else if (data.hasPrintInputData)
                 {
                     //入力データ
                     //  格点

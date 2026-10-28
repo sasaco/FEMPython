@@ -25,6 +25,9 @@ namespace PDF_Manager.Printing
 
         private Dictionary<int, List<FixMember>> fixmembers = new Dictionary<int, List<FixMember>>();
 
+        // Spring rows by TYPE (sheet) number.
+        internal IReadOnlyDictionary<int, List<FixMember>> Sheets => fixmembers;
+
         public InputFixMember(Dictionary<string, object> value)
         {
             if (!value.ContainsKey(KEY))

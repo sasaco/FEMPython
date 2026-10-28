@@ -18,6 +18,7 @@ namespace PDF_Manager.Printing
         public double P1;
         public double P2;
         public int row;
+        public string ms; // FrameG の M/S: 局所 y の荷重を曲げ用 (M) とせん断用 (S) に分ける印
     }
 
     public class LoadNode
@@ -75,6 +76,7 @@ namespace PDF_Manager.Printing
                         lm.direction = dataManager.toString(member["direction"]);
                         lm.mark = dataManager.toString(member["mark"]);
                         lm.L1 = dataManager.toString(member["L1"]);
+                        lm.ms = dataManager.toString(member["ms"]);
                         lm.L2 = dataManager.parseDouble(member["L2"]);
                         lm.P1 = dataManager.parseDouble(member["P1"]);
                         lm.P2 = dataManager.parseDouble(member["P2"]);

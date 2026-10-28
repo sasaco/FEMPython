@@ -24,7 +24,7 @@ public sealed class TransverseReportCompositionTests
         root["node"] = JObject.Parse("""{"1":{"x":0,"y":1,"z":0}}""");
 
         var pdf = Pdf(root, "portrait-input-only-shared-font");
-        Assert.Contains("Node Data", pdf.Text);
+        Assert.Contains("NODE DATA", pdf.Text);
         Assert.Contains("TITLE : Shared Style", pdf.Text);
         Assert.DoesNotContain("Page   1", pdf.Text);
         Assert.All(PdfFontSizes(root), size => Assert.InRange(size, PdfDocument.ReferencePortraitFontSize - 0.001, PdfDocument.ReferencePortraitFontSize + 0.001));
@@ -42,7 +42,7 @@ public sealed class TransverseReportCompositionTests
         root["reacName"] = JArray.Parse("""[["1","Reaction Case"]]""");
 
         var pdf = Pdf(root, "portrait-input-and-reaction-shared-font");
-        Assert.Contains("Node Data", pdf.Text);
+        Assert.Contains("NODE DATA", pdf.Text);
         Assert.Contains("Supporting Reaction", pdf.Text);
         Assert.True(pdf.Pages >= 2);
         Assert.All(PdfFontSizes(root), size => Assert.InRange(size, PdfDocument.ReferencePortraitFontSize - 0.001, PdfDocument.ReferencePortraitFontSize + 0.001));
@@ -60,7 +60,7 @@ public sealed class TransverseReportCompositionTests
         root["fsecName"] = JArray.Parse("""[["1","Force Case"]]""");
 
         var pdf = Pdf(root, "portrait-input-and-force-shared-font");
-        Assert.Contains("Node Data", pdf.Text);
+        Assert.Contains("NODE DATA", pdf.Text);
         Assert.Contains("MEMBER FORCES", pdf.Text);
         Assert.True(pdf.Pages >= 2);
         Assert.All(PdfFontSizes(root), size => Assert.InRange(size, PdfDocument.ReferencePortraitFontSize - 0.001, PdfDocument.ReferencePortraitFontSize + 0.001));

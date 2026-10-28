@@ -24,6 +24,9 @@ namespace PDF_Manager.Printing
 
         private Dictionary<int, Dictionary<string, Element>> elements = new Dictionary<int, Dictionary<string, Element>>();
 
+        // Materials by TYPE (sheet) number.
+        internal IReadOnlyDictionary<int, Dictionary<string, Element>> Sheets => elements;
+
         /// <summary>
         /// データを読み込む
         /// </summary>
