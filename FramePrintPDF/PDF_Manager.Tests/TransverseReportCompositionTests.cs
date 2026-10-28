@@ -216,11 +216,12 @@ public sealed class TransverseReportCompositionTests
     }
 
     [Fact]
-    public void PortraitDisplacementReferencePairsUseCentralColumns()
+    public void PortraitDisplacementReferenceUsesOneCentralColumnOfCases()
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
         root["referenceResultLayout"] = true;
+        root["node"] = InputNodes(12);
         var cases = new JObject();
         var names = new JArray();
         foreach (int id in new[] { 1, 2 })
@@ -232,16 +233,32 @@ public sealed class TransverseReportCompositionTests
         root["disg"] = cases;
         root["disgName"] = names;
         var pdf = Pdf(root, "portrait-displacement-reference-grid");
-        Assert.InRange(Assert.Single(pdf.Runs, run => run.Text == "変 位 量").X, 110, 121);
-        Assert.InRange(Assert.Single(pdf.Runs, run => run.Text == "CASE 1 Load1").X, 69, 81);
-        Assert.InRange(Assert.Single(pdf.Runs, run => run.Text == "CASE 2 Load2").X, 320, 332);
-        Assert.InRange(pdf.Runs.First(run => run.Text == "JOINT").Y, 731, 734);
-        var nodes = pdf.Runs.Where(run => run.Text == "1").OrderBy(run => run.X).ToArray();
-        Assert.InRange(nodes[0].X, 98, 110);
-        Assert.InRange(nodes[0].Y, 690, 693);
-        // Right-aligned values start further right as the 9.06 pt glyphs are narrower (right edge 559.1 unchanged).
-        Assert.All(pdf.Runs.Where(run => run.Page == 1), run => Assert.InRange(run.X, 65, 532.5));
+        Assert.Equal(1, pdf.Pages);
+        // FrameG (原宿ボックス 0404): one column of cases, each caption at 136.1 pt under the previous case.
+        Assert.InRange(Assert.Single(pdf.Runs, run => run.Text == "変  位  量").X, 110, 121);
+        var first = Assert.Single(pdf.Runs, run => run.Text == "CASE  1  Load1");
+        var second = Assert.Single(pdf.Runs, run => run.Text == "CASE  2  Load2");
+        Assert.InRange(first.X, 135, 137);
+        Assert.InRange(second.X, 135, 137);
+        Assert.True(first.Y - second.Y >= 12 * 8.9, "The second case follows every row of the first.");
+        Assert.InRange(Assert.Single(pdf.Runs, run => run.Text == "JOINT").Y, 739, 743);
+        using var measurement = new PdfSharpCore.Pdf.PdfDocument();
+        using var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage());
+        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
+        double Right((string Text, double X, double Y, int Page) run) => run.X + graphics.MeasureString(run.Text, font).Width;
+        var nodes = pdf.Runs.Where(run => run.Text == "1").OrderByDescending(run => run.Y).ToArray();
+        Assert.Equal(2, nodes.Length);
+        Assert.All(nodes, node => Assert.InRange(Right(node), 270.4, 272.4));
+        Assert.InRange(nodes[0].Y, 703, 707);
+        Assert.Equal(12, pdf.Runs.Count(run => run.Text == "-1.0000"));
+        Assert.Equal(12, pdf.Runs.Count(run => run.Text == "-2.0000"));
+        // Everything lies in FrameG's central band, inside the 71.6 pt left and 25 pt right margins.
+        Assert.All(pdf.Runs, run => Assert.InRange(run.X, 110, 442));
+        Assert.All(pdf.Runs, run => Assert.InRange(Right(run), 110, 442));
     }
+
+    private static JObject InputNodes(int count) => new(Enumerable.Range(1, count).Select(id =>
+        new JProperty(id.ToString(), new JObject { ["x"] = id, ["y"] = 0, ["z"] = 0 })));
 
     [Theory]
     [InlineData("1.367")]
@@ -252,6 +269,7 @@ public sealed class TransverseReportCompositionTests
         root["pageOrientation"] = "Vertical";
         root["referenceResultLayout"] = true;
         string name = new string('X', 44) + " " + coefficient + "*D1";
+        root["node"] = InputNodes(1);
         root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":1,"dy":2,"rz":3}]}""");
         root["disgName"] = new JArray { new JArray("1", name) };
         var pdf = Pdf(root, "numeric-coefficient-" + coefficient);
@@ -261,7 +279,10 @@ public sealed class TransverseReportCompositionTests
         using var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage());
         var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
         double rightEdge = coefficientLine.X + graphics.MeasureString(coefficientLine.Text, font).Width;
-        Assert.InRange(rightEdge, 40, 310);
+        // The FrameG column starts at 136.1 pt and spans the page, so the caption may run to the
+        // 25 pt right margin (595 - 25) rather than to the former left panel's 310 pt edge.
+        Assert.InRange(coefficientLine.X, 135, 137);
+        Assert.InRange(rightEdge, 136, 570);
     }
 
     [Fact]
@@ -280,19 +301,24 @@ public sealed class TransverseReportCompositionTests
         root["fsec"] = cases;
         root["fsecName"] = names;
         var pdf = Pdf(root, "portrait-basic-forces");
-        // A case fills the whole portrait page (FrameG): members 1-9 on its first page, the two
-        // 35-station members 10 and 11 on its second, so each case takes two pages.
-        Assert.Equal(20, pdf.Pages);
+        // A case fills the whole portrait page (FrameG): members 1-9 on its first page, and each
+        // 35-station member (10, then 11) on a page of its own, as FrameG's 60 pt bottom margin
+        // leaves no room for both; each case takes three pages.
+        Assert.Equal(30, pdf.Pages);
         Assert.Equal(950, pdf.Runs.Count(run => run.Text == "123.45"));
         Assert.DoesNotContain(pdf.Runs.Where(run => run.Page == 1), run => run.Text.StartsWith("MEMBER 10 "));
         // Member 10 could have started on page 1 (room for its caption and a row above the
-        // 25 pt bottom margin) but moved to page 2 whole.
-        Assert.True(pdf.Runs.Where(run => run.Page == 1).Min(run => run.Y) - 25 > 13.5 + 9);
+        // 60 pt bottom margin) but moved to page 2 whole; member 11 likewise moved to page 3.
+        Assert.True(pdf.Runs.Where(run => run.Page == 1).Min(run => run.Y) - PdfDocument.FrameGBottom > 13.5 + 9);
+        Assert.True(pdf.Runs.Where(run => run.Page == 2).Min(run => run.Y) - PdfDocument.FrameGBottom > 13.5 + 9);
         Assert.Contains(pdf.Runs.Where(run => run.Page == 2), run => run.Text.StartsWith("MEMBER 10 "));
-        Assert.Contains(pdf.Runs.Where(run => run.Page == 2), run => run.Text.StartsWith("MEMBER 11 "));
-        Assert.Equal(70, pdf.Runs.Count(run => run.Page == 2 && run.Text == "123.45"));
-        Assert.Contains(pdf.Runs.Where(run => run.Page == 3), run => run.Text.StartsWith("CASE  2 "));
-        Assert.DoesNotContain(pdf.Runs.Where(run => run.Page == 3), run => run.Text.StartsWith("MEMBER 10 "));
+        Assert.DoesNotContain(pdf.Runs.Where(run => run.Page == 2), run => run.Text.StartsWith("MEMBER 11 "));
+        Assert.Contains(pdf.Runs.Where(run => run.Page == 3), run => run.Text.StartsWith("MEMBER 11 "));
+        Assert.Equal(35, pdf.Runs.Count(run => run.Page == 2 && run.Text == "123.45"));
+        Assert.Equal(35, pdf.Runs.Count(run => run.Page == 3 && run.Text == "123.45"));
+        Assert.All(pdf.Runs.Where(run => run.Text == "123.45"), run => Assert.True(run.Y >= PdfDocument.FrameGBottom));
+        Assert.Contains(pdf.Runs.Where(run => run.Page == 4), run => run.Text.StartsWith("CASE  2 "));
+        Assert.DoesNotContain(pdf.Runs.Where(run => run.Page == 4), run => run.Text.StartsWith("MEMBER 10 "));
         foreach (var page in pdf.Runs.GroupBy(run => run.Page))
             Assert.Single(page.Where(run => run.Text.StartsWith("CASE ")));
     }
@@ -352,11 +378,12 @@ public sealed class TransverseReportCompositionTests
     }
 
     [Fact]
-    public void PortraitDisplacementPrintsFiveCasePairsAndFiveCombinationPairsOnSeparatePages()
+    public void PortraitDisplacementPrintsTenCasesInOneColumnAndFiveCombinationPairsOnSeparatePages()
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
         root["referenceResultLayout"] = true;
+        root["node"] = InputNodes(12);
         var cases = new JObject();
         var combinations = new JObject();
         var names = new JArray();
@@ -378,16 +405,23 @@ public sealed class TransverseReportCompositionTests
         root["disgCombineName"] = names.DeepClone();
         root["ordinaryDisplacementCombinations"] = ordinary;
         var pdf = Pdf(root, "portrait-displacement-and-combine");
-        Assert.Equal(2, pdf.Pages);
+        // FrameG's single column holds five whole 12-node cases per page, so the basic cases take
+        // pages 1-2; the combinations keep their paired layout and start on page 3.
+        Assert.Equal(3, pdf.Pages);
         Assert.Equal(240, pdf.Runs.Count(run => Regex.IsMatch(run.Text, @"^-\d+[.]0000$")));
         foreach (int id in Enumerable.Range(1, 10))
         {
-            Assert.Contains(pdf.Runs.Where(run => run.Page == 1), run => run.Text == "CASE " + id + " Load" + id);
-            Assert.Contains(pdf.Runs.Where(run => run.Page == 2), run => run.Text.StartsWith("MIX. " + id + " Load" + id + " "));
+            string caption = ReferenceResultLayout.FrameGCaseTitle(id.ToString(), "Load" + id, "  ");
+            var basic = Assert.Single(pdf.Runs, run => run.Text == caption);
+            Assert.Equal(id <= 5 ? 1 : 2, basic.Page);
+            Assert.InRange(basic.X, 135, 137);
+            Assert.Contains(pdf.Runs.Where(run => run.Page == 3), run => run.Text.StartsWith("MIX. " + id + " Load" + id + " "));
         }
+        // One heading per basic page and one per combination panel.
         Assert.Equal(4, pdf.Runs.Count(run => run.Text == "JOINT"));
         Assert.Equal(4, pdf.Runs.Count(run => run.Text == "NO."));
-        Assert.All(pdf.Runs.Where(run => Regex.IsMatch(run.Text, @"^-\d+[.]0000$")), run => Assert.InRange(run.Y, 25, 780));
+        Assert.All(pdf.Runs.Where(run => Regex.IsMatch(run.Text, @"^-\d+[.]0000$")),
+            run => Assert.InRange(run.Y, PdfDocument.FrameGBottom, 780));
     }
 
     [Fact]
@@ -423,25 +457,31 @@ public sealed class TransverseReportCompositionTests
         root["disgCombine"] = combinations;
         root["disgCombineName"] = names.DeepClone();
         root["ordinaryDisplacementCombinations"] = ordinary;
+        root["node"] = InputNodes(12);
 
         var pdf = Pdf(root, "portrait-long-formula-displacement");
-        Assert.Equal(2, pdf.Pages);
+        // The basic cases fill FrameG's single column on pages 1-2 (five whole cases a page);
+        // the paired combinations follow on page 3.
+        Assert.Equal(3, pdf.Pages);
         Assert.Equal(240, pdf.Runs.Count(run => Regex.IsMatch(run.Text, @"^-\d+[.]0000$")));
+        foreach (int id in Enumerable.Range(1, 10))
+            Assert.Equal(id <= 5 ? 1 : 2, Assert.Single(pdf.Runs, run => run.Text ==
+                ReferenceResultLayout.FrameGCaseTitle(id.ToString(), "Rail transverse load pattern extended " + id, "  ")).Page);
         using var measurement = new PdfSharpCore.Pdf.PdfDocument();
         using var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage());
         var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
-        var pageTwo = pdf.Runs.Where(run => run.Page == 2).ToArray();
+        var combinationPage = pdf.Runs.Where(run => run.Page == 3).ToArray();
         foreach (int id in Enumerable.Range(1, 10))
         {
             string caption = "MIX. " + id + " Rail transverse load pattern extended " + id + " " + formulas[id - 1];
             bool left = id % 2 == 1;
             bool InPanel((string Text, double X, double Y, int Page) run) => left ? run.X < 300 : run.X >= 300;
-            int start = Array.FindIndex(pageTwo, run => InPanel(run) && run.Text.StartsWith("MIX. " + id + " "));
+            int start = Array.FindIndex(combinationPage, run => InPanel(run) && run.Text.StartsWith("MIX. " + id + " "));
             Assert.True(start >= 0, caption);
-            int firstNode = Array.FindIndex(pageTwo, start + 1,
+            int firstNode = Array.FindIndex(combinationPage, start + 1,
                 run => InPanel(run) && run.Text == "1" && run.X > (left ? 95 : 345));
             Assert.True(firstNode > start, caption);
-            var fragments = pageTwo.Skip(start).Take(firstNode - start).Where(InPanel).ToArray();
+            var fragments = combinationPage.Skip(start).Take(firstNode - start).Where(InPanel).ToArray();
             string printed = string.Concat(fragments.Select(run => run.Text));
             Assert.Equal(caption.Replace(" ", ""), printed.Replace(" ", ""));
             Assert.All(fragments, run => Assert.True(run.X + graphics.MeasureString(run.Text, font).Width <=
@@ -456,11 +496,12 @@ public sealed class TransverseReportCompositionTests
     }
 
     [Fact]
-    public void PortraitDisplacementContinuationCaptionsStayInsideTheirPanels()
+    public void PortraitDisplacementLongCaseContinuesOnNextPagesWithoutLosingRowsOrCaptions()
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
         root["referenceResultLayout"] = true;
+        root["node"] = InputNodes(120);
         var cases = new JObject();
         var names = new JArray();
         foreach (int id in new[] { 1, 2 })
@@ -472,14 +513,42 @@ public sealed class TransverseReportCompositionTests
         root["disg"] = cases;
         root["disgName"] = names;
         var pdf = Pdf(root, "portrait-displacement-continuation-captions");
-        Assert.True(pdf.Pages >= 2);
+        // A 120-node case is taller than a page: it continues on the next page under a repeated
+        // heading, and the next case starts on a fresh page rather than splitting further.
+        Assert.True(pdf.Pages >= 4);
         Assert.Equal(240, pdf.Runs.Count(run => Regex.IsMatch(run.Text, @"^-\d+[.]0000$")));
+        using var measurement = new PdfSharpCore.Pdf.PdfDocument();
+        using var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage());
+        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
+        foreach (int id in new[] { 1, 2 })
+        {
+            var values = pdf.Runs.Where(run => run.Text == "-" + id + ".0000").ToArray();
+            Assert.Equal(120, values.Length);
+            Assert.True(values.Select(run => run.Page).Distinct().Count() >= 2, "The case continues on another page.");
+            // Rows keep the input-node order across the page break: 1..120 in reading order.
+            var ids = pdf.Runs.Where(run => values.Any(value => value.Page == run.Page && Math.Abs(value.Y - run.Y) < 0.01) &&
+                Regex.IsMatch(run.Text, @"^\d+$")).Select(run => int.Parse(run.Text)).ToArray();
+            Assert.Equal(Enumerable.Range(1, 120), ids);
+            // The caption heads the case on its first page and is repeated on each continuation page.
+            var captions = pdf.Runs.Where(run => run.Text.StartsWith("CASE  " + id + "  ")).ToArray();
+            Assert.Equal(values.Select(run => run.Page).Distinct().OrderBy(page => page),
+                captions.Select(run => run.Page).OrderBy(page => page));
+            foreach (var caption in captions)
+            {
+                Assert.True(caption.Y > values.Where(run => run.Page == caption.Page).Max(run => run.Y));
+                Assert.InRange(caption.X, 135, 137);
+                Assert.InRange(caption.X + graphics.MeasureString(caption.Text, font).Width, 136, 570);
+            }
+        }
+        Assert.True(pdf.Runs.Where(run => run.Text.StartsWith("CASE  2  ")).Min(run => run.Page) >
+            pdf.Runs.Where(run => run.Text == "-1.0000").Max(run => run.Page));
         foreach (int page in Enumerable.Range(1, pdf.Pages))
         {
             var runs = pdf.Runs.Where(run => run.Page == page).ToArray();
-            Assert.Contains(runs, run => run.Text.StartsWith("CASE 1 ") && run.X >= 65 && run.X < 325);
-            Assert.Contains(runs, run => run.Text.StartsWith("CASE 2 ") && run.X >= 325 && run.X < 535);
+            Assert.Single(runs, run => run.Text == "変  位  量");
+            Assert.Single(runs, run => run.Text == "JOINT");
             Assert.All(runs, run => Assert.InRange(run.X, 0, 595));
+            Assert.All(runs, run => Assert.InRange(run.Y, PdfDocument.FrameGBottom, 842));
         }
     }
 
@@ -489,21 +558,30 @@ public sealed class TransverseReportCompositionTests
         var root = Root();
         root["pageOrientation"] = "Vertical";
         root["referenceResultLayout"] = true;
+        root["node"] = InputNodes(1);
         root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":1,"dy":2,"rz":3}],"2":[{"id":"1","dx":4,"dy":5,"rz":6}]}""");
         root["disgName"] = JArray.Parse("""[["1","Left"],["2","Right"]]""");
         var pdf = Pdf(root, "portrait-displacement-joint-heading");
-        var headings = pdf.Runs.Where(run => run.Text == "JOINT").OrderBy(run => run.X).ToArray();
-        var labels = pdf.Runs.Where(run => run.Text == "NO.").OrderBy(run => run.X).ToArray();
-        Assert.Equal(2, headings.Length);
-        Assert.Equal(2, labels.Length);
-        Assert.InRange(headings[0].X, 87, 93);
-        Assert.InRange(headings[1].X, 337, 343);
-        Assert.All(headings.Zip(labels), pair =>
+        // FrameG's single column has one heading: "JOINT" over "NO.", both ending on the right
+        // edge of the ID column, with the IDs right-aligned inside it.
+        var heading = Assert.Single(pdf.Runs, run => run.Text == "JOINT");
+        var label = Assert.Single(pdf.Runs, run => run.Text == "NO.");
+        Assert.InRange(heading.X, 251, 254);
+        Assert.True(heading.Y > label.Y);
+        using var measurement = new PdfSharpCore.Pdf.PdfDocument();
+        using var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage());
+        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
+        double Right((string Text, double X, double Y, int Page) run) => run.X + graphics.MeasureString(run.Text, font).Width;
+        Assert.InRange(Math.Abs(Right(heading) - Right(label)), 0, 0.5);
+        var ids = pdf.Runs.Where(run => run.Text == "1").ToArray();
+        Assert.Equal(2, ids.Length);
+        Assert.All(ids, id =>
         {
-            Assert.InRange(Math.Abs(pair.First.X - pair.Second.X), 0, 0.1);
-            Assert.True(pair.First.Y > pair.Second.Y);
+            Assert.InRange(id.X, heading.X, Right(heading));
+            Assert.InRange(Right(id), heading.X, Right(heading));
         });
-        Assert.InRange(Assert.Single(pdf.Runs, run => run.Text == "CASE 1 Left").X, 69, 81);
+        Assert.InRange(Assert.Single(pdf.Runs, run => run.Text == "CASE  1  Left").X, 135, 137);
+        Assert.InRange(Assert.Single(pdf.Runs, run => run.Text == "CASE  2  Right").X, 135, 137);
     }
 
     [Theory]
@@ -734,8 +812,10 @@ public sealed class TransverseReportCompositionTests
         root["disgName"] = new JArray { new JArray("1", name) };
         var pdf = Pdf(root, "long-caption-" + orientation);
         Assert.Contains(name, pdf.Text.Replace("\n", ""));
-        Assert.DoesNotContain(pdf.Runs, run => run.Text == "CASE 1 " + name);
-        Assert.Contains(pdf.Runs, run => run.Text.StartsWith("CASE 1 ") && run.Text.Length < name.Length);
+        // Portrait prints FrameG's single-column caption "CASE  1  name"; landscape keeps paired panels.
+        string prefix = orientation == "Vertical" ? "CASE  1  " : "CASE 1 ";
+        Assert.DoesNotContain(pdf.Runs, run => run.Text == prefix + name);
+        Assert.Contains(pdf.Runs, run => run.Text.StartsWith(prefix) && run.Text.Length < name.Length);
     }
 
     [Fact]
@@ -765,7 +845,8 @@ public sealed class TransverseReportCompositionTests
         root["pageOrientation"] = orientation;
         root["referenceResultLayout"] = true;
         root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":1,"dy":2,"rz":3}]}""");
-        root["disgName"] = new JArray { new JArray("1", new string('荷', 2000)) };
+        // Wrapped across the portrait page, the caption must still be taller than a page.
+        root["disgName"] = new JArray { new JArray("1", new string('荷', 8000)) };
         int active = PdfDocument.ActiveDocumentCount;
         var failure = Assert.Throws<InvalidOperationException>(() => new PrintInput(JObject.FromObject(root).ToString())
             .GetPdfBytes(maxPages: 3, maxBytes: DirectPdfGenerator.MaxPdfBytes));

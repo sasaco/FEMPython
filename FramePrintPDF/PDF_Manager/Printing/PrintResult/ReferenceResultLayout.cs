@@ -316,6 +316,100 @@ namespace PDF_Manager.Printing
             }
         }
 
+        // FrameG's displacement report (原宿ボックス 0404, 5-18): one column of cases, a case kept whole.
+        // Positions are FrameG's in points; values are right-aligned on their column edges.
+        internal static void FrameGDisplacements(PdfDocument document, PrintData data, ref int page,
+            IReadOnlyList<(string Caption, IReadOnlyList<Disg> Rows)> cases)
+        {
+            const double captionGap = 17.9, rowPitch = 8.97, caseGap = 18.1;
+            var font = ReportFont(document, data);
+            double bottom = document.currentPage.Height - document.Margine.Bottom;
+            bool pageStarted = false;
+            int pageNo = page; // A local function cannot capture the ref parameter.
+            void Header()
+            {
+                if (!document.currentPos.Equals(document.initialPos)) document.NewPage(ref pageNo);
+                document.currentPos = new XPoint(115.7, document.currentPos.Y);
+                const string title = "変  位  量";
+                Text.PrtText(document, title, font);
+                double width = document.gfx.MeasureString(title, font).Width;
+                document.gfx.DrawLine(new XPen(XColors.Black, 0.12), 105.1, document.currentPos.Y + 2.1,
+                    115.7 + width + 3.7, document.currentPos.Y + 2.1);
+                double y = document.currentPos.Y + 13.4;
+                void Put(string text, double x, double baseline, bool right = false)
+                {
+                    document.currentPos = new XPoint(x, baseline);
+                    if (right) Text.PrtText(document, text, font, XStringFormats.BottomRight);
+                    else Text.PrtText(document, text, font);
+                }
+                Put("JOINT", 252.6, y);
+                Put("X-DISP.", 328.5, y, true);
+                Put("Y-DISP.", 386.1, y, true);
+                Put("ROTATION", 441.4, y, true);
+                Put("NO.", 275.0, y + 9, true);
+                Put("(mm)", 319.5, y + 9, true);
+                Put("(mm)", 377.1, y + 9, true);
+                Put("(mRad)", 436.9, y + 9, true);
+                document.currentPos = new XPoint(document.currentPos.X, y + 9);
+                pageStarted = true;
+            }
+            const double captionX = 136.1;
+            double captionWidth = document.currentPage.Width - document.Margine.Right - captionX;
+            foreach (var (caption, rows) in cases)
+            {
+                if (rows.Count == 0) continue;
+                document.CheckBudget();
+                // A long case name wraps within the page; one that cannot leave room for a row fails first.
+                var lines = Wrap(document, font, caption, captionWidth);
+                double captionHeight = captionGap + (lines.Count - 1) * rowPitch;
+                double emptyPage = bottom - (document.initialPos.Y + 13.4 + 9); // Below a fresh page's header.
+                if (captionHeight + rowPitch > emptyPage)
+                    throw new InvalidOperationException("A displacement case caption leaves no room for a row on the selected paper.");
+                double need = captionHeight + rows.Count * rowPitch;
+                // FrameG keeps a case whole: one that does not fit in the rest of the page starts a new one
+                // (and a case longer than a page continues from there with its caption repeated).
+                if (!pageStarted || need > bottom - document.currentPos.Y) Header();
+                double y = document.currentPos.Y;
+                void Caption()
+                {
+                    foreach (string line in lines)
+                    {
+                        y += line == lines[0] ? captionGap : rowPitch;
+                        document.currentPos = new XPoint(captionX, y);
+                        Text.PrtText(document, line, font);
+                    }
+                }
+                Caption();
+                foreach (Disg row in rows)
+                {
+                    if (y + rowPitch > bottom)
+                    {
+                        // A case longer than a page continues with its caption repeated.
+                        Header();
+                        y = document.currentPos.Y;
+                        Caption();
+                    }
+                    y += rowPitch;
+                    foreach (var (text, right) in new[] { (row.id, 271.4), (Number(row.dx, 4), 328.5),
+                        (Number(row.dy, 4), 386.1), (Number(row.rz, 4), 436.9) })
+                    {
+                        document.currentPos = new XPoint(right, y);
+                        Text.PrtText(document, text, font, XStringFormats.BottomRight);
+                    }
+                }
+                document.currentPos = new XPoint(document.currentPos.X, y + caseGap - captionGap);
+            }
+            page = pageNo;
+        }
+
+        // FrameG never prints a negative zero ("-0.00" is "0.00").
+        private static string Number(double value, int digits)
+        {
+            string text = printManager.toString(value, digits);
+            return text.StartsWith("-", StringComparison.Ordinal) && text.Skip(1).All(c => c == '0' || c == '.')
+                ? text.Substring(1) : text;
+        }
+
         // Right edges of DIST, M, S and N from the table's left edge in FrameG's member forces.
         private static readonly double[] BasicValueRight = { 158.4, 222.8, 280.4, 337.9 };
 
@@ -436,7 +530,7 @@ namespace PDF_Manager.Printing
         private static string[] ForceCells(Fsec row, bool source)
         {
             var values = row == null ? new[] { "", "", "" } : new[] {
-                printManager.toString(row.mz, 2), printManager.toString(row.fy, 2), printManager.toString(row.fx, 2) };
+                Number(row.mz, 2), Number(row.fy, 2), Number(row.fx, 2) };
             return source ? values.Concat(new[] { row == null ? "" : CompactProvenance(row.caseStr, row.comb) }).ToArray() : values;
         }
 

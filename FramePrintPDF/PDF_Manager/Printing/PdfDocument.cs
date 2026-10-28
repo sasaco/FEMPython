@@ -181,7 +181,26 @@ namespace PDF_Manager.Printing
             this.Margine.Left = 35;
             this.Margine.Right = 25;
             this.Margine.Bottom = 25;
+            if (referenceResultLayout && pageOrientation == PageOrientation.Portrait)
+            {
+                // FrameG's printable area on A4 (原宿ボックス 0404): text from 25.3 mm, baselines down to 778.6 pt (about 22 mm from the bottom).
+                this.Margine.Left = FrameGLeft;
+                this.Margine.Bottom = FrameGBottom;
+            }
         }
+
+        /// <summary>
+        /// Diagram pages keep the default margins until their own FrameG layout is set
+        /// (原宿ボックス 0404 report, step 3); only FrameG text pages use FrameGLeft/FrameGBottom.
+        /// </summary>
+        internal void UseDiagramMargins()
+        {
+            this.Margine.Left = 35;
+            this.Margine.Bottom = 25;
+        }
+
+        internal const double FrameGLeft = 71.6;
+        internal const double FrameGBottom = 60.0;
 
         /// <summary>
         /// 改ページ

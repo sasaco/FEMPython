@@ -456,6 +456,17 @@ namespace PDF_Manager.Printing
         {
             if (!referenceLayout || data.dimension != 2 || disgs.Values.Any(value => !(value is List<Disg>)))
             { base.printPDF(mc, data, ref indexPage); return; }
+            if (ReferenceResultLayout.Portrait(mc))
+            {
+                // FrameG: one column of cases over the input nodes only (generated stations are internal).
+                var inputNodes = ((InputNode)data.printDatas[InputNode.KEY]).Nodes;
+                ReferenceResultLayout.FrameGDisplacements(mc, data, ref indexPage, disgs.Select(entry =>
+                    (ReferenceResultLayout.FrameGCaseTitle(entry.Key, disgnames[entry.Key], "  "),
+                     (IReadOnlyList<Disg>)((List<Disg>)entry.Value)
+                        .Where(row => inputNodes.Count == 0 || inputNodes.ContainsKey(row.id)).ToList()))
+                    .ToList());
+                return;
+            }
             for (int i = 0; i < disgs.Count; i += 2)
             {
                 var left = disgs.ElementAt(i);

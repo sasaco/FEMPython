@@ -145,170 +145,22 @@ public class PrintInput
                 //CHECK HAS PRINT CALCULATION RESULT
                 if (data.hasPrintCalculation)
                 {
-                    // 計算結果データ
-                    // 変位量
-                    if (data.keyCal.Any(x => x.Contains(ResultDisg.KEY + "Name")))
+                    // FrameG prints member forces before displacements (原宿ボックス 0404); other reports keep
+                    // displacement, reaction and member force order. Combined and PICKUP results follow.
+                    string[] order = data.dimension == 2 && data.referenceResultLayout
+                        ? new[] { ResultFsec.KEY, ResultDisg.KEY, ResultReac.KEY }
+                        : new[] { ResultDisg.KEY, ResultReac.KEY, ResultFsec.KEY };
+                    foreach (string key in order.Concat(new[] {
+                        ResultDisgCombine.KEY, ResultReacCombine.KEY, ResultFsecCombine.KEY,
+                        ResultDisgPickup.KEY, ResultReacPickup.KEY, ResultFsecPickup.KEY }))
                     {
+                        if (!data.keyCal.Any(x => x.Contains(key + "Name"))) continue;
                         if (hasPreviousData)
                         {
                             mc.NewPage(ref indexPage);
                             prevIndexPage = indexPage;
                         }
-                        data.printDatas[ResultDisg.KEY].printPDF(mc, data, ref indexPage);
-                        if (prevIndexPage != indexPage)
-                        {
-                            prevIndexPage = indexPage;
-                            hasPreviousData = true;
-                        }
-                        else
-                        {
-                            hasPreviousData = false;
-                        }
-                    }
-                    // 反力
-                    if (data.keyCal.Any(x => x.Contains(ResultReac.KEY + "Name")))
-                    {
-                        if (hasPreviousData)
-                        {
-                            mc.NewPage(ref indexPage);
-                            prevIndexPage = indexPage;
-                        }
-                        data.printDatas[ResultReac.KEY].printPDF(mc, data, ref indexPage);
-                        if (prevIndexPage != indexPage)
-                        {
-                            prevIndexPage = indexPage;
-                            hasPreviousData = true;
-                        }
-                        else
-                        {
-                            hasPreviousData = false;
-                        }
-                    }
-                    // 断面力
-                    if (data.keyCal.Any(x => x.Contains(ResultFsec.KEY + "Name")))
-                    {
-                        if (hasPreviousData)
-                        {
-                            mc.NewPage(ref indexPage);
-                            prevIndexPage = indexPage;
-                        }
-                        data.printDatas[ResultFsec.KEY].printPDF(mc, data, ref indexPage);
-                        if (prevIndexPage != indexPage)
-                        {
-                            prevIndexPage = indexPage;
-                            hasPreviousData = true;
-                        }
-                        else
-                        {
-                            hasPreviousData = false;
-                        }
-                    }
-
-                    // 組み合わせ変位量
-                    if (data.keyCal.Any(x => x.Contains(ResultDisgCombine.KEY + "Name")))
-                    {
-                        if (hasPreviousData)
-                        {
-                            mc.NewPage(ref indexPage);
-                            prevIndexPage = indexPage;
-                        }
-                        data.printDatas[ResultDisgCombine.KEY].printPDF(mc, data, ref indexPage);
-                        if (prevIndexPage != indexPage)
-                        {
-                            prevIndexPage = indexPage;
-                            hasPreviousData = true;
-                        }
-                        else
-                        {
-                            hasPreviousData = false;
-                        }
-                    }
-                    // 組み合わせ反力
-                    if (data.keyCal.Any(x => x.Contains(ResultReacCombine.KEY + "Name")))
-                    {
-                        if (hasPreviousData)
-                        {
-                            mc.NewPage(ref indexPage);
-                            prevIndexPage = indexPage;
-                        }
-                        data.printDatas[ResultReacCombine.KEY].printPDF(mc, data, ref indexPage);
-                        if (prevIndexPage != indexPage)
-                        {
-                            prevIndexPage = indexPage;
-                            hasPreviousData = true;
-                        }
-                        else
-                        {
-                            hasPreviousData = false;
-                        }
-                    }
-                    // 組み合わせ断面力
-                    if (data.keyCal.Any(x => x.Contains(ResultFsecCombine.KEY + "Name")))
-                    {
-                        if (hasPreviousData)
-                        {
-                            mc.NewPage(ref indexPage);
-                            prevIndexPage = indexPage;
-                        }
-                        data.printDatas[ResultFsecCombine.KEY].printPDF(mc, data, ref indexPage);
-                        if (prevIndexPage != indexPage)
-                        {
-                            prevIndexPage = indexPage;
-                            hasPreviousData = true;
-                        }
-                        else
-                        {
-                            hasPreviousData = false;
-                        }
-                    }
-
-                    // ピックアップ変位量
-                    if (data.keyCal.Any(x => x.Contains(ResultDisgPickup.KEY + "Name")))
-                    {
-                        if (hasPreviousData)
-                        {
-                            mc.NewPage(ref indexPage);
-                            prevIndexPage = indexPage;
-                        }
-                        data.printDatas[ResultDisgPickup.KEY].printPDF(mc, data, ref indexPage);
-                        if (prevIndexPage != indexPage)
-                        {
-                            prevIndexPage = indexPage;
-                            hasPreviousData = true;
-                        }
-                        else
-                        {
-                            hasPreviousData = false;
-                        }
-                    }
-                    // ピックアップ反力
-                    if (data.keyCal.Any(x => x.Contains(ResultReacPickup.KEY + "Name")))
-                    {
-                        if (hasPreviousData)
-                        {
-                            mc.NewPage(ref indexPage);
-                            prevIndexPage = indexPage;
-                        }
-                        data.printDatas[ResultReacPickup.KEY].printPDF(mc, data, ref indexPage);
-                        if (prevIndexPage != indexPage)
-                        {
-                            prevIndexPage = indexPage;
-                            hasPreviousData = true;
-                        }
-                        else
-                        {
-                            hasPreviousData = false;
-                        }
-                    }
-                    // ピックアップ断面力
-                    if (data.keyCal.Any(x => x.Contains(ResultFsecPickup.KEY + "Name")))
-                    {
-                        if (hasPreviousData)
-                        {
-                            mc.NewPage(ref indexPage);
-                            prevIndexPage = indexPage;
-                        }
-                        data.printDatas[ResultFsecPickup.KEY].printPDF(mc, data, ref indexPage);
+                        data.printDatas[key].printPDF(mc, data, ref indexPage);
                         if (prevIndexPage != indexPage)
                         {
                             prevIndexPage = indexPage;
@@ -321,6 +173,7 @@ public class PrintInput
                     }
                 }
 
+                mc.UseDiagramMargins();
                 // Break only after printed tables; a diagram-only document starts on the first page.
                 if (printScreens.Count > 0 && (data.hasPrintInputData || data.hasPrintCalculation) &&
                     !PrintData.IsCanonicalDiagram(printScreens.First().Value))

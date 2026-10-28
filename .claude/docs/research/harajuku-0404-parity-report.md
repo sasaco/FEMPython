@@ -119,6 +119,15 @@ y 上向きで書かれたデータ：K: の `線路直角方向.json`（杭が 
 | 同 `PortraitBasicReferenceColumnsUseNarrowCentralGrid` | 値を列の左端に揃える |
 | `TransversePrintMetadataTests.ForceLabelsRetainExactStationIdentityAndSavedMemberAndCaseNames` | 部材の見出し `部材 M1 (1 - 2) Beam` |
 
+### 印刷領域・節の順序・変位量
+
+- 印刷領域（A4 の端からの余白）：見本の文字の頁は全て左 25.3 mm・上 21.9 mm から、行の下端は 778.6 pt（下端から約 22 mm）まで。FrameG の体裁の左余白を 71.6 pt、下余白を 60 pt にした（`PdfDocument.FrameGLeft`・`FrameGBottom`）。図の頁の余白は図を直すとき（手順 3 の 5・6）に合わせる。
+- 節の順序：FrameG は MEMBER FORCES → 変位量 → COMBINE → PICK UP。FrameG の体裁では断面力を変位より先に出す（`PrintInput.cs`）。
+- 変位量：1 列にケースを縦に並べ、入力の節点だけを出す（自動で作った点は出さない）。見出し `CASE  1  名称`、値は X・Y・回転の列の右端に右揃え。基本ケースは見本と同じ 2 頁で、対になった語のずれは 1 mm 以内。違うのは値の 4 桁目の丸めだけ。
+- 負のゼロ：見本は `-0.00` を出さないので、FrameG の体裁では 0 に丸まる値の符号を付けない。
+
+以前の見本に合わせた試験のうち、この変更で書き直すもの（2 列の変位量、左余白 35 pt を前提にした折返し幅など）は、試験ごとに理由を確かめてから直す。
+
 ## 決めていただくこと
 
 1. **N2（M/S）**：FrameWeb の部材荷重に M/S の区別を足すか（荷重の行に属性を足し、計算は M の荷重と S の荷重の 2 回）。足さなければ、ケース 5・6 を含む PICKUP 1・3・4・6・7 は一致しない。

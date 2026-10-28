@@ -297,8 +297,9 @@ public sealed class CanonicalSectionDiagramTests
         JObject root = Job(); root["hasPrintCalculation"] = true;
         var pdf = Render(root);
         Assert.Equal(4, pdf.Pages);
-        Assert.Contains(pdf.Runs, run => run.Page == 1 && run.Text == "X-DISP.");
-        Assert.Contains(pdf.Runs, run => run.Page == 2 && run.Text == "MEMBER FORCES");
+        // FrameG's order (原宿ボックス 0404): member forces before displacements.
+        Assert.Contains(pdf.Runs, run => run.Page == 1 && run.Text == "MEMBER FORCES");
+        Assert.Contains(pdf.Runs, run => run.Page == 2 && run.Text == "X-DISP.");
         Assert.DoesNotContain(pdf.Runs, run => run.Page <= 2 && run.Text == "Case A: Service load");
         foreach (int page in new[] { 3, 4 })
         {
