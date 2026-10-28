@@ -152,12 +152,9 @@ public class PrintInput
                 //CHECK HAS PRINT CALCULATION RESULT
                 if (data.hasPrintCalculation)
                 {
-                    // FrameG prints member forces before displacements (原宿ボックス 0404); other reports keep
-                    // displacement, reaction and member force order. Combined and PICKUP results follow.
-                    string[] order = data.dimension == 2 && data.referenceResultLayout
-                        ? new[] { ResultFsec.KEY, ResultDisg.KEY, ResultReac.KEY }
-                        : new[] { ResultDisg.KEY, ResultReac.KEY, ResultFsec.KEY };
-                    foreach (string key in order.Concat(new[] {
+                    // FrameG prints member forces before displacements (原宿ボックス 0404).
+                    // Combined and PICKUP results follow.
+                    foreach (string key in new[] { ResultFsec.KEY, ResultDisg.KEY, ResultReac.KEY }.Concat(new[] {
                         ResultDisgCombine.KEY, ResultReacCombine.KEY, ResultFsecCombine.KEY,
                         ResultDisgPickup.KEY, ResultReacPickup.KEY, ResultFsecPickup.KEY }))
                     {

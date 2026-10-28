@@ -17,7 +17,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["hasPrintInputData"] = true;
         root["hasPrintCalculation"] = false;
         root["title"] = "Shared Style";
@@ -35,7 +34,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["hasPrintInputData"] = true;
         root["node"] = JObject.Parse("""{"1":{"x":0,"y":1,"z":0}}""");
         root["reac"] = JObject.Parse("""{"1":[{"id":"1","tx":7.625,"ty":-7.625,"mz":2}]}""");
@@ -53,7 +51,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["hasPrintInputData"] = true;
         root["node"] = JObject.Parse("""{"1":{"x":0,"y":1,"z":0}}""");
         root["fsec"] = new JObject { ["1"] = PortraitForceRows() };
@@ -71,7 +68,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["reacPickup"] = JObject.Parse("""{"1":{"tx_max":{"1":{"tx":3,"ty":2,"mz":1,"case":"1"}}}}""");
         root["reacPickupName"] = JArray.Parse("""[["1","Envelope"]]""");
 
@@ -81,11 +77,10 @@ public sealed class TransverseReportCompositionTests
     }
 
     [Fact]
-    public void ThreeDimensionalInputKeepsLegacyTitleAndTableFontEvenIfFlagged()
+    public void ThreeDimensionalInputKeepsLegacyTitleAndTableFont()
     {
         var root = Root(3);
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["hasPrintInputData"] = true;
         root["hasPrintCalculation"] = false;
         root["node"] = JObject.Parse("""{"1":{"x":0,"y":1,"z":2}}""");
@@ -97,17 +92,18 @@ public sealed class TransverseReportCompositionTests
     }
 
     [Fact]
-    public void LandscapeTableAndDiagramFontKeepTheirOriginalSizes()
+    public void LandscapeTableUsesFrameGFontAndDiagramFontKeepsItsSize()
     {
+        // FrameG's layout is placed on any paper (2026-10-29): landscape tables keep its font and title.
         var root = Root();
-        root["referenceResultLayout"] = true;
         root["hasPrintInputData"] = true;
         root["hasPrintCalculation"] = false;
         root["node"] = JObject.Parse("""{"1":{"x":0,"y":1,"z":0}}""");
 
-        var pdf = Pdf(root, "landscape-input-legacy-font");
-        Assert.Contains("Page   1", pdf.Text);
-        Assert.Contains(PdfFontSizes(root), size => Math.Abs(size - 11) < 0.001);
+        var pdf = Pdf(root, "landscape-input-frameg-font");
+        Assert.Contains("NODE DATA", pdf.Text);
+        Assert.DoesNotContain("Page   1", pdf.Text);
+        Assert.All(PdfFontSizes(root), size => Assert.InRange(size, PdfDocument.ReferencePortraitFontSize - 0.001, PdfDocument.ReferencePortraitFontSize + 0.001));
         int page = 1;
         using var document = new PdfDocument(new PrintData(root), ref page);
         Assert.Equal(8, document.font_got.Size);
@@ -118,7 +114,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["title"] = "Rail Sample";
         root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":1,"dy":2,"rz":3}]}""");
         root["disgName"] = JArray.Parse("""[["1","Load"]]""");
@@ -128,15 +123,13 @@ public sealed class TransverseReportCompositionTests
         Assert.InRange(title.Y, 770, 775);
         Assert.DoesNotContain("Page   1", pdf.Text);
 
-        root["referenceResultLayout"] = false;
-        var normal = Pdf(root, "portrait-normal-title");
-        Assert.Contains("Page   1", normal.Text);
-        Assert.InRange(Assert.Single(normal.Runs.Where(run => run.Text == "TITLE : Rail Sample")).X, 34, 36);
-
-        root["referenceResultLayout"] = true;
+        // The same distance from the top left on landscape paper (595 pt high).
         root["pageOrientation"] = "Horizontal";
         var landscape = Pdf(root, "landscape-reference-title");
-        Assert.Contains("Page   1", landscape.Text);
+        var landscapeTitle = Assert.Single(landscape.Runs.Where(run => run.Text == "TITLE : Rail Sample"));
+        Assert.InRange(landscapeTitle.X, 70, 73);
+        Assert.InRange(595 - landscapeTitle.Y, 67, 72);
+        Assert.DoesNotContain("Page   1", landscape.Text);
     }
 
     [Fact]
@@ -144,7 +137,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["fsec"] = new JObject { ["1"] = PortraitForceRows() };
         root["fsecName"] = JArray.Parse("""[["1","Load1"]]""");
         var pdf = Pdf(root, "portrait-basic-reference-grid");
@@ -184,7 +176,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         var rows = PortraitForceRows();
         foreach (JObject row in rows)
         {
@@ -220,7 +211,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["node"] = InputNodes(12);
         var cases = new JObject();
         var names = new JArray();
@@ -267,7 +257,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         string name = new string('X', 44) + " " + coefficient + "*D1";
         root["node"] = InputNodes(1);
         root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":1,"dy":2,"rz":3}]}""");
@@ -290,7 +279,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         var cases = new JObject();
         var names = new JArray();
         for (int i = 1; i <= 10; i++)
@@ -340,7 +328,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         var cases = new JObject();
         var names = new JArray();
         foreach (int id in Enumerable.Range(1, 5))
@@ -383,7 +370,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["node"] = InputNodes(12);
         var cases = new JObject();
         var combinations = new JObject();
@@ -430,7 +416,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         var cases = new JObject();
         var combinations = new JObject();
         var names = new JArray();
@@ -501,7 +486,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["node"] = InputNodes(120);
         var cases = new JObject();
         var names = new JArray();
@@ -558,7 +542,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         root["node"] = InputNodes(1);
         root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":1,"dy":2,"rz":3}],"2":[{"id":"1","dx":4,"dy":5,"rz":6}]}""");
         root["disgName"] = JArray.Parse("""[["1","Left"],["2","Right"]]""");
@@ -594,7 +577,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         var rows = new JArray(new[] { 2, middleRows, 2 }.SelectMany((count, member) =>
             Enumerable.Range(0, count).Select(station => new JObject
             {
@@ -624,7 +606,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         string caption = "MEMBER " + new string('荷', 120);
         // The full portrait page holds 72 rows under the four-line caption, so 130 rows continue.
         const int stations = 130;
@@ -654,7 +635,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         string expression = string.Join(" + ", Enumerable.Range(1, 70).Select(i => "1.125*CASE_A" + i.ToString("D3")));
         string expected = "( 77 :" + string.Join("+", Enumerable.Range(1, 70).Select(i => "CASE_A" + i.ToString("D3"))) + " )";
         var rows = new JArray(Enumerable.Range(0, 95).Select(i => new JObject
@@ -690,79 +670,9 @@ public sealed class TransverseReportCompositionTests
     }
 
     [Fact]
-    public void ReferenceDisplacementPairsAdjacentCasesWithoutRepeatingValues()
-    {
-        var root = Root();
-        root["referenceResultLayout"] = true;
-        root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":12.3456,"dy":2,"rz":3}],"2":[{"id":"1","dx":98.7654,"dy":4,"rz":5}],"3":[{"id":"generated:11:S9","dx":23.4567,"dy":6,"rz":7}]}""");
-        root["disgName"] = JArray.Parse("""[["1","Left"],["2","Right"],["3","Odd"]]""");
-        var pdf = Pdf(root, "paired-displacement");
-        Assert.Contains("Left", pdf.Text);
-        Assert.Contains("12.3456", pdf.Text);
-        Assert.Contains("CASE 1 Left", pdf.Text);
-        Assert.Contains("CASE 2 Right", pdf.Text);
-        Assert.Contains("generated:11:S9", pdf.Text);
-        Assert.Equal(1, Regex.Matches(pdf.Text, "12[.]3456").Count);
-        Assert.Equal(1, pdf.Pages);
-        var left = Assert.Single(pdf.Runs.Where(run => run.Text == "CASE 1 Left"));
-        var right = Assert.Single(pdf.Runs.Where(run => run.Text == "CASE 2 Right"));
-        Assert.True(right.X > left.X + 250);
-        Assert.Equal(left.Y, right.Y, 3);
-    }
-
-    [Fact]
-    public void ReferenceForcesPairCasesAndRepeatMemberCaptionAfterPageBreak()
-    {
-        var root = Root();
-        root["referenceResultLayout"] = true;
-        var rows = new JArray(Enumerable.Range(0, 65).Select(i => new JObject
-        {
-            ["m"] = "5", ["n"] = "S" + i, ["stationLabel"] = i == 0 ? "I-TAN" : "POINT" + i,
-            ["memberCaption"] = "MEMBER 5 (5 - 6) Beam", ["l"] = i / 10d,
-            ["fx"] = 10, ["fy"] = 20, ["mz"] = 123.45,
-        }));
-        root["fsec"] = new JObject { ["1"] = rows, ["2"] = rows.DeepClone() };
-        root["fsecName"] = JArray.Parse("""[["1","Left"],["2","Right"]]""");
-        var pdf = Pdf(root, "paired-forces");
-        Assert.Contains("MEMBER 5 (5 - 6) Beam", pdf.Text);
-        Assert.Contains("I-TAN", pdf.Text);
-        Assert.DoesNotContain("S64", pdf.Text);
-        Assert.Equal(130, Regex.Matches(pdf.Text, "123[.]45").Count);
-        Assert.True(pdf.Pages >= 2);
-        Assert.True(Regex.Matches(pdf.Text, Regex.Escape("MEMBER 5 (5 - 6) Beam")).Count >= 2 * pdf.Pages);
-        var left = pdf.Runs.First(run => run.Text == "CASE 1 Left");
-        var right = pdf.Runs.First(run => run.Text == "CASE 2 Right");
-        Assert.Equal(left.Y, right.Y, 3);
-        Assert.True(right.X > left.X + 250);
-        var rightMember = pdf.Runs.First(run => run.Text == "MEMBER 5 (5 - 6) Beam" && run.X > 300);
-        // PDF Td operands are serialized at four decimal places; accumulated
-        // text positions can differ by a fraction of one hundredth of a point.
-        Assert.InRange(Math.Abs(right.X - rightMember.X), 0, 0.01);
-    }
-
-    [Fact]
-    public void ReferencePickupPairsSignedModesWithCorrelatedSourcesAndExpressions()
-    {
-        var root = Root();
-        root["referenceResultLayout"] = true;
-        root["fsecPickup"] = JObject.Parse("""{"1":{"mz_max":[{"m":"5","n":"S0","stationLabel":"I-TAN","memberCaption":"MEMBER 5 (5 - 6) Beam","l":0,"fx":13,"fy":21,"mz":123.45,"case":"6","comb":"1+4+5+6"}],"mz_min":[{"m":"5","n":"S0","stationLabel":"I-TAN","memberCaption":"MEMBER 5 (5 - 6) Beam","l":0,"fx":17,"fy":28,"mz":-67.89,"case":"1","comb":"1+2+3+4+5"}]}}""");
-        root["fsecPickupName"] = JArray.Parse("""[["1","Envelope"]]""");
-        var pdf = Pdf(root, "paired-pickup");
-        Assert.Contains("(6:1+4+5+6)", pdf.Text);
-        Assert.Contains("(1:1+2+3+4+5)", pdf.Text);
-        Assert.Contains("I-TAN", pdf.Text);
-        Assert.Contains("PICK UP 1", pdf.Text);
-        var max = Assert.Single(pdf.Runs.Where(run => run.Text == "123.45"));
-        var min = Assert.Single(pdf.Runs.Where(run => run.Text == "-67.89"));
-        Assert.Equal(max.Y, min.Y, 3);
-        Assert.True(min.X > max.X + 250);
-    }
-
-    [Fact]
     public void ReferenceOrdinaryCombinationsPairFilteredVectorsAndKeepWeightedHeader()
     {
         var root = Root();
-        root["referenceResultLayout"] = true;
         root["ordinaryDisplacementCombinations"] = new JArray("1", "2");
         root["disgCombine"] = JObject.Parse("""{"1":{"rz_min":{"1":{"dx":12.3456,"dy":2,"rz":3,"case":"1,2","comb":"1*D1 + 1.2*D2"}}},"2":{"dy_max":{"1":{"dx":98.7654,"dy":4,"rz":5,"case":"1","comb":"-0.8*D1"}}}}""");
         root["disgCombineName"] = JArray.Parse("""[["1","Left"],["2","Right"]]""");
@@ -776,30 +686,6 @@ public sealed class TransverseReportCompositionTests
         Assert.Equal(1, pdf.Pages);
     }
 
-    [Fact]
-    public void ReferenceTwelveNodeDisplacementUsesThreePairsPerPage()
-    {
-        var root = Root();
-        root["referenceResultLayout"] = true;
-        var cases = new JObject();
-        var names = new JArray();
-        for (int i = 1; i <= 10; i++)
-        {
-            cases[i + "/Static/0"] = new JArray(Enumerable.Range(1, 12).Select(node =>
-                new JObject { ["id"] = node.ToString(), ["dx"] = i + node / 100d, ["dy"] = -i, ["rz"] = node / 10d }));
-            names.Add(new JArray(i + "/Static/0", "Load" + i));
-        }
-        root["disg"] = cases;
-        root["disgName"] = names;
-        var pdf = Pdf(root, "ten-case-displacement");
-        Assert.Equal(2, pdf.Pages);
-        Assert.Contains("CASE 1 Load1", pdf.Text);
-        Assert.DoesNotContain("/Static/0", pdf.Text);
-        Assert.Equal(120, pdf.Runs.Count(run => Regex.IsMatch(run.Text, @"^-\d+[.]0000$")));
-        Assert.Equal(1, Assert.Single(pdf.Runs.Where(run => run.Text == "CASE 5 Load5")).Page);
-        Assert.Equal(2, Assert.Single(pdf.Runs.Where(run => run.Text == "CASE 7 Load7")).Page);
-    }
-
     [Theory]
     [InlineData("Horizontal")]
     [InlineData("Vertical")]
@@ -807,14 +693,15 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = orientation;
-        root["referenceResultLayout"] = true;
-        string name = "A deliberately long case caption with a weighted expression 1.2*D1 + 0.85*D2 + 1.35*D3 and a retained source";
+        // Longer than the caption column of landscape paper, too.
+        string name = string.Concat(Enumerable.Repeat(
+            "A deliberately long case caption with a weighted expression 1.2*D1 + 0.85*D2 + 1.35*D3 ", 2)) + "and a retained source";
         root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":1,"dy":2,"rz":3}]}""");
         root["disgName"] = new JArray { new JArray("1", name) };
         var pdf = Pdf(root, "long-caption-" + orientation);
         Assert.Contains(name, pdf.Text.Replace("\n", ""));
-        // Portrait prints FrameG's single-column caption "CASE  1  name"; landscape keeps paired panels.
-        string prefix = orientation == "Vertical" ? "CASE  1  " : "CASE 1 ";
+        // FrameG's single-column caption "CASE  1  name" on any paper.
+        const string prefix = "CASE  1  ";
         Assert.DoesNotContain(pdf.Runs, run => run.Text == prefix + name);
         Assert.Contains(pdf.Runs, run => run.Text.StartsWith(prefix) && run.Text.Length < name.Length);
     }
@@ -823,7 +710,6 @@ public sealed class TransverseReportCompositionTests
     public void ReferenceMixedOrdinaryAndEnvelopeCombinationPreservesBothRoutes()
     {
         var root = Root();
-        root["referenceResultLayout"] = true;
         root["ordinaryDisplacementCombinations"] = new JArray("1");
         root["disgCombine"] = JObject.Parse("""{"1":{"rz_min":{"1":{"dx":12.3456,"dy":2,"rz":3,"case":"1","comb":"1*D1"}}},"2":{"dy_max":{"1":{"dx":98.7654,"dy":4,"rz":5,"case":"2"}},"dy_min":{"1":{"dx":-67.8912,"dy":-4,"rz":-5,"case":"3"}}}}""");
         root["disgCombineName"] = JArray.Parse("""[["1","Ordinary"],["2","Envelope"]]""");
@@ -844,7 +730,6 @@ public sealed class TransverseReportCompositionTests
     {
         var root = Root();
         root["pageOrientation"] = orientation;
-        root["referenceResultLayout"] = true;
         root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":1,"dy":2,"rz":3}]}""");
         // Wrapped across the portrait page, the caption must still be taller than a page.
         root["disgName"] = new JArray { new JArray("1", new string('荷', 8000)) };
@@ -856,50 +741,36 @@ public sealed class TransverseReportCompositionTests
     }
 
     [Fact]
-    public void WeightedPickupExpressionUsesMeasuredSourceWidthWithoutUnnecessaryWrap()
-    {
-        var root = Root();
-        root["referenceResultLayout"] = true;
-        root["fsecPickup"] = JObject.Parse("""{"1":{"mz_max":[{"m":"5","n":"S0","stationLabel":"I-TAN","memberCaption":"MEMBER 5","l":0,"fx":13,"fy":21,"mz":123.45,"case":"6","comb":"1.1*1 + 1.367*4 + 5 + 1.367*6"}]}}""");
-        root["fsecPickupName"] = JArray.Parse("""[["1","Envelope"]]""");
-        var pdf = Pdf(root, "weighted-pickup");
-        Assert.Single(pdf.Runs.Where(run => run.Text == "(6:1.1*1+1.367*4+5+1.367*6)"));
-        Assert.Contains("123.45", pdf.Text);
-    }
-
-    [Fact]
     public void LongMemberCaptionWrapsAndRepeatsEveryLineOnContinuationPages()
     {
         var root = Root();
-        root["referenceResultLayout"] = true;
         string caption = "MEMBER " + new string('荷', 120);
         var rows = new JArray(Enumerable.Range(0, 65).Select(i => new JObject
         {
             ["m"] = "5", ["n"] = "S" + i, ["stationLabel"] = "P" + i,
             ["memberCaption"] = caption, ["l"] = i, ["fx"] = 1, ["fy"] = 2, ["mz"] = 3,
         }));
-        root["fsec"] = new JObject { ["1"] = rows, ["2"] = rows.DeepClone() };
-        root["fsecName"] = JArray.Parse("""[["1","Left"],["2","Right"]]""");
+        root["fsec"] = new JObject { ["1"] = rows };
+        root["fsecName"] = JArray.Parse("""[["1","Load"]]""");
         var pdf = Pdf(root, "long-member-caption");
         Assert.True(pdf.Pages >= 2);
         Assert.DoesNotContain(pdf.Runs, run => run.Text == caption);
+        // FrameG's member caption column (146.1 pt) on every page the member continues on.
         foreach (var page in pdf.Runs.GroupBy(run => run.Page))
-        foreach (bool right in new[] { false, true })
         {
-            var fragments = page.Where(run => (run.X > 300) == right &&
-                (run.Text.StartsWith("MEMBER 荷") || run.Text.Length > 0 && run.Text.All(character => character == '荷'))).ToArray();
+            var fragments = page.Where(run =>
+                run.Text.StartsWith("MEMBER 荷") || run.Text.Length > 0 && run.Text.All(character => character == '荷')).ToArray();
             Assert.Equal(caption, string.Concat(fragments.Select(run => run.Text)));
             Assert.True(fragments.Length > 1);
-            Assert.All(fragments, fragment => Assert.InRange(fragment.X, right ? 430 : 35, right ? 450 : 45));
+            Assert.All(fragments, fragment => Assert.InRange(fragment.X, 145, 147));
         }
-        Assert.Equal(130, pdf.Runs.Count(run => run.Text == "3.00"));
+        Assert.Equal(65, pdf.Runs.Count(run => run.Text == "3.00"));
     }
 
     [Fact]
     public void ShortNodeIdsLeaveRoomForJointHeadingInBothBaseAndCombinationPanels()
     {
         var root = Root();
-        root["referenceResultLayout"] = true;
         root["ordinaryDisplacementCombinations"] = new JArray("1", "2");
         root["disg"] = JObject.Parse("""{"1":[{"id":"1","dx":1,"dy":2,"rz":3}],"2":[{"id":"12","dx":4,"dy":5,"rz":6}]}""");
         root["disgName"] = JArray.Parse("""[["1","Left"],["2","Right"]]""");
@@ -908,10 +779,11 @@ public sealed class TransverseReportCompositionTests
         var pdf = Pdf(root, "short-id-header-spacing");
         using var measurement = new PdfSharpCore.Pdf.PdfDocument();
         using var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage());
-        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", 10);
-        double headingWidth = graphics.MeasureString("JOINT NO.", font).Width;
-        var headings = pdf.Runs.Where(run => run.Text == "JOINT NO.").ToArray();
-        Assert.Equal(4, headings.Length);
+        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
+        double headingWidth = graphics.MeasureString("JOINT", font).Width;
+        // FrameG prints "JOINT" over "NO.": once for the basic displacements, once per combination panel.
+        var headings = pdf.Runs.Where(run => run.Text == "JOINT").ToArray();
+        Assert.Equal(3, headings.Length);
         foreach (var heading in headings)
         {
             var translation = pdf.Runs.First(run => run.Text == "X-DISP." && run.Page == heading.Page &&

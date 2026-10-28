@@ -167,7 +167,6 @@ namespace PDF_Manager.Printing
         private Dictionary<string, string> disgnames = new Dictionary<string, string>();
         private Dictionary<string, string> disgcasenames = new Dictionary<string, string>();
         private readonly HashSet<string> ordinaryCombinations = new HashSet<string>();
-        private readonly bool referenceLayout;
         private readonly Dictionary<string, object> sourceRoot;
         private readonly string sourceKey;
 
@@ -175,7 +174,6 @@ namespace PDF_Manager.Printing
         {
             sourceRoot = value;
             sourceKey = key;
-            referenceLayout = ReferenceResultLayout.Enabled(value);
             // The same composer is delegated true moving-load envelopes under KEY.
             // Only the projection can declare a combination to have one physical vector.
             if (key == KEY && value.TryGetValue("ordinaryDisplacementCombinations", out var ordinary))
@@ -618,7 +616,7 @@ namespace PDF_Manager.Printing
         #region PrintableBaseC.printPDF()用メソッド定義
         public new void printPDF(PdfDocument mc, PrintData data, ref int indexPage)
         {
-            if (!referenceLayout || data.dimension != 2 || ordinaryCombinations.Count == 0)
+            if (data.dimension != 2 || ordinaryCombinations.Count == 0)
             { base.printPDF(mc, data, ref indexPage); return; }
             List<Disg> Vector(DisgCombine value) => Enumerable.Range(0, 6)
                 .Select(value.getValue2).First(rows => rows.Any());

@@ -78,12 +78,10 @@ namespace PDF_Manager.Printing
 
         public Dictionary<string, object> fsecs = new Dictionary<string, object>();
         private Dictionary<string, string> fsecnames = new Dictionary<string, string>();
-        private readonly bool referenceLayout;
 
 
         public ResultFsec(Dictionary<string, object> value)
         {
-            referenceLayout = ReferenceResultLayout.Enabled(value);
             if (!value.ContainsKey(KEY))
                 return;
 
@@ -505,29 +503,15 @@ namespace PDF_Manager.Printing
         #region PrintableBaseB.printPDF()用メソッド定義
         public new void printPDF(PdfDocument mc, PrintData data, ref int indexPage)
         {
-            if (!referenceLayout || data.dimension != 2 || fsecs.Values.Any(value => !(value is List<Fsec>)))
+            if (data.dimension != 2 || fsecs.Values.Any(value => !(value is List<Fsec>)))
             { base.printPDF(mc, data, ref indexPage); return; }
-            if (ReferenceResultLayout.Portrait(mc))
+            bool next = false;
+            foreach (var entry in fsecs)
             {
-                bool next = false;
-                foreach (var entry in fsecs)
-                {
-                    ReferenceResultLayout.SingleForces(mc, data, ref indexPage,
-                        ReferenceResultLayout.FrameGCaseTitle(entry.Key, fsecnames[entry.Key], " : "),
-                        ((List<Fsec>)entry.Value).Where(row => !row.dummy).ToList(), false, next);
-                    next = true;
-                }
-                return;
-            }
-            for (int i = 0; i < fsecs.Count; i += 2)
-            {
-                var left = fsecs.ElementAt(i);
-                var right = i + 1 < fsecs.Count ? fsecs.ElementAt(i + 1) : default;
-                ReferenceResultLayout.Forces(mc, data, ref indexPage,
-                    ReferenceResultLayout.CaseTitle(left.Key, fsecnames[left.Key]), ((List<Fsec>)left.Value).Where(row => !row.dummy).ToList(),
-                    right.Key == null ? "" : ReferenceResultLayout.CaseTitle(right.Key, fsecnames[right.Key]),
-                    right.Key == null ? new List<Fsec>() : ((List<Fsec>)right.Value).Where(row => !row.dummy).ToList(),
-                    envelope: false, newGroup: i > 0);
+                ReferenceResultLayout.SingleForces(mc, data, ref indexPage,
+                    ReferenceResultLayout.FrameGCaseTitle(entry.Key, fsecnames[entry.Key], " : "),
+                    ((List<Fsec>)entry.Value).Where(row => !row.dummy).ToList(), next);
+                next = true;
             }
         }
 

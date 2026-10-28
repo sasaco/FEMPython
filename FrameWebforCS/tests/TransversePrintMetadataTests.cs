@@ -34,7 +34,8 @@ public sealed class TransversePrintMetadataTests
         string[] markers = root["ordinaryDisplacementCombinations"]!.AsArray()
             .Select(x => x!.GetValue<string>()).ToArray();
         Assert.Equal(ordinary, markers.Contains("1"));
-        Assert.True(root["referenceResultLayout"]!.GetValue<bool>());
+        // 2D prints FrameG's layout without a layout flag (2026-10-29).
+        Assert.Null(root["referenceResultLayout"]);
         Assert.Single(root["disgCombine"]!["1"]!.AsObject());
     }
 
@@ -115,7 +116,7 @@ public sealed class TransversePrintMetadataTests
     }
 
     [Fact]
-    public void TwoDimensionalInputOnlyProjectionWithoutResultsUsesReferencePortraitStyle()
+    public void TwoDimensionalInputOnlyProjectionWithoutResultsCarriesNoLayoutFlag()
     {
         JsonObject saved = Saved();
         var selection = new PrintSelection([PrintOption.Input],
@@ -123,7 +124,9 @@ public sealed class TransversePrintMetadataTests
         JsonObject root = JsonNode.Parse(PrintProjection.Build(new PrintSnapshot(
             selection, saved.ToJsonString(), 1, 1, null, null, [])))!.AsObject();
 
-        Assert.True(root["referenceResultLayout"]!.GetValue<bool>());
+        // FramePrintPDF chooses FrameG's layout from the dimension alone.
+        Assert.Equal(2, root["dimension"]!.GetValue<int>());
+        Assert.Null(root["referenceResultLayout"]);
         Assert.False(root["hasPrintCalculation"]!.GetValue<bool>());
     }
 

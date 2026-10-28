@@ -69,11 +69,9 @@ namespace PDF_Manager.Printing
 
         public Dictionary<string, object> disgs = new Dictionary<string, object>();
         private Dictionary<string, string> disgnames = new Dictionary<string, string>();
-        private readonly bool referenceLayout;
 
         public ResultDisg(Dictionary<string, object> value)
         {
-            referenceLayout = ReferenceResultLayout.Enabled(value);
             if (!value.ContainsKey(KEY))
                 return;
 
@@ -454,28 +452,15 @@ namespace PDF_Manager.Printing
         #region PrintableBaseB.printPDF()用メソッド定義
         public new void printPDF(PdfDocument mc, PrintData data, ref int indexPage)
         {
-            if (!referenceLayout || data.dimension != 2 || disgs.Values.Any(value => !(value is List<Disg>)))
+            if (data.dimension != 2 || disgs.Values.Any(value => !(value is List<Disg>)))
             { base.printPDF(mc, data, ref indexPage); return; }
-            if (ReferenceResultLayout.Portrait(mc))
-            {
-                // FrameG: one column of cases over the input nodes only (generated stations are internal).
-                var inputNodes = ((InputNode)data.printDatas[InputNode.KEY]).Nodes;
-                ReferenceResultLayout.FrameGDisplacements(mc, data, ref indexPage, disgs.Select(entry =>
-                    (ReferenceResultLayout.FrameGCaseTitle(entry.Key, disgnames[entry.Key], "  "),
-                     (IReadOnlyList<Disg>)((List<Disg>)entry.Value)
-                        .Where(row => inputNodes.Count == 0 || inputNodes.ContainsKey(row.id)).ToList()))
-                    .ToList());
-                return;
-            }
-            for (int i = 0; i < disgs.Count; i += 2)
-            {
-                var left = disgs.ElementAt(i);
-                var right = i + 1 < disgs.Count ? disgs.ElementAt(i + 1) : default;
-                ReferenceResultLayout.Displacements(mc, data, ref indexPage,
-                    ReferenceResultLayout.CaseTitle(left.Key, disgnames[left.Key]), (List<Disg>)left.Value,
-                    right.Key == null ? "" : ReferenceResultLayout.CaseTitle(right.Key, disgnames[right.Key]),
-                    right.Key == null ? new List<Disg>() : (List<Disg>)right.Value);
-            }
+            // FrameG: one column of cases over the input nodes only (generated stations are internal).
+            var inputNodes = ((InputNode)data.printDatas[InputNode.KEY]).Nodes;
+            ReferenceResultLayout.FrameGDisplacements(mc, data, ref indexPage, disgs.Select(entry =>
+                (ReferenceResultLayout.FrameGCaseTitle(entry.Key, disgnames[entry.Key], "  "),
+                 (IReadOnlyList<Disg>)((List<Disg>)entry.Value)
+                    .Where(row => inputNodes.Count == 0 || inputNodes.ContainsKey(row.id)).ToList()))
+                .ToList());
         }
 
         protected override bool HasAnyData() => disgs.Any();

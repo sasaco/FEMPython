@@ -106,7 +106,6 @@ public sealed class FrameGEnvelopeLayoutTests
     {
         var root = TransverseReportCompositionTests.Root();
         root["pageOrientation"] = "Vertical";
-        root["referenceResultLayout"] = true;
         return root;
     }
 

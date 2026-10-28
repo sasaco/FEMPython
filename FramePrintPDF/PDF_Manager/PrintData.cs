@@ -53,9 +53,6 @@ namespace PDF_Manager
             else
                 this.pageOrientation = "Vertical"; // or Horizontal
 
-            this.referenceResultLayout = data.TryGetValue("referenceResultLayout", out var referenceLayout)
-                && Convert.ToBoolean(referenceLayout);
-
             // タイトル
             if (data.ContainsKey("title"))
                 this.title = data["title"].ToString();
@@ -167,11 +164,9 @@ namespace PDF_Manager
                     printLoadData.Add("pageOrientation", pageOrientation);
 
                 printLoadData.Add(InputElement.KEY, data[InputElement.KEY]);
-                // FrameG の体裁の荷重図（DiagramInput）は剛域と体裁の切替えも読む
+                // FrameG の体裁の荷重図（DiagramInput）は剛域も読む
                 if (data.ContainsKey(InputRigid.KEY))
                     printLoadData.Add(InputRigid.KEY, data[InputRigid.KEY]);
-                if (data.ContainsKey("referenceResultLayout"))
-                    printLoadData.Add("referenceResultLayout", data["referenceResultLayout"]);
                 if (data.ContainsKey(InputFixMember.KEY))
                     printLoadData.Add(InputFixMember.KEY, data[InputFixMember.KEY]);
                 if(data.ContainsKey(InputFixNode.KEY))
@@ -305,8 +300,6 @@ namespace PDF_Manager
         public string pageSize { get; }
 
         public string pageOrientation { get; }
-
-        public bool referenceResultLayout { get; }
 
         public string title { get; }
 

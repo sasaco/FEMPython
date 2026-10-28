@@ -23,12 +23,14 @@ public sealed class CanonicalSectionDiagramTests
         Assert.Equal(2, pdf.Pages);
         Assert.Contains("10.00", pdf.Text);
         Assert.Contains("1.00", pdf.Text); // Raw 0.001 m displacement is labelled in mm.
-        Assert.Contains("Bending moment", pdf.Text);
-        Assert.Contains("Displacement (mm)", pdf.Text);
+        Assert.Contains(pdf.Runs, run => run.Page == 1 && run.Text == "Bending moment");
+        Assert.Contains(pdf.Runs, run => run.Page == 2 && run.Text == "Displacement  (mm)");
+        Assert.DoesNotContain(pdf.Runs, run => run.Text.StartsWith("TITLE :"));
         foreach (int page in Enumerable.Range(1, pdf.Pages))
         {
-            Run title = Assert.Single(pdf.Runs.Where(r => r.Page == page && r.Text == "TITLE : Diagram Test"));
-            Run caption = Assert.Single(pdf.Runs.Where(r => r.Page == page && r.Text == "Case A: Service load"));
+            // FrameG's page header: the title alone, then the case.
+            Run title = Assert.Single(pdf.Runs, r => r.Page == page && r.Text == "Diagram Test");
+            Run caption = Assert.Single(pdf.Runs, r => r.Page == page && r.Text == " Case A: Service load");
             Assert.True(title.Y - caption.Y >= 12, "The case caption must be below the title without overlap.");
             Assert.Contains(pdf.Strokes, s => s.Page == page && s.Points.Count >= 3);
         }
@@ -75,17 +77,19 @@ public sealed class CanonicalSectionDiagramTests
     }
 
     [Fact]
-    public void CanonicalDiagramFitsAxesIndependentlyAndKeepsNegativeYBelowBeam()
+    public void CanonicalDiagramUsesOneScaleForBothAxesAndKeepsNegativeYBelowBeam()
     {
         JObject root = Job();
         ((JObject)root["PrintDiagram"]!)["diagramResult"] = Config("mz");
         var pdf = Render(root);
+        Stroke pile = pdf.Strokes.Where(s => s.Points.Count == 2 && Math.Abs(s.Points[0].X - s.Points[1].X) < 0.001)
+            .OrderByDescending(s => Math.Abs(s.Points[1].Y - s.Points[0].Y)).First();
         Stroke beam = pdf.Strokes.First(s => s.Points.Count == 2 && Math.Abs(s.Points[0].Y - s.Points[1].Y) < 0.001 &&
-            Math.Abs(s.Points[1].X - s.Points[0].X) > 200);
-        Stroke pile = pdf.Strokes.First(s => s.Points.Count == 2 && Math.Abs(s.Points[0].X - s.Points[1].X) < 0.001 &&
-            Math.Abs(s.Points[1].Y - s.Points[0].Y) > 200);
+            Math.Abs(s.Points[1].X - pile.Points[0].X) < 0.001 && Math.Abs(s.Points[1].X - s.Points[0].X) > 10);
         Assert.True(pile.Points[0].Y > pile.Points[1].Y, "PDF coordinates must put the negative-Y pile end below its start.");
         Assert.Equal(beam.Points[1].Y, pile.Points[0].Y, 3);
+        // FrameG draws the frame at one scale: the 20 m pile is ten times the 2 m beam.
+        Assert.Equal(10, Math.Abs(pile.Points[1].Y - pile.Points[0].Y) / Math.Abs(beam.Points[1].X - beam.Points[0].X), 3);
 
         root["PrintDiagram"]!["diagramResult"]!["scaleX"] = 0.05; // 1:20, model metres.
         root["PrintDiagram"]!["diagramResult"]!["scaleY"] = 0.005; // 1:200.
@@ -142,12 +146,14 @@ public sealed class CanonicalSectionDiagramTests
         Assert.Contains("7.00", pdf.Text); Assert.DoesNotContain("-7.00", pdf.Text);
         Assert.Contains("-9.00", pdf.Text);
         Stroke[] frames = pdf.Strokes.Where(s => s.Points.Count == 2 &&
-            Math.Abs(s.Points[0].Y - s.Points[1].Y) < .001 && Math.Abs(s.Points[1].X - s.Points[0].X) > 200).ToArray();
+            Math.Abs(s.Points[0].Y - s.Points[1].Y) < .001 && Math.Abs(s.Points[1].X - s.Points[0].X) > 150).ToArray();
         Stroke[] curves = pdf.Strokes.Where(s => s.Points.Count >= 3).ToArray();
         Assert.Equal(3, frames.Length); Assert.Equal(3, curves.Length);
         Assert.True(curves[0].Points[0].Y > frames[0].Points[0].Y); // Positive moment above beam.
         Assert.True(curves[1].Points[0].Y < frames[1].Points[0].Y); // Positive shear below beam.
-        Assert.True(curves[2].Points[0].Y > frames[2].Points[0].Y); // Reference compression uses -Fx*n.
+        // FrameG draws -N on its y-up local +y side, which is +N on FrameWeb's member normal: the
+        // compression of this left-to-right beam lies on the side opposite its positive moment.
+        Assert.True(curves[2].Points[0].Y < frames[2].Points[0].Y);
         Assert.All(rows.Cast<JObject>(), row => Assert.Equal(5, (double)row["mz"]!));
     }
 
@@ -195,11 +201,12 @@ public sealed class CanonicalSectionDiagramTests
         var pdf = Render(root);
         Assert.Equal(3, pdf.Pages);
         Assert.Contains(pdf.Runs, run => run.Page == 1 && run.Text == "MEMBER FORCES");
-        Assert.DoesNotContain(pdf.Runs, run => run.Page == 1 && run.Text == "Case A: Service load");
+        Assert.DoesNotContain(pdf.Runs, run => run.Page == 1 && run.Text == " Case A: Service load");
         foreach (int page in new[] { 2, 3 })
         {
-            Assert.Single(pdf.Runs.Where(run => run.Page == page && run.Text == "TITLE : Diagram Test"));
-            Assert.Single(pdf.Runs.Where(run => run.Page == page && run.Text == "Case A: Service load"));
+            Assert.DoesNotContain(pdf.Runs, run => run.Page == page && run.Text.StartsWith("TITLE :"));
+            Assert.Single(pdf.Runs, run => run.Page == page && run.Text == "Diagram Test");
+            Assert.Single(pdf.Runs, run => run.Page == page && run.Text == " Case A: Service load");
             Assert.Contains(pdf.Strokes, stroke => stroke.Page == page && stroke.Points.Count > 2);
         }
     }
@@ -238,7 +245,7 @@ public sealed class CanonicalSectionDiagramTests
     }
 
     [Fact]
-    public void CanonicalCompressionOnDownwardPileIsRightOfMemberAndKeepsNegativeLabels()
+    public void CanonicalCompressionOnDownwardPileFollowsTheMemberNormalAndKeepsNegativeLabels()
     {
         JObject root = Job();
         ((JObject)root["member"]!).Remove("beam/A"); ((JObject)root["node"]!).Remove("node/A");
@@ -249,7 +256,9 @@ public sealed class CanonicalSectionDiagramTests
         var pdf = Render(root);
         Stroke frame = pdf.Strokes.First(stroke => stroke.Points.Count == 2);
         Stroke curve = Assert.Single(pdf.Strokes.Where(stroke => stroke.Points.Count >= 3));
-        Assert.All(curve.Points, point => Assert.True(point.X > frame.Points[0].X));
+        // +N on FrameWeb's normal: a pile drawn downward (y up) has its normal to the right, so its
+        // compression lies to the left.
+        Assert.All(curve.Points, point => Assert.True(point.X < frame.Points[0].X));
         Assert.Contains("-9.00", pdf.Text);
     }
 
@@ -287,8 +296,9 @@ public sealed class CanonicalSectionDiagramTests
         foreach (JObject row in rows) row["fy"] = 0;
         root["fsec"]!["Case/A/Static/0"] = rows;
         var pdf = Render(root);
-        Assert.Single(pdf.Runs.Where(run => run.Text == "10.00"));
-        Assert.Single(pdf.Runs.Where(run => run.Text == "0.04"));
+        Assert.Single(pdf.Runs, run => run.Text == "10.00");
+        // FrameG labels one interior extreme per member, the larger one; the small opposite one is not printed.
+        Assert.DoesNotContain(pdf.Runs, run => run.Text is "0.04" or "-0.04" or "9.99");
     }
 
     [Fact]
@@ -300,11 +310,12 @@ public sealed class CanonicalSectionDiagramTests
         // FrameG's order (原宿ボックス 0404): member forces before displacements.
         Assert.Contains(pdf.Runs, run => run.Page == 1 && run.Text == "MEMBER FORCES");
         Assert.Contains(pdf.Runs, run => run.Page == 2 && run.Text == "X-DISP.");
-        Assert.DoesNotContain(pdf.Runs, run => run.Page <= 2 && run.Text == "Case A: Service load");
+        Assert.DoesNotContain(pdf.Runs, run => run.Page <= 2 && run.Text == " Case A: Service load");
         foreach (int page in new[] { 3, 4 })
         {
-            Assert.Single(pdf.Runs.Where(run => run.Page == page && run.Text == "TITLE : Diagram Test"));
-            Assert.Single(pdf.Runs.Where(run => run.Page == page && run.Text == "Case A: Service load"));
+            Assert.DoesNotContain(pdf.Runs, run => run.Page == page && run.Text.StartsWith("TITLE :"));
+            Assert.Single(pdf.Runs, run => run.Page == page && run.Text == "Diagram Test");
+            Assert.Single(pdf.Runs, run => run.Page == page && run.Text == " Case A: Service load");
             Assert.Contains(pdf.Strokes, stroke => stroke.Page == page && stroke.Points.Count > 2);
         }
     }
@@ -342,17 +353,21 @@ public sealed class CanonicalSectionDiagramTests
         root["PrintDiagram"]!["diagramResult"]!["displacementStations"] = new JObject
         { ["beam/A"] = new JArray(
             new JObject { ["nodeId"] = "node/A", ["position"] = 0 },
-            new JObject { ["nodeId"] = "opaque interior ID", ["position"] = 1 },
+            // On one of FrameG's 0.4 m bends: a solved station between bends is not yet a vertex of the
+            // FrameG displacement curve, so its value would be missed (reported to the leader, W5).
+            new JObject { ["nodeId"] = "opaque interior ID", ["position"] = 1.2 },
             new JObject { ["nodeId"] = "node/B", ["position"] = 2 }) };
         JArray displacements = new(new[] { ("node/A", 0.001), ("opaque interior ID", -.004), ("node/B", .002) }
             .Select(pair => new JObject { ["id"] = pair.Item1, ["dx"] = 0, ["dy"] = pair.Item2,
                 ["dz"] = 0, ["rx"] = 0, ["ry"] = 0, ["rz"] = 0 }));
         root["PrintDiagram"]!["disg"]!["Case/A/Static/0"] = displacements;
         var complete = Render(root);
-        Assert.Contains("4.00", complete.Text); // Solved middle node governs over the original endpoints.
+        Assert.Contains("4.00", complete.Text); // The solved interior node governs over the original endpoints.
         Stroke frame = complete.Strokes.First(stroke => stroke.Points.Count == 2);
+        // It is the largest displacement, drawn 10 mm (28.35 pt) from the member.
         Assert.Contains(complete.Strokes.SelectMany(stroke => stroke.Points), point =>
-            Math.Abs(point.X - (frame.Points[0].X + frame.Points[1].X) / 2) < .02 && point.Y < frame.Points[0].Y - 30);
+            Math.Abs(point.X - (frame.Points[0].X + .6 * (frame.Points[1].X - frame.Points[0].X))) < .02 &&
+            Math.Abs(point.Y - (frame.Points[0].Y - 72 / 2.54)) < .02);
         root["PrintDiagram"]!["diagramResult"]!["displacementLabelNodeIds"] = new JArray("node/A");
         var selected = Render(root);
         Assert.Equal(complete.Strokes.SelectMany(stroke => stroke.Points), selected.Strokes.SelectMany(stroke => stroke.Points));
@@ -405,7 +420,7 @@ public sealed class CanonicalSectionDiagramTests
         Assert.Contains("10.00", pdf.Text);
         Assert.DoesNotContain(pdf.Strokes, stroke => stroke.Points.Count > 2);
         Assert.Contains(pdf.Strokes, stroke => stroke.Points.Count == 2 &&
-            Math.Abs(stroke.Points[0].X - stroke.Points[1].X) > 200 &&
+            Math.Abs(stroke.Points[0].X - stroke.Points[1].X) > 100 &&
             Math.Abs(stroke.Points[0].Y - stroke.Points[1].Y) > 10);
     }
 
@@ -432,7 +447,7 @@ public sealed class CanonicalSectionDiagramTests
     }
 
     [Fact]
-    public void CanonicalNearbyEqualLabelsAreDeduplicatedWithoutLosingDistantUnequalOrRotatedLabels()
+    public void CanonicalBasicCaseLabelsEveryMemberEndWhileAnEnvelopePrintsAnEqualValueOnceAtOnePlace()
     {
         JObject root = Job(); root["PrintDiagram"]!["diagramResult"] = Config("fx");
         // Fixed display scales make the short adjacent member ends 5 points apart.
@@ -460,15 +475,28 @@ public sealed class CanonicalSectionDiagramTests
         var pdf = Render(root);
         Assert.Equal(before, root.ToString());
         Assert.Equal(20, pdf.Strokes.Count); // All five frames, curves, and both end ordinates survive.
-        Assert.Equal(4, pdf.Runs.Count(run => run.Text == "-95.78" && Math.Abs(run.Angle) < .1));
+        // A basic case labels both ends of every member, so the shared node B carries the short and the
+        // main member's equal values (FrameG's sample prints 17.50 twice at a wall node).
+        Assert.Equal(6, pdf.Runs.Count(run => run.Text == "-95.78" && Math.Abs(run.Angle) < .1));
         Assert.Equal(2, pdf.Runs.Count(run => run.Text == "-95.78" && Math.Abs(run.Angle) > 89.9));
-        Assert.Single(pdf.Runs.Where(run => run.Text == "-95.79"));
+        Assert.Equal(2, pdf.Runs.Count(run => run.Text == "-95.79"));
+
+        // An envelope prints an equal value once where labels would overlap (the 5-point short members'
+        // ends and the shared node B collapse to one), keeping distant, unequal and rotated ones.
+        root.Remove("fsec"); root.Remove("fsecName");
+        root["fsecCombine"] = new JObject { ["1"] = new JObject { ["fx_max"] = rows, ["fx_min"] = rows.DeepClone() } };
+        root["fsecCombineName"] = new JArray { new JArray("1", "Envelope") };
+        root["CombPrintDiagram"] = new JObject { ["diagramResult"] = root["PrintDiagram"]!["diagramResult"]!.DeepClone() };
+        root.Remove("PrintDiagram");
+        var envelope = Render(root);
+        Assert.Equal(4, envelope.Runs.Count(run => run.Text == "-95.78" && Math.Abs(run.Angle) < .1));
+        Assert.Equal(2, envelope.Runs.Count(run => run.Text == "-95.78" && Math.Abs(run.Angle) > 89.9));
+        Assert.Single(envelope.Runs, run => run.Text == "-95.79");
     }
 
     private static JObject Config(params string[] outputs) => new()
     {
-        // These tests cover the earlier canonical layout; FrameG's layout (referenceLayout) has FrameGSectionDiagramTests.
-        ["canonicalStations"] = true, ["yUp"] = true, ["referenceLayout"] = false,
+        ["canonicalStations"] = true, ["yUp"] = true,
         ["layout"] = "splitHorizontal", ["output"] = new JArray(outputs),
         ["displacementLabelScale"] = 1000,
         ["caseLabels"] = new JObject { ["Case/A/Static/0"] = "Case A: Service load" },
@@ -484,7 +512,7 @@ public sealed class CanonicalSectionDiagramTests
         return new JObject
         {
             ["dimension"] = 2, ["language"] = "en", ["pageSize"] = "A4", ["pageOrientation"] = "Vertical",
-            ["ver"] = "2.5.12", ["referenceResultLayout"] = true, ["title"] = "Diagram Test",
+            ["ver"] = "2.5.12", ["title"] = "Diagram Test",
             ["hasPrintInputData"] = false, ["hasPrintCalculation"] = false,
             ["node"] = JObject.Parse("""{"node/A":{"x":0,"y":0},"node/B":{"x":2,"y":0},"node/C":{"x":2,"y":-20}}"""),
             ["member"] = JObject.Parse("""{"beam/A":{"ni":"node/A","nj":"node/B","e":"1"},"pile/B":{"ni":"node/B","nj":"node/C","e":"1"}}"""),

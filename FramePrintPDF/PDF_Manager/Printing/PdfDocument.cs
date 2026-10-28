@@ -41,7 +41,8 @@ namespace PDF_Manager.Printing
         private PageSize pageSize;
         private PageOrientation pageOrientation;        
         private string title;   // 全ページ共通 左上に印字するタイトル
-        private readonly bool referenceResultLayout;
+        // 2D reports use FrameG's layout (原宿ボックス 0404) on any paper; 3D keeps the original one.
+        private readonly bool frameG;
                                 // private string casename;    //  左上に印字するケース名
 
         /// <summary>
@@ -58,7 +59,7 @@ namespace PDF_Manager.Printing
 
         internal XFont TableFont(string language)
         {
-            if (!referenceResultLayout || pageOrientation != PageOrientation.Portrait)
+            if (!frameG)
                 return language == "cn" ? font_simsun : font_mic;
             return new XFont(language == "cn" ? "simsun" : "MS Mincho",
                 ReferencePortraitFontSize, XFontStyle.Regular);
@@ -94,7 +95,7 @@ namespace PDF_Manager.Printing
             this.font_simsun = new XFont("simsun", printManager.FontSize, XFontStyle.Regular);
 
             this.title = pd.title;
-            this.referenceResultLayout = pd.dimension == 2 && pd.referenceResultLayout;
+            this.frameG = pd.dimension == 2;
 
             // 新しいページを作成する
             this.NewPage(pd.pageSize, pd.pageOrientation, ref indexPage);
@@ -181,9 +182,10 @@ namespace PDF_Manager.Printing
             this.Margine.Left = 35;
             this.Margine.Right = 25;
             this.Margine.Bottom = 25;
-            if (referenceResultLayout && pageOrientation == PageOrientation.Portrait)
+            if (frameG)
             {
                 // FrameG's printable area on A4 (原宿ボックス 0404): text from 25.3 mm, baselines down to 778.6 pt (about 22 mm from the bottom).
+                // Other papers keep the same distances from the top left.
                 this.Margine.Left = FrameGLeft;
                 this.Margine.Bottom = FrameGBottom;
             }
@@ -199,9 +201,29 @@ namespace PDF_Manager.Printing
             this.Margine.Bottom = 25;
         }
 
-        /// <summary>The pages print their own header (FrameG's 断面力図 pages); NewPage adds no "TITLE :" or page number.</summary>
-        internal bool OwnPageHeader;
+        /// <summary>The pages print their own header (FrameG's 荷重図 and 断面力図 pages); NewPage adds no "TITLE :" or page number.</summary>
+        private bool ownPageHeader;
         internal string Title => title;
+
+        /// <summary>
+        /// Starts pages that print their own header. The page in hand already carries the text pages'
+        /// "TITLE :"; an untouched one is replaced, so the current page is always a fresh headerless page.
+        /// </summary>
+        internal void BeginOwnHeaderPages(ref int indexPage)
+        {
+            ownPageHeader = true;
+            if (currentPos.Equals(initialPos))
+            {
+                gfx.Dispose();
+                gfx = null;
+                document.Pages.Remove(currentPage);
+                indexPage--;
+            }
+            NewPage(ref indexPage);
+        }
+
+        /// <summary>Later pages carry the text pages' header again.</summary>
+        internal void EndOwnHeaderPages() => ownPageHeader = false;
 
         internal const double FrameGLeft = 71.6;
         internal const double FrameGBottom = 60.0;
@@ -228,13 +250,13 @@ namespace PDF_Manager.Printing
             this.currentPos.Y += printManager.titlePos.Y;
             this.currentPos.X += printManager.titlePos.X;
 
-            if (OwnPageHeader)
+            if (ownPageHeader)
             {
                 this.initialPos = this.currentPos;
                 indexPage++;
                 return;
             }
-            if (referenceResultLayout && this.pageOrientation == PageOrientation.Portrait)
+            if (frameG)
             {
                 this.currentPos = new XPoint(71.6, 70.7);
                 if (this.title != null)

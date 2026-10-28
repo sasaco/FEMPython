@@ -12,7 +12,6 @@ internal static class PrintResultMetadata
     internal static void Apply(JsonObject root, JsonObject saved, PrintSnapshot snapshot)
     {
         CalculationResultPresentation presentation = snapshot.Result!;
-        if (presentation.Dimension == 2) root["referenceResultLayout"] = true;
         AddLabels(root, saved, presentation);
         var ordinary = new JsonArray();
         root["ordinaryDisplacementCombinations"] = ordinary;

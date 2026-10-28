@@ -43,7 +43,7 @@ public sealed class SectionDiagramProjectionTests
             Assert.NotNull(details["canonicalStations"]);
             Assert.True(details["canonicalStations"]!.GetValue<bool>());
             Assert.False(details["yUp"]!.GetValue<bool>());
-            Assert.True(details["referenceLayout"]!.GetValue<bool>());
+            Assert.Null(details["referenceLayout"]); // FramePrintPDF lays out every 2D diagram as FrameG's.
             Assert.Equal(label, details["caseLabels"]![caseId]!.GetValue<string>());
             Assert.Equal("splitHorizontal", details["layout"]!.GetValue<string>());
             Assert.Equal(0.05, details["scaleX"]!.GetValue<double>());

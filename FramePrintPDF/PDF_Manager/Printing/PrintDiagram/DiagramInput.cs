@@ -159,7 +159,7 @@ namespace PDF_Manager.Printing
         /// <param name="data">入力データ</param>
         private void printLoad(PdfDocument mc, PrintData data, ref int indexPage)
         {
-            if (data.dimension == 2 && data.referenceResultLayout)
+            if (data.dimension == 2)
             {
                 // FrameG の体裁（原宿ボックス 0404）：上下 2 段書き、single_layout_cases は 1 頁に 1 ケース
                 new FrameGLoadDiagram(mc, data).Print(loadRows ?? new JObject(),

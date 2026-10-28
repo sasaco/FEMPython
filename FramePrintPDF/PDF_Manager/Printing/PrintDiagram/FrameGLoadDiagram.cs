@@ -147,43 +147,39 @@ namespace PDF_Manager.Printing
         internal void Print(JObject loads, InputLoadName names, bool split, ICollection<int> singleCases, ref int indexPage)
         {
             if (nodes.Count == 0 || members.Count == 0) return;
-            if (!mc.currentPos.Equals(mc.initialPos)) mc.NewPage(ref indexPage);
-            BlankPage();
-            bool pageUsed = false, upperUsed = false, titled = false;
-            int index = 0;
-            foreach (var pair in loads)
+            // FrameG の図の頁に頁頭の題名（TITLE :）は無い。
+            mc.BeginOwnHeaderPages(ref indexPage);
+            try
             {
-                mc.CheckBudget();
-                bool single = !split || singleCases.Contains(index);
-                int slot;
-                if (single || !upperUsed)
+                bool pageUsed = false, upperUsed = false, titled = false;
+                int index = 0;
+                foreach (var pair in loads)
                 {
-                    if (pageUsed) { mc.NewPage(ref indexPage); BlankPage(); }
-                    slot = 0;
-                    upperUsed = !single;
+                    mc.CheckBudget();
+                    bool single = !split || singleCases.Contains(index);
+                    int slot;
+                    if (single || !upperUsed)
+                    {
+                        if (pageUsed) mc.NewPage(ref indexPage);
+                        slot = 0;
+                        upperUsed = !single;
+                    }
+                    else
+                    {
+                        slot = 1;
+                        upperUsed = false;
+                    }
+                    pageUsed = true;
+                    bool pageTitle = !titled;
+                    titled = true;
+                    int.TryParse(pair.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out int caseNo);
+                    names.loadnames.TryGetValue(caseNo, out var name);
+                    DrawCase(pair.Key, name, pair.Value as JObject ?? new JObject(), single ? SingleSlot : SplitSlots[slot],
+                        slot == 1, pageTitle);
+                    index++;
                 }
-                else
-                {
-                    slot = 1;
-                    upperUsed = false;
-                }
-                pageUsed = true;
-                bool pageTitle = !titled;
-                titled = true;
-                int.TryParse(pair.Key, NumberStyles.Integer, CultureInfo.InvariantCulture, out int caseNo);
-                names.loadnames.TryGetValue(caseNo, out var name);
-                DrawCase(pair.Key, name, pair.Value as JObject ?? new JObject(), single ? SingleSlot : SplitSlots[slot],
-                    slot == 1, pageTitle);
-                index++;
             }
-        }
-
-        /// <summary>改頁で印字された頁頭（TITLE :）を消して白紙にする。FrameG の図の頁に頁頭の題名は無い。</summary>
-        private void BlankPage()
-        {
-            mc.gfx.Dispose();
-            mc.currentPage.Contents.Elements.Clear();
-            mc.gfx = XGraphics.FromPdfPage(mc.currentPage);
+            finally { mc.EndOwnHeaderPages(); }
         }
 
         private double PageWidth => mc.currentPage.Width.Point;

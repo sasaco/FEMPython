@@ -101,7 +101,6 @@ namespace PDF_Manager.Printing
 
         public ResultFsecCombine(Dictionary<string, object> value, string key = ResultFsecCombine.KEY)
         {
-            referenceLayout = ReferenceResultLayout.Enabled(value);
             reportPrefix = key == "fsecPickup" ? "PICK UP " : "COMBINE ";
             if (!value.ContainsKey(key))
                 return;
@@ -571,13 +570,11 @@ namespace PDF_Manager.Printing
         }
 
         #region PrintableBaseC.printPDF()用メソッド定義
-        private readonly bool referenceLayout;
         private readonly string reportPrefix;
         public new void printPDF(PdfDocument mc, PrintData data, ref int indexPage)
         {
-            if (!referenceLayout || data.dimension != 2)
+            if (data.dimension != 2)
             { base.printPDF(mc, data, ref indexPage); return; }
-            bool nextGroup = false;
             foreach (var entry in Fsecs)
             {
                 // Reference order is bending moment, shear, then axial force.
@@ -586,23 +583,15 @@ namespace PDF_Manager.Printing
                     var max = entry.Value.getValue2(focus.Max);
                     var min = entry.Value.getValue2(focus.Max + 1);
                     if (!max.Any() && !min.Any()) continue;
-                    if (ReferenceResultLayout.Portrait(mc))
+                    // FrameG spells the shear page "SHARE"; the report prints "SHEAR" in the same field.
+                    string force = focus.Name == "SHARE" ? "SHEAR" : focus.Name;
+                    fsecnames.TryGetValue(entry.Key, out string name);
+                    foreach (var extremum in new[] { (Rows: max, Name: "MAX."), (Rows: min, Name: "MIN.") })
                     {
-                        // FrameG spells the shear page "SHARE"; the report prints "SHEAR" in the same field.
-                        string force = focus.Name == "SHARE" ? "SHEAR" : focus.Name;
-                        fsecnames.TryGetValue(entry.Key, out string name);
-                        foreach (var extremum in new[] { (Rows: max, Name: "MAX."), (Rows: min, Name: "MIN.") })
-                        {
-                            if (!extremum.Rows.Any()) continue;
-                            FrameGEnvelopeLayout.Print(mc, data, ref indexPage, reportPrefix == "PICK UP ",
-                                entry.Key, name, $"{force,-6} {extremum.Name}", extremum.Rows);
-                        }
-                        continue;
+                        if (!extremum.Rows.Any()) continue;
+                        FrameGEnvelopeLayout.Print(mc, data, ref indexPage, reportPrefix == "PICK UP ",
+                            entry.Key, name, $"{force,-6} {extremum.Name}", extremum.Rows);
                     }
-                    ReferenceResultLayout.Forces(mc, data, ref indexPage,
-                        reportPrefix + entry.Key + " " + fsecnames[entry.Key] + " " + focus.Name + " MAX.", max,
-                        focus.Name + " MIN.", min, envelope: true, newGroup: nextGroup);
-                    nextGroup = true;
                 }
             }
         }

@@ -11,8 +11,7 @@ namespace PDF_Manager.Printing
     // The member mark (ﾏｰｸ) and the notice point names are not in the saved input, so their cells stay empty.
     internal sealed class FrameGInputLayout
     {
-        internal static bool Applies(PdfDocument document, PrintData data) =>
-            data.dimension == 2 && data.referenceResultLayout && ReferenceResultLayout.Portrait(document);
+        internal static bool Applies(PdfDocument document, PrintData data) => data.dimension == 2;
 
         private const double Top = 87.5;              // the first baseline under the page title
         private const double Line = 8.975;            // FrameG's line pitch
@@ -326,6 +325,15 @@ namespace PDF_Manager.Printing
             if (sheets == null) return;
             var types = sheets.Where(sheet => sheet.Value.Count > 0).OrderBy(sheet => sheet.Key).ToList();
             if (types.Count == 0) return;
+            // FrameG has one spring per member and TYPE over the whole member. Partial spring intervals
+            // (FrameWeb's length), repeated members or springs on unknown members keep the generic table,
+            // which prints every row.
+            if (types.Any(sheet => sheet.Value.Any(row => row.length.HasValue || !members.ContainsKey(row.m)) ||
+                sheet.Value.GroupBy(row => row.m).Any(rows => rows.Count() > 1)))
+            {
+                Legacy(InputFixMember.KEY);
+                return;
+            }
             // FrameG lists every member that has a spring in any TYPE.
             var springMembers = new HashSet<string>(types.SelectMany(sheet => sheet.Value.Select(row => row.m)));
             var listed = ById(members).Where(member => springMembers.Contains(member.Key)).ToList();

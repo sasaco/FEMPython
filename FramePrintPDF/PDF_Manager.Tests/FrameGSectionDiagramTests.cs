@@ -14,7 +14,6 @@ public sealed class FrameGSectionDiagramTests
         JObject root = Job();
         root["language"] = language;
         var settings = (JObject)root["PrintDiagram"]!["diagramResult"]!;
-        settings["referenceLayout"] = true;
         settings["yUp"] = false;
         return root;
     }

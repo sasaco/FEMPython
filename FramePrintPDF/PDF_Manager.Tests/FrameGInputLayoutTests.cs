@@ -172,10 +172,10 @@ public sealed class FrameGInputLayoutTests
     }
 
     [Fact]
-    public void WithoutTheReferenceFlagTheGenericTablesRemain()
+    public void ThreeDimensionalInputKeepsTheGenericTables()
     {
         var root = Model();
-        root["referenceResultLayout"] = false;
+        root["dimension"] = 3;
 
         var pdf = Pdf(root);
 
@@ -191,7 +191,7 @@ public sealed class FrameGInputLayoutTests
     private static JObject Model() => JObject.Parse("""
         {
           "dimension": 2, "language": "ja", "pageSize": "A4", "pageOrientation": "Vertical",
-          "referenceResultLayout": true, "hasPrintInputData": true, "hasPrintCalculation": false, "title": "FrameG",
+          "hasPrintInputData": true, "hasPrintCalculation": false, "title": "FrameG",
           "node": { "1": { "x": 0, "y": -3.225 }, "2": { "x": 0.35, "y": -3.225 }, "3": { "x": 4.4, "y": -3.225 },
                     "4": { "x": 4.4, "y": 0 } },
           "member": { "1": { "ni": "1", "nj": "2", "e": "1" }, "2": { "ni": "2", "nj": "3", "e": "2" },

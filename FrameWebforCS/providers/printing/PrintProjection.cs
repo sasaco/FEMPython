@@ -234,8 +234,6 @@ internal static class PrintProjection
         BridgePrintProjection.AddTables(root, saved, snapshot);
         AddVectorDiagrams(root, snapshot);
         AddCapturedDiagrams(root, snapshot.DiagramRequests, images);
-        if (root["dimension"]?.GetValue<int>() == 2 && root["referenceResultLayout"] is null)
-            root["referenceResultLayout"] = true;
         if (stillCurrent is not null && !stillCurrent())
             throw new PrintProjectionException("The document changed while preparing the print preview.");
         return root.ToJsonString();

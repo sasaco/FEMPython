@@ -137,15 +137,6 @@ public sealed class FrameGLoadDiagramTests
         Near(pdf.Single(3, " Ｃase 4  永久作用としての側圧　EHP"), 78.0 / 595 * 842, 443.3 / 842 * 595, height: 595);
     }
 
-    [Fact]
-    public void OtherLayoutsKeepTheEarlierLoadDiagram()
-    {
-        JObject root = Box();
-        root.Remove("referenceResultLayout");
-        var pdf = Render(root);
-        Assert.Contains(pdf.Runs, r => r.Text.StartsWith("荷 重 図  Case 1"));
-        Assert.DoesNotContain(pdf.Runs, r => r.Text.StartsWith(" Ｃase"));
-    }
 
     private static bool Close((double X, double Y) point, double x, double top) =>
         Math.Abs(point.X - x) < 0.5 && Math.Abs(842 - point.Y - top) < 0.5;
@@ -161,7 +152,7 @@ public sealed class FrameGLoadDiagramTests
     {
         var root = JObject.Parse("""
             {"dimension":2,"language":"ja","pageSize":"A4","pageOrientation":"Vertical","ver":"2.5.12",
-             "title":"0404_完成時FrameG","referenceResultLayout":true,
+             "title":"0404_完成時FrameG",
              "node":{"1":{"x":0.0,"y":-3.225},"2":{"x":0.35,"y":-3.225},"3":{"x":4.4,"y":-3.225},"4":{"x":4.75,"y":-3.225},
                      "5":{"x":0.0,"y":-2.975},"6":{"x":0.0,"y":-0.751},"7":{"x":0.0,"y":0.0},"8":{"x":4.75,"y":-2.975},
                      "9":{"x":4.75,"y":-0.751},"10":{"x":4.75,"y":0.0}},

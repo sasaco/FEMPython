@@ -12,10 +12,6 @@ namespace PDF_Manager.Printing
         internal static string Provenance(string source, string expression) =>
             string.IsNullOrEmpty(expression) ? source ?? "" : "(" + source + " : " + expression + ")";
 
-        private static string CompactProvenance(string source, string expression) =>
-            string.IsNullOrEmpty(expression) ? source ?? "" : "(" + source + ":" +
-                new string(expression.Where(character => !char.IsWhiteSpace(character)).ToArray()) + ")";
-
         internal static List<string> Wrap(PdfDocument document, XFont font, string text, double width)
         {
             var lines = new List<string>();
@@ -75,14 +71,9 @@ namespace PDF_Manager.Printing
             { Cells = cells; Caption = caption; IsCaption = isCaption; Height = height; }
         }
 
-        internal static bool Portrait(PdfDocument document) => document.currentPage.Width < document.currentPage.Height;
-
+        // FrameG's coordinates are A4 portrait points; other papers keep the same font and distances.
         internal static XFont ReportFont(PdfDocument document, PrintData data) =>
-            new XFont(data.language == "cn" ? "SimSun" : "MS Mincho",
-                Portrait(document) ? PdfDocument.ReferencePortraitFontSize : 10);
-
-        internal static bool Enabled(Dictionary<string, object> root) =>
-            root.TryGetValue("referenceResultLayout", out var enabled) && Convert.ToBoolean(enabled);
+            new XFont(data.language == "cn" ? "SimSun" : "MS Mincho", PdfDocument.ReferencePortraitFontSize);
 
         // FrameG's case heading: the ID right-aligned in two columns, then the separator and the name.
         internal static string FrameGCaseTitle(string key, string name, string separator)
@@ -92,15 +83,8 @@ namespace PDF_Manager.Printing
             return $"CASE {id,2}" + (name == id || string.IsNullOrEmpty(name) ? "" : separator + name);
         }
 
-        internal static string CaseTitle(string key, string name)
-        {
-            // Canonical lookup keys include result kind and step; report captions do not.
-            int suffix = key.IndexOf("/Static/", StringComparison.Ordinal);
-            string id = suffix < 0 ? key : key.Substring(0, suffix);
-            return "CASE " + id + (name == id ? "" : " " + name);
-        }
-
-        // These are report panels, not Table.Nup's successive rows of the same case.
+        // These are report panels, not Table.Nup's successive rows of the same case: FrameG's basic member
+        // forces (squareViewport) and the paired COMBINE displacements ("Displacement").
         internal static void Print(PdfDocument document, PrintData data, ref int page,
             string title, string[][] headers, double[] widths, IReadOnlyList<Row> rows,
             bool newGroup = false, int[] panelStarts = null, bool keepMemberTogether = false,
@@ -108,16 +92,12 @@ namespace PDF_Manager.Printing
         {
             if (rows.Count == 0) return;
             if (newGroup && !document.currentPos.Equals(document.initialPos)) document.NewPage(ref page);
-            double lineHeight = Portrait(document) ? 9 : 10.5;
+            const double lineHeight = 9;
             var font = ReportFont(document, data);
-            // The portrait basic-force reference keeps the compact table viewport;
-            // its tall paper does not expand that report's vertical composition.
-            // FrameG fills the portrait page with one case's member forces (原宿ボックス 0404).
+            // FrameG fills the page with one case's member forces (原宿ボックス 0404).
             double pageHeight = document.currentPage.Height;
-            bool referenceBasic = data.referenceResultLayout && Portrait(document) && squareViewport;
-            bool referencePickup = data.referenceResultLayout && Portrait(document) &&
-                (title.StartsWith("PICK UP ", StringComparison.Ordinal) || title.StartsWith("COMBINE ", StringComparison.Ordinal));
-            bool referenceDisplacement = data.referenceResultLayout && Portrait(document) && title == "Displacement";
+            bool referenceBasic = squareViewport;
+            bool referenceDisplacement = !squareViewport;
             double bottomMargin = referenceDisplacement ? 15 : document.Margine.Bottom;
             if (referenceBasic)
             {
@@ -125,22 +105,11 @@ namespace PDF_Manager.Printing
                 headers = new[] { headers[1], headers[0] };
                 wrapFirstHeader = false;
             }
-            else if (referencePickup)
-            {
-                widths = new double[] { 79.3, 68.7, 54.1, 54.2, 37.8, 144.3 };
-                headers = new[] { headers[0], headers[1] };
-                wrapFirstHeader = false;
-            }
-            else if (referenceDisplacement)
+            else
             {
                 widths = new double[] { 59, 58, 50, 67, 16, 59, 58, 50, 67 };
                 headers = headers.Select(row => row.ToArray()).ToArray();
                 headers[0][0] = headers[0][5] = "";
-            }
-            else
-            {
-                double scale = document.currentPageSize.Width / widths.Sum();
-                widths = widths.Select(width => width * scale).ToArray();
             }
             // A case caption can include a long load name and a weighted expression.
             // Wrap within each panel so it cannot overwrite its neighbour's caption.
@@ -217,87 +186,74 @@ namespace PDF_Manager.Printing
                     table.RowHeight[0] = 11.6;
                     table.RowHeight[1] = 11.6;
                 }
-                if (referencePickup && pageHeaders.Length == 2)
-                {
-                    table.RowHeight[0] = 13.5;
-                    table.RowHeight[1] = 13.4;
-                }
                 for (int row = 0; row < pageRows.Count; row++) table.RowHeight[pageHeaders.Length + row] = Height(pageRows[row]);
                 var cells = pageHeaders.Concat(pageRows.Select(row => row.Cells)).ToArray();
                 for (int row = 0; row < cells.Length; row++)
                 for (int column = 0; column < cells[row].Length; column++)
                 {
-                    bool stationLabel = (referenceBasic || referencePickup) && column == 0 &&
-                        row >= pageHeaders.Length && !pageRows[row - pageHeaders.Length].IsCaption;
+                    bool dataRow = row >= pageHeaders.Length && !pageRows[row - pageHeaders.Length].IsCaption;
                     // FrameG right-aligns the basic values on its own column edges; drawn below.
-                    bool basicValue = referenceBasic && column > 0 && row >= pageHeaders.Length &&
-                        !pageRows[row - pageHeaders.Length].IsCaption;
+                    bool basicLabelOrValue = referenceBasic && dataRow;
                     bool basicCaption = referenceBasic && column == 0 &&
                         (row == 1 || row >= pageHeaders.Length && pageRows[row - pageHeaders.Length].IsCaption);
-                    table[row, column] = stationLabel || basicCaption || basicValue ? "" : cells[row][column];
-                    table.AlignX[row, column] = (referenceBasic || referencePickup) && column == 0 &&
-                        row >= pageHeaders.Length && !pageRows[row - pageHeaders.Length].IsCaption ? "R"
-                        : (referenceBasic || referencePickup) ? "L"
-                        : referenceDisplacement && row >= pageHeaders.Length &&
-                        !pageRows[row - pageHeaders.Length].IsCaption && (column == 0 || column == 5) ? "C"
+                    table[row, column] = basicLabelOrValue || basicCaption ? "" : cells[row][column];
+                    table.AlignX[row, column] = referenceBasic ? (dataRow && column == 0 ? "R" : "L")
+                        : dataRow && (column == 0 || column == 5) ? "C"
                         : row < pageHeaders.Length || starts.Contains(column) ? "L" : "R";
                 }
-                if (referenceBasic || referencePickup || referenceDisplacement)
+                if (titleRequired)
                 {
-                    if (titleRequired)
+                    document.currentPos.X = 115.7;
+                    string heading = referenceDisplacement ? "変 位 量" : title;
+                    Text.PrtText(document, heading, font);
+                    if (referenceBasic)
                     {
-                        document.currentPos.X = referencePickup ? 91.9 : 115.7;
-                        string heading = referenceDisplacement ? "変 位 量" : title;
-                        Text.PrtText(document, heading, font);
-                        if (referenceBasic)
-                        {
-                            // FrameG underlines the report title with a hairline.
-                            double width = document.gfx.MeasureString(heading, font).Width;
-                            document.gfx.DrawLine(new XPen(XColors.Black, 0.12), document.currentPos.X - 3.7,
-                                document.currentPos.Y + 2.1, document.currentPos.X + width + 6.7, document.currentPos.Y + 2.1);
-                        }
-                        document.addCurrentY(referenceBasic ? -0.8 : referencePickup ? -0.1 : 13.4);
+                        // FrameG underlines the report title with a hairline.
+                        double width = document.gfx.MeasureString(heading, font).Width;
+                        document.gfx.DrawLine(new XPen(XColors.Black, 0.12), document.currentPos.X - 3.7,
+                            document.currentPos.Y + 2.1, document.currentPos.X + width + 6.7, document.currentPos.Y + 2.1);
                     }
-                    double tableStartX = referenceBasic ? 115.7 : referencePickup ? 91.9 : 75.1;
-                    document.currentPos.X = tableStartX;
-                    double tableStartY = document.currentPos.Y;
-                    table.PrintTable(document, font);
-                    if (referenceBasic || referencePickup || referenceDisplacement && pageHeaders.Length == 2)
+                    document.addCurrentY(referenceBasic ? -0.8 : 13.4);
+                }
+                double tableStartX = referenceBasic ? 115.7 : 75.1;
+                document.currentPos.X = tableStartX;
+                double tableStartY = document.currentPos.Y;
+                table.PrintTable(document, font);
+                if (referenceBasic || pageHeaders.Length == 2)
+                {
+                    var tableEnd = document.currentPos;
+                    if (referenceBasic)
                     {
-                        var tableEnd = document.currentPos;
-                        if (referenceBasic || referencePickup)
+                        double baselineY = tableStartY;
+                        for (int row = 0; row < cells.Length; row++)
                         {
-                            double baselineY = tableStartY;
-                            for (int row = 0; row < cells.Length; row++)
+                            baselineY += table.RowHeight[row] > 0 ? table.RowHeight[row] : lineHeight;
+                            if (row == 1)
                             {
-                                baselineY += table.RowHeight[row] > 0 ? table.RowHeight[row] : lineHeight;
-                                if (referenceBasic && row == 1)
-                                {
-                                    document.currentPos = new XPoint(132.6, baselineY);
-                                    Text.PrtText(document, cells[row][0], font);
-                                }
-                                if (row < pageHeaders.Length) continue;
-                                if (referenceBasic && pageRows[row - pageHeaders.Length].IsCaption)
-                                {
-                                    document.currentPos = new XPoint(146.1, baselineY);
-                                    Text.PrtText(document, cells[row][0], font);
-                                }
-                                else if (!pageRows[row - pageHeaders.Length].IsCaption &&
-                                    !string.IsNullOrEmpty(cells[row][0]))
-                                {
-                                    document.currentPos = new XPoint(tableStartX + widths[0] - 20, baselineY);
-                                    Text.PrtText(document, cells[row][0], font, XStringFormats.BottomRight);
-                                }
-                                if (referenceBasic && !pageRows[row - pageHeaders.Length].IsCaption)
-                                    for (int column = 1; column < cells[row].Length; column++)
-                                    {
-                                        if (string.IsNullOrEmpty(cells[row][column])) continue;
-                                        document.currentPos = new XPoint(tableStartX + BasicValueRight[column - 1], baselineY);
-                                        Text.PrtText(document, cells[row][column], font, XStringFormats.BottomRight);
-                                    }
+                                document.currentPos = new XPoint(132.6, baselineY);
+                                Text.PrtText(document, cells[row][0], font);
+                            }
+                            if (row < pageHeaders.Length) continue;
+                            if (pageRows[row - pageHeaders.Length].IsCaption)
+                            {
+                                document.currentPos = new XPoint(146.1, baselineY);
+                                Text.PrtText(document, cells[row][0], font);
+                                continue;
+                            }
+                            if (!string.IsNullOrEmpty(cells[row][0]))
+                            {
+                                document.currentPos = new XPoint(tableStartX + widths[0] - 20, baselineY);
+                                Text.PrtText(document, cells[row][0], font, XStringFormats.BottomRight);
+                            }
+                            for (int column = 1; column < cells[row].Length; column++)
+                            {
+                                if (string.IsNullOrEmpty(cells[row][column])) continue;
+                                document.currentPos = new XPoint(tableStartX + BasicValueRight[column - 1], baselineY);
+                                Text.PrtText(document, cells[row][column], font, XStringFormats.BottomRight);
                             }
                         }
-                        if (referenceDisplacement && pageHeaders.Length == 2)
+                    }
+                    else
                         foreach (double x in new[] { 89.8, 339.8 })
                         {
                             document.currentPos = new XPoint(x, tableStartY + table.RowHeight[0]);
@@ -305,16 +261,14 @@ namespace PDF_Manager.Printing
                             document.currentPos = new XPoint(x, tableStartY + table.RowHeight[0] + table.RowHeight[1]);
                             Text.PrtText(document, "NO.", font);
                         }
-                        document.currentPos = tableEnd;
-                    }
-                    document.addCurrentY(printManager.LineSpacing1);
+                    document.currentPos = tableEnd;
                 }
-                else
-                    printManager.printTableContents(document, table, new[] { title }, titleRequired, font);
+                document.addCurrentY(printManager.LineSpacing1);
                 document.addCurrentY((referenceDisplacement ? 0 : 5) - printManager.LineSpacing1);
                 if (next < rows.Count) document.NewPage(ref page);
             }
         }
+
 
         // FrameG's displacement report (原宿ボックス 0404, 5-18): one column of cases, a case kept whole.
         // Positions are FrameG's in points; values are right-aligned on their column edges.
@@ -413,6 +367,7 @@ namespace PDF_Manager.Printing
         // Right edges of DIST, M, S and N from the table's left edge in FrameG's member forces.
         private static readonly double[] BasicValueRight = { 158.4, 222.8, 280.4, 337.9 };
 
+        // The paired COMBINE displacements ("Combine変位量", not part of the FrameG comparison).
         internal static void Displacements(PdfDocument document, PrintData data, ref int page,
             string leftTitle, IReadOnlyList<Disg> left, string rightTitle, IReadOnlyList<Disg> right)
         {
@@ -422,125 +377,28 @@ namespace PDF_Manager.Printing
             if (idWidth > document.currentPageSize.Width / 2 - 3 * 55)
                 throw new InvalidOperationException("A displacement node ID is too wide for the paired report.");
             var rows = new List<Row>();
-            string[] caption = null;
-            if (Portrait(document))
-            {
-                caption = new[] { leftTitle, "", "", "", "", rightTitle, "", "", "" };
-                rows.Add(new Row(caption, caption, true, data.referenceResultLayout ? 17.9 : 13.5));
-            }
+            string[] caption = { leftTitle, "", "", "", "", rightTitle, "", "", "" };
+            rows.Add(new Row(caption, caption, true, 17.9));
             for (int i = 0; i < Math.Max(left.Count, right.Count); i++)
                 rows.Add(new Row(DisplacementCells(i < left.Count ? left[i] : null)
                     .Concat(new[] { "" }).Concat(DisplacementCells(i < right.Count ? right[i] : null)).ToArray(),
-                    caption, height: Portrait(document) && i == 0 ? 13.5 : 0));
-            if (Portrait(document))
-            {
-                Print(document, data, ref page, "Displacement",
-                    new[] {
-                        new[] { "JOINT NO.", "X-DISP.", "Y-DISP.", "ROTATION", "", "JOINT NO.", "X-DISP.", "Y-DISP.", "ROTATION" },
-                        new[] { "", "(mm)", "(mm)", "(mRad)", "", "", "(mm)", "(mm)", "(mRad)" } },
-                    new[] { idWidth, 75, 75, 75, 20, idWidth, 75, 75, 75 }, rows,
-                    panelStarts: new[] { 0, 5 }, headersOnlyAtPageStart: true, wrapFirstHeader: false);
-                return;
-            }
+                    caption, height: i == 0 ? 13.5 : 0));
             Print(document, data, ref page, "Displacement",
                 new[] {
-                    new[] { leftTitle, "", "", "", "", rightTitle, "", "", "" },
                     new[] { "JOINT NO.", "X-DISP.", "Y-DISP.", "ROTATION", "", "JOINT NO.", "X-DISP.", "Y-DISP.", "ROTATION" },
                     new[] { "", "(mm)", "(mm)", "(mRad)", "", "", "(mm)", "(mm)", "(mRad)" } },
-                new[] { idWidth, 75, 75, 75, 20, idWidth, 75, 75, 75 }, rows, panelStarts: new[] { 0, 5 });
+                new[] { idWidth, 75, 75, 75, 20, idWidth, 75, 75, 75 }, rows,
+                panelStarts: new[] { 0, 5 }, headersOnlyAtPageStart: true, wrapFirstHeader: false);
         }
 
         private static string[] DisplacementCells(Disg row) => row == null ? new[] { "", "", "", "" }
             : new[] { row.id, printManager.toString(row.dx, 4), printManager.toString(row.dy, 4), printManager.toString(row.rz, 4) };
 
-        internal static void Forces(PdfDocument document, PrintData data, ref int page,
-            string leftTitle, IReadOnlyList<Fsec> left, string rightTitle, IReadOnlyList<Fsec> right,
-            bool envelope, bool newGroup)
-        {
-            double[] widths = envelope ? new double[] { 50, 45, 50, 50, 50, 130, 12, 50, 50, 50, 130 }
-                : new double[] { 50, 50, 75, 75, 75, 20, 50, 50, 75, 75, 75 };
-            var font = new XFont(data.language == "cn" ? "SimSun" : "MS Mincho", 10);
-            double sourceWidth = widths[5] * document.currentPageSize.Width / widths.Sum() - 4;
-            // Include occurrence in the key: equal positions and repeated station IDs may
-            // represent different physical sides and must never be silently collapsed.
-            Dictionary<string, Fsec> Index(IReadOnlyList<Fsec> values)
-            {
-                var occurrences = new Dictionary<string, int>();
-                var index = new Dictionary<string, Fsec>();
-                foreach (var row in values)
-                {
-                    string identity = row.m + "\0" + row.n;
-                    occurrences.TryGetValue(identity, out int occurrence);
-                    occurrences[identity] = occurrence + 1;
-                    index.Add(identity + "\0" + occurrence, row);
-                }
-                return index;
-            }
-            var a = Index(left);
-            var b = Index(right);
-            var keys = a.Keys.Concat(b.Keys.Where(key => !a.ContainsKey(key)));
-            var rows = new List<Row>();
-            string member = null;
-            string[] caption = null;
-            foreach (string key in keys)
-            {
-                a.TryGetValue(key, out var x);
-                b.TryGetValue(key, out var y);
-                Fsec location = x ?? y;
-                if (member != location.m)
-                {
-                    member = location.m;
-                    caption = new string[11];
-                    caption[0] = location.memberCaption ?? "MEMBER " + location.m;
-                    if (!envelope) caption[6] = (y ?? x).memberCaption ?? "MEMBER " + location.m;
-                    rows.Add(new Row(caption, caption, true));
-                }
-                string[] cells;
-                if (envelope)
-                    cells = new[] { location.stationLabel ?? location.n, printManager.toString(location.l, 3) }
-                        .Concat(ForceCells(x, true)).Concat(new[] { "" }).Concat(ForceCells(y, true)).ToArray();
-                else
-                    cells = StationForceCells(x).Concat(new[] { "" }).Concat(StationForceCells(y)).ToArray();
-                if (!envelope) { rows.Add(new Row(cells, caption)); continue; }
-                var sourceA = Wrap(document, font, cells[5], sourceWidth);
-                var sourceB = Wrap(document, font, cells[10], sourceWidth);
-                int lines = Math.Max(sourceA.Count, sourceB.Count);
-                for (int line = 0; line < lines; line++)
-                {
-                    var output = line == 0 ? cells : new string[11];
-                    output[5] = line < sourceA.Count ? sourceA[line] : "";
-                    output[10] = line < sourceB.Count ? sourceB[line] : "";
-                    rows.Add(new Row(output, caption));
-                }
-            }
-            var headers = envelope ? new[] {
-                new[] { leftTitle, "", "", "", "", "", "", rightTitle, "", "", "" },
-                new[] { "", "DIST.", "M", "S", "N", "COM: CASE", "", "M", "S", "N", "COM: CASE" },
-                new[] { "", "(m)", "(kN m)", "(kN)", "(kN)", "", "", "(kN m)", "(kN)", "(kN)", "" } }
-                : new[] {
-                    new[] { leftTitle, "", "", "", "", "", rightTitle, "", "", "", "" },
-                    new[] { "", "DIST.", "M", "S", "N", "", "", "DIST.", "M", "S", "N" },
-                    new[] { "", "(m)", "(kN m)", "(kN)", "(kN)", "", "", "(m)", "(kN m)", "(kN)", "(kN)" } };
-            Print(document, data, ref page, "MEMBER FORCES", headers, widths, rows, newGroup, new[] { 0, envelope ? 7 : 6 });
-        }
-
-        private static string[] StationForceCells(Fsec row) => row == null ? new[] { "", "", "", "", "" }
-            : new[] { row.stationLabel ?? row.n, printManager.toString(row.l, 3) }.Concat(ForceCells(row, false)).ToArray();
-
-        private static string[] ForceCells(Fsec row, bool source)
-        {
-            var values = row == null ? new[] { "", "", "" } : new[] {
-                Number(row.mz, 2), Number(row.fy, 2), Number(row.fx, 2) };
-            return source ? values.Concat(new[] { row == null ? "" : CompactProvenance(row.caseStr, row.comb) }).ToArray() : values;
-        }
-
+        // FrameG's basic member forces (原宿ボックス 0404, 5-7..5-17): one case filling the page.
         internal static void SingleForces(PdfDocument document, PrintData data, ref int page,
-            string caption, IReadOnlyList<Fsec> forces, bool envelope, bool newGroup)
+            string caption, IReadOnlyList<Fsec> forces, bool newGroup)
         {
-            double[] widths = envelope ? new double[] { 50, 45, 50, 50, 50, 130 } : new double[] { 50, 50, 75, 75, 75 };
-            var font = ReportFont(document, data);
-            double sourceWidth = envelope && data.referenceResultLayout && Portrait(document) ? 143
-                : widths.Last() * document.currentPageSize.Width / widths.Sum() - 4;
+            double[] widths = { 50, 50, 75, 75, 75 };
             var rows = new List<Row>();
             string member = null;
             string[] memberCaption = null;
@@ -555,32 +413,14 @@ namespace PDF_Manager.Printing
                     rows.Add(new Row(memberCaption, memberCaption, true, 13.5));
                 }
                 var cells = new[] { string.IsNullOrEmpty(force.stationLabel) ? force.n : force.stationLabel,
-                    printManager.toString(force.l, 3) }.Concat(ForceCells(force, envelope)).ToArray();
-                var source = envelope ? Wrap(document, font, cells.Last(), sourceWidth) : new List<string> { "" };
-                for (int line = 0; line < source.Count; line++)
-                {
-                    var output = line == 0 ? cells : new string[widths.Length];
-                    if (envelope) output[widths.Length - 1] = source[line];
-                    rows.Add(new Row(output, memberCaption, height: first && line == 0 ? 13.5 : 9));
-                }
+                    printManager.toString(force.l, 3), Number(force.mz, 2), Number(force.fy, 2), Number(force.fx, 2) };
+                rows.Add(new Row(cells, memberCaption, height: first ? 13.5 : 9));
             }
             var heading = new string[widths.Length];
-            string reportTitle = "MEMBER FORCES";
-            if (envelope && data.referenceResultLayout && Portrait(document))
-            {
-                var match = Regex.Match(caption, @"^(.*)\s+((?:MOMENT|SHARE|AXIAL) (?:MAX|MIN)\.)$");
-                if (match.Success)
-                {
-                    reportTitle = match.Groups[1].Value;
-                    heading[2] = "     " + match.Groups[2].Value;
-                }
-                else heading[0] = caption;
-            }
-            else heading[0] = caption;
-            var columns = envelope ? new[] { "", "DIST.", "M", "S", "N", "COM: CASE" } : new[] { "", "DIST.", "M", "S", "N" };
-            var units = envelope ? new[] { "", "(m)", "(kN m)", "(kN)", "(kN)", "" } : new[] { "", "(m)", "(kN m)", "(kN)", "(kN)" };
-            Print(document, data, ref page, reportTitle, new[] { heading, columns, units }, widths, rows,
-                newGroup, new[] { 0 }, keepMemberTogether: !envelope, squareViewport: !envelope);
+            heading[0] = caption;
+            Print(document, data, ref page, "MEMBER FORCES", new[] { heading,
+                    new[] { "", "DIST.", "M", "S", "N" }, new[] { "", "(m)", "(kN m)", "(kN)", "(kN)" } },
+                widths, rows, newGroup, new[] { 0 }, keepMemberTogether: true, squareViewport: true);
         }
     }
 }

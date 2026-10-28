@@ -31,7 +31,6 @@ namespace PDF_Manager.Printing
         private const double DisplacementDivision = .4;
         private const int MaxDisplacementDivisions = 10;
 
-        private bool frameGLayout;
         private HashSet<string> rigidMembers = new HashSet<string>(StringComparer.Ordinal);
         private readonly Dictionary<string, Tuple<double, double>> rigidZones =
             new Dictionary<string, Tuple<double, double>>(StringComparer.Ordinal);
@@ -75,21 +74,17 @@ namespace PDF_Manager.Printing
             TrimMargins margins = document.Margine;
             document.Margine = new TrimMargins
             { Left = FrameGLeft, Top = TitleBaseline - TitleSize, Right = FrameGRight, Bottom = FrameGBottom };
-            // The page in hand is fresh and carries the text pages' "TITLE :" header; FrameG's diagram
-            // pages have their own header, so this page is replaced instead of drawn on.
-            PdfPage fresh = document.currentPage;
-            document.gfx.Dispose();
-            document.gfx = null;
-            fresh.Owner.Pages.Remove(fresh);
-            pageIndex--;
-            document.OwnPageHeader = true;
+            // FrameG's diagram pages have their own header instead of the text pages' "TITLE :".
+            document.BeginOwnHeaderPages(ref pageIndex);
             try
             {
+                bool firstPage = true;
                 foreach (var item in cases)
                     for (int first = 0; first < outputs.Length; first += panels)
                     {
                         document.CheckBudget();
-                        document.NewPage(ref pageIndex);
+                        if (!firstPage) document.NewPage(ref pageIndex);
+                        firstPage = false;
                         DrawFrameGHeader(document, FrameGCaption(item), data.language);
                         for (int slot = 0; slot < panels && first + slot < outputs.Length; slot++)
                         {
@@ -107,7 +102,7 @@ namespace PDF_Manager.Printing
             }
             finally
             {
-                document.OwnPageHeader = false;
+                document.EndOwnHeaderPages();
                 document.Margine = margins;
             }
         }
@@ -244,7 +239,7 @@ namespace PDF_Manager.Printing
                     if (!Finite(row.l) || row.l < -1e-9 * member.Length || row.l > member.Length * (1 + 1e-9) ||
                         !Finite(row.getValue2D(component)))
                         throw new InvalidOperationException("Invalid force station on diagram member: " + run[0].m);
-                curves.Add(new ForceCurve(member, run, component, item.Rows != null, null));
+                curves.Add(new ForceCurve(member, run, component, item.Rows != null));
                 runs.Add(run);
             }
             if (curves.SelectMany(curve => curve.Samples).Any(point => !Finite(point.Value)))

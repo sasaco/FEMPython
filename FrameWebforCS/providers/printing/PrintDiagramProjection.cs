@@ -14,7 +14,6 @@ internal static class PrintDiagramProjection
         details["canonicalStations"] = true;
         // FrameWeb's 2D y points down (the desktop camera and the load diagram draw it so).
         details["yUp"] = false;
-        details["referenceLayout"] = true;
         details["caseLabels"] = CaseLabels(root, presentation, option);
         AddFrameGGeometry(root, details);
         // Physical drawing scales need this conversion even for force-only diagrams.
