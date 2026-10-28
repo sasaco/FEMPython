@@ -56,7 +56,9 @@ public sealed class SectionDiagramProjectionTests
         Assert.Equal(-0.002, raw["dy"]!.GetValue<double>());
         Assert.Equal(0.003, raw["rz"]!.GetValue<double>());
         Assert.Equal(1, mixed["disg"]!["1/Static/0"]![1]!["dx"]!.GetValue<double>());
-        Assert.Equal(-3, mixed["disg"]!["1/Static/0"]![1]!["rz"]!.GetValue<double>());
+        Assert.Equal(2, mixed["disg"]!["1/Static/0"]![1]!["dy"]!.GetValue<double>());
+        Assert.Equal(3, mixed["disg"]!["1/Static/0"]![1]!["rz"]!.GetValue<double>());
+        Assert.Equal(-0.002, ((ForceAnalysisResult)presentation.Pages[0].Result).NodeDisplacements[1].Components.Dy);
         Assert.Equal(0.003, ((ForceAnalysisResult)presentation.Pages[0].Result).NodeDisplacements[1].Components.Rz);
     }
 
@@ -211,26 +213,26 @@ public sealed class SectionDiagramProjectionTests
         JsonNode childResult = fixture["results"]![0]!.DeepClone();
         childResult["case_id"] = "1.1";
         childResult["node_displacements"]![1]!["components"]!["dx"] = 0.0023;
-        childResult["node_displacements"]![1]!["components"]!["rz"] = -0.004;
+        childResult["node_displacements"]![1]!["components"]!["dy"] = -0.004;
         fixture["results"]!.AsArray().Add(childResult);
         var presentation = new CalculationResultPresentation(
             AnalysisResultSetJson.Deserialize(fixture.ToJsonString()), dimension: 2);
         JsonObject saved = Saved();
         JsonObject tables = Project(presentation, saved, new([PrintOption.Displacement],
-            NodeIds: ["2"], DisplacementComponents: ["rz_max"]));
+            NodeIds: ["2"], DisplacementComponents: ["dy_max"]));
         JsonObject root = Project(presentation, saved, new([PrintOption.SectionDiagram],
-            NodeIds: ["2"], DisplacementComponents: ["rz_max"], DiagramComponents: ["disg"]));
+            NodeIds: ["2"], DisplacementComponents: ["dy_max"], DiagramComponents: ["disg"]));
         Assert.True(JsonNode.DeepEquals(tables["disg"], root["disg"]));
         JsonNode rawModes = root["PrintDiagram"]!["disg"]!["1/Static/0"]!;
         Assert.Equal(6, rawModes.AsObject().Count);
         Assert.Single(root["disg"]!["1/Static/0"]!.AsObject());
-        Assert.Equal(2, rawModes["rz_max"]!.AsObject().Count);
-        JsonNode raw = rawModes["rz_max"]!["2"]!;
+        Assert.Equal(2, rawModes["dy_max"]!.AsObject().Count);
+        JsonNode raw = rawModes["dy_max"]!["2"]!;
         Assert.Equal("1.1", raw["case"]!.GetValue<string>());
         Assert.Equal(0.0023, raw["dx"]!.GetValue<double>());
-        Assert.Equal(-0.004, raw["rz"]!.GetValue<double>());
-        Assert.Equal(4, root["disg"]!["1/Static/0"]!["rz_max"]!["2"]!["rz"]!.GetValue<double>());
-        Assert.Equal(-0.004, presentation.Pages[0].MovingChildren[0].NodeDisplacements[1].Components.Rz);
+        Assert.Equal(-0.004, raw["dy"]!.GetValue<double>());
+        Assert.Equal(4, root["disg"]!["1/Static/0"]!["dy_max"]!["2"]!["dy"]!.GetValue<double>());
+        Assert.Equal(-0.004, presentation.Pages[0].MovingChildren[0].NodeDisplacements[1].Components.Dy);
         Assert.Equal(new[] { "2" }, root["PrintDiagram"]!["diagramResult"]!["displacementLabelNodeIds"]!.AsArray()
             .Select(node => node!.GetValue<string>()));
     }
@@ -251,8 +253,8 @@ public sealed class SectionDiagramProjectionTests
         JsonArray rows = root["PrintDiagram"]!["fsec"]!["1/Static/0"]!.AsArray();
         Assert.Equal(new[] { "S0", "S1", "S1", "S2" }, rows.Select(row => row!["n"]!.GetValue<string>()));
         Assert.Equal(new[] { 0.0, 1.0, 1.0, 2.0 }, rows.Select(row => row!["l"]!.GetValue<double>()));
-        Assert.Equal(new[] { 0.0, 10.0, 10.0, 0.0 }, rows.Select(row => row!["mz"]!.GetValue<double>()));
-        Assert.Equal(new[] { 10.0, 10.0, -10.0, -10.0 }, rows.Select(row => row!["fy"]!.GetValue<double>()));
+        Assert.Equal(new[] { 0.0, -10.0, -10.0, 0.0 }, rows.Select(row => row!["mz"]!.GetValue<double>()));
+        Assert.Equal(new[] { -10.0, -10.0, 10.0, 10.0 }, rows.Select(row => row!["fy"]!.GetValue<double>()));
         Assert.All(rows, row => Assert.Equal("M1", row!["m"]!.GetValue<string>()));
     }
 
@@ -282,13 +284,13 @@ public sealed class SectionDiagramProjectionTests
         Assert.True(JsonNode.DeepEquals(tables["fsec"], root["fsec"]));
         Assert.NotNull(root["PrintDiagram"]!["fsec"]);
         JsonNode envelope = root["PrintDiagram"]!["fsec"]!["1/Static/0"]!;
-        Assert.Equal(new[] { 20.0, 20.0, -10.0, -10.0 },
+        Assert.Equal(new[] { -10.0, -10.0, 30.0, 30.0 },
             envelope["fy_max"]!.AsArray().Select(row => row!["fy"]!.GetValue<double>()));
-        Assert.Equal(new[] { "1.1", "1.1", "1", "1" },
-            envelope["fy_max"]!.AsArray().Select(row => row!["case"]!.GetValue<string>()));
-        Assert.Equal(new[] { 10.0, 10.0, -30.0, -30.0 },
-            envelope["fy_min"]!.AsArray().Select(row => row!["fy"]!.GetValue<double>()));
         Assert.Equal(new[] { "1", "1", "1.1", "1.1" },
+            envelope["fy_max"]!.AsArray().Select(row => row!["case"]!.GetValue<string>()));
+        Assert.Equal(new[] { -20.0, -20.0, 10.0, 10.0 },
+            envelope["fy_min"]!.AsArray().Select(row => row!["fy"]!.GetValue<double>()));
+        Assert.Equal(new[] { "1.1", "1.1", "1", "1" },
             envelope["fy_min"]!.AsArray().Select(row => row!["case"]!.GetValue<string>()));
         Assert.Equal(new[] { 0.0, 1.0, 1.0, 2.0 },
             envelope["fy_max"]!.AsArray().Select(row => row!["l"]!.GetValue<double>()));
@@ -397,8 +399,8 @@ public sealed class SectionDiagramProjectionTests
         JsonNode modes = mixed[diagramKey]![family]![caseKey]!;
         Assert.NotNull(modes["fy_max"]);
         Assert.NotNull(modes["fy_min"]);
-        Assert.Equal(20, modes["fy_max"]![0]!["fy"]!.GetValue<double>());
-        Assert.Equal(10, modes["fy_min"]![0]!["fy"]!.GetValue<double>());
+        Assert.Equal(-10, modes["fy_max"]![0]!["fy"]!.GetValue<double>());
+        Assert.Equal(-20, modes["fy_min"]![0]!["fy"]!.GetValue<double>());
     }
 
     [Fact]
@@ -418,9 +420,9 @@ public sealed class SectionDiagramProjectionTests
         Assert.NotNull(raw["dy_max"]);
         Assert.NotNull(raw["dy_min"]);
         Assert.Equal(6, raw.AsObject().Count);
-        Assert.Equal(-0.002, raw["dy_max"]!["2"]!["dy"]!.GetValue<double>());
-        Assert.Equal(-0.006, raw["dy_min"]!["2"]!["dy"]!.GetValue<double>());
-        Assert.Equal("1.1", raw["dy_min"]!["2"]!["case"]!.GetValue<string>());
+        Assert.Equal(-0.006, raw["dy_max"]!["2"]!["dy"]!.GetValue<double>());
+        Assert.Equal(-0.002, raw["dy_min"]!["2"]!["dy"]!.GetValue<double>());
+        Assert.Equal("1.1", raw["dy_max"]!["2"]!["case"]!.GetValue<string>());
     }
 
     private static JsonObject Project(CalculationResultPresentation? presentation, JsonObject saved,

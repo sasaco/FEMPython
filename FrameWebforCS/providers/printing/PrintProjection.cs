@@ -431,9 +431,9 @@ internal static class PrintProjection
                         {
                             if (!preserveSegmentSides && !seen.Add(stationId)) return;
                             rows.Add(new JsonObject { ["m"] = member.MemberId, ["n"] = stationId,
-                                ["l"] = positions[stationId], ["fx"] = value.Fx, ["fy"] = value.Fy,
-                                ["fz"] = value.Fz, ["mx"] = value.Mx, ["my"] = value.My,
-                                ["mz"] = presentation.Dimension == 2 ? -value.Mz : value.Mz,
+                                ["l"] = positions[stationId],
+                                ["fx"] = value.Fx, ["fy"] = presentation.Dimension == 2 ? -value.Fy : value.Fy,
+                                ["fz"] = value.Fz, ["mx"] = value.Mx, ["my"] = value.My, ["mz"] = value.Mz,
                                 ["dummy"] = false });
                         }
                     }
@@ -455,7 +455,8 @@ internal static class PrintProjection
 
     // This legacy print boundary labels physical displacements mm/mrad. Unspecified
     // legacy saved-document lengths use metres; canonical/export values stay raw.
-    // Only 2D reports use the explicitly chosen clockwise rotation/Mz convention.
+    // 2D reports print FrameG's signs: FrameWeb's 2D y points down and FrameG's up, so the
+    // y components (displacement dy, shear fy) are reversed and rotations and moments are not.
     private static double[] DisplayComponents(string family, double[] values,
         int dimension, string length, bool physical = true)
     {
@@ -465,7 +466,7 @@ internal static class PrintProjection
             double scale = DisplacementLengthScale(length);
             for (int i = 0; i < 6; i++) values[i] *= i < 3 ? scale : 1000;
         }
-        if (dimension == 2 && family is "disg" or "fsec") values[5] = -values[5];
+        if (dimension == 2 && family is "disg" or "fsec") values[1] = -values[1];
         return values;
     }
 
@@ -689,8 +690,8 @@ internal static class PrintProjection
     internal static string DisplayMode(string mode, string family, int dimension)
     {
         bool reversed = dimension == 2 &&
-            (family == "disg" && mode.StartsWith("rz_", StringComparison.Ordinal) ||
-             family == "fsec" && mode.StartsWith("mz_", StringComparison.Ordinal));
+            (family == "disg" && mode.StartsWith("dy_", StringComparison.Ordinal) ||
+             family == "fsec" && mode.StartsWith("fy_", StringComparison.Ordinal));
         return reversed ? mode[..^3] + (mode.EndsWith("max", StringComparison.Ordinal) ? "min" : "max") : mode;
     }
 

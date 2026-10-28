@@ -30,10 +30,12 @@ public sealed class TransverseDisplayProjectionTests
         JsonObject root = Project(presentation, new([PrintOption.Displacement, PrintOption.SectionForce]));
         JsonNode displacement = root["disg"]!.AsObject().Single().Value![1]!;
         JsonNode force = root["fsec"]!.AsObject().Single().Value![0]!;
-        Assert.Equal(0.002 * scale, displacement["dy"]!.GetValue<double>(), 12);
-        Assert.Equal(sign * 1.5, displacement["rz"]!.GetValue<double>(), 12);
-        Assert.Equal(-3, force["fy"]!.GetValue<double>());
-        Assert.Equal(sign * -6, force["mz"]!.GetValue<double>());
+        Assert.Equal(sign * 0.002 * scale, displacement["dy"]!.GetValue<double>(), 12);
+        Assert.Equal(1.5, displacement["rz"]!.GetValue<double>(), 12);
+        Assert.Equal(sign * -3, force["fy"]!.GetValue<double>());
+        Assert.Equal(-6, force["mz"]!.GetValue<double>());
+        Assert.Equal(0.002, ((ForceAnalysisResult)presentation.Pages[0].Result)
+            .NodeDisplacements[1].Components.Dy);
         Assert.Equal(0.0015, ((ForceAnalysisResult)presentation.Pages[0].Result)
             .NodeDisplacements[1].Components.Rz);
         Assert.Equal(before, fixture.ToJsonString());
@@ -73,21 +75,21 @@ public sealed class TransverseDisplayProjectionTests
         foreach (string suffix in new[] { "max", "min" })
         {
             double factor = suffix == "max" ? 1 : -2;
-            displacement["rz_" + suffix] = [new("2", null,
+            displacement["dy_" + suffix] = [new("2", null,
                 dnames.Select((n, i) => (n, v: factor * (i + 1) * 0.001))
                     .ToDictionary(x => x.n, x => x.v), suffix, "full provenance " + suffix)];
-            forces["mz_" + suffix] = [new("M1", "S0",
+            forces["fy_" + suffix] = [new("M1", "S0",
                 fnames.Select((n, i) => (n, v: factor * (i + 1)))
                     .ToDictionary(x => x.n, x => x.v), suffix, "full provenance " + suffix)];
         }
         foreach (string suffix in new[] { "max", "min" })
         {
-            CalculationDerivedRow node = displacement["rz_" + suffix][0];
-            displacement["rz_" + suffix] = [node, node with { EntityId = "1" }];
+            CalculationDerivedRow node = displacement["dy_" + suffix][0];
+            displacement["dy_" + suffix] = [node, node with { EntityId = "1" }];
             foreach (string component in dnames)
-                displacement[component + "_" + suffix] = displacement["rz_" + suffix];
+                displacement[component + "_" + suffix] = displacement["dy_" + suffix];
             foreach (string component in fnames)
-                forces[component + "_" + suffix] = forces["mz_" + suffix];
+                forces[component + "_" + suffix] = forces["fy_" + suffix];
         }
         var item = new CalculationDerivedCase("1", "Envelope", displacement,
             new Dictionary<string, IReadOnlyList<CalculationDerivedRow>>(), forces);
@@ -97,37 +99,37 @@ public sealed class TransverseDisplayProjectionTests
         var presentation = new CalculationResultPresentation(resultSet, derived, dimension);
         string rawForceExport = PickupExportFormatter.Format(presentation);
         string rawNodeExport = PickupNodeExportFormatter.Format(presentation, PickupNodeQuantity.Displacement);
-        CalculationDerivedRow raw = displacement["rz_" + sourceMode][0];
+        CalculationDerivedRow raw = displacement["dy_" + sourceMode][0];
         JsonObject root = Project(presentation, new(
             [PrintOption.CombinedDisplacement, PrintOption.PickupDisplacement,
              PrintOption.CombinedSectionForce, PrintOption.PickupSectionForce],
             DerivedIds: ["1"],
-            DisplacementComponents: ["rz_max"], SectionForceComponents: ["mz_max"]));
+            DisplacementComponents: ["dy_max"], SectionForceComponents: ["fy_max"]));
         foreach (string key in new[] { "disgCombine", "disgPickup" })
         {
             Assert.Single(root[key]!["1"]!.AsObject());
-            JsonNode row = root[key]!["1"]!["rz_max"]!["2"]!;
+            JsonNode row = root[key]!["1"]!["dy_max"]!["2"]!;
             Assert.Equal(sourceMode, row["case"]!.GetValue<string>());
             Assert.Equal(raw.Components["dx"] * 1000, row["dx"]!.GetValue<double>());
-            Assert.Equal(sign * raw.Components["rz"] * 1000, row["rz"]!.GetValue<double>());
+            Assert.Equal(sign * raw.Components["dy"] * 1000, row["dy"]!.GetValue<double>());
             Assert.Equal(raw.Provenance, row["comb"]!.GetValue<string>());
             foreach (string component in dnames)
                 Assert.Equal(raw.Components[component] * 1000 *
-                    (component == "rz" ? sign : 1), row[component]!.GetValue<double>(), 12);
+                    (component == "dy" ? sign : 1), row[component]!.GetValue<double>(), 12);
         }
         foreach (string key in new[] { "fsecCombine", "fsecPickup" })
         {
             Assert.Single(root[key]!["1"]!.AsObject());
-            JsonNode row = root[key]!["1"]!["mz_max"]![0]!;
+            JsonNode row = root[key]!["1"]!["fy_max"]![0]!;
             Assert.Equal(sourceMode, row["case"]!.GetValue<string>());
-            Assert.Equal(forces["mz_" + sourceMode][0].Components["fy"], row["fy"]!.GetValue<double>());
-            Assert.Equal(sign * forces["mz_" + sourceMode][0].Components["mz"], row["mz"]!.GetValue<double>());
+            Assert.Equal(forces["fy_" + sourceMode][0].Components["mz"], row["mz"]!.GetValue<double>());
+            Assert.Equal(sign * forces["fy_" + sourceMode][0].Components["fy"], row["fy"]!.GetValue<double>());
             foreach (string component in fnames)
-                Assert.Equal(forces["mz_" + sourceMode][0].Components[component] *
-                    (component == "mz" ? sign : 1), row[component]!.GetValue<double>(), 12);
+                Assert.Equal(forces["fy_" + sourceMode][0].Components[component] *
+                    (component == "fy" ? sign : 1), row[component]!.GetValue<double>(), 12);
         }
-        Assert.Same(raw, displacement["rz_" + sourceMode][0]);
-        Assert.Equal(sourceMode == "max" ? 0.006 : -0.012, raw.Components["rz"], 12);
+        Assert.Same(raw, displacement["dy_" + sourceMode][0]);
+        Assert.Equal(sourceMode == "max" ? 0.002 : -0.004, raw.Components["dy"], 12);
         Assert.Equal(rawForceExport, PickupExportFormatter.Format(presentation));
         Assert.Equal(rawNodeExport, PickupNodeExportFormatter.Format(presentation, PickupNodeQuantity.Displacement));
     }
@@ -144,14 +146,14 @@ public sealed class TransverseDisplayProjectionTests
     [InlineData(2, "L.2", 300, -30)]
     [InlineData(3, "L.1", 200, 20)]
     public void MovingEnvelopeSelectsDisplayedExtremeBeforeFormattingAndRetainsFirstTie(
-        int dimension, string expectedCase, double expectedDx, double expectedShear)
+        int dimension, string expectedCase, double expectedDx, double expectedMoment)
     {
         JsonObject fixture = Fixture("single-static");
         JsonNode originalCase = fixture["cases"]![0]!.DeepClone();
         JsonNode originalResult = fixture["results"]![0]!.DeepClone();
         var cases = new JsonArray();
         var results = new JsonArray();
-        foreach (var (id, rotation, dx, shear) in new[]
+        foreach (var (id, deflection, dx, moment) in new[]
         {
             ("L", 0.001, 0.1, 10.0), ("L.1", 0.004, 0.2, 20.0),
             ("L.2", -0.003, 0.3, -30.0), ("L.3", -0.003, 0.4, -40.0),
@@ -163,9 +165,9 @@ public sealed class TransverseDisplayProjectionTests
             itemCase["symbol"] = "LL";
             itemResult["case_id"] = id;
             itemResult["node_displacements"]![1]!["components"]!["dx"] = dx;
-            itemResult["node_displacements"]![1]!["components"]!["rz"] = rotation;
-            itemResult["member_section_forces"]![0]!["segments"]![0]!["i_end"]!["mz"] = rotation * 1000;
-            itemResult["member_section_forces"]![0]!["segments"]![0]!["i_end"]!["fy"] = shear;
+            itemResult["node_displacements"]![1]!["components"]!["dy"] = deflection;
+            itemResult["member_section_forces"]![0]!["segments"]![0]!["i_end"]!["fy"] = deflection * 1000;
+            itemResult["member_section_forces"]![0]!["segments"]![0]!["i_end"]!["mz"] = moment;
             cases.Add(itemCase);
             results.Add(itemResult);
         }
@@ -173,21 +175,21 @@ public sealed class TransverseDisplayProjectionTests
         fixture["results"] = results;
         var presentation = Presentation(fixture, dimension);
         JsonObject root = Project(presentation, new([PrintOption.Displacement, PrintOption.SectionForce],
-            DisplacementComponents: ["rz_max"], SectionForceComponents: ["mz_max"]));
+            DisplacementComponents: ["dy_max"], SectionForceComponents: ["fy_max"]));
         JsonObject dispEnvelope = root["disg"]!.AsObject().Single().Value!.AsObject();
         JsonObject forceEnvelope = root["fsec"]!.AsObject().Single().Value!.AsObject();
         Assert.Single(dispEnvelope);
         Assert.Single(forceEnvelope);
-        JsonNode displacement = dispEnvelope["rz_max"]!["2"]!;
-        JsonNode force = forceEnvelope["mz_max"]![0]!;
+        JsonNode displacement = dispEnvelope["dy_max"]!["2"]!;
+        JsonNode force = forceEnvelope["fy_max"]![0]!;
         Assert.Equal(expectedCase, displacement["case"]!.GetValue<string>());
         Assert.Equal(expectedDx, displacement["dx"]!.GetValue<double>());
-        Assert.Equal(dimension == 2 ? 3 : 4, displacement["rz"]!.GetValue<double>());
+        Assert.Equal(dimension == 2 ? 3 : 4, displacement["dy"]!.GetValue<double>());
         Assert.Equal(expectedCase, force["case"]!.GetValue<string>());
-        Assert.Equal(expectedShear, force["fy"]!.GetValue<double>());
-        Assert.Equal(dimension == 2 ? 3 : 4, force["mz"]!.GetValue<double>());
+        Assert.Equal(expectedMoment, force["mz"]!.GetValue<double>());
+        Assert.Equal(dimension == 2 ? 3 : 4, force["fy"]!.GetValue<double>());
         Assert.Equal(-0.003, presentation.Pages[0].MovingChildren[1]
-            .NodeDisplacements[1].Components.Rz);
+            .NodeDisplacements[1].Components.Dy);
     }
 
     private static CalculationResultPresentation Presentation(JsonObject fixture, int dimension) =>

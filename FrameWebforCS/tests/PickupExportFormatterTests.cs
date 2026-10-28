@@ -28,6 +28,20 @@ public sealed class PickupExportFormatterTests
     }
 
     [Fact]
+    public void TwoDimensionalPickupPrintsFrameGShearSign()
+    {
+        // FrameWeb's 2D y points down and FrameG's up: S = -fy, so the S maximum is the fy minimum.
+        string[] lines = PickupExportFormatter.Format(Presentation(2)).Split('\n');
+
+        Assert.Equal("-20.00", lines[1][50..60].Trim()); // S beside the M maximum.
+        Assert.Equal("S", lines[3][5..10].Trim());
+        Assert.Equal("41", lines[3][15..20].Trim());
+        Assert.Equal("40", lines[3][20..25].Trim());
+        Assert.Equal(new[] { "-2.00", "20.00", "-10.00", "1.00", "-20.00", "10.00" },
+            Enumerable.Range(0, 6).Select(index => lines[3][(40 + 10 * index)..(50 + 10 * index)].Trim()));
+    }
+
+    [Fact]
     public void ThreeDimensionalPickupUsesCsvColumnsAndCorrelatedVectors()
     {
         string[] lines = PickupExportFormatter.Format(Presentation(3)).Split('\n');

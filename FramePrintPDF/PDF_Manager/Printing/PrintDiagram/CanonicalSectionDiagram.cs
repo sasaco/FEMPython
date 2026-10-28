@@ -206,7 +206,7 @@ namespace PDF_Manager.Printing
             {
                 document.CheckBudget();
                 var normal = transform.Normal(curve.Member);
-                double side = component == "fy" ? 1 : -1;
+                double side = Side(component);
                 XPoint Location(ForcePoint point)
                 {
                     XPoint origin = transform.Point(curve.Member.X + curve.Member.Ux * point.Distance,
@@ -241,11 +241,16 @@ namespace PDF_Manager.Printing
                 ForcePoint point = candidate.Item2;
                 XPoint normal = transform.Normal(member);
                 XPoint origin = transform.Point(member.X + member.Ux * point.Distance, member.Y + member.Uy * point.Distance);
-                double ordinate = point.Value * (component == "fy" ? 1 : -1) * scale;
+                double ordinate = point.Value * Side(component) * scale;
                 labels.Add(new XPoint(origin.X + normal.X * ordinate, origin.Y + normal.Y * ordinate),
                     component == "fx" ? point.Value : Math.Abs(point.Value), normal);
             }
         }
+
+        // Values arrive with FrameG's printed signs (M = raw mz, S = -raw fy, N = raw fx). M and S draw the
+        // raw value on the member's local +y side, as FrameG does; N keeps its earlier -y side (FrameG draws
+        // a closed frame's axial force inside it, which is not a local-axis rule).
+        private static double Side(string component) => component == "mz" ? 1 : -1;
 
         private void DrawDisplacements(PdfDocument document, DiagramCase item,
             Dictionary<string, MemberGeometry> geometry, PlotTransform transform, LabelPlacement labels)

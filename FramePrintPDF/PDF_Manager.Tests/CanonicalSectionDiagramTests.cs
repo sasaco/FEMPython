@@ -118,10 +118,10 @@ public sealed class CanonicalSectionDiagramTests
         ((JObject)root["node"]!).Remove("node/C");
         root["PrintDiagram"]!["diagramResult"] = Config("mz");
         root["fsec"]!["Case/A/Static/0"] = new JArray(
-            new JObject { ["m"] = "beam/A", ["n"] = "S0", ["l"] = 0, ["mz"] = 0, ["fy"] = 10, ["fx"] = 0 },
-            new JObject { ["m"] = "beam/A", ["n"] = "S1", ["l"] = 2, ["mz"] = 0, ["fy"] = -10, ["fx"] = 0 });
+            new JObject { ["m"] = "beam/A", ["n"] = "S0", ["l"] = 0, ["mz"] = 0, ["fy"] = -10, ["fx"] = 0 },
+            new JObject { ["m"] = "beam/A", ["n"] = "S1", ["l"] = 2, ["mz"] = 0, ["fy"] = 10, ["fx"] = 0 });
         var pdf = Render(root);
-        Assert.Contains("5.00", pdf.Text); // M(x)=10*x-5*x*x: interior x=1 gives 5, both ends give zero.
+        Assert.Contains("5.00", pdf.Text); // M(x)=-10*x+5*x*x: interior x=1 gives -5, both ends give zero.
         Stroke curve = Assert.Single(pdf.Strokes.Where(s => s.Points.Count > 10));
         Assert.Equal(curve.Points[0].Y, curve.Points[^1].Y, 3);
         Assert.True(curve.Points.Min(p => p.Y) < curve.Points[0].Y - 10);
@@ -134,8 +134,8 @@ public sealed class CanonicalSectionDiagramTests
         JObject root = Job();
         ((JObject)root["member"]!).Remove("pile/B"); ((JObject)root["node"]!).Remove("node/C");
         root["PrintDiagram"]!["diagramResult"] = Config("mz", "fy", "fx");
-        var rows = Rows("beam/A", -5, -5, -5);
-        foreach (JObject row in rows) { row["fy"] = -7; row["fx"] = -9; }
+        var rows = Rows("beam/A", 5, 5, 5);
+        foreach (JObject row in rows) { row["fy"] = 7; row["fx"] = -9; }
         root["fsec"]!["Case/A/Static/0"] = rows;
         var pdf = Render(root);
         Assert.Contains("5.00", pdf.Text); Assert.DoesNotContain("-5.00", pdf.Text);
@@ -145,10 +145,10 @@ public sealed class CanonicalSectionDiagramTests
             Math.Abs(s.Points[0].Y - s.Points[1].Y) < .001 && Math.Abs(s.Points[1].X - s.Points[0].X) > 200).ToArray();
         Stroke[] curves = pdf.Strokes.Where(s => s.Points.Count >= 3).ToArray();
         Assert.Equal(3, frames.Length); Assert.Equal(3, curves.Length);
-        Assert.True(curves[0].Points[0].Y > frames[0].Points[0].Y); // Negative moment above beam.
-        Assert.True(curves[1].Points[0].Y < frames[1].Points[0].Y); // Negative shear below beam.
+        Assert.True(curves[0].Points[0].Y > frames[0].Points[0].Y); // Positive moment above beam.
+        Assert.True(curves[1].Points[0].Y < frames[1].Points[0].Y); // Positive shear below beam.
         Assert.True(curves[2].Points[0].Y > frames[2].Points[0].Y); // Reference compression uses -Fx*n.
-        Assert.All(rows.Cast<JObject>(), row => Assert.Equal(-5, (double)row["mz"]!));
+        Assert.All(rows.Cast<JObject>(), row => Assert.Equal(5, (double)row["mz"]!));
     }
 
     [Fact]
@@ -317,7 +317,7 @@ public sealed class CanonicalSectionDiagramTests
         JObject Row(double position, double moment, double shear) => new()
         { ["m"] = "beam/A", ["n"] = "S" + position, ["l"] = position, ["mz"] = moment, ["fy"] = shear };
         root["PrintDiagram"]!["fsec"] = new JObject { ["Case/A/Static/0"] = new JArray(
-            Row(0, 0, 10), Row(1, 10, 10), Row(1, 10, -10), Row(2, 0, -10)) };
+            Row(0, 0, -10), Row(1, -10, -10), Row(1, -10, 10), Row(2, 0, 10)) };
         string before = root.ToString();
         var pdf = Render(root);
         Assert.Equal(before, root.ToString()); Assert.Contains("10.00", pdf.Text);

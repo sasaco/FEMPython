@@ -26,8 +26,11 @@ internal static class PickupExportFormatter
                 ? new[] { ("mz", "M"), ("fy", "S"), ("fx", "N") }
                 : ForceNames.Select(name => (name, name)))
             {
-                if (!pickup.SectionForces.TryGetValue(symbol + "_max", out var maxima) ||
-                    !pickup.SectionForces.TryGetValue(symbol + "_min", out var minima))
+                // A 2D PIK carries FrameG's signs: FrameWeb's 2D y points down, so S = -fy and the
+                // S maximum is the fy minimum (M = mz and N = fx keep their signs).
+                bool reversed = is2D && symbol == "fy";
+                if (!pickup.SectionForces.TryGetValue(symbol + (reversed ? "_min" : "_max"), out var maxima) ||
+                    !pickup.SectionForces.TryGetValue(symbol + (reversed ? "_max" : "_min"), out var minima))
                     throw new InvalidOperationException($"PICKUP {pickup.Id} has incomplete {symbol} results.");
 
                 var minimumByStation = minima.ToDictionary(
@@ -60,7 +63,8 @@ internal static class PickupExportFormatter
                             output.Append(FixedField(FixedNumber(station.Position, 3), 10));
                             foreach (CalculationDerivedRow row in new[] { maximum, minimum })
                                 foreach (string component in new[] { "mz", "fy", "fx" })
-                                    output.Append(FixedField(FixedNumber(row.Components[component], 2), 10));
+                                    output.Append(FixedField(FixedNumber(
+                                        component == "fy" ? -row.Components[component] : row.Components[component], 2), 10));
                         }
                         else
                         {
