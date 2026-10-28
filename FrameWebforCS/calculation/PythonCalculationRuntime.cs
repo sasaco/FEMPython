@@ -61,6 +61,10 @@ public sealed class PythonCalculationRuntime : IAsyncDisposable
         _thread.Start();
     }
 
+    /// <summary>Runs a projected request and folds its M/S companion analyses back into their cases.</summary>
+    internal async Task<string> CalculateAsync(CalculationRequest request, CancellationToken cancellationToken = default) =>
+        CalculationShearMerger.Merge(await CalculateAsync(request.Json, cancellationToken), request.ShearCompanions);
+
     /// <summary>Runs a calculation off the UI thread. Cancellation discards its eventual result.</summary>
     public Task<string> CalculateAsync(string requestJson, CancellationToken cancellationToken = default)
     {

@@ -31,6 +31,8 @@ namespace FrameWebforCS.components.input
         public string? L2 = null;
         public float? P1 = null;
         public float? P2 = null;
+        // FrameG M/S: "M" bends only, "S" shears only the members it loads; null loads both.
+        public string? ms = null;
     }
 
     internal class clsLoad
@@ -136,6 +138,7 @@ namespace FrameWebforCS.components.input
         public string? m1 { get => Member?.m1; set { SetMember(value, (row, item) => row.m1 = item, nameof(m1)); } }
         public string? m2 { get => Member?.m2; set { SetMember(value, (row, item) => row.m2 = item, nameof(m2)); } }
         public string? direction { get => Member?.direction; set { SetMember(value, (row, item) => row.direction = item, nameof(direction)); } }
+        public string? ms { get => Member?.ms; set { SetMember(string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToUpperInvariant(), (row, item) => row.ms = item, nameof(ms)); } }
         public string? mark { get => Member?.mark; set { SetMember(value, (row, item) => row.mark = item, nameof(mark)); } }
         public string? L1 { get => Member?.L1; set { SetMember(value, (row, item) => row.L1 = item, nameof(L1)); } }
         public string? L2 { get => Member?.L2; set { SetMember(value, (row, item) => row.L2 = item, nameof(L2)); } }
@@ -896,8 +899,11 @@ namespace FrameWebforCS.components.input
                     clsLoadMember member => HasMemberValues(member),
                     _ => false
                 };
-                if (hasData)
-                    values.Add(DataHelperModule.ClassToDictionary(row));
+                if (!hasData) continue;
+                var value = DataHelperModule.ClassToDictionary(row);
+                // Only M/S rows carry ms, so files without it keep their shape.
+                if (row is clsLoadMember { ms: null or "" }) value.Remove(nameof(clsLoadMember.ms));
+                values.Add(value);
             }
             if (values.Count == 0) target.Remove(key);
             else target[key] = values;

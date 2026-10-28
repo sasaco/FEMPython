@@ -222,6 +222,45 @@ public sealed class CalculationRequestTests
     }
 
     [Fact]
+    public void BendingAndShearRowsSplitIntoTheCaseAndAShearCompanion()
+    {
+        // FrameG M/S: an M row loads the analysis for every force except the S of the members an S row
+        // loads, which comes from a companion analysis of the S rows (unmarked rows load both).
+        string saved = BaseSnapshot("""
+            "1":{"symbol":"GL","fix_node":1,"element":1,
+              "load_member":[{"row":1,"m1":"1","direction":"y","mark":"2","P1":10,"P2":10,"ms":"M"},
+                             {"row":2,"m1":"1","direction":"y","mark":"2","P1":12,"P2":12,"ms":"S"},
+                             {"row":3,"m1":"2","direction":"y","mark":"2","P1":5,"P2":5}]}
+            """, 2);
+        CalculationRequest request = CalculationRequestBuilder.FromSavedJson(saved);
+        using var result = JsonDocument.Parse(request.Json);
+        var loads = result.RootElement.GetProperty("load");
+        Assert.Equal(new[] { "1", "1#S" }, loads.EnumerateObject().Select(item => item.Name));
+        (int, double)[] Rows(string id) => loads.GetProperty(id).GetProperty("load_member").EnumerateArray()
+            .Select(row => (row.GetProperty("m").GetInt32(), row.GetProperty("P1").GetDouble())).ToArray();
+        Assert.Equal(new[] { (1, 10.0), (2, 5.0) }, Rows("1"));
+        Assert.Equal(new[] { (1, 12.0), (2, 5.0) }, Rows("1#S"));
+        Assert.All(loads.EnumerateObject().SelectMany(item => item.Value.GetProperty("load_member").EnumerateArray()),
+            row => Assert.False(row.TryGetProperty("ms", out _)));
+        var companion = Assert.Single(request.ShearCompanions);
+        Assert.Equal("1", companion.Key);
+        Assert.Equal("1#S", companion.Value.CaseId);
+        Assert.Equal(new[] { "1" }, companion.Value.MemberIds);
+    }
+
+    [Fact]
+    public void BendingAndShearRowsCannotMove()
+    {
+        string saved = BaseSnapshot("""
+            "1":{"symbol":"LL","fix_node":1,"element":1,"LL_pitch":0.5,
+              "load_member":[{"row":1,"m1":"1","m2":"-2","direction":"y","mark":"1","L1":"0.2","P1":10,"ms":"S"}]}
+            """, 2);
+        var error = Assert.Throws<CalculationRequestException>(() => CalculationRequestBuilder.FromSavedJson(saved));
+        Assert.Contains("load.1", error.Message);
+        Assert.Contains("M/S", error.Message);
+    }
+
+    [Fact]
     public void PositiveEndMemberRepeatsTheLoadOnEachMember()
     {
         string saved = BaseSnapshot("""

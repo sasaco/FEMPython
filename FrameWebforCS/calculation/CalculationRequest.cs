@@ -8,7 +8,12 @@ using FrameWebforCS.components.input;
 
 namespace FrameWebforCS.calculation;
 
-internal sealed record CalculationRequest(string Json);
+/// <param name="ShearCompanions">Load case ID -> the companion analysis whose shear replaces the case's
+/// shear on the listed members (FrameG M/S rows); merge with <see cref="CalculationShearMerger"/>.</param>
+internal sealed record CalculationRequest(string Json, IReadOnlyDictionary<string, ShearCompanion> ShearCompanions);
+
+/// <summary>The S-row analysis of a load case and the members whose shear it supplies.</summary>
+internal sealed record ShearCompanion(string CaseId, IReadOnlyList<string> MemberIds);
 
 internal sealed class CalculationRequestException(string message) : Exception(message);
 
@@ -129,18 +134,21 @@ internal static class CalculationRequestBuilder
         }
 
         result["load"] = ProjectLoads(Object(result, "load"), nodes, members, elements,
-            result["fix_node"] as JsonObject, result["fix_member"] as JsonObject, dimension);
+            result["fix_node"] as JsonObject, result["fix_member"] as JsonObject, dimension, out var shearCompanions);
         var loads = Object(result, "load");
         if (loads.Count == 0) throw new CalculationRequestException("At least one load case is required.");
         if (dimension == 2) Complete2D(result);
         result["dimension"] = dimension;
-        return new CalculationRequest(result.ToJsonString());
+        return new CalculationRequest(result.ToJsonString(), shearCompanions);
     }
 
     private static JsonObject ProjectLoads(JsonObject savedLoads, JsonObject nodes, JsonObject members,
-        JsonObject elements, JsonObject? supports, JsonObject? springs, int dimension)
+        JsonObject elements, JsonObject? supports, JsonObject? springs, int dimension,
+        out Dictionary<string, ShearCompanion> shearCompanions)
     {
         var projected = new JsonObject();
+        var companionCases = new JsonObject();
+        shearCompanions = new Dictionary<string, ShearCompanion>(StringComparer.Ordinal);
         foreach (var (caseId, caseValue) in savedLoads.OrderBy(pair =>
             double.TryParse(pair.Key, NumberStyles.Float, CultureInfo.InvariantCulture, out double id) ? id : double.MaxValue))
         {
@@ -203,6 +211,22 @@ internal static class CalculationRequestBuilder
                 foreach (var value in springRows)
                     if (value is JsonObject row && !members.ContainsKey(Id(row["m"])))
                         throw new CalculationRequestException($"fix_member.{springId}: member {Id(row["m"])} does not exist.");
+            // FrameG M/S: M rows load the case, S rows a companion analysis; unmarked rows load both.
+            bool bendingShear = memberRows.Any(row => Ms(row) is "M" or "S");
+            if (bendingShear && String(selector["symbol"]) == "LL")
+                throw new CalculationRequestException($"load.{caseId}: M/S の荷重は移動荷重のケースでは使えません。");
+            if (bendingShear)
+            {
+                var companion = (JsonObject)selector.DeepClone();
+                if (nodeRows.Count > 0) companion["load_node"] = nodeRows.DeepClone();
+                var shearRows = PositionMemberRows(memberRows.Where(row => Ms(row) != "M").ToList(), 0, members, nodes);
+                if (shearRows.Count > 0) companion["load_member"] = WithoutMs(shearRows);
+                string companionId = caseId + "#S";
+                companionCases[companionId] = companion;
+                shearCompanions[caseId] = new ShearCompanion(companionId, memberRows.Where(row => Ms(row) == "S")
+                    .Select(row => Id(row["m"])).Distinct(StringComparer.Ordinal).ToArray());
+                memberRows = memberRows.Where(row => Ms(row) != "S").ToList();
+            }
             var positions = String(selector["symbol"]) == "LL"
                 ? MovingPositions(source, memberRows, members, nodes, caseId) : new List<double> { 0 };
             int digit = (int)Math.Pow(10, (positions.Count - 1).ToString(CultureInfo.InvariantCulture).Length);
@@ -214,7 +238,7 @@ internal static class CalculationRequestBuilder
                 var item = (JsonObject)selector.DeepClone();
                 if (nodeRows.Count > 0 && index == 0) item["load_node"] = nodeRows.DeepClone();
                 var positioned = PositionMemberRows(memberRows, positions[index], members, nodes);
-                if (positioned.Count > 0) item["load_member"] = positioned;
+                if (positioned.Count > 0) item["load_member"] = WithoutMs(positioned);
                 if (hasSpatial) item["spatial_loads"] = spatial!.DeepClone();
                 if (item.ContainsKey("load_node") || item.ContainsKey("load_member") || hasSpatial)
                 {
@@ -239,7 +263,23 @@ internal static class CalculationRequestBuilder
             .OrderBy(pair => double.Parse(pair.Key, CultureInfo.InvariantCulture))
             .Concat(projected.Where(pair => pair.Key.Contains('.'))))
             ordered[pair.Key] = pair.Value?.DeepClone();
+        foreach (var (id, companion) in companionCases)
+        {
+            string caseId = id[..^2];
+            // The merge needs the case itself; an S-only case keeps an empty bending analysis.
+            if (!ordered.ContainsKey(caseId)) throw new CalculationRequestException(
+                $"load.{caseId}: M/S の荷重には M の行（または M/S の無い行）も要ります。");
+            ordered[id] = companion!.DeepClone();
+        }
         return ordered;
+    }
+
+    private static string Ms(JsonObject row) => String(row["ms"]).Trim().ToUpperInvariant();
+
+    private static JsonArray WithoutMs(JsonArray rows)
+    {
+        foreach (var row in rows.OfType<JsonObject>()) row.Remove("ms");
+        return rows;
     }
 
     private static IEnumerable<JsonObject> ExpandMemberRow(JsonObject row, JsonObject members, JsonObject nodes,
@@ -278,6 +318,7 @@ internal static class CalculationRequestBuilder
                 ["P2"] = mark == 9 ? Number(row["P1"]) ?? 0 : Number(row["P2"]) ?? 0,
                 ["row"] = (int?)row["row"] ?? 0
             };
+            if (Ms(row) is "M" or "S") projected["ms"] = Ms(row);
             if (row["_relativeZeroLength"]?.GetValue<bool>() == true)
                 projected["_relativeZeroLength"] = true;
             yield return projected;
@@ -308,6 +349,7 @@ internal static class CalculationRequestBuilder
                     ["m"] = begin + i, ["direction"] = direction, ["mark"] = 2,
                     ["L1"] = Math.Round(low - offset, 9), ["L2"] = Math.Round(offset + lengths[i] - high, 9),
                     ["P1"] = At(low), ["P2"] = At(high), ["row"] = (int?)row["row"] ?? 0,
+                    ["ms"] = Ms(row) is "M" or "S" ? Ms(row) : null,
                 };
             offset += lengths[i];
         }

@@ -101,6 +101,22 @@ public class FrdExporterTests
     private static string Sjis(byte[] bytes) => Encoding.GetEncoding(932).GetString(bytes);
 
     [Fact]
+    public void BendingAndShearRowsKeepTheirMsThroughFrameG()
+    {
+        // FrameG writes M/S (bending or shear load) in the V/H column of a local-y member load.
+        JObject model = Model();
+        var rows = (JArray)model["load"]!["1"]!["load_member"]!;
+        rows.Add(JObject.Parse("""{ "row": 4, "m1": "2", "m2": null, "direction": "y", "mark": "2", "L1": "0", "L2": "0", "P1": 61, "P2": 61, "ms": "M" }"""));
+        rows.Add(JObject.Parse("""{ "row": 5, "m1": "2", "m2": null, "direction": "y", "mark": "2", "L1": "0", "L2": "0", "P1": 73.1, "P2": 73.1, "ms": "S" }"""));
+
+        var read = (JArray)Forward(Succeed(model))["load"]!["1"]!["load_member"]!;
+
+        Assert.Equal(new[] { ("y", "M", 61.0), ("y", "S", 73.1) }, read.Skip(2)
+            .Select(row => ((string)row["direction"]!, (string)row["ms"]!, (double)row["P1"]!)));
+        Assert.All(read.Take(2), row => Assert.Null(row["ms"]));
+    }
+
+    [Fact]
     public void TheForwardReaderReadsBackWhatWasExported()
     {
         JObject json = Forward(Succeed(Model()));

@@ -222,7 +222,7 @@ public sealed class InputLoadFixedRowsTests
             using (component)
             {
                 var sheet = spread.ActiveSheet;
-                sheet.SetActiveCell(0, 10);
+                sheet.SetActiveCell(0, 11);
                 var selected = new List<(int, string)>();
                 component.GridSelectionChanged += (row, field) => selected.Add((row, field));
                 string selectedCase = service.SelectedCaseId;
@@ -230,14 +230,14 @@ public sealed class InputLoadFixedRowsTests
                 Assert.True(LoadSheetTest.Key(spread, Keys.Oem5).SuppressKeyPress);
                 Application.DoEvents();
                 Assert.Equal(0, sheet.ActiveRowIndex);
-                Assert.Equal(10, sheet.ActiveColumnIndex);
+                Assert.Equal(11, sheet.ActiveColumnIndex);
                 Assert.False(service.IntensityRows[0].IsAssigned);
                 Assert.Equal("2", sheet.Cells[1, 0].Text);
                 Assert.Equal("1", sheet.Cells[3, 0].Text);
                 Assert.Equal(100000, sheet.RowCount);
                 Assert.Equal(widths, Enumerable.Range(0, sheet.ColumnCount).Select(c => sheet.Columns[c].Width).ToArray());
                 selected.Clear();
-                LoadSheetTest.EnterCell(spread, 0, 10);
+                LoadSheetTest.EnterCell(spread, 0, 11);
                 Assert.Empty(selected);
                 Assert.Equal(selectedCase, service.SelectedCaseId);
 
@@ -267,7 +267,7 @@ public sealed class InputLoadFixedRowsTests
             using (component)
             {
                 var sheet = spread.ActiveSheet;
-                sheet.SetActiveCell(5, 9);
+                sheet.SetActiveCell(5, 10);
                 spread.Focus();
                 spread.StartCellEditing(EventArgs.Empty, false);
                 Assert.True(spread.EditMode);
@@ -297,7 +297,7 @@ public sealed class InputLoadFixedRowsTests
             using (component)
             {
                 var sheet = spread.ActiveSheet;
-                sheet.SetActiveCell(0, 10);
+                sheet.SetActiveCell(0, 11);
                 sheet.ClearSelection();
                 sheet.AddSelection(0, 0, 1, sheet.ColumnCount);
                 Assert.True(LoadSheetTest.Key(spread, Keys.Delete).SuppressKeyPress);
@@ -305,9 +305,9 @@ public sealed class InputLoadFixedRowsTests
                 Assert.Null(service.IntensityRows[0].tx);
                 Assert.Equal("21", service.IntensityRows[0].n);
                 Assert.Equal(100000, sheet.RowCount);
-                sheet.Columns[9].Locked = true;
+                sheet.Columns[10].Locked = true;
                 sheet.Protect = true;
-                sheet.SetActiveCell(0, 9);
+                sheet.SetActiveCell(0, 10);
                 LoadSheetTest.Key(spread, Keys.Delete);
                 Assert.Equal("21", service.IntensityRows[0].n);
                 string before = LoadSheetTest.Save(service);
@@ -331,14 +331,14 @@ public sealed class InputLoadFixedRowsTests
             using (component)
             {
                 var sheet = spread.ActiveSheet;
-                sheet.SetActiveCell(6, 10);
-                sheet.AddSelection(6, 10, 2, 1);
+                sheet.SetActiveCell(6, 11);
+                sheet.AddSelection(6, 11, 2, 1);
                 var beforeSelection = sheet.GetSelections().Select(r => (r.Row, r.Column, r.RowCount, r.ColumnCount)).ToArray();
                 string before = LoadSheetTest.Save(service);
                 string caseId = service.SelectedCaseId;
                 LoadSheetTest.Key(spread, Keys.Oem5);
                 Application.DoEvents();
-                Assert.Equal((6, 10), (sheet.ActiveRowIndex, sheet.ActiveColumnIndex));
+                Assert.Equal((6, 11), (sheet.ActiveRowIndex, sheet.ActiveColumnIndex));
                 Assert.Equal(beforeSelection, sheet.GetSelections().Select(r => (r.Row, r.Column, r.RowCount, r.ColumnCount)).ToArray());
                 Assert.Equal(before, LoadSheetTest.Save(service));
                 Assert.Equal(caseId, service.SelectedCaseId);
@@ -403,11 +403,11 @@ public sealed class InputLoadFixedRowsTests
                 Assert.Equal(("2", 4), (service.IntensityRows[2].CaseId, service.IntensityRows[2].Row));
                 if (navigate)
                 {
-                    sheet.SetActiveCell(6, 9);
-                    LoadSheetTest.EnterCell(spread, 6, 9);
+                    sheet.SetActiveCell(6, 10);
+                    LoadSheetTest.EnterCell(spread, 6, 10);
                 }
                 Application.DoEvents();
-                Assert.Equal(navigate ? (6, 9) : (2, 0), (sheet.ActiveRowIndex, sheet.ActiveColumnIndex));
+                Assert.Equal(navigate ? (6, 10) : (2, 0), (sheet.ActiveRowIndex, sheet.ActiveColumnIndex));
                 Assert.Equal(100000, sheet.RowCount);
             }
         }));
@@ -468,7 +468,7 @@ public sealed class InputLoadFixedRowsTests
                 viewport.FlushPending();
                 var loads = Assert.IsType<ThreeLoadsService>(typeof(ThreeService)
                     .GetField("_loads", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(viewport));
-                LoadSheetTest.EnterCell(spread, 5, 10);
+                LoadSheetTest.EnterCell(spread, 5, 11);
                 viewport.FlushPending();
                 Assert.Equal("2", InputLoadService.Instance.SelectedCaseId);
                 Assert.Equal((7, "tx"), loads.Selection);
@@ -477,10 +477,10 @@ public sealed class InputLoadFixedRowsTests
                 viewport.FlushPending();
                 Assert.True(component.SelectGridRow(7, "tx", "2"));
                 Assert.Equal(6, spread.ActiveSheet.ActiveRowIndex);
-                LoadSheetTest.EnterCell(spread, 6, 10);
+                LoadSheetTest.EnterCell(spread, 6, 11);
                 viewport.FlushPending();
                 Assert.Equal((7, "tx"), loads.Selection);
-                LoadSheetTest.EnterCell(spread, 0, 10);
+                LoadSheetTest.EnterCell(spread, 0, 11);
                 viewport.FlushPending();
                 Assert.Equal((7, "tx"), loads.Selection);
                 Assert.Equal("2", InputLoadService.Instance.SelectedCaseId);

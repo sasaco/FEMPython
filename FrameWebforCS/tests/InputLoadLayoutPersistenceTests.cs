@@ -64,6 +64,32 @@ public sealed class InputLoadLayoutPersistenceTests
     }
 
     [Fact]
+    public void BendingAndShearMarksSurviveSaveAndReachTheCalculationSnapshot()
+    {
+        // FrameG M/S rows: only marked rows carry ms, so unmarked files keep their shape.
+        var input = InputDataService.Instance;
+        try
+        {
+            OpenDocument("""
+                {"load":{"5":{"load_member":[
+                  {"row":1,"m1":"1","m2":"-3","direction":"y","mark":"2","L1":"0","L2":0,"P1":61,"P2":61,"ms":"M"},
+                  {"row":2,"m1":"1","m2":"-3","direction":"y","mark":"2","L1":"0","L2":0,"P1":73.1,"P2":73.1,"ms":"s"},
+                  {"row":3,"m1":"10","direction":"y","mark":"2","L1":"0","L2":0,"P1":5,"P2":5}]}}}
+                """);
+            Assert.Equal("M", InputLoadService.Instance.IntensityRows[0].ms);
+            InputLoadService.Instance.IntensityRows[1].ms = "s";
+            Assert.Equal("S", InputLoadService.Instance.IntensityRows[1].ms);
+            string[]?[] Marks(JsonElement root) => [root.GetProperty("load").GetProperty("5").GetProperty("load_member")
+                .EnumerateArray().Select(row => row.TryGetProperty("ms", out var ms) ? ms.GetString() : null).ToArray()];
+            using (var saved = JsonDocument.Parse(JsonSerializer.Serialize(input.GetSaveJson())))
+                Assert.Equal(new[] { "M", "S", null }, Marks(saved.RootElement)[0]);
+            using (var calculation = JsonDocument.Parse(input.CaptureCalculationSnapshotJson()))
+                Assert.Equal(new[] { "M", "S", null }, Marks(calculation.RootElement)[0]);
+        }
+        finally { OpenDocument("{}"); }
+    }
+
+    [Fact]
     public void EmptyDocumentSaveContainsNoLayoutOrDummyLoads()
     {
         var input = InputDataService.Instance;

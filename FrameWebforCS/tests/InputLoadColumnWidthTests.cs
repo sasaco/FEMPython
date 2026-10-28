@@ -47,10 +47,11 @@ public sealed class InputLoadColumnWidthTests(ITestOutputHelper output)
                 Application.DoEvents();
                 var sheet = spread.ActiveSheet;
                 Assert.Equal("荷重強度", sheet.SheetName);
-                Assert.Equal(16, sheet.ColumnCount);
+                Assert.Equal(17, sheet.ColumnCount);
                 float[] before = Widths(sheet);
-                foreach (int column in new[] { 0, 1, 2, 9 })
+                foreach (int column in new[] { 0, 1, 2, 10 })
                     Assert.Equal(50f, before[column]);
+                Assert.Equal("ms", sheet.Columns[4].DataField);
                 int columnIndex = Enumerable.Range(0, sheet.ColumnCount)
                     .Single(index => sheet.Columns[index].DataField == field);
                 int rowIndex = existingRow ? service.FindIntensityRowIndex("1", 1) : 0;

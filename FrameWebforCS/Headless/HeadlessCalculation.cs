@@ -60,7 +60,7 @@ internal static class HeadlessCalculation
 
         string canonicalJson;
         var runtime = new PythonCalculationRuntime(redirectOutputToStderr: true);
-        try { canonicalJson = await runtime.CalculateAsync(request.Json, cancellationToken); }
+        try { canonicalJson = await runtime.CalculateAsync(request, cancellationToken); }
         finally
         {
             // A native solve cannot be interrupted in process. On cancellation the process exits;

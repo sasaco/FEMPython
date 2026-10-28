@@ -237,7 +237,7 @@ namespace FrameWebforCS
                 CalculationResultStore.Instance.Clear();
                 計算ToolStripMenuItem.Text = "計算中 (クリックで中止)";
                 _calculationRuntime ??= new PythonCalculationRuntime();
-                string json = await _calculationRuntime.CalculateAsync(request.Json, cancellation);
+                string json = await _calculationRuntime.CalculateAsync(request, cancellation);
                 CalculationResultPresentation prepared = await Task.Run(() =>
                 {
                     AnalysisResultSet resultSet = AnalysisResultSetJson.Deserialize(json);

@@ -623,6 +623,10 @@ namespace Convert_Manager.FrameG
             if ((mark == 1 || mark == 2) && direction == "y")
             {
                 load.Mark = mark;
+                // FrameG keeps M/S (bending or shear load) in the V/H column.
+                string ms = Text(row["ms"]).ToUpperInvariant();
+                if (ms == "M" || ms == "S")
+                    load.Direction = ms;
             }
             else if ((mark == 1 || mark == 2) && direction == "x")
             {

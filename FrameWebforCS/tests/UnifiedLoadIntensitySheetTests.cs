@@ -220,7 +220,7 @@ public sealed class UnifiedLoadIntensitySheetTests
 
             Assert.True(component.SelectGridRow(1, "ty", "2"));
             Assert.Equal(second, sheet.ActiveRowIndex);
-            Assert.Equal(11, sheet.ActiveColumnIndex);
+            Assert.Equal(12, sheet.ActiveColumnIndex);
             Assert.Equal("2", service.SelectedCaseId);
             Assert.Equal("1", sheet.Cells[first, 0].Text);
 
@@ -233,7 +233,7 @@ public sealed class UnifiedLoadIntensitySheetTests
             try
             {
                 typeof(FpSpread).GetMethod("OnEnterCell", BindingFlags.Instance | BindingFlags.NonPublic)!
-                    .Invoke(spread, [new EnterCellEventArgs(new SpreadView(spread), second, 10)]);
+                    .Invoke(spread, [new EnterCellEventArgs(new SpreadView(spread), second, 11)]);
                 Assert.Contains((1, "tx"), selected);
                 Assert.Equal("2", service.SelectedCaseId);
                 Assert.Equal(new[] { "2" }, cases);
@@ -344,7 +344,7 @@ public sealed class UnifiedLoadIntensitySheetTests
             spread.ActiveSheetIndex = 1;
             var sheet = spread.ActiveSheet;
             int insertIndex = service.FindIntensityRowIndex("2", 1);
-            sheet.SetActiveCell(insertIndex, 10);
+            sheet.SetActiveCell(insertIndex, 11);
             var insert = new KeyEventArgs(Keys.Oem5);
             typeof(Control).GetMethod("OnKeyDown",
                 BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(spread, [insert]);
@@ -355,7 +355,7 @@ public sealed class UnifiedLoadIntensitySheetTests
             AssertRow(service, "1", 1, node: "11");
 
             int count = service.IntensityRows.Count;
-            sheet.SetActiveCell(service.FindIntensityRowIndex("2", 1), 10);
+            sheet.SetActiveCell(service.FindIntensityRowIndex("2", 1), 11);
             var delete = new KeyEventArgs(Keys.Delete);
             typeof(myFpSpread).GetMethod("myFpSpread_KeyDown",
                 BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(spread, [spread, delete]);

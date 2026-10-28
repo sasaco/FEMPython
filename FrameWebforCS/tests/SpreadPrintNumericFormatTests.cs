@@ -164,14 +164,14 @@ public sealed class SpreadPrintNumericFormatTests
                 spread.ActiveSheetIndex = 1;
                 SheetView sheet = spread.ActiveSheet;
                 int row = service.FindIntensityRowIndex("1", 1);
-                Assert.Equal("1,235", sheet.Cells[row, 5].Text);
                 Assert.Equal("1,235", sheet.Cells[row, 6].Text);
-                Assert.Equal("7,62", sheet.Cells[row, 7].Text);
-                Assert.Equal("-7,62", sheet.Cells[row, 8].Text);
+                Assert.Equal("1,235", sheet.Cells[row, 7].Text);
+                Assert.Equal("7,62", sheet.Cells[row, 8].Text);
+                Assert.Equal("-7,62", sheet.Cells[row, 9].Text);
                 Assert.Equal("1.23456", service.GetIntensityRowAt(row)!.L1);
                 Assert.Equal("1.23456", service.GetIntensityRowAt(row)!.L2);
 
-                sheet.SetActiveCell(row, 5);
+                sheet.SetActiveCell(row, 6);
                 spread.StartCellEditing(EventArgs.Empty, false);
                 Assert.True(spread.EditMode);
                 spread.StopCellEditing();
@@ -182,13 +182,13 @@ public sealed class SpreadPrintNumericFormatTests
                 Assert.Equal("1.23456", member.GetProperty("L1").GetString());
                 Assert.Equal("1.23456", member.GetProperty("L2").GetString());
 
-                sheet.Cells[row, 5].Value = "1.25";
-                Assert.Equal("1,250", sheet.Cells[row, 5].Text);
-                sheet.SetActiveCell(row, 5);
+                sheet.Cells[row, 6].Value = "1.25";
+                Assert.Equal("1,250", sheet.Cells[row, 6].Text);
+                sheet.SetActiveCell(row, 6);
                 spread.StartCellEditing(EventArgs.Empty, false);
                 spread.StopCellEditing();
                 Assert.Equal("1.25", service.GetIntensityRowAt(row)!.L1);
-                sheet.SetActiveCell(row, 6);
+                sheet.SetActiveCell(row, 7);
                 spread.StartCellEditing(EventArgs.Empty, false);
                 spread.EditingControl!.Text = "2.34567";
                 spread.StopCellEditing();
@@ -200,8 +200,8 @@ public sealed class SpreadPrintNumericFormatTests
                 int reloadedRow = service.FindIntensityRowIndex("1", 1);
                 Assert.Equal("1.25", service.GetIntensityRowAt(reloadedRow)!.L1);
                 Assert.Equal("2.34567", service.GetIntensityRowAt(reloadedRow)!.L2);
-                Assert.Equal("1,250", sheet.Cells[reloadedRow, 5].Text);
-                Assert.Equal("2,346", sheet.Cells[reloadedRow, 6].Text);
+                Assert.Equal("1,250", sheet.Cells[reloadedRow, 6].Text);
+                Assert.Equal("2,346", sheet.Cells[reloadedRow, 7].Text);
 
                 JsonObject snapshot = JsonNode.Parse(savedJson)!.AsObject();
                 snapshot["node"] = JsonNode.Parse("""
@@ -425,8 +425,8 @@ public sealed class SpreadPrintNumericFormatTests
                 SheetView sheet = Spread(view).Sheets[1];
                 int row = service.FindIntensityRowIndex("1", 1);
                 clsLoadIntensityRow bound = service.GetIntensityRowAt(row)!;
-                Assert.Equal(bound.P1!.Value.ToString("F2", CultureInfo.CurrentCulture), sheet.Cells[row, 7].Text);
-                Assert.Equal(bound.P2!.Value.ToString("F2", CultureInfo.CurrentCulture), sheet.Cells[row, 8].Text);
+                Assert.Equal(bound.P1!.Value.ToString("F2", CultureInfo.CurrentCulture), sheet.Cells[row, 8].Text);
+                Assert.Equal(bound.P2!.Value.ToString("F2", CultureInfo.CurrentCulture), sheet.Cells[row, 9].Text);
             }
             finally { service.clear(); }
         });

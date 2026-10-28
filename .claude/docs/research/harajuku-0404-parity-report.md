@@ -87,7 +87,10 @@
 | B2 空の支点シート | 直した | `InputFixNode.cs`：空のシートは表にしない（試験 `InputPrintSkipsEmptyNodeSupportSheets`） |
 | N1 範囲指定 | 直した | `CalculationRequest.cs` の `MemberGroupRows`（試験 `NegativeEndMemberSpansTheRangeAsOneMember` ほか） |
 | L1 荷重図の上下 | 直した | 原因は y の向き。FrameWeb の 2D は y 下向き（Q25、DESIGN.md 2026-10-29）。`ConvertManager`・`load.cs`・`FrdModelReader.cs` で y を反転して鏡に映し、断面力図も `yUp` false |
-| N3 符号 | 原因が分かった | y 下向きのデータでは FrameG の符号 = M はそのまま、S は反転、N はそのまま。今の印刷は M を反転しているので逆。PIK は S を反転すれば PICKUP 2 が 0.01 以内で全て一致 |
+| N3 符号 | 直した（c584555） | 2D の数表と PIK は M = mz、S = −fy、N = fx、変位は dy を反転し回転はそのまま。断面力図は M・S を生の値で局所 +y 側に。軸力図の側は FrameG（閉じた骨組の内側）と違うまま（S5 として体裁で扱う） |
+| N2 M/S | 直した（未コミット） | 部材荷重の行に `ms`（M・S・空）。M/S の行があるケースは S の行だけの相棒の解析（`5#S`）を足し、S の行が載る部材の S だけを相棒から取る（`CalculationShearMerger`）。FrameG の変換は V/H の欄の M・S を `ms` と相互に写す。デスクトップの荷重強度の表に「M/S」列 |
+
+N2 の後の再計算（`20261029T000216/out4`・`headless4`）：基本ケースの MEMBER FORCES は 11 ケースとも 0.01 以内。PIK は M の行が全 PICKUP で 0.01 以内。残る 251 行は全て同点（着目した値は一致し、一緒に書く断面力だけが違う）で、N4 の対象。
 
 再計算（`.tmp/harajuku-0404-parity/20261029T000216/`）：基本ケースの N はケース 5・6 を除き 0.01 以内。余分な着目点は消えた。荷重図は上下が正しくなり、断面力図の形も見本と同じ向き。
 試験：Convert_Manager 120/120、PDF_Manager 124/124、FrameWebforCS 600/601（失敗の 1 件 `ResultPageActivationTests.CombinedPagePublishesWhenInitiallyShownAfterRouteSelection` は変更前から失敗）。

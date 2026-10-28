@@ -272,26 +272,26 @@ namespace FrameWebforCS.components.input
 
             // データソースを割り付け
             var column = fpSpread1_Sheet2.Columns;
-            fpSpread1_Sheet2.ColumnCount = 16;
-            string[] fields = { "LoadId", "m1", "m2", "direction", "mark", "L1", "L2",
+            fpSpread1_Sheet2.ColumnCount = 17;
+            string[] fields = { "LoadId", "m1", "m2", "direction", "ms", "mark", "L1", "L2",
                 "P1", "P2", "n", "tx", "ty", "tz", "rx", "ry", "rz" };
             for (int i = 0; i < fields.Length; i++)
                 column[i].DataField = fields[i];
             if (_input.dimension == 2)
             {
-                fpSpread1_Sheet2.ColumnCount = 13;
-                column[12].DataField = "rz";
+                fpSpread1_Sheet2.ColumnCount = 14;
+                column[13].DataField = "rz";
             }
-            column[5].CellType = new LoadLengthCellType();
             column[6].CellType = new LoadLengthCellType();
-            column[7].CellType = new GeneralCellType { FormatString = "F2" };
+            column[7].CellType = new LoadLengthCellType();
             column[8].CellType = new GeneralCellType { FormatString = "F2" };
+            column[9].CellType = new GeneralCellType { FormatString = "F2" };
             fpSpread1_Sheet2.DataSource = _service.IntensityRows;
 
             // 見た目の制御
             var header = fpSpread1_Sheet2.ColumnHeader;
             if (fpSpread1_Sheet2.ColumnCount > 1) header.Cells[0, 1].ColumnSpan = 1;
-            if (fpSpread1_Sheet2.ColumnCount > 9) header.Cells[0, 9].ColumnSpan = 1;
+            if (fpSpread1_Sheet2.ColumnCount > 10) header.Cells[0, 10].ColumnSpan = 1;
             header.RowCount = 3;
 
             for (int i = 0; i < column.Count; i++)
@@ -311,19 +311,22 @@ namespace FrameWebforCS.components.input
             header.Cells[2, 2].Text = "2";
             header.Cells[1, 3].Text = "方向";
             header.Cells[2, 3].Text = "(x,y,z)";
-            header.Cells[1, 4].Text = "マーク";
-            header.Cells[2, 4].Text = "(1,2,9,11)";
-            header.Cells[1, 5].Text = "L1";
-            header.Cells[2, 5].Text = "(m)";
-            header.Cells[1, 6].Text = "L2";
+            // FrameG M/S: M bends only, S shears only the members it loads; blank loads both.
+            header.Cells[1, 4].Text = "M/S";
+            header.Cells[2, 4].Text = "";
+            header.Cells[1, 5].Text = "マーク";
+            header.Cells[2, 5].Text = "(1,2,9,11)";
+            header.Cells[1, 6].Text = "L1";
             header.Cells[2, 6].Text = "(m)";
-            header.Cells[1, 7].Text = "P1";
-            header.Cells[2, 7].Text = "(kN/m)";
-            header.Cells[1, 8].Text = "P2";
+            header.Cells[1, 7].Text = "L2";
+            header.Cells[2, 7].Text = "(m)";
+            header.Cells[1, 8].Text = "P1";
             header.Cells[2, 8].Text = "(kN/m)";
+            header.Cells[1, 9].Text = "P2";
+            header.Cells[2, 9].Text = "(kN/m)";
 
             header.Cells[0, 0].RowSpan = 3;
-            header.Cells[0, 1].ColumnSpan = 8;
+            header.Cells[0, 1].ColumnSpan = 9;
             header.Cells[1, 1].ColumnSpan = 2;
 
             column[0].Width = 50;
@@ -331,33 +334,34 @@ namespace FrameWebforCS.components.input
             column[2].Width = 50;
 
             //
-            header.Cells[0, 9].Text = "節点荷重";
-            header.Cells[1, 9].Text = "節点";
-            header.Cells[2, 9].Text = "No";
-            header.Cells[1, 10].Text = "X";
-            header.Cells[2, 10].Text = "(kN)";
-            header.Cells[1, 11].Text = "Y";
+            header.Cells[0, 10].Text = "節点荷重";
+            header.Cells[1, 10].Text = "節点";
+            header.Cells[2, 10].Text = "No";
+            header.Cells[1, 11].Text = "X";
             header.Cells[2, 11].Text = "(kN)";
-            header.Cells[1, 12].Text = "Z";
+            header.Cells[1, 12].Text = "Y";
             header.Cells[2, 12].Text = "(kN)";
+            header.Cells[1, 13].Text = "Z";
+            header.Cells[2, 13].Text = "(kN)";
             if (_input.dimension != 2)
             {
-                header.Cells[1, 13].Text = "RX";
-                header.Cells[2, 13].Text = "(kN・m)";
-                header.Cells[1, 14].Text = "RY";
+                header.Cells[1, 14].Text = "RX";
                 header.Cells[2, 14].Text = "(kN・m)";
-                header.Cells[1, 15].Text = "RZ";
+                header.Cells[1, 15].Text = "RY";
                 header.Cells[2, 15].Text = "(kN・m)";
+                header.Cells[1, 16].Text = "RZ";
+                header.Cells[2, 16].Text = "(kN・m)";
             }
 
-            header.Cells[0, 9].ColumnSpan = _input.dimension == 2 ? 4 : 6;
+            header.Cells[0, 10].ColumnSpan = _input.dimension == 2 ? 4 : 6;
 
-            column[9].Width = 50;
+            column[4].Width = 40;
+            column[10].Width = 50;
 
             if (_input.dimension == 2)
             {
-                header.Cells[1, 12].Text = "RZ";
-                header.Cells[2, 12].Text = "(kN・m)";
+                header.Cells[1, 13].Text = "RZ";
+                header.Cells[2, 13].Text = "(kN・m)";
             }
 
             RefreshIntensityRowColors();

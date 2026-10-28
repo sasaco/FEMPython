@@ -17,6 +17,9 @@ namespace Convert_Manager.FrameWebForJS
         public double L2;
         public double P1;
         public double P2;
+        // FrameG の M/S：M は曲げ用、S はせん断用の荷重。空なら両方に使う。
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string ms;
 
         public LoadMember Clone()
         {
@@ -506,7 +509,12 @@ namespace Convert_Manager.FrameWebForJS
                                 c.P2 *= -1;
                             }
                             else
+                            {
+                                // V/H と同じ欄の M・S は、局所 y の荷重を曲げ用とせん断用に分ける印。
+                                if (c.direction == "M" || c.direction == "S")
+                                    c.ms = c.direction;
                                 c.direction = "y";
+                            }
                             break;
 
                         case "5":

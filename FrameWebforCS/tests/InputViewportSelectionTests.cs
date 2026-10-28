@@ -279,9 +279,9 @@ public sealed class InputViewportSelectionTests
                 Assert.True(load.SelectGridRow(3, "ty"));
                 Assert.Equal(1, spread.ActiveSheetIndex);
                 Assert.Equal(2, spread.ActiveSheet.ActiveRowIndex);
-                Assert.Equal(11, spread.ActiveSheet.ActiveColumnIndex);
+                Assert.Equal(12, spread.ActiveSheet.ActiveColumnIndex);
                 Assert.Empty(selected);
-                RaiseEnterCell(spread, 4, 7);
+                RaiseEnterCell(spread, 4, 8);
                 Assert.Contains((5, "p1"), selected);
             }
             finally
