@@ -1,0 +1,4 @@
+# 見本は元のバイトのまま（Shift-JIS・CRLF）残す。SHA-256 は README.md
+*.pik -text
+*.frd -text
+*.pdf -text
