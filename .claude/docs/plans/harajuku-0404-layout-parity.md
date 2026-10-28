@@ -22,7 +22,7 @@ FrameG（WinFrameG 4.3.6）の見本 `FrameGConverter/Convert_Test/TestData/原�
 1. この計画書の全項目に ✅、知見・設計の考え方・Tips がある。
 2. `denzan.pdf` が `見本_電算出力.pdf` と同じ頁割り（T5 の COMBINE 変位の頁を除く）で、入力の写し・MEMBER FORCES・変位量・COMBINE・PICK UP の全頁で対の語の位置差が 1 mm 以内、文字列・フォント・色が一致（例外：N5、`SHARE`→`SHEAR`、T5、付記）。
 3. `load-diagram.pdf` が 7 頁・同じケースの組で、文字は 1 mm 以内、線・矢印・寸法は重ねた画像で一致。
-4. `section-diagram.pdf` が 44 頁（付記の 23 頁を除く）で頁割り・頁頭・色が一致、図は重ねた画像で一致。
+4. `section-diagram.pdf` が 44 頁（付記の 23 頁を除く）で頁割り・頁頭・色が一致、図は重ねた画像で一致。値の文字は 1 つの置き方の規則に従い、FrameG 自身の置き方が揃わない所の 2 mm 前後のずれは認める（2026-10-29 決定 Q11）。
 5. 余白が文字の頁・図の頁とも見本と ±1 mm（`margins.py`）。
 6. `referenceResultLayout` のフラグが無くなり、FrameG の体裁が 2D の既定。
 7. 試験が全て通る（既知の 1 件を除く）。書き直した試験の理由がこの計画書にある。
@@ -37,7 +37,7 @@ FrameG（WinFrameG 4.3.6）の見本 `FrameGConverter/Convert_Test/TestData/原�
 |---|---|---|
 | A | W1 入力の頁 | `C:\tmp\fp-wt\A` / `wip/harajuku-w1-input` |
 | B | W2 COMBINE・PICK UP | `C:\tmp\fp-wt\B` / `wip/harajuku-w2-envelope` |
-| C | W3 荷重図 | `C:\tmp\fp-wt\C` / `wip/harajuku-w3-load` |
+| C | W3 荷重図、W6 1 頁 1 ケースの選択 | `C:\tmp\fp-wt\C` / `wip/harajuku-w3-load` |
 | D | W4 断面力図 | `C:\tmp\fp-wt\D` / `wip/harajuku-w4-section` |
 | リーダー | 統合・W5・報告 | `main` |
 
@@ -114,6 +114,14 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 確かめ方：頁頭の文字は `layout_compare.py`、図は重ねた画像。
 
 結果（`1b46b17`、作業者 D の `ede2993` を取り込み）：44 頁、頁割り・頁頭（題名、`Case 1 固定死荷重:D1`、`COMBINE 1 名称`）・色（全て青の MS 明朝の細字）は見本どおり。重ね画像で 1 mm 内に相手の無い画素は見本→出力 32,792／出力→見本 16,200（変更前 627,970／1,219,736。見本側は頁ごとに付記約 400）。値の文字の 1 mm 超は 44 頁で 290 語（語数 1900。近い順に対にすると 213）。残りは FrameG の置き方が左右で揃わない所（剛域の面の値のずらし方）、剛域側のせん断力の描く側、基本ケースの N の値の選び方、変位図の i 端の値（各 2 mm 前後）。W4-5（S5）は「閉じた骨組の内側」ではなく「+N を部材の法線（`transform.Normal`）側」が FrameG の規則（見本 25 頁で COMBINE 1 の上床版の圧縮が外側に出る）。新しいファイル `PrintDiagram/CanonicalSectionDiagram.FrameG.cs`（partial）、試験 `FrameGSectionDiagramTests.cs`（8 件）・`FrameGSectionDiagramProjectionTests.cs`（3 件）。共有の変更：`PdfDocument.cs` に `OwnPageHeader`・`Title`。
+
+#### W6 荷重図の「1 頁に 1 ケース」の選択（作業者 C、2026-10-29 決定 Q9 (b)）
+
+- [ ] W6-1 デスクトップの印刷の画面に、荷重図で 1 頁に 1 ケースにするケースを選ぶ欄（`PrintSelection.LoadDiagramSingleCaseIds`）。
+- [ ] W6-2 Headless の `run` に同じ選択の引数。
+- [ ] W6-3 試験と README（`headless-runner` の SKILL.md はユーザーの未コミットの変更があるので触らない）。
+
+`.frd` の書式（`$16.txt` の `1.2`）は保存データに写さない（ユーザーの決定）。
 
 #### W5 `referenceResultLayout` の撤去（リーダー、W1〜W4 の統合後）
 
