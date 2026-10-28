@@ -9,10 +9,10 @@ FrameG（WinFrameG 4.3.6）の見本 `FrameGConverter/Convert_Test/TestData/原�
 
 - 流れ：`.frd` →（`ConvertManager`）→ 保存形式の JSON → 計算 → `PrintProjection.Build` → `DirectPdfGenerator`。
 - 比べ方：計算書の付記（`4-n`・`5-n`、章・節の見出し、断面力図の 23 頁）は除く。頁割り・文字列・フォント・色は一致、位置は ±1 mm、加えて頁を重ねた目視。
-- 余白も見本に合わせる。文字の頁は左 71.6 pt・行の下端 ≈ 778.6 pt（`PdfDocument.FrameGLeft`・`FrameGBottom`）。図の頁は W3・W4 で決める。
+- 用紙が横向き・A3 でも、FrameG の体裁を A4 縦の座標（pt）のまま選んだ用紙に置く（2026-10-29 決定）。頁送りは頁の高さから求める。横向きで 2 ケースを並べる体裁は消す。文字の頁は左 71.6 pt・行の下端 ≈ 778.6 pt（`PdfDocument.FrameGLeft`・`FrameGBottom`）。図の頁は W3・W4 で決める。
 - 文字は MS 明朝 9.06 pt、数表の行の間隔 9 pt。
 - FrameG の版の文字列（`DataVer 4.3.6`・バナー）は出さない。`SHARE` は `SHEAR` で出す。
-- ja は見本を再現、en は同じ配置で日本語の文字だけ英訳。3D・Web 版（FramePrintAzure）は変えない。
+- ja は見本を再現、en は同じ配置で日本語の文字だけ英訳。3D は変えない。**Web 版（FramePrintAzure）の 2D も FrameG の体裁にする**（2026-10-29 にユーザーが「Web 版は変えない」を改めた）。Web 版の JSON には FrameWebforCS だけが付けるメタデータが無いので、欠けていても例外を出さずに組む。
 - 符号は変えない（2D は y 下向き。数表・PIK は M = mz、S = −fy、N = fx）。COMBINE の変位（T5）と値の最後の桁の丸め（N5）は対象外。
 - 試験を弱めない。以前の見本（線路直角方向）を前提にした試験を直すときは、試験ごとの理由をこの計画書に書く。既知の失敗 `ResultPageActivationTests.CombinedPagePublishesWhenInitiallyShownAfterRouteSelection` は無視。
 - Git：`.claude/skills/headless-runner/SKILL.md` の未コミットの変更はユーザーのもの（含めない・戻さない）。push しない。共用の Release の Headless exe は作り直さない（`-c Debug`）。
@@ -66,10 +66,10 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 #### W1 入力の頁（作業者 A）　見本 `見本_電算出力.pdf` 1〜4 頁
 
 - [ ] W1-1 格点 DATA：縦 1 列（No・X・Y）。
-- [ ] W1-2 部材 DATA：格点番号・部材長・ﾏｰｸ・部材名・部材数・E・膨張係数・A・I（材料の表は別に出さない）。
+- [ ] W1-2 部材 DATA：格点番号・部材長・ﾏｰｸ・部材名・部材数・E・膨張係数・A・I（材料の表は別に出さない）。ﾏｰｸの欄は空（2026-10-29 決定：保存形式に足さない。比較の例外）。
 - [ ] W1-3 剛域データ（部材 DATA（剛域データ））。
 - [ ] W1-4 部材バネ DATA：TYPE ごとに 2 列（Kv・Ku）。
-- [ ] W1-5 着目点：名前（左壁前面など）。`.frd` にあり変換で落ちているなら変換を直す。
+- [ ] W1-5 着目点：名前の欄は空（2026-10-29 決定：保存形式に足さない・変換も変えない。比較の例外）。
 - [ ] W1-6 基本荷重 DATA：構造系条件の欄。
 - [ ] W1-7 実荷重：V/H・M/S の欄と通し番号「(...1)」。
 - [ ] W1-8 DEFINE、COMBINE（係数を下の行に）、PickUp。
@@ -89,8 +89,8 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 #### W3 荷重図（作業者 C）　見本 `見本_荷重図.pdf` 1〜7 頁
 
 - [ ] W3-1 頁の組：1 頁に 1〜2 ケース（3・4、5・6、7・8、9・10 を同じ頁に）。組み方の規則を見本から決める。
-- [ ] W3-2 頁頭の題名を出さず、左の余白に回転した `題名 P n`（`(DataVer 4.3.6)` は出さない）。
-- [ ] W3-3 ケースの見出し `Case 3  名称  記号` の位置・フォント。
+- [ ] W3-2 頁頭の題名を出さない。左の余白の回転した `題名 (DataVer 4.3.6) P n` も出さず、`4-n` と同じく比較から外す（2026-10-29 決定）。
+- [ ] W3-3 ケースの見出し `Case 3  名称  記号` の位置・フォント（FrameG 自身の出力。比較に含める）。
 - [ ] W3-4 荷重の値と寸法を図の外に横書き。部材軸方向の分布荷重は `q =11.00`。節点荷重の矢印と値。
 - [ ] W3-5 図の大きさ・位置・余白。
 
@@ -127,6 +127,7 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 - 変換後の JSON に部材のﾏｰｸ（G・A・B1・B2・C）と着目点の名前が無い（`member` は `ni`・`nj`・`e` だけ、`notice_points` は `m`・`Points` だけ）。部材名は断面（`element`）の `n`。
 - `PrintProjection.Build` は入力の節（`node`・`member`・`element`・`notice_points` など）を保存形式の JSON からそのまま写す（`PrintProjection.cs:222`）。保存形式に足した項目は印刷側で読めば届く。
+- W5 の前提：`PDF_Manager` の `PrintInput` は FrameWebforCS（`DirectPdfGenerator.Generate`）のほかに Web 版 `FramePrintAzure/Function1.cs`・`Function2.cs` と `PDF_Test*` からも呼ばれ、Web 版の JSON にはフラグが無い。フラグを消して「2D なら常に FrameG」にすると Web 版の 2D が変わり、制約（Web 版は変えない）に反する。DESIGN.md 2026-10-28 の捨てた案に「FrameWebforCS だけが出すメタデータ無しで Web・3D に体裁を当てる」がある。→ 2026-10-29 にユーザーが決定：Web 版も含めて 2D は全て FrameG の体裁（入口で切り替える案は捨てた）。W5 ではフラグを消し、2D なら FrameG の体裁にする。Web 版の JSON（メタデータ無し）で組めることを試験で確かめる。
 
 ### 設計の考え方
 
