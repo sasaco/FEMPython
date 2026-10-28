@@ -357,7 +357,8 @@ namespace PDF_Manager.Printing
         }
 
         #region PrintableBaseB.printPDF()用メソッド定義
-        protected override bool HasAnyData() => fixnodes.Any();
+        // Empty sheets (a frame supported by member springs only) print no table.
+        protected override bool HasAnyData() => fixnodes.Values.Any(sheet => sheet.Count > 0);
         protected override void PrintInit(PdfDocument mc, PrintData data, out string[] titles, out int headerRows, out Table.NupInfo[] nupInfo)
         {
             // タイトル などの初期化
@@ -369,7 +370,7 @@ namespace PDF_Manager.Printing
         }
         protected override IEnumerable<Table> GetTables(PdfDocument mc, PrintData data, int indexPage)
         {
-            foreach (var tmp0 in fixnodes.Chunk(dimension == 3 ? 1 : 2))
+            foreach (var tmp0 in fixnodes.Where(sheet => sheet.Value.Count > 0).Chunk(dimension == 3 ? 1 : 2))
             {
                 Table table;
                 if (dimension == 3)

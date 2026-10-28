@@ -11,14 +11,15 @@ public class FrdExporterTests
     internal static readonly DateTimeOffset Time = new(2026, 10, 22, 9, 0, 0, TimeSpan.FromHours(9));
 
     // A 2D model in the format FrameWebforCS saves, using every section the exporter writes.
+    // A portal frame in FrameWeb's 2D axes: y points down, so the columns rise to y = -3.
     internal const string ModelJson = """
     {
       "dimension": 2,
       "three": { "camera": { "x": 0, "y": 0, "z": 50 } },
       "node": {
         "1": { "x": 0, "y": 0, "z": null },
-        "2": { "x": 0, "y": 3, "z": null },
-        "3": { "x": 4, "y": 3, "z": null },
+        "2": { "x": 0, "y": -3, "z": null },
+        "3": { "x": 4, "y": -3, "z": null },
         "4": { "x": 4, "y": 0, "z": null }
       },
       "member": {
@@ -51,15 +52,15 @@ public class FrdExporterTests
       "notice_points": [ { "row": 1, "m": "1", "Points": [ 1.5, 3 ] }, { "row": 2, "m": "2", "Points": [ 2 ] } ],
       "load": {
         "1": { "fix_node": 1, "fix_member": 1, "element": 1, "joint": 1, "symbol": "D", "LL_pitch": null, "name": "死荷重",
-          "load_node": [ { "row": 2, "n": "2", "tx": 10, "ty": -20, "tz": null, "rx": null, "ry": null, "rz": 5 } ],
+          "load_node": [ { "row": 2, "n": "2", "tx": 10, "ty": 20, "tz": null, "rx": null, "ry": null, "rz": -5 } ],
           "load_member": [
-            { "row": 1, "m1": "2", "m2": "2", "direction": "gy", "mark": "2", "L1": "0", "L2": "0", "P1": -10, "P2": -10 },
-            { "row": 3, "m1": "1", "m2": "3", "direction": "y", "mark": "1", "L1": "1.5", "L2": "0", "P1": 30, "P2": null } ] },
+            { "row": 1, "m1": "2", "m2": "2", "direction": "gy", "mark": "2", "L1": "0", "L2": "0", "P1": 10, "P2": 10 },
+            { "row": 3, "m1": "1", "m2": "3", "direction": "y", "mark": "1", "L1": "1.5", "L2": "0", "P1": -30, "P2": null } ] },
         "2": { "fix_node": 2, "element": 2, "symbol": "T", "name": "温度",
           "load_member": [
             { "row": 1, "m1": "1", "m2": "3", "direction": "x", "mark": "9", "L1": null, "L2": null, "P1": 10, "P2": null },
             { "row": 2, "m1": "2", "m2": null, "direction": "x", "mark": "2", "L1": "-0", "L2": "-1.5", "P1": 3, "P2": 3 },
-            { "row": 3, "m1": "1", "m2": null, "direction": "z", "mark": "11", "L1": "1", "L2": null, "P1": 50, "P2": null } ] },
+            { "row": 3, "m1": "1", "m2": null, "direction": "z", "mark": "11", "L1": "1", "L2": null, "P1": -50, "P2": null } ] },
         "3": { "symbol": "H", "name": "水平",
           "load_member": [ { "row": 1, "m1": "1", "m2": "-3", "direction": "gx", "mark": "2", "L1": "0", "L2": "0", "P1": 7, "P2": 7 } ] }
       },
@@ -106,7 +107,7 @@ public class FrdExporterTests
 
         Assert.Equal(new[] { "1", "2", "3", "4" }, ((JObject)json["node"]!).Properties().Select(p => p.Name));
         Assert.Equal(4.0, (double)json["node"]!["3"]!["x"]!);
-        Assert.Equal(3.0, (double)json["node"]!["3"]!["y"]!);
+        Assert.Equal(-3.0, (double)json["node"]!["3"]!["y"]!);
         Assert.Equal("3", (string)json["member"]!["3"]!["ni"]!);
         Assert.Equal("4", (string)json["member"]!["3"]!["nj"]!);
         Assert.Equal("3", (string)json["member"]!["3"]!["e"]!);
@@ -150,12 +151,12 @@ public class FrdExporterTests
         Assert.Equal(("D", "死荷重", 1, 1, 1, 1), ((string)dead["symbol"]!, (string)dead["name"]!, (int)dead["fix_node"]!,
             (int)dead["element"]!, (int)dead["fix_member"]!, (int)dead["joint"]!));
         var deadMembers = (JArray)dead["load_member"]!;
-        Assert.Equal(("gy", "2", -10.0, -10.0), ((string)deadMembers[0]["direction"]!, (string)deadMembers[0]["mark"]!,
+        Assert.Equal(("gy", "2", 10.0, 10.0), ((string)deadMembers[0]["direction"]!, (string)deadMembers[0]["mark"]!,
             (double)deadMembers[0]["P1"]!, (double)deadMembers[0]["P2"]!));
-        Assert.Equal(("y", "1", "1", "3", "1.5", 30.0), ((string)deadMembers[1]["direction"]!, (string)deadMembers[1]["mark"]!,
+        Assert.Equal(("y", "1", "1", "3", "1.5", -30.0), ((string)deadMembers[1]["direction"]!, (string)deadMembers[1]["mark"]!,
             (string)deadMembers[1]["m1"]!, (string)deadMembers[1]["m2"]!, (string)deadMembers[1]["L1"]!, (double)deadMembers[1]["P1"]!));
         var node = Assert.Single((JArray)dead["load_node"]!);
-        Assert.Equal(("2", 10.0, -20.0, 5.0), ((string)node["n"]!, (double)node["tx"]!, (double)node["ty"]!, (double)node["rz"]!));
+        Assert.Equal(("2", 10.0, 20.0, -5.0), ((string)node["n"]!, (double)node["tx"]!, (double)node["ty"]!, (double)node["rz"]!));
 
         var temperature = json["load"]!["2"]!;
         Assert.Equal((2, 2), ((int)temperature["fix_node"]!, (int)temperature["element"]!));
@@ -163,7 +164,7 @@ public class FrdExporterTests
         Assert.Equal(("9", "", 10.0), ((string)rows[0]["mark"]!, (string)rows[0]["direction"]!, (double)rows[0]["P1"]!));
         Assert.Equal(("2", "x", "-0", -1.5, 3.0), ((string)rows[1]["mark"]!, (string)rows[1]["direction"]!,
             (string)rows[1]["L1"]!, (double)rows[1]["L2"]!, (double)rows[1]["P2"]!));
-        Assert.Equal(("11", "z", 50.0), ((string)rows[2]["mark"]!, (string)rows[2]["direction"]!, (double)rows[2]["P1"]!));
+        Assert.Equal(("11", "z", -50.0), ((string)rows[2]["mark"]!, (string)rows[2]["direction"]!, (double)rows[2]["P1"]!));
 
         var horizontal = Assert.Single((JArray)json["load"]!["3"]!["load_member"]!);
         Assert.Equal(("gx", "-3", 7.0), ((string)horizontal["direction"]!, (string)horizontal["m2"]!, (double)horizontal["P1"]!));

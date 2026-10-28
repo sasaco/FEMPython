@@ -1,0 +1,104 @@
+# 原宿ボックス 0404：FrameG との差異の報告（2026-10-28）
+
+見本 `FrameGConverter/Convert_Test/TestData/原宿ボックス_0404/`（README に頁の対応）と、FrameWebforCS で `.frd` を計算・印刷した結果を比べた。
+判定は **差異あり**。数値は、原因が分かった 4 つの違い（下の N1〜N4）を除けば丸めの差 0.01 以内で一致する。体裁は大きく違う。
+用語は `GLOSSARY.md`、目標の決定は `.claude/docs/DESIGN.md`（2026-10-28）。
+
+## 実行したこと
+
+- HEAD `3bbd4b1`。実行ディレクトリ `.tmp/harajuku-0404-parity/20261028T231831/`（git に入らない）。
+- `.frd` → デスクトップと同じ `InputFileLoader.Open`（`ConvertManager`）→ `out/model.json`。
+- 計算と PDF：私設のハーネス `.tmp/harajuku-0404-parity/harness-src/`（`CalculationRequestBuilder` → Python → `CalculationDerivedPresenter` → `PrintProjection.Build` → `DirectPdfGenerator`）。A4 縦・`ja`・題名 `0404_完成時FrameG`。
+  - `out/denzan.pdf`：入力・断面力・変位・COMBINE 変位・COMBINE 断面力・PICKUP 断面力（見本の電算出力に当たる）
+  - `out/load-diagram.pdf`：荷重図
+  - `out/section-diagram.pdf`：基本ケースと COMBINE の断面力図（上下 2 段）
+- PIK：Headless runner（`-c Debug` で作り直した `FrameWebforCS/Headless/bin/Debug/…`。共用の Release の exe は触っていない）の `run`。
+- 比べる道具：`.tmp/harajuku-0404-parity/tools/`（`member_forces.py`：見本の MEMBER FORCES と全行、`pik_compare.py`：PIK の全行、`variants.py`：仮説を確かめる変種のモデル、`pair.py`：頁を並べた画像）。
+- 先へ進めるために私設のコピーでだけ回避したもの：B1（温度荷重の direction を `x` に）、B2（空の支点シートを印刷用 JSON から除く）。
+
+## 止まったところ（B）
+
+| # | 内容 | 場所 | 直し方の案 |
+|---|---|---|---|
+| B1 | FrameG の温度荷重（mark 9）は向きを持たず、変換すると `direction` が空。`CalculationRequestBuilder` がこれを拒むので、**デスクトップでもこの `.frd` を開いて計算できない** | `CalculationRequest.cs:295`（空の direction を拒む試験 `EmptyMemberLoadDirectionReportsCaseAndRow` がある） | 変換（`ConvertManager`）で mark 9 に `x` を入れる |
+| B2 | 支点が部材ばねだけ（`fix_node` の 6 シートが全て空）だと、入力の写しの支点の表で範囲外を参照して例外 | `FramePrintPDF/…/InputFixNode.cs:353`（行の無い表で `RowHeight[3]`） | 空のシートを飛ばす |
+
+## 数値（N）
+
+基本ケースの断面力（11 ケース × 48 点）を見本の MEMBER FORCES と全行比べた。
+
+| ケース | 変換したまま | N1 を直した変種 | N1 と N2（M の行だけ）を直した変種 |
+|---|---|---|---|
+| 1・3・7〜11 | 0.01 以内 | 0.01 以内 | 0.01 以内 |
+| 2 | 最大 0.81 | 0.01 以内 | 0.01 以内 |
+| 4 | 最大 2.13 | 0.01 以内 | 0.01 以内 |
+| 5・6 | 最大 173.61 | 最大 173.61 | M・N は 0.01 以内。S は上床版で違う（N2） |
+
+- **N1 範囲指定の部材荷重（FrameWebforCS の不具合）**：`1 -3 2 0.225 0.225 2.30` のように `m2` が負なら、部材 1〜3 を**1 つの部材**とみなし、その始まりから L1、終わりから L2 を除いて載せる（台形荷重 P1→P2 も全体で直線に変わる）。これは FrameG と FrameWeb の共通の仕様（FrameWeb のマニュアル、`FramePrintPDF/doc/Report-cw-20230217.md:277`）で、Angular 版は `input-load.service.ts` の `getMemberGroupLoad` で仕様どおりに分けている。
+  FrameWebforCS の `CalculationRequest.cs` の `ExpandMemberRow` はこれを移しておらず、負の範囲を正の範囲（部材ごとに同じ L1・L2・P1・P2）と同じに扱う。ケース 2 は部材 1・3 の荷重が消えて合計 8.28 kN（正しくは 9.9 kN）、ケース 4 は部材 4・5 がそれぞれ 14→40 になる。
+  変種 `range-split`（区間を部材ごとの行に分けたもの）でケース 2・4 が一致し、部材 2 の余分な着目点（0.225・3.825）も消えた。この余分な着目点が PIK の行が 42 行多い理由（7 PICKUP × 3 × 2）。
+- **N2 荷重の M/S の区別**：FrameG の実荷重には M/S の欄があり、ケース 5・6 は `61.00 M`・`73.10 S`（6 は `56.20 M`・`67.50 S`）。変換でこの欄が落ち、2 行とも同時に載っている。
+  全 48 行で次の規則に一致した：**M の行の荷重で全部材の M・N と、S の行が載らない部材の S を求め、S の行の荷重で、その行が載る部材（ここでは 1〜3）の S だけを求める**。FrameWeb にこの機能は無い。
+- **N3 PIK の M の符号**：`pickup.pik` の M は FrameG と逆の符号。S・N は同じ。PDF の数表は FrameG と同じ符号なので、今の FrameWebforCS では PIK と自分の数表で M の符号が逆になっている（DESIGN.md 2026-10-15：2D の時計回りの符号は印刷のときだけで、PIK は生のまま）。M を反転し最大と最小を入れ替えると、PICKUP 2（ケース 5・6 を含まない）は 48×3 行が 0.01 以内で一致する。
+- **N4 同点のときの採用**：PICKUP 5 の側壁の N は COMBINE 8 と 9 で同じ値になる（違いは側圧と温度で、どちらも側壁の N を変えない）。FrameG は同点のとき最大の行と最小の行に同じ組合せを採る。FrameWeb は別の組合せ（温度の +T と −T）を採り、一緒に書く M・S が変わる（N の値は同じ）。
+- **N5 丸め**：一致しているケースにも 0.01 の差が数か所ある（例：ケース 1 部材 1 の 0.225 で S が 23.44 と 23.43）。FrameG は計算の精度か丸め方が違う。
+- PICKUP 1・3・4・6・7 は N2 を直さないと比べられない（全てケース 5 か 6 を含む）。N1 と M の行だけを直した変種では、差はケース 5・6 の上床版の S（最大 34.5）に限られる。
+
+## 体裁
+
+頁数：電算出力 128 頁に対して 278 頁、荷重図 7 頁に対して 11 頁、断面力図 45 頁に対して 44 頁（見本の 1 頁は計算書の付記）。
+頁を並べた画像：`.tmp/harajuku-0404-parity/20261028T231831/png/`。
+
+### 電算出力（数表）
+
+| # | 見本（FrameG） | 今 |
+|---|---|---|
+| T1 | 節の順序：入力 → MEMBER FORCES → 変位量 → COMBINE → PICK UP | 入力 → 変位量 → MEMBER FORCES → COMBINE 変位量 → COMBINE → PICK UP |
+| T2 | 入力の写し 4 頁。格点を縦 1 列、部材 DATA に E・膨張係数・A・I と部材名・ﾏｰｸ、剛域データ、部材バネを TYPE ごとに 2 列、着目点に名前（左壁前面など）、基本荷重の構造系条件、実荷重に V/H・M/S の欄と通し番号「(...1)」、COMBINE は係数を下の行に | 5 頁。格点を 3 列、材料を別の表、着目点の名前が無い（変換で落ちている）、ばねの表の作りが違う、COMBINE は係数を同じ行に |
+| T3 | MEMBER FORCES は 1 ケース 1 頁（10 部材）。「CASE 1 : 名称」「部 材 1 ( 1 - 2 ) 剛域」（部材名つき）、見出しに下線、行の間隔が狭い | 1 ケース 2 頁。部材名が無い、行の間隔が広い |
+| T4 | 変位量は入力の節点（10）だけ、ケースを縦 1 列 | 自動で作った節点（`generated:2:S1` など）も出す、ケースを左右 2 列 |
+| T5 | COMBINE の変位は変位量の表の中に「COMB. n 名称 1+2+3+4+5+8+10+11」として 1 組（係数をかけた和。DEFINE の選択肢のうち 1 つを採る。採り方の規則は未解明） | 「Combine変位量」を方向ごとの最大・最小で 73 頁 |
+| T6 | COMBINE・PICK UP は 1 頁ずつ。CASE の欄は「( 1+2+3+4+5+8-10 )」（採ったケース番号と符号）、PICK UP は「( 2 :1+2+3+4+8-10 )」 | 2〜3 頁ずつ。欄が「(1,2,3,4,5,8,-10,0:1.1*1+1.2*2…)」と係数まで書いて折り返す |
+| T7 | 頁頭は `TITLE : 題名` | 同じ（合っている） |
+
+### 荷重図
+
+| # | 見本 | 今 |
+|---|---|---|
+| L1 | 上床版の荷重を上に描く | **上下が逆**（上床版の荷重と寸法 0.35・4.05・0.35 が下に描かれる） |
+| L2 | 1 頁に 1〜2 ケース（ケース 3・4、5・6、7・8、9・10 を同じ頁に） | 1 頁に 1 ケース |
+| L3 | 荷重の値と寸法を図の外に横書き、部材軸方向の分布荷重は「q =11.00」、節点荷重の矢印と値 | 値を回転して部材のそばに、寸法線の置き方が違う |
+| L4 | 左の余白に回転した「題名 P n」。頁頭の題名は無い | 頁頭に「荷 重 図 Case n 名称 記号」と `TITLE : 題名` |
+
+### 断面力図
+
+| # | 見本 | 今 |
+|---|---|---|
+| S1 | 頁頭は題名だけ（`TITLE :` なし）、「Case 1 固定死荷重:D1」（記号つき） | `TITLE : 題名`、「Case 1 固定死荷重」（記号なし） |
+| S2 | COMBINE の頁に「COMBINE 1 名称」 | COMBINE の頁にケース名が無い（「曲げモーメント図」だけ） |
+| S3 | 図が小さめ。値は部材の端と最大値などの限られた点だけ、小さな文字 | 図が大きい。全ての着目点に値を書き、隅で重なる |
+| S4 | 文字は全て青、図の題の文字は細い | 値は青、題は太字 |
+
+## 進捗（2026-10-29、未コミット）
+
+| 項目 | 状態 | 変えたところ |
+|---|---|---|
+| B1 温度荷重の direction | 直した | `CalculationRequest.cs`：mark 9 は direction が空でよい（試験 `TemperatureLoadNeedsNoDirection`。空の direction を拒む試験は mark 2 に変えた） |
+| B2 空の支点シート | 直した | `InputFixNode.cs`：空のシートは表にしない（試験 `InputPrintSkipsEmptyNodeSupportSheets`） |
+| N1 範囲指定 | 直した | `CalculationRequest.cs` の `MemberGroupRows`（試験 `NegativeEndMemberSpansTheRangeAsOneMember` ほか） |
+| L1 荷重図の上下 | 直した | 原因は y の向き。FrameWeb の 2D は y 下向き（Q25、DESIGN.md 2026-10-29）。`ConvertManager`・`load.cs`・`FrdModelReader.cs` で y を反転して鏡に映し、断面力図も `yUp` false |
+| N3 符号 | 原因が分かった | y 下向きのデータでは FrameG の符号 = M はそのまま、S は反転、N はそのまま。今の印刷は M を反転しているので逆。PIK は S を反転すれば PICKUP 2 が 0.01 以内で全て一致 |
+
+再計算（`.tmp/harajuku-0404-parity/20261029T000216/`）：基本ケースの N はケース 5・6 を除き 0.01 以内。余分な着目点は消えた。荷重図は上下が正しくなり、断面力図の形も見本と同じ向き。
+試験：Convert_Manager 120/120、PDF_Manager 124/124、FrameWebforCS 600/601（失敗の 1 件 `ResultPageActivationTests.CombinedPagePublishesWhenInitiallyShownAfterRouteSelection` は変更前から失敗）。
+
+y 上向きで書かれたデータ：K: の `線路直角方向.json`（杭が y = −24.35 へ伸びる）は y 上向きで、2026-10-15・16 の印刷の符号と `yUp` はこれに合わせていた。この変更でその PDF の断面力図は上下が逆になる（データは客先のものなので変えていない）。
+
+## 決めていただくこと
+
+1. **N2（M/S）**：FrameWeb の部材荷重に M/S の区別を足すか（荷重の行に属性を足し、計算は M の荷重と S の荷重の 2 回）。足さなければ、ケース 5・6 を含む PICKUP 1・3・4・6・7 は一致しない。
+2. **N1（範囲指定）**：決まり（2026-10-28）。仕様と Angular 版に合わせて `CalculationRequestBuilder` を直す。負の範囲で L1・L2 か台形荷重を使う既存の JSON は、結果が仕様どおりの値に変わる。
+3. **N3（PIK の符号）**：`pickup.pik` の M を FrameG（と自分の数表）と同じ符号にするか。WebPier・関内EVピット・Capacita への受け渡しの符号が変わる。
+4. **N4（同点）**：同点のときの採り方を FrameG に合わせるか。
+5. **T5（COMBINE の変位）**：FrameG の「COMB.」の 1 組に合わせるか。合わせるなら、DEFINE の選択肢の採り方の規則をさらに調べる。
+6. B1・B2・L1 と残りの体裁（T1〜T4・T6・L2〜L4・S1〜S4）は、合意（見本に合わせる）のとおり直す。どの順で直すか。

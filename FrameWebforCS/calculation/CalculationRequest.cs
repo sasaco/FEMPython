@@ -175,7 +175,7 @@ internal static class CalculationRequestBuilder
             var memberRows = new List<JsonObject>();
             if (source["load_member"] is JsonArray rawMemberRows)
                 foreach (var row in NormalizeRelativeMemberRows(rawMemberRows, members, nodes, caseId))
-                    memberRows.AddRange(ExpandMemberRow(row, members, caseId));
+                    memberRows.AddRange(ExpandMemberRow(row, members, nodes, caseId));
             var spatial = source["spatial_loads"] as JsonObject;
             bool hasSpatial = spatial?["loads"] is JsonArray spatialLoads && spatialLoads.Count > 0;
             if (hasSpatial && dimension != 3)
@@ -242,7 +242,8 @@ internal static class CalculationRequestBuilder
         return ordered;
     }
 
-    private static IEnumerable<JsonObject> ExpandMemberRow(JsonObject row, JsonObject members, string caseId)
+    private static IEnumerable<JsonObject> ExpandMemberRow(JsonObject row, JsonObject members, JsonObject nodes,
+        string caseId)
     {
         double? first = Number(row["m1"]), last = Number(row["m2"]), mark = Number(row["mark"]);
         string direction = mark == 9 ? "x" : String(row["direction"]).Trim().ToLowerInvariant();
@@ -256,6 +257,13 @@ internal static class CalculationRequestBuilder
         if (Math.Abs(first.Value) > Math.Abs(last.Value)) (first, last) = (-last, -first);
         int begin = (int)Math.Abs(first.Value), end = (int)Math.Abs(last.Value);
         if (last < 0 && mark is 1 or 11) end = begin;
+        if (last < 0 && mark == 2 && begin < end && row["_relativeZeroLength"] == null &&
+            (Number(row["L1"]) ?? 0) >= 0 && (Number(row["L2"]) ?? 0) >= 0)
+        {
+            foreach (var groupRow in MemberGroupRows(row, begin, end, direction, members, nodes, caseId))
+                yield return groupRow;
+            yield break;
+        }
         for (int member = begin; member <= end; member++)
         {
             string id = member.ToString(CultureInfo.InvariantCulture);
@@ -276,6 +284,35 @@ internal static class CalculationRequestBuilder
         }
     }
 
+    /// <summary>
+    /// A negative end member loads m1..|m2| as one member (FrameWeb manual; Angular getMemberGroupLoad):
+    /// L1 from the start of the first member, L2 from the end of the last, P1 -> P2 linear over the loaded span.
+    /// </summary>
+    private static IEnumerable<JsonObject> MemberGroupRows(JsonObject row, int begin, int end, string direction,
+        JsonObject members, JsonObject nodes, string caseId)
+    {
+        var ids = Enumerable.Range(begin, end - begin + 1).Select(member => member.ToString(CultureInfo.InvariantCulture)).ToArray();
+        foreach (string id in ids)
+            if (!members.ContainsKey(id)) throw new CalculationRequestException($"load.{caseId}: member {id} does not exist.");
+        double[] lengths = ids.Select(id => JsRound(MemberLength(id, members, nodes) * 1000) / 1000).ToArray();
+        double spanStart = Number(row["L1"]) ?? 0, spanEnd = lengths.Sum() - (Number(row["L2"]) ?? 0);
+        double p1 = Number(row["P1"]) ?? 0, p2 = Number(row["P2"]) ?? 0;
+        double At(double position) => spanEnd > spanStart ? p1 + (p2 - p1) * (position - spanStart) / (spanEnd - spanStart) : p1;
+        double offset = 0;
+        for (int i = 0; i < ids.Length; i++)
+        {
+            double low = Math.Max(spanStart, offset), high = Math.Min(spanEnd, offset + lengths[i]);
+            if (high > low)
+                yield return new JsonObject
+                {
+                    ["m"] = begin + i, ["direction"] = direction, ["mark"] = 2,
+                    ["L1"] = Math.Round(low - offset, 9), ["L2"] = Math.Round(offset + lengths[i] - high, 9),
+                    ["P1"] = At(low), ["P2"] = At(high), ["row"] = (int?)row["row"] ?? 0,
+                };
+            offset += lengths[i];
+        }
+    }
+
     private static IEnumerable<JsonObject> NormalizeRelativeMemberRows(JsonArray source,
         JsonObject members, JsonObject nodes, string caseId)
     {
@@ -293,7 +330,8 @@ internal static class CalculationRequestBuilder
             if (markValue != 0 && markValue != 1 && markValue != 2 && markValue != 9 && markValue != 11)
                 throw new CalculationRequestException(
                     $"load.{caseId}.load_member row {rowNumber}: unsupported mark {String(row["mark"])}.");
-            if (string.IsNullOrWhiteSpace(String(row["direction"])))
+            // A temperature change (mark 9) acts along the member and needs no direction.
+            if (markValue != 9 && string.IsNullOrWhiteSpace(String(row["direction"])))
                 throw new CalculationRequestException(
                     $"load.{caseId}.load_member row {rowNumber}: direction is required.");
             if ((Number(row["m1"]) == null && Number(row["m2"]) == null) ||

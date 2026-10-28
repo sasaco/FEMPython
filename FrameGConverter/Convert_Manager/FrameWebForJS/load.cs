@@ -496,14 +496,17 @@ namespace Convert_Manager.FrameWebForJS
                     {
                         case "1":
                         case "2":
+                            // y 下向きに鏡に映すと、局所 y と鉛直（V）の符号はそのまま。水平（H）は x なので従来どおり反転する。
                             if (c.direction == "V")
                                 c.direction = "gy";
-                            else if(c.direction == "H")
+                            else if (c.direction == "H")
+                            {
                                 c.direction = "gx";
+                                c.P1 *= -1;
+                                c.P2 *= -1;
+                            }
                             else
                                 c.direction = "y";
-                            c.P1 *= -1;
-                            c.P2 *= -1;
                             break;
 
                         case "5":
@@ -528,8 +531,6 @@ namespace Convert_Manager.FrameWebForJS
 
                         case "11":
                             c.direction = "z";
-                            c.P1 *= -1;
-                            c.P2 *= -1;
                             break;
 
                         case "9":
@@ -548,8 +549,7 @@ namespace Convert_Manager.FrameWebForJS
                 i = 1;
                 foreach (var c in a.Value.load_node)
                 {
-                    c.ty *= -1; // 曲げと鉛直力は符号を逆にする
-                    c.rz *= -1;
+                    // FrameG の y 上向きの座標を鏡に映した FrameWeb（y 下向き）では、鉛直力と曲げの符号はそのまま。
                     c.row = i;
                     i++;
                 }

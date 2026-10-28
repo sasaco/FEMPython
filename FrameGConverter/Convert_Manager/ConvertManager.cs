@@ -84,8 +84,12 @@ public class ConvertManager
 
 
         /// 書き出し
-        // 節点
-        result.Add(node.KEY, _node.GetNode());
+        // 節点。FrameG の y は上向き、FrameWeb の 2D の y は下向きなので、y を反転して鏡に映す。
+        // 荷重の符号は鏡に映すとそのまま FrameWeb の符号になる（load.cs exchangeData）。
+        var mirrored = new Dictionary<string, Vector3>();
+        foreach (var item in _node.GetNode())
+            mirrored.Add(item.Key, new Vector3 { x = item.Value.x, y = 0.0 - item.Value.y });
+        result.Add(node.KEY, mirrored);
         // 支点
         result.Add(fix_node.KEY, _fix_node.GetFixNode());
         // 部材

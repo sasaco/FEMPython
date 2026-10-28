@@ -130,7 +130,8 @@ namespace Convert_Manager.FrameG
                 var node = new FrdNode
                 {
                     X = Number(value["x"], path + ".x") ?? 0,
-                    Y = Number(value["y"], path + ".y") ?? 0
+                    // FrameWeb's 2D y points down and FrameG's points up (ConvertManager mirrors on reading).
+                    Y = 0.0 - (Number(value["y"], path + ".y") ?? 0)
                 };
                 if ((Number(value["z"], path + ".z") ?? 0) != 0)
                     Dropped3D("node", "節点の z 座標");
@@ -594,13 +595,13 @@ namespace Convert_Manager.FrameG
             foreach (string key in new[] { "tz", "rx", "ry" })
                 if ((Number(row[key], path + "." + key) ?? 0) != 0)
                     Dropped3D("load_node", "節点荷重の tz・rx・ry");
-            // FrameG takes vertical force and moment with the opposite sign (load.cs exchangeData).
+            // The mirrored y axis keeps vertical force and moment signs as they are (load.cs exchangeData).
             return new FrdNodeLoad
             {
                 Node = node.Number,
                 Tx = Number(row["tx"], path + ".tx") ?? 0,
-                Ty = -(Number(row["ty"], path + ".ty") ?? 0),
-                Rz = -(Number(row["rz"], path + ".rz") ?? 0)
+                Ty = Number(row["ty"], path + ".ty") ?? 0,
+                Rz = Number(row["rz"], path + ".rz") ?? 0
             };
         }
 
@@ -616,34 +617,31 @@ namespace Convert_Manager.FrameG
             double? markValue = Number(row["mark"], path + ".mark");
             string direction = Text(row["direction"]).ToLowerInvariant();
             int mark = markValue != null && markValue == Math.Truncate(markValue.Value) ? (int)markValue.Value : -1;
+            // The mirrored y axis keeps the y, V and moment signs; FrameG's H is the reverse of gx (load.cs exchangeData).
             var load = new FrdMemberLoad();
-            bool negate;
+            bool negate = false;
             if ((mark == 1 || mark == 2) && direction == "y")
             {
                 load.Mark = mark;
-                negate = true;
             }
             else if ((mark == 1 || mark == 2) && direction == "x")
             {
                 load.Mark = mark + 4;
-                negate = false;
             }
             else if ((mark == 1 || mark == 2) && (direction == "gy" || direction == "gx"))
             {
-                // Written like y (mark 1/2, sign reversed) with FrameG's global direction V/H.
+                // Written like y (mark 1/2) with FrameG's global direction V/H.
                 load.Mark = mark;
                 load.Direction = direction == "gy" ? "V" : "H";
-                negate = true;
+                negate = direction == "gx";
             }
             else if (mark == 11 && direction == "z")
             {
                 load.Mark = 11;
-                negate = true;
             }
             else if (mark == 9)
             {
                 load.Mark = 9;
-                negate = false;
             }
             else
             {

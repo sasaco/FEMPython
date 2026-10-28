@@ -41,7 +41,7 @@ public sealed class SectionDiagramProjectionTests
             JsonNode details = mixed[key]!["diagramResult"]!;
             Assert.NotNull(details["canonicalStations"]);
             Assert.True(details["canonicalStations"]!.GetValue<bool>());
-            Assert.True(details["yUp"]!.GetValue<bool>());
+            Assert.False(details["yUp"]!.GetValue<bool>());
             Assert.True(details["referenceLayout"]!.GetValue<bool>());
             Assert.Equal(label, details["caseLabels"]![caseId]!.GetValue<string>());
             Assert.Equal("splitHorizontal", details["layout"]!.GetValue<string>());

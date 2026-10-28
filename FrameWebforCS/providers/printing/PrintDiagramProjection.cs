@@ -12,7 +12,8 @@ internal static class PrintDiagramProjection
         CalculationResultPresentation presentation = snapshot.Result ??
             throw new PrintProjectionException("A section diagram requires current calculation results.");
         details["canonicalStations"] = true;
-        details["yUp"] = true;
+        // FrameWeb's 2D y points down (the desktop camera and the load diagram draw it so).
+        details["yUp"] = false;
         details["referenceLayout"] = true;
         details["caseLabels"] = CaseLabels(root, presentation, option);
         // Physical drawing scales need this conversion even for force-only diagrams.

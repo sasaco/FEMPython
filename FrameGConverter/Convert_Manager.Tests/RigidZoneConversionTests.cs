@@ -152,7 +152,9 @@ public class RigidZoneConversionTests
         var springs = new fix_member(converter.wdata);
         pile_spring.Apply(converter.wdata, originalNodes, originalMembers, supports, springs);
 
-        Assert.True(JToken.DeepEquals(JObject.FromObject(originalNodes.GetNode()), json["node"]));
+        // FrameG's y points up and FrameWeb's 2D y points down: the converter mirrors every node.
+        var mirroredNodes = originalNodes.GetNode().ToDictionary(item => item.Key, item => new Vector3 { x = item.Value.x, y = 0.0 - item.Value.y });
+        Assert.True(JToken.DeepEquals(JObject.FromObject(mirroredNodes), json["node"]));
         Assert.True(JToken.DeepEquals(JObject.FromObject(originalMembers.GetMember()), json["member"]));
         Assert.True(JToken.DeepEquals(JObject.FromObject(supports.GetFixNode()), json["fix_node"]));
         Assert.True(JToken.DeepEquals(JObject.FromObject(springs.GetFixMember()), json["fix_member"]));

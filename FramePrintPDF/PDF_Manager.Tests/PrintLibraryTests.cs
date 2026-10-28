@@ -40,6 +40,25 @@ public sealed class PrintLibraryTests
     }
 
     [Fact]
+    public void InputPrintSkipsEmptyNodeSupportSheets()
+    {
+        // A FrameG box frame is supported by member springs only; every fix_node sheet is empty.
+        const string job = """
+            {"dimension":2,"language":"ja","pageSize":"A4","pageOrientation":"Vertical","title":"支点なし",
+             "hasPrintInputData":true,"hasPrintCalculation":false,
+             "node":{"1":{"x":0,"y":0},"2":{"x":1,"y":0}},
+             "member":{"1":{"ni":"1","nj":"2","e":"1"}},
+             "element":{"1":{"1":{"E":1000,"Xp":0.00001,"A":1,"Iz":1,"name":"梁"}}},
+             "fix_node":{"1":[],"2":[],"3":[]},
+             "fix_member":{"1":[{"row":1,"m":"1","tx":10,"ty":20}]}}
+            """;
+        var bytes = DirectPdfGenerator.Generate(job);
+
+        using var pdf = PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Import);
+        Assert.True(pdf.PageCount >= 1);
+    }
+
+    [Fact]
     public void DirectGeneratorRejectsOversizedAndMalformedRequests()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>

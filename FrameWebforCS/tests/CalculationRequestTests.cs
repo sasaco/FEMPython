@@ -166,11 +166,78 @@ public sealed class CalculationRequestTests
     {
         string saved = BaseSnapshot("""
             "1":{"symbol":"DL","fix_node":1,"element":1,
-              "load_member":[{"row":1,"m1":"1","direction":"","mark":"9","L1":0,"L2":0,"P1":10}]}
+              "load_member":[{"row":1,"m1":"1","direction":"","mark":"2","L1":0,"L2":0,"P1":10}]}
             """);
         var error = Assert.Throws<CalculationRequestException>(() => CalculationRequestBuilder.FromSavedJson(saved));
         Assert.Contains("load.1.load_member row 1", error.Message);
         Assert.Contains("direction", error.Message);
+    }
+
+    [Fact]
+    public void TemperatureLoadNeedsNoDirection()
+    {
+        // FrameG temperature rows (mark 9) carry no direction; the change is uniform along the member.
+        string saved = BaseSnapshot("""
+            "1":{"symbol":"T","fix_node":1,"element":1,
+              "load_member":[{"row":1,"m1":"1","m2":"-2","direction":"","mark":"9","L1":0,"L2":0,"P1":10}]}
+            """, 2);
+        using var result = JsonDocument.Parse(CalculationRequestBuilder.FromSavedJson(saved).Json);
+        var rows = result.RootElement.GetProperty("load").GetProperty("1").GetProperty("load_member");
+        Assert.Equal(new[] { 1, 2 }, rows.EnumerateArray().Select(row => row.GetProperty("m").GetInt32()));
+        Assert.All(rows.EnumerateArray(), row =>
+        {
+            Assert.Equal(10, row.GetProperty("P1").GetDouble());
+            Assert.Equal(10, row.GetProperty("P2").GetDouble());
+        });
+    }
+
+    [Theory]
+    // A negative end member makes the range one member: L1 from its start, L2 from its end, P1 -> P2 over the span.
+    [InlineData("0.25", "0.5", 10, 22.5, 1, 0.25, 0, 10, 17.5, 2, 0, 0.5, 17.5, 22.5)]
+    // The span may begin inside a later member.
+    [InlineData("1.2", "0.3", 10, 10, 2, 0.2, 0.3, 10, 10, 0, 0, 0, 0, 0)]
+    public void NegativeEndMemberSpansTheRangeAsOneMember(string l1, string l2, double p1, double p2,
+        int firstMember, double firstL1, double firstL2, double firstP1, double firstP2,
+        int secondMember, double secondL1, double secondL2, double secondP1, double secondP2)
+    {
+        string saved = BaseSnapshot($$"""
+            "1":{"symbol":"DL","fix_node":1,"element":1,
+              "load_member":[{"row":1,"m1":"1","m2":"-2","direction":"y","mark":"2",
+              "L1":"{{l1}}","L2":"{{l2}}","P1":{{p1}},"P2":{{p2}}}]}
+            """, 2);
+        using var result = JsonDocument.Parse(CalculationRequestBuilder.FromSavedJson(saved).Json);
+        var rows = result.RootElement.GetProperty("load").GetProperty("1").GetProperty("load_member")
+            .EnumerateArray().ToArray();
+        var expected = new List<(int M, double L1, double L2, double P1, double P2)> { (firstMember, firstL1, firstL2, firstP1, firstP2) };
+        if (secondMember != 0) expected.Add((secondMember, secondL1, secondL2, secondP1, secondP2));
+        Assert.Equal(expected.Count, rows.Length);
+        for (int i = 0; i < rows.Length; i++)
+        {
+            Assert.Equal(expected[i].M, rows[i].GetProperty("m").GetInt32());
+            Assert.Equal(expected[i].L1, rows[i].GetProperty("L1").GetDouble(), 6);
+            Assert.Equal(expected[i].L2, rows[i].GetProperty("L2").GetDouble(), 6);
+            Assert.Equal(expected[i].P1, rows[i].GetProperty("P1").GetDouble(), 6);
+            Assert.Equal(expected[i].P2, rows[i].GetProperty("P2").GetDouble(), 6);
+        }
+    }
+
+    [Fact]
+    public void PositiveEndMemberRepeatsTheLoadOnEachMember()
+    {
+        string saved = BaseSnapshot("""
+            "1":{"symbol":"DL","fix_node":1,"element":1,
+              "load_member":[{"row":1,"m1":"1","m2":"2","direction":"y","mark":"2","L1":"0.25","L2":"0.5","P1":10,"P2":20}]}
+            """, 2);
+        using var result = JsonDocument.Parse(CalculationRequestBuilder.FromSavedJson(saved).Json);
+        var rows = result.RootElement.GetProperty("load").GetProperty("1").GetProperty("load_member");
+        Assert.Equal(new[] { 1, 2 }, rows.EnumerateArray().Select(row => row.GetProperty("m").GetInt32()));
+        Assert.All(rows.EnumerateArray(), row =>
+        {
+            Assert.Equal(0.25, row.GetProperty("L1").GetDouble(), 6);
+            Assert.Equal(0.5, row.GetProperty("L2").GetDouble(), 6);
+            Assert.Equal(10, row.GetProperty("P1").GetDouble(), 6);
+            Assert.Equal(20, row.GetProperty("P2").GetDouble(), 6);
+        });
     }
 
     [Fact]
