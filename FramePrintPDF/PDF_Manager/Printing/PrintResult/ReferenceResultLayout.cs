@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -16,7 +16,7 @@ namespace PDF_Manager.Printing
             string.IsNullOrEmpty(expression) ? source ?? "" : "(" + source + ":" +
                 new string(expression.Where(character => !char.IsWhiteSpace(character)).ToArray()) + ")";
 
-        private static List<string> Wrap(PdfDocument document, XFont font, string text, double width)
+        internal static List<string> Wrap(PdfDocument document, XFont font, string text, double width)
         {
             var lines = new List<string>();
             string line = "";
@@ -77,7 +77,7 @@ namespace PDF_Manager.Printing
 
         internal static bool Portrait(PdfDocument document) => document.currentPage.Width < document.currentPage.Height;
 
-        private static XFont ReportFont(PdfDocument document, PrintData data) =>
+        internal static XFont ReportFont(PdfDocument document, PrintData data) =>
             new XFont(data.language == "cn" ? "SimSun" : "MS Mincho",
                 Portrait(document) ? PdfDocument.ReferencePortraitFontSize : 10);
 
@@ -403,7 +403,7 @@ namespace PDF_Manager.Printing
         }
 
         // FrameG never prints a negative zero ("-0.00" is "0.00").
-        private static string Number(double value, int digits)
+        internal static string Number(double value, int digits)
         {
             string text = printManager.toString(value, digits);
             return text.StartsWith("-", StringComparison.Ordinal) && text.Skip(1).All(c => c == '0' || c == '.')
