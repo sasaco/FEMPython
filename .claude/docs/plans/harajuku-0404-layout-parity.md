@@ -65,17 +65,19 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 #### W1 入力の頁（作業者 A）　見本 `見本_電算出力.pdf` 1〜4 頁
 
-- [ ] W1-1 格点 DATA：縦 1 列（No・X・Y）。
-- [ ] W1-2 部材 DATA：格点番号・部材長・ﾏｰｸ・部材名・部材数・E・膨張係数・A・I（材料の表は別に出さない）。ﾏｰｸの欄は空（2026-10-29 決定：保存形式に足さない。比較の例外）。
-- [ ] W1-3 剛域データ（部材 DATA（剛域データ））。
-- [ ] W1-4 部材バネ DATA：TYPE ごとに 2 列（Kv・Ku）。
-- [ ] W1-5 着目点：名前の欄は空（2026-10-29 決定：保存形式に足さない・変換も変えない。比較の例外）。
-- [ ] W1-6 基本荷重 DATA：構造系条件の欄。
-- [ ] W1-7 実荷重：V/H・M/S の欄と通し番号「(...1)」。
-- [ ] W1-8 DEFINE、COMBINE（係数を下の行に）、PickUp。
-- [ ] W1-9 頁割り 4 頁、右端からはみ出さない。
+- [x] ✅ W1-1 格点 DATA：縦 1 列（No・X・Y）。
+- [x] ✅ W1-2 部材 DATA：格点番号・部材長・ﾏｰｸ・部材名・部材数・E・膨張係数・A・I（材料の表は別に出さない）。ﾏｰｸの欄は空（2026-10-29 決定：保存形式に足さない。比較の例外）。
+- [x] ✅ W1-3 剛域データ（部材 DATA（剛域データ））。
+- [x] ✅ W1-4 部材バネ DATA：TYPE ごとに 2 列（Kv・Ku）。
+- [x] ✅ W1-5 着目点：名前の欄は空（2026-10-29 決定：保存形式に足さない・変換も変えない。比較の例外）。
+- [x] ✅ W1-6 基本荷重 DATA：構造系条件の欄。
+- [x] ✅ W1-7 実荷重：V/H・M/S の欄と通し番号「(...1)」。
+- [x] ✅ W1-8 DEFINE、COMBINE（係数を下の行に）、PickUp。
+- [x] ✅ W1-9 頁割り 4 頁、右端からはみ出さない。
 
-確かめ方：`layout_compare.py 見本 1..4 出力 1..4 --detail` で 1 mm 超 0、`margins.py`。試験 `dotnet test FramePrintPDF/PDF_Manager.Tests`、変換に触れたら `FrameGConverter/Convert_Manager.Tests`。
+確かめ方：`layout_compare.py 見本 1..4 出力 1..4 --detail` で 1 mm 超 0、`margins.py`。
+
+結果（`52cef81`、作業者 A の `2a87dec` を取り込み）：入力の写しは 5 頁 → 4 頁で見本と同じ頁割り。対の語は 274・261・291・312 で 1 mm 超 0。見本にだけある語は 1 頁のﾏｰｸ 20 個と 2 頁の着目点の名前 19 個（決定どおり空欄）、出力にだけある「剛域」2 個は見本で隣の名前とつながった語。余白の差 0.3 mm 以内。新しいファイル `PrintInput/FrameGInputLayout.cs`、試験 `FrameGInputLayoutTests.cs`（9 件）。共有の `PrintInput.cs` は 2D の入力の節の前に `FrameGInputLayout.Applies` の分岐を 1 つ足しただけ（FrameG は節の順序が違い材料の表も出さないので、節を丸ごと置き換える）。試験 `dotnet test FramePrintPDF/PDF_Manager.Tests`、変換に触れたら `FrameGConverter/Convert_Manager.Tests`。
 
 #### W2 COMBINE・PICK UP の数表（作業者 B）　見本 21〜128 頁
 
@@ -150,6 +152,13 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 - 罠：見本の値の文字は末尾に空白が付く（`"0.000 "`）。`layout_compare.py` は span の幅を字数で割るので、右端は「span の右端 − 1 字」で読む。試験の PDF は `fsecCombineName` が無いと COMBINE の節が出ない（`PrintData.cs:119`）。
 - W5 で見ること：縦の条件を外すと `ReferenceResultLayout.ReportFont` が横向きで 10 pt にする。FrameG の体裁では向きに関係なく 9.06 pt に。古い横向きの分岐（`ReferenceResultLayout.Forces`）は `SHARE` のまま（W5 で消す）。
 
+- 入力の写しの見本の寸法（pt、文字は基準線）：最初の見出し 87.5、行 8.975、半行の空きを入れた行 13.4625、頁の下の限り 782（778.6 まで印字）。節の間（前の最後の行から次の見出し）：格点→部材 31.5、部材→剛域 27、剛域→バネ 27、バネ→着目点 27、着目点→基本荷重 31.3、基本荷重→実荷重 27、実荷重→DEFINE 44.8、DEFINE→COMBINE 29.7、COMBINE→PickUp 31.5。行の間隔は DEFINE 11.66、PickUp 13.48、COMBINE は 2 行で 1 組。
+- FrameG の入力の写しの振る舞い：格点の Y は y 上向きで出す（保存形式の 2D は y 下向きなので印字のときだけ符号を変える）。着目点には入力に無い剛域の端（部材 6・9 の 0.613、部材 10 の 0.100・4.650、名前「剛域」）を足す。基本荷重・DEFINE の表は行の途中で頁を変え見出しを出し直す。部材バネは TYPE 2 つの組を同じ頁に収める。実荷重はケースの最後の行 + 18 pt が入らなければ次の頁に送り、次の頁では「実荷重 DATA」を出さず種類の見出しを 96.5 から。通し番号は部材荷重と節点荷重で別に数える。ﾏｰｸは部材軸方向（x）が FrameWeb の mark + 4、`gy` は V、`gx` は H（P の符号を戻す）、`ms` は M/S の欄。値が 0 なら空欄。A・I が「0.0000」の欄に収まらない（剛域の 1000）ときは整数で左寄せ。COMBINE の割増係数は FrameWeb に無いので常に 1.0000。見本の「Ｃase」の C は全角。
+- ﾏｰｸが無いので、ﾏｰｸが変わる行の前の半行の空きは「部材名（材料名 `n`）が変わる所」で空ける。この見本では空く所がﾏｰｸのときと同じ。
+- ﾏｰｸは `.frd` の `Buzai.tmp`（1 行 244 バイト、Xp の後の 5 バイト。変換は `element.cs` で `[NonSerialized]`）、着目点の名前は `Chakumoku.tmp`（1 行 1053 バイト、454 バイト目から 12 バイトずつ）にある。保存形式に足してもデスクトップで開いて保存すると落ちる（`clsElement`・`clsNoticePoints` が決まった項目しか持たない）。決定（2026-10-29）で足さない。
+- 支点・結合・シェルは見本に無いので、データがあるときだけ今の表のまま剛域の後・バネと着目点の後に出す（合否は判定しない）。節点荷重の F.X・M の列の右端（261.4・397.0）は推定。
+- 罠：見本の 1 つの文字のかたまりに離れた見出しがつながっていることがある（「割増係数実荷重記号」など）。PyMuPDF の `rawdict` で 1 文字ずつの位置を出し、隙間で分けて位置を求める。文字は `XStringFormats.BaseLineLeft`/`BaseLineRight` で見本の基準線にそのまま置く。
+
 ### 設計の考え方
 
 - 作業者の新しい体裁は、`ReferenceResultLayout.FrameGDisplacements` と同じく「見本の座標（pt）を定数で持ち、右揃えの値を列の右端に置く」書き方にする。表の自動の幅の計算（`Table`）は使わない。
@@ -158,6 +167,7 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 | 試験 | 理由 |
 |---|---|
+| `TransverseReportCompositionTests` の `PortraitReferenceInputOnlyNodeTableUsesReferenceBodyFont`・`PortraitReferenceMixedInputAndReactionUsesSharedFontOnLaterPage`・`PortraitReferenceMixedInputAndForceUseSameFontAcrossPages`（W1） | 2D・縦の入力の写しが FrameG の見出し（en では `NODE DATA`）になったので、探す文字を `Node Data` から `NODE DATA` に。確かめること（参照のフォントの大きさ）は同じ。 |
 | `TransverseReportCompositionTests.PortraitPickupReferenceCaptionAndColumnsUseCentralGrid`（W2） | 以前の見本の CASE の書き方 `(6:1.1*1+1.367*4+5)` を前提にしていた。今回の見本の `( 6 :1+4+5 )` に直した（位置の範囲はそのまま）。 |
 | `TransverseReportCompositionTests.PortraitPickupUsesSeparateOrderedExtremumFlowsAndPrintsSelectedCases`（旧 `…AndPreservesWeightedSources`、W2） | 今回の見本は係数を出さず、`SHARE` を `SHEAR` にする。`( 6 :1+4+5 )`・`SHARE` が出ないこと・`SHEAR  MAX.` を確かめる。 |
 | `TransverseReportCompositionTests.PortraitMinOnlyPickupKeepsCorrelatedVectorAndWrappedSourceAcrossPages`（W2） | CASE を `( 77 :CASE_A001+…+CASE_A070 )` に。CASE の欄が x = 383.5 になったので折り返しを拾う下限を 385 → 380、列見出しを `COM:    CASE` に。頁をまたぐ折返しは今も確かめる。 |
