@@ -200,8 +200,8 @@ public sealed class TransverseReportCompositionTests
         Assert.InRange(Assert.Single(first, run => run.Text == "M").X, 234, 246);
         Assert.InRange(Assert.Single(first, run => run.Text == "DIST.").Y, 726, 730);
         Assert.InRange(first.First(run => run.Text == "0.000").X, 165, 177);
-        Assert.InRange(first.First(run => run.Text.StartsWith("(6:")).X, 377, 389);
-        Assert.Contains("(6:1.1*1+1.367*4+5)", pdf.Text);
+        Assert.InRange(first.First(run => run.Text.StartsWith("( 6 :")).X, 377, 389);
+        Assert.Contains("( 6 :1+4+5 )", pdf.Text);
         using (var measurement = new PdfSharpCore.Pdf.PdfDocument())
         using (var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage()))
         {
@@ -336,7 +336,7 @@ public sealed class TransverseReportCompositionTests
     }
 
     [Fact]
-    public void PortraitPickupUsesSeparateOrderedExtremumFlowsAndPreservesWeightedSources()
+    public void PortraitPickupUsesSeparateOrderedExtremumFlowsAndPrintsSelectedCases()
     {
         var root = Root();
         root["pageOrientation"] = "Vertical";
@@ -366,10 +366,11 @@ public sealed class TransverseReportCompositionTests
         Assert.Equal(60, pdf.Pages);
         Assert.Equal(1425, pdf.Runs.Count(run => run.Text == "123.45"));
         Assert.Equal(1425, pdf.Runs.Count(run => run.Text == "-67.89"));
-        Assert.Contains("(6:1.1*1+1.367*4+5)", pdf.Text);
-        Assert.Contains("(1:1.1*1+1.367*4+5)", pdf.Text);
+        Assert.Contains("( 6 :1+4+5 )", pdf.Text);
+        Assert.Contains("( 1 :1+4+5 )", pdf.Text);
+        Assert.DoesNotContain("SHARE", pdf.Text);
         foreach (var (page, focus) in new[] { (1, "MOMENT MAX."), (3, "MOMENT MIN."),
-            (5, "SHARE MAX."), (7, "SHARE MIN."), (9, "AXIAL MAX."), (11, "AXIAL MIN.") })
+            (5, "SHEAR  MAX."), (7, "SHEAR  MIN."), (9, "AXIAL  MAX."), (11, "AXIAL  MIN.") })
         {
             Assert.Contains(pdf.Runs.Where(run => run.Page == page), run => run.Text.Contains(focus));
             string opposite = focus.Contains("MAX") ? focus.Replace("MAX", "MIN") : focus.Replace("MIN", "MAX");
@@ -655,7 +656,7 @@ public sealed class TransverseReportCompositionTests
         root["pageOrientation"] = "Vertical";
         root["referenceResultLayout"] = true;
         string expression = string.Join(" + ", Enumerable.Range(1, 70).Select(i => "1.125*CASE_A" + i.ToString("D3")));
-        string expected = "(77:" + expression.Replace(" ", "") + ")";
+        string expected = "( 77 :" + string.Join("+", Enumerable.Range(1, 70).Select(i => "CASE_A" + i.ToString("D3"))) + " )";
         var rows = new JArray(Enumerable.Range(0, 95).Select(i => new JObject
         {
             ["m"] = "5", ["n"] = "S" + i, ["stationLabel"] = "P" + i,
@@ -674,13 +675,13 @@ public sealed class TransverseReportCompositionTests
         var vector = pdf.Runs.Where(run => run.Page == moment.Page && Math.Abs(run.Y - moment.Y) < 0.01).ToArray();
         Assert.Contains(vector, run => run.Text == "700.25");
         Assert.Contains(vector, run => run.Text == "-1400.50");
-        Assert.Contains(vector, run => run.Text.StartsWith("(77:"));
+        Assert.Contains(vector, run => run.Text.StartsWith("( 77 :"));
         var fragments = new List<(string Text, int Page)>();
         bool collecting = false;
         foreach (var run in pdf.Runs)
         {
-            if (run.Text.StartsWith("(77:")) collecting = true;
-            if (!collecting || run.X < 385 || run.Text.StartsWith("Page ") || run.Text == "COM: CASE") continue;
+            if (run.Text.StartsWith("( 77 :")) collecting = true;
+            if (!collecting || run.X < 380 || run.Text.StartsWith("Page ") || run.Text == "COM:    CASE") continue;
             fragments.Add((run.Text, run.Page));
             if (run.Text.EndsWith(")")) break;
         }
@@ -981,7 +982,7 @@ public sealed class TransverseReportCompositionTests
         }
     }
 
-    private static (string Text, int Pages, List<(string Text, double X, double Y, int Page)> Runs) Pdf(Dictionary<string, object> root, string name)
+    internal static (string Text, int Pages, List<(string Text, double X, double Y, int Page)> Runs) Pdf(Dictionary<string, object> root, string name)
     {
         byte[] bytes = DirectPdfGenerator.Generate(JObject.FromObject(root).ToString());
         using var document = PdfReader.Open(new MemoryStream(bytes), PdfDocumentOpenMode.Import);

@@ -588,13 +588,14 @@ namespace PDF_Manager.Printing
                     if (!max.Any() && !min.Any()) continue;
                     if (ReferenceResultLayout.Portrait(mc))
                     {
-                        foreach (var extremum in new[] { (Rows: max, Name: " MAX."), (Rows: min, Name: " MIN.") })
+                        // FrameG spells the shear page "SHARE"; the report prints "SHEAR" in the same field.
+                        string force = focus.Name == "SHARE" ? "SHEAR" : focus.Name;
+                        fsecnames.TryGetValue(entry.Key, out string name);
+                        foreach (var extremum in new[] { (Rows: max, Name: "MAX."), (Rows: min, Name: "MIN.") })
                         {
                             if (!extremum.Rows.Any()) continue;
-                            ReferenceResultLayout.SingleForces(mc, data, ref indexPage,
-                                reportPrefix + entry.Key + " " + fsecnames[entry.Key] + " " + focus.Name + extremum.Name,
-                                extremum.Rows, true, nextGroup);
-                            nextGroup = true;
+                            FrameGEnvelopeLayout.Print(mc, data, ref indexPage, reportPrefix == "PICK UP ",
+                                entry.Key, name, $"{force,-6} {extremum.Name}", extremum.Rows);
                         }
                         continue;
                     }
