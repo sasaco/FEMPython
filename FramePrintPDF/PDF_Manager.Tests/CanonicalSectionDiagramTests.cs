@@ -353,9 +353,8 @@ public sealed class CanonicalSectionDiagramTests
         root["PrintDiagram"]!["diagramResult"]!["displacementStations"] = new JObject
         { ["beam/A"] = new JArray(
             new JObject { ["nodeId"] = "node/A", ["position"] = 0 },
-            // On one of FrameG's 0.4 m bends: a solved station between bends is not yet a vertex of the
-            // FrameG displacement curve, so its value would be missed (reported to the leader, W5).
-            new JObject { ["nodeId"] = "opaque interior ID", ["position"] = 1.2 },
+            // Between FrameG's 0.4 m bends (0.8 and 1.2 m): the curve still passes through the solved station.
+            new JObject { ["nodeId"] = "opaque interior ID", ["position"] = 1.0 },
             new JObject { ["nodeId"] = "node/B", ["position"] = 2 }) };
         JArray displacements = new(new[] { ("node/A", 0.001), ("opaque interior ID", -.004), ("node/B", .002) }
             .Select(pair => new JObject { ["id"] = pair.Item1, ["dx"] = 0, ["dy"] = pair.Item2,
@@ -366,7 +365,7 @@ public sealed class CanonicalSectionDiagramTests
         Stroke frame = complete.Strokes.First(stroke => stroke.Points.Count == 2);
         // It is the largest displacement, drawn 10 mm (28.35 pt) from the member.
         Assert.Contains(complete.Strokes.SelectMany(stroke => stroke.Points), point =>
-            Math.Abs(point.X - (frame.Points[0].X + .6 * (frame.Points[1].X - frame.Points[0].X))) < .02 &&
+            Math.Abs(point.X - (frame.Points[0].X + .5 * (frame.Points[1].X - frame.Points[0].X))) < .02 &&
             Math.Abs(point.Y - (frame.Points[0].Y - 72 / 2.54)) < .02);
         root["PrintDiagram"]!["diagramResult"]!["displacementLabelNodeIds"] = new JArray("node/A");
         var selected = Render(root);

@@ -347,7 +347,18 @@ namespace PDF_Manager.Printing
                 {
                     var stations = DisplacementStations(member);
                     var points = new List<DisplacementPoint>();
-                    foreach (double distance in DisplacementVertices(member))
+                    // FrameG's bends, and the solved stations between them so that the curve and its
+                    // largest value pass through the computed displacements.
+                    double tolerance = 1e-9 * Math.Max(1, member.Length);
+                    var bends = DisplacementVertices(member).ToList();
+                    var vertices = new List<(double Distance, bool Bend)>();
+                    foreach (var vertex in bends.Select(distance => (distance, true))
+                        .Concat(stations.Select(station => (station.Item2, false))).OrderBy(vertex => vertex.Item1))
+                        if (vertices.Count == 0 || vertex.Item1 - vertices[vertices.Count - 1].Distance > tolerance)
+                            vertices.Add(vertex);
+                        else if (vertex.Item2)
+                            vertices[vertices.Count - 1] = (vertices[vertices.Count - 1].Distance, true);
+                    foreach (var (distance, bend) in vertices)
                     {
                         int segment = 1;
                         while (segment < stations.Count - 1 && stations[segment].Item2 < distance) segment++;
@@ -363,7 +374,8 @@ namespace PDF_Manager.Printing
                             : vi * (1 - t) + vj * t;
                         string nodeId = Math.Abs(distance) <= 1e-12 ? member.NodeI :
                             Math.Abs(distance - member.Length) <= 1e-12 * Math.Max(1, member.Length) ? member.NodeJ : null;
-                        points.Add(new DisplacementPoint(distance, member.Ux * u - member.Uy * v, member.Uy * u + member.Ux * v, nodeId));
+                        points.Add(new DisplacementPoint(distance, member.Ux * u - member.Uy * v, member.Uy * u + member.Ux * v,
+                            nodeId, bend));
                     }
                     curves.Add(Tuple.Create(member, points));
                 }
@@ -392,15 +404,15 @@ namespace PDF_Manager.Printing
                 if (maximum > 0) document.gfx.DrawLines(new XPen(XColors.Black, MemberPen), curve.Item2.Select(Location).ToArray());
                 // The value across the member, as FrameG prints it (y for a beam, x for a wall), in mm.
                 double Across(DisplacementPoint point) => Math.Abs(-member.Uy * point.Dx + member.Ux * point.Dy) * labelScale;
-                // A member on ground springs shows every bend of its curve; another one its i end and its
-                // largest value. An i end's value starts at the end and is placed before the others, so a
+                // A member on ground springs shows every FrameG bend of its curve; another one its i end and
+                // its largest value. An i end's value starts at the end and is placed before the others, so a
                 // node shared with the previous member's j end keeps it.
                 DisplacementPoint largest = curve.Item2.OrderByDescending(Across).First();
                 bool springs = springMembers.Contains(member.Id);
                 foreach (DisplacementPoint point in curve.Item2)
                 {
                     bool first = point == curve.Item2[0];
-                    if (!springs && !first && point != largest) continue;
+                    if (springs ? !point.Bend : !first && point != largest) continue;
                     if (displacementLabelNodes != null && (point.NodeId == null || !displacementLabelNodes.Contains(point.NodeId)) ||
                         AtRigidFace(member, point.Distance))
                         continue;

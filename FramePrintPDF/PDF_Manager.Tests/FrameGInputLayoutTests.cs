@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using PDF_Manager;
 using PDF_Manager.Printing;
 using PdfSharpCore.Pdf.Content;
@@ -181,6 +181,24 @@ public sealed class FrameGInputLayoutTests
 
         Assert.DoesNotContain(pdf.Runs, run => run.Text == "格 点 DATA");
         Assert.Contains(pdf.Runs, run => run.Text == "格点データ");
+    }
+
+    [Fact]
+    public void PartialSpringIntervalsKeepTheGenericTableWithEveryRow()
+    {
+        // FrameG has one spring per member and TYPE; FrameWeb's partial intervals must not lose a row.
+        var root = Model();
+        root["fix_member"] = JObject.Parse("""
+            { "1": [ { "row": 1, "m": "3", "length": 1.5, "tx": 1111, "ty": 2222 },
+                     { "row": 2, "m": "3", "length": 2.5, "tx": 3333, "ty": 4444 } ] }
+            """);
+
+        var pdf = Pdf(root);
+
+        Assert.Contains(pdf.Runs, run => run.Text == "格 点 DATA");
+        Assert.DoesNotContain(pdf.Runs, run => run.Text == "部材バネ DATA");
+        foreach (string value in new[] { "1.500", "1111.000", "2.22E+003", "2.500", "3333.000", "4.44E+003" })
+            Assert.Contains(pdf.Runs, run => run.Text == value);
     }
 
     private static void AssertRight((string Text, double X, double Y, double Width, int Page) run, double right) =>

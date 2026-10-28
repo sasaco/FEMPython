@@ -275,9 +275,10 @@ namespace PDF_Manager.Printing
         {
             internal readonly double Distance, Dx, Dy;
             internal readonly string NodeId;
+            internal readonly bool Bend;   // one of FrameG's bends rather than a solved station between them
             internal double Magnitude => Math.Sqrt(Dx * Dx + Dy * Dy);
-            internal DisplacementPoint(double distance, double dx, double dy, string nodeId = null)
-            { Distance = distance; Dx = dx; Dy = dy; NodeId = nodeId; }
+            internal DisplacementPoint(double distance, double dx, double dy, string nodeId = null, bool bend = true)
+            { Distance = distance; Dx = dx; Dy = dy; NodeId = nodeId; Bend = bend; }
         }
     }
 }
