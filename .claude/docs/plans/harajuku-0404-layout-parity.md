@@ -12,7 +12,7 @@ FrameG（WinFrameG 4.3.6）の見本 `FrameGConverter/Convert_Test/TestData/原�
 - 用紙が横向き・A3 でも、FrameG の体裁を A4 縦の座標（pt）のまま選んだ用紙に置く（2026-10-29 決定）。頁送りは頁の高さから求める。横向きで 2 ケースを並べる体裁は消す。文字の頁は左 71.6 pt・行の下端 ≈ 778.6 pt（`PdfDocument.FrameGLeft`・`FrameGBottom`）。図の頁は W3・W4 で決める。
 - 文字は MS 明朝 9.06 pt、数表の行の間隔 9 pt。
 - FrameG の版の文字列（`DataVer 4.3.6`・バナー）は出さない。`SHARE` は `SHEAR` で出す。
-- ja は見本を再現、en は同じ配置で日本語の文字だけ英訳。3D は変えない。**Web 版（FramePrintAzure）の 2D も FrameG の体裁にする**（2026-10-29 にユーザーが「Web 版は変えない」を改めた）。Web 版の JSON には FrameWebforCS だけが付けるメタデータが無いので、欠けていても例外を出さずに組む。
+- ja は見本を再現、en は同じ配置で日本語の文字だけ英訳。3D は変えない。**Web 版（FramePrintAzure）の 2D も FrameG の体裁にする**（2026-10-29 にユーザーが「Web 版は変えない」を改めた）。ただし Web 版そのものは考えない（Web 版のための手直しも確かめもしない。2026-10-29 決定）。`cn` は `en` と同じ決まり（配置は同じ、日本語の文字だけ中国語に）。
 - 符号は変えない（2D は y 下向き。数表・PIK は M = mz、S = −fy、N = fx）。COMBINE の変位（T5）と値の最後の桁の丸め（N5）は対象外。
 - 試験を弱めない。以前の見本（線路直角方向）を前提にした試験を直すときは、試験ごとの理由をこの計画書に書く。既知の失敗 `ResultPageActivationTests.CombinedPagePublishesWhenInitiallyShownAfterRouteSelection` は無視。
 - Git：`.claude/skills/headless-runner/SKILL.md` の未コミットの変更はユーザーのもの（含めない・戻さない）。push しない。共用の Release の Headless exe は作り直さない（`-c Debug`）。
@@ -131,7 +131,7 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 - 変換後の JSON に部材のﾏｰｸ（G・A・B1・B2・C）と着目点の名前が無い（`member` は `ni`・`nj`・`e` だけ、`notice_points` は `m`・`Points` だけ）。部材名は断面（`element`）の `n`。
 - `PrintProjection.Build` は入力の節（`node`・`member`・`element`・`notice_points` など）を保存形式の JSON からそのまま写す（`PrintProjection.cs:222`）。保存形式に足した項目は印刷側で読めば届く。
-- W5 の前提：`PDF_Manager` の `PrintInput` は FrameWebforCS（`DirectPdfGenerator.Generate`）のほかに Web 版 `FramePrintAzure/Function1.cs`・`Function2.cs` と `PDF_Test*` からも呼ばれ、Web 版の JSON にはフラグが無い。フラグを消して「2D なら常に FrameG」にすると Web 版の 2D が変わり、制約（Web 版は変えない）に反する。DESIGN.md 2026-10-28 の捨てた案に「FrameWebforCS だけが出すメタデータ無しで Web・3D に体裁を当てる」がある。→ 2026-10-29 にユーザーが決定：Web 版も含めて 2D は全て FrameG の体裁（入口で切り替える案は捨てた）。W5 ではフラグを消し、2D なら FrameG の体裁にする。Web 版の JSON（メタデータ無し）で組めることを試験で確かめる。
+- W5 の前提：`PDF_Manager` の `PrintInput` は FrameWebforCS（`DirectPdfGenerator.Generate`）のほかに Web 版 `FramePrintAzure/Function1.cs`・`Function2.cs` と `PDF_Test*` からも呼ばれ、Web 版の JSON にはフラグが無い。フラグを消して「2D なら常に FrameG」にすると Web 版の 2D が変わり、制約（Web 版は変えない）に反する。DESIGN.md 2026-10-28 の捨てた案に「FrameWebforCS だけが出すメタデータ無しで Web・3D に体裁を当てる」がある。→ 2026-10-29 にユーザーが決定：Web 版も含めて 2D は全て FrameG の体裁（入口で切り替える案は捨てた）。W5 ではフラグを消し、2D なら FrameG の体裁にする。Web 版のことは考えない。
 
 - COMBINE・PICK UP の見本の寸法（pt。x は文字の左端、値は列の右端）：
 
