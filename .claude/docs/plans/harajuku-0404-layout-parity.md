@@ -117,25 +117,37 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 #### W6 荷重図の「1 頁に 1 ケース」の選択（作業者 C、2026-10-29 決定 Q9 (b)）
 
-- [ ] W6-1 デスクトップの印刷の画面に、荷重図で 1 頁に 1 ケースにするケースを選ぶ欄（`PrintSelection.LoadDiagramSingleCaseIds`）。
-- [ ] W6-2 Headless の `run` に同じ選択の引数。
-- [ ] W6-3 試験と README（`headless-runner` の SKILL.md はユーザーの未コミットの変更があるので触らない）。
+- [x] ✅ W6-1 デスクトップの印刷の画面に、荷重図で 1 頁に 1 ケースにするケースを選ぶ欄（`PrintSelection.LoadDiagramSingleCaseIds`）。
+- [x] ✅ W6-2 Headless の `run` に同じ選択の引数。
+- [x] ✅ W6-3 試験と README（`headless-runner` の SKILL.md はユーザーの未コミットの変更があるので触らない）。
 
 `.frd` の書式（`$16.txt` の `1.2`）は保存データに写さない（ユーザーの決定）。
 
+結果（`97423df`、作業者 C の `e8a5daf`）：印刷の画面に「荷重図で 1 頁に 1 ケース (分割配置のとき)」（2D だけ、荷重図に印があり上下か左右の分割のときだけ選べる。何も選ばなければ全ケースを 2 つずつ）。Headless は `--load-diagram-single-cases 1,2`（`load` のキーのカンマ区切り。分割の配置でないと `INVALID_ARGUMENT`、文書に無いキーは `LOAD_DIAGRAM_UNKNOWN_CASE`）。0404 で `--load-diagram-layout split_horizontal --load-diagram-single-cases 1,2` にすると見本と同じ 7 頁。Headless の README を更新。`.claude/skills/headless-runner/SKILL.md` はユーザーの未コミットの変更があるので触っていない（書くべき 2 文はユーザーに渡した）。試験：PrintUi.Tests 32（新 3）、Headless.Tests 74（Debug）。
+
 #### W5 `referenceResultLayout` の撤去（リーダー、W1〜W4 の統合後）
 
-- [ ] W5-1 `PrintProjection.cs` が付けるフラグと `PrintData.referenceResultLayout` を撤去し、2D は常に FrameG の体裁。
-- [ ] W5-2 `PdfDocument.cs`・`PrintInput.cs`・`PrintResult/*.cs`・`PrintResultMetadata.cs` の分岐を整理。横向きの対の体裁（landscape paired-case）を消す。
-- [ ] W5-3 試験の書き直し（理由を下の表に）。
+- [x] ✅ W5-1 `PrintProjection.cs` が付けるフラグと `PrintData.referenceResultLayout` を撤去し、2D は常に FrameG の体裁。
+- [x] ✅ W5-2 `PdfDocument.cs`・`PrintInput.cs`・`PrintResult/*.cs`・`PrintResultMetadata.cs` の分岐を整理。横向きの対の体裁（landscape paired-case）を消す。
+- [x] ✅ W5-3 試験の書き直し（理由を下の表に）。
+
+結果（`e6fd37c`）：
+- FramePrintPDF は次元だけで体裁を決める（`PdfDocument.frameG = dimension == 2`、`FrameGInputLayout.Applies`、`DiagramInput`、`CanonicalSectionDiagram`）。`PrintData.referenceResultLayout`・`ReferenceResultLayout.Enabled`・各 `Result*` の `referenceLayout` を消した。FrameWebforCS の投影（`PrintProjection`・`PrintResultMetadata`・`PrintDiagramProjection`）はフラグを付けない。
+- 横向き・A3 でも FrameG の座標・9.06 pt（`ReportFont`・`TableFont`・余白・頁頭）。横向きで 2 ケースを並べる体裁（`ReferenceResultLayout.Forces`、横向きの `Displacements`、`CaseTitle`、PICK UP の古い分岐）を消した。
+- 正規の断面力図は FrameWebforCS が 2D でしか作らない（`PrintProjection.cs:702`）ので、従来の描画（`DrawCaption`・`Panel`・`DrawHeading`・`DrawForces`・`DrawDisplacements`・`LabelPlacement`・着目点の札）を消した。
+- 図の頁の頭：`PdfDocument.BeginOwnHeaderPages(ref indexPage)`／`EndOwnHeaderPages()`。触っていない頁は置き換え、そうでなければ改頁し、頁頭（`TITLE :`）を出さない。荷重図の `BlankPage`（頁の中身を消す）と断面力図の `Pages.Remove` をこれに寄せた。
+- 統合で見つけて直した不具合（`feb56ca`）：FrameG の部材バネの表が部材ごとに最初の行しか出さず、FrameWeb の部分区間（`length`）や同じ部材の複数行を黙って落としていた → そのときは全ての行を出す元の表にする（試験 `PartialSpringIntervalsKeepTheGenericTableWithEveryRow`）。FrameG の変位図の線が 0.4 m ごとの折れ点だけを通り、間の解いた点（着目点）の値と最大値を落としていた → 線は折れ点と解いた点の両方を通り、最大値もそこから採る。地盤バネの部材の値は見本どおり折れ点だけ（試験 `CanonicalDisplacementUsesSolvedInteriorStations…` の点を 1.0 m に戻した）。
+- 確かめ：PDF_Manager.Tests 157/157、FrameWebforCS.Tests 615/616（既知の 1 件）、Headless.Tests 74/74（Debug）。電算出力と荷重図は統合前の出力と語・位置が全く同じ。断面力図は変位図の 4 頁だけ変わり、見本との数（1 mm 超・重ね画像）は同じ。PIK の比較の記録は統合前（`pik5.json`）と同一（27 行は FrameG 自身の丸め誤差）。
 
 #### 統合（リーダー）
 
-- [ ] I-1 作業者ごとに差分を読み、試験と比較を流し直してから main に取り込み、コミット。
-- [ ] I-2 数値の後退が無いこと（`member_forces.py`、`pik_compare.py`）。
+- [x] ✅ I-1 作業者ごとに差分を読み、試験と比較を流し直してから main に取り込み、コミット。
+- [x] ✅ I-2 数値の後退が無いこと（電算出力の語・位置が統合前と同一、`pik_compare.py` の記録が `pik5.json` と同一）。
 - [ ] I-3 DESIGN.md・報告書・GLOSSARY・README を更新。
 
 ### 状況
+
+- 2026-10-29（続き）：W1〜W6・W5 を main に統合（`e6fd37c`・`97423df`・`feb56ca`）。データの落ちの有無を独立のレビューで確認中。
 
 - 2026-10-29：計画書を作成。基準の出力 `.tmp/harajuku-0404-parity/20261029T000216/base/`（HEAD `f29add9`）：電算 261 頁（見本 128。COMBINE 変位の 73 頁と COMBINE・PICK UP の頁の増えを含む）、荷重図 11 頁（見本 7）、断面力図 44 頁（見本 45、付記 1 頁を除けば同数）。
 
@@ -189,7 +201,16 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 | 試験 | 理由 |
 |---|---|
-| `CanonicalSectionDiagramTests` の 10 件（W4） | 共通の `Config` を `referenceLayout = false` にして従来の体裁の試験として残した（`TITLE :`・軸ごとの縮尺・ラベルの間引きを前提にしている）。FrameG の体裁は `FrameGSectionDiagramTests` で確かめる。W5 で従来の体裁を消すときに見直す。 |
+| `TransverseReportCompositionTests`：`ReferenceDisplacementPairsAdjacentCasesWithoutRepeatingValues`・`ReferenceForcesPairCasesAndRepeatMemberCaptionAfterPageBreak`・`ReferencePickupPairsSignedModesWithCorrelatedSourcesAndExpressions`・`ReferenceTwelveNodeDisplacementUsesThreePairsPerPage`・`WeightedPickupExpressionUsesMeasuredSourceWidthWithoutUnnecessaryWrap`（W5、消した） | 横向きで 2 ケースを並べる体裁と係数つきの PICK UP の欄を確かめていた。その体裁は消した（決定 Q2）。FrameG の変位量・断面力・COMBINE／PICK UP は `FrameGEnvelopeLayoutTests` と同じファイルの縦の試験が確かめる。 |
+| 同 `LandscapeTableAndDiagramFontKeepTheirOriginalSizes` → `LandscapeTableUsesFrameGFontAndDiagramFontKeepsItsSize`（W5） | 横向きも FrameG の文字（9.06 pt）と頁番号の無い頁頭。図の文字 8 pt はそのまま確かめる。 |
+| 同 `PortraitReferenceGlobalTitleMatchesReferenceAndSuppressesPageNumber`（W5） | フラグを切った 2D の頁頭はもう無い（3D は `ThreeDimensionalInputKeepsLegacyTitleAndTableFont` が確かめる）。横向きでも左上から同じ距離に `TITLE :`、頁番号なしを確かめるように。 |
+| 同 `ReferenceLongCaseCaptionWrapsWithinItsPanelAndRetainsText`（W5） | 横向きも FrameG の `CASE  1  名称`。横向きの広い欄でも折り返すように題名を長くした。 |
+| 同 `LongMemberCaptionWrapsAndRepeatsEveryLineOnContinuationPages`（W5） | 2 ケースを並べた左右の欄から、FrameG の 1 ケースの部材の見出しの欄（146.1 pt）に。頁ごとに見出しを繰り返すことは同じ。 |
+| 同 `ShortNodeIdsLeaveRoomForJointHeadingInBothBaseAndCombinationPanels`（W5） | FrameG は `JOINT` と `NO.` を別の行に書く。`JOINT` が `X-DISP.` に重ならないことを、基本ケース 1 つと COMBINE の左右 2 つで確かめる。 |
+| `FrameGInputLayoutTests.WithoutTheReferenceFlagTheGenericTablesRemain` → `ThreeDimensionalInputKeepsTheGenericTables`（W5） | フラグが無くなったので、元の表が残るのは 3D。 |
+| `FrameGLoadDiagramTests.OtherLayoutsKeepTheEarlierLoadDiagram`（W5、消した） | 2D の従来の荷重図はもう無い（2D は全て FrameG）。 |
+| `CanonicalSectionDiagramTests` の 10 件（W5、作業者 D） | 全て残して FrameG の体裁の期待に書き直した。頁数・空白頁が無いこと・表の後の図が次の頁から・データの検査・数値を変えないこと・縮尺の明示・曲線の側（N は Q10）・節点の選択が札だけを絞ることは同じ。名前を変えたもの：`…UsesOneScaleForBothAxes…`（FrameG は両軸で縮尺が一つ）、`…FollowsTheMemberNormalAndKeepsNegativeLabels`、`CanonicalBasicCaseLabelsEveryMemberEndWhileAnEnvelopePrintsAnEqualValueOnceAtOnePlace`（従来の「近くの同じ値を間引く」は FrameG では基本ケースと包絡で振る舞いが違う）。消した Assert は `…RoundoffOscillationFlood` の「0.04 が 1 つ」だけ（FrameG は部材内の極値を大きい方 1 つしか書かない。代わりに 0.04・-0.04・9.99 が出ないことを確かめる）。 |
+| `TransversePrintMetadataTests`・`SectionDiagramProjectionTests`（W5） | 投影がフラグ（`referenceResultLayout`・`referenceLayout`）を付けないことを確かめるように。 || `CanonicalSectionDiagramTests` の 10 件（W4） | 共通の `Config` を `referenceLayout = false` にして従来の体裁の試験として残した（`TITLE :`・軸ごとの縮尺・ラベルの間引きを前提にしている）。FrameG の体裁は `FrameGSectionDiagramTests` で確かめる。W5 で従来の体裁を消すときに見直す。 |
 | `SectionDiagramProjectionTests.DiagramContractPreservesTableStationsAndAddsRawGeometricDisplacements`（W4） | COMBINE・PICKUP の見出しを見本の `COMBINE 1 …`・`PICKUP 1 …` に。 |
 | `TransverseReportCompositionTests` の `PortraitReferenceInputOnlyNodeTableUsesReferenceBodyFont`・`PortraitReferenceMixedInputAndReactionUsesSharedFontOnLaterPage`・`PortraitReferenceMixedInputAndForceUseSameFontAcrossPages`（W1） | 2D・縦の入力の写しが FrameG の見出し（en では `NODE DATA`）になったので、探す文字を `Node Data` から `NODE DATA` に。確かめること（参照のフォントの大きさ）は同じ。 |
 | `TransverseReportCompositionTests.PortraitPickupReferenceCaptionAndColumnsUseCentralGrid`（W2） | 以前の見本の CASE の書き方 `(6:1.1*1+1.367*4+5)` を前提にしていた。今回の見本の `( 6 :1+4+5 )` に直した（位置の範囲はそのまま）。 |
