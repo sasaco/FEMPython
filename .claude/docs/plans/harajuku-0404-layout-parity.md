@@ -92,24 +92,28 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 #### W3 荷重図（作業者 C）　見本 `見本_荷重図.pdf` 1〜7 頁
 
-- [ ] W3-1 頁の組：1 頁に 1〜2 ケース（3・4、5・6、7・8、9・10 を同じ頁に）。組み方の規則を見本から決める。
-- [ ] W3-2 頁頭の題名を出さない。左の余白の回転した `題名 (DataVer 4.3.6) P n` も出さず、`4-n` と同じく比較から外す（2026-10-29 決定）。
-- [ ] W3-3 ケースの見出し `Case 3  名称  記号` の位置・フォント（FrameG 自身の出力。比較に含める）。
-- [ ] W3-4 荷重の値と寸法を図の外に横書き。部材軸方向の分布荷重は `q =11.00`。節点荷重の矢印と値。
-- [ ] W3-5 図の大きさ・位置・余白。
+- [x] ✅ W3-1 頁の組：1 頁に 1〜2 ケース（3・4、5・6、7・8、9・10 を同じ頁に）。組み方の規則を見本から決める。
+- [x] ✅ W3-2 頁頭の題名を出さない。左の余白の回転した `題名 (DataVer 4.3.6) P n` も出さず、`4-n` と同じく比較から外す（2026-10-29 決定）。
+- [x] ✅ W3-3 ケースの見出し `Case 3  名称  記号` の位置・フォント（FrameG 自身の出力。比較に含める）。
+- [x] ✅ W3-4 荷重の値と寸法を図の外に横書き。部材軸方向の分布荷重は `q =11.00`。節点荷重の矢印と値。
+- [x] ✅ W3-5 図の大きさ・位置・余白。
 
 確かめ方：文字は `layout_compare.py`、線・矢印は重ねた画像（差分画像の道具を足す）。
 
+結果（`48cb2c0`、作業者 C の `30690cc` を取り込み）：7 頁、ケースの組は見本と同じ（ハーネスは荷重図を `SplitHorizontal` と `LoadDiagramSingleCaseIds: ["1","2"]` で出す）。7 頁とも 1 mm 超 0。1 mm 内に相手の無い線の画素は 3 頁 33（ケース 4 の右の寸法の補助線）・4 頁 3 だけ。余白は白い塗り（付記）を除いて 0.3 mm 以内。新しいファイル `PrintDiagram/FrameGLoadDiagram.cs`、試験 `FrameGLoadDiagramTests.cs`（9 件）・`LoadDiagramSingleCaseProjectionTests.cs`（3 件）。共有の変更：`PrintData.cs`（荷重図の JSON に `rigid` とフラグ）、`PrintProjection.cs`（`PrintSelection.LoadDiagramSingleCaseIds` → `single_layout_cases`）。「1 頁に 1 ケース」をどこから受け取るかはユーザーに確認中。
+
 #### W4 断面力図（作業者 D）　見本 `見本_断面力図.pdf` 1〜22・24〜45 頁
 
-- [ ] W4-1 S1 頁頭は題名だけ（`TITLE :` なし）、`Case 1 固定死荷重:D1`（記号つき）。
-- [ ] W4-2 S2 COMBINE の頁に `COMBINE 1 名称`。
-- [ ] W4-3 S3 図を小さめ、値は部材端・最大値など限られた点だけ小さな文字。
-- [ ] W4-4 S4 文字は全て青、題は細字。
-- [ ] W4-5 S5 軸力図を閉じた骨組の内側に描く。
-- [ ] W4-6 図の頁の余白。
+- [x] ✅ W4-1 S1 頁頭は題名だけ（`TITLE :` なし）、`Case 1 固定死荷重:D1`（記号つき）。
+- [x] ✅ W4-2 S2 COMBINE の頁に `COMBINE 1 名称`。
+- [x] ✅ W4-3 S3 図を小さめ、値は部材端・最大値など限られた点だけ小さな文字。
+- [x] ✅ W4-4 S4 文字は全て青、題は細字。
+- [x] ✅ W4-5 S5 軸力図を閉じた骨組の内側に描く。
+- [x] ✅ W4-6 図の頁の余白。
 
 確かめ方：頁頭の文字は `layout_compare.py`、図は重ねた画像。
+
+結果（`1b46b17`、作業者 D の `ede2993` を取り込み）：44 頁、頁割り・頁頭（題名、`Case 1 固定死荷重:D1`、`COMBINE 1 名称`）・色（全て青の MS 明朝の細字）は見本どおり。重ね画像で 1 mm 内に相手の無い画素は見本→出力 32,792／出力→見本 16,200（変更前 627,970／1,219,736。見本側は頁ごとに付記約 400）。値の文字の 1 mm 超は 44 頁で 290 語（語数 1900。近い順に対にすると 213）。残りは FrameG の置き方が左右で揃わない所（剛域の面の値のずらし方）、剛域側のせん断力の描く側、基本ケースの N の値の選び方、変位図の i 端の値（各 2 mm 前後）。W4-5（S5）は「閉じた骨組の内側」ではなく「+N を部材の法線（`transform.Normal`）側」が FrameG の規則（見本 25 頁で COMBINE 1 の上床版の圧縮が外側に出る）。新しいファイル `PrintDiagram/CanonicalSectionDiagram.FrameG.cs`（partial）、試験 `FrameGSectionDiagramTests.cs`（8 件）・`FrameGSectionDiagramProjectionTests.cs`（3 件）。共有の変更：`PdfDocument.cs` に `OwnPageHeader`・`Title`。
 
 #### W5 `referenceResultLayout` の撤去（リーダー、W1〜W4 の統合後）
 
@@ -161,6 +165,14 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 - 中国語（`cn`）：入力の写しの見出しを中国語にした（`dfed8f9`。訳は既存の `case "cn":` の語を優先し、日本語の字が混じる既存の訳「要件荷重」「開始」「結尾」は「构件载重」「开始」「结尾」に）。ただしデスクトップの投影 `PrintProjection.ValidateSelection`（`PrintProjection.cs:253`）が ja・en 以外を拒むので、FrameWebforCS・Headless から cn は出せない（FramePrintPDF の中だけで動く）。`TITLE :` の行は `PdfDocument.cs` が MS 明朝で書く。
 
+- 荷重図の頁の組み方は FrameG 自身の設定：`.frd` の `$16.txt` の 4 行目 `1.2`（小数点の前が段数で 1 なら 2 段書き、後ろが 1 頁 1 ケースにする先頭のケースの数）、7 行目 `40 40` は縮尺 1/40、11 行目 `1` はフォントが MS ゴシック（読み方は `KAJYU_ZU23.cs` の `K荷重図INIT_Frame_23`）。FramePrintPDF の上下 2 分割と `single_layout_cases` がもともと同じ仕組み。
+- 荷重図の寸法（pt）：見出しは ` Ｃase 3  名称　記号`（MS ゴシック 9.66、x 78.0、基線 83.8／443.3）。最初の頁だけ ` 荷 重 図`（11.2 pt。見本では計算書の白い四角に隠れるが文字は残る）を出し見出しが 8.4 下がる。1 頁 1 ケースは横 335.28 に収め（1/40）中心 (312.48, 456.12)、2 段書きは横 223.56・縦 134.04 に収め中心 x 298.98、y 298.86／672.06。線は骨組 0.84、剛域の部材 1.44、剛域データの部分 1.68。見本の文字は送りが 1.04 % 広い（大きさを 1/1.0104、横を 1.0104² 倍）。
+- 荷重図の帯の高さ（K = 16.62 pt、B は基準の荷重）：一様な荷重 h = K·1.2·(P/B)^0.2 / ln(B·10/ln10/P)、水平の部材で B/P > 3 なら (B/P)^0.2 倍。鉛直の部材の台形は (P/B)^0.8·1.2·1.3·1.3。B は部材に直角な荷重の最大値で、最も下の水平の部材の荷重を除く。M/S の対は高さに M、B に S を含める（`Ws=`・`Wm=` の 2 行）。積み方：帯と部材の隙間は水平 4.2・鉛直 6.84、寸法線は帯の外側から「帯の高さ + 6」（2 行目があれば + 10.7）、寸法線から次の帯まで 15.6、範囲が重なる荷重は外へ積む。範囲指定の荷重の寸法は全体の 1 本、1 本の部材の全長だけの荷重には寸法を付けない。
+- 断面力図の寸法：題名 x 80.4・基線 89.2（8.86 pt）、ケースの見出し x 80.4・117.4（9.66 pt、先頭に半角空白）、図の題 8.16 pt、値 6.70 pt。図の領域は 135.3 から用紙の下 28.3 まで、上下 2 段（各 339.2）、図の題は段の上から 4.9・x 83.3、右の余白 39.9。骨組は 1:70（「段の 0.44 以内に収まる縮尺を分母 1 桁に切り上げ」が見本に合う推定）。骨組の線は剛域 1.08・ほか 0.72、曲線 0.48 で最大値を 10 mm。
+- 断面力図の値を出す点：基本ケースは部材端と剛域の面（隣の部材と同じ節点では 2 つ重ねる）、COMBINE は端だけで最大・最小の大きい方（剛域の面は出さない）、M の部材内の極値は 1 つ（S・N には出さない）。値は曲線の端から 3.8 外（内側に読むなら 3.4）、梁は上向きの縦書き、壁は横書き。FrameG は重なった値をずらさない。変位図は剛域でない部分を 0.4 m ごと（最大 10 分割）、地盤ばねのある部材は折れ点ごと、ほかは i 端と最大値。
+- 罠：`layout_compare.py` は同じ文字を並び順で対にするので、同じ値が並ぶ図では入れ違って大きなずれに見える（近い順の対も見る）。`margins.py` は見本の付記の白い四角も数える（作業者 C の `margins2.py` は白い塗りを除く）。解析は記号の無いケースに仮の記号 `LoadSymbol` を付けるので、図では出さない。荷重図のゴシックの PDF 上のフォント名が文字化けした名前になる（字形は同じ。既存の図も同じ、`JapaneseFontResolver` 側）。
+- W5 で整理すること：荷重図は頁頭の `TITLE :` を頁の中身を消して白紙に戻し（`BlankPage`）、断面力図は最初の頁を `Pages.Remove` で取り除いて作り直している。`PdfDocument` に図の頁の頭を持たせる正式な口を作って両方をそれに寄せる。
+
 ### 設計の考え方
 
 - 作業者の新しい体裁は、`ReferenceResultLayout.FrameGDisplacements` と同じく「見本の座標（pt）を定数で持ち、右揃えの値を列の右端に置く」書き方にする。表の自動の幅の計算（`Table`）は使わない。
@@ -169,6 +181,8 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 | 試験 | 理由 |
 |---|---|
+| `CanonicalSectionDiagramTests` の 10 件（W4） | 共通の `Config` を `referenceLayout = false` にして従来の体裁の試験として残した（`TITLE :`・軸ごとの縮尺・ラベルの間引きを前提にしている）。FrameG の体裁は `FrameGSectionDiagramTests` で確かめる。W5 で従来の体裁を消すときに見直す。 |
+| `SectionDiagramProjectionTests.DiagramContractPreservesTableStationsAndAddsRawGeometricDisplacements`（W4） | COMBINE・PICKUP の見出しを見本の `COMBINE 1 …`・`PICKUP 1 …` に。 |
 | `TransverseReportCompositionTests` の `PortraitReferenceInputOnlyNodeTableUsesReferenceBodyFont`・`PortraitReferenceMixedInputAndReactionUsesSharedFontOnLaterPage`・`PortraitReferenceMixedInputAndForceUseSameFontAcrossPages`（W1） | 2D・縦の入力の写しが FrameG の見出し（en では `NODE DATA`）になったので、探す文字を `Node Data` から `NODE DATA` に。確かめること（参照のフォントの大きさ）は同じ。 |
 | `TransverseReportCompositionTests.PortraitPickupReferenceCaptionAndColumnsUseCentralGrid`（W2） | 以前の見本の CASE の書き方 `(6:1.1*1+1.367*4+5)` を前提にしていた。今回の見本の `( 6 :1+4+5 )` に直した（位置の範囲はそのまま）。 |
 | `TransverseReportCompositionTests.PortraitPickupUsesSeparateOrderedExtremumFlowsAndPrintsSelectedCases`（旧 `…AndPreservesWeightedSources`、W2） | 今回の見本は係数を出さず、`SHARE` を `SHEAR` にする。`( 6 :1+4+5 )`・`SHARE` が出ないこと・`SHEAR  MAX.` を確かめる。 |
