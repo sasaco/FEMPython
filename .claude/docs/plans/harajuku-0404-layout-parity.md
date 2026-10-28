@@ -159,6 +159,8 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 - 支点・結合・シェルは見本に無いので、データがあるときだけ今の表のまま剛域の後・バネと着目点の後に出す（合否は判定しない）。節点荷重の F.X・M の列の右端（261.4・397.0）は推定。
 - 罠：見本の 1 つの文字のかたまりに離れた見出しがつながっていることがある（「割増係数実荷重記号」など）。PyMuPDF の `rawdict` で 1 文字ずつの位置を出し、隙間で分けて位置を求める。文字は `XStringFormats.BaseLineLeft`/`BaseLineRight` で見本の基準線にそのまま置く。
 
+- 中国語（`cn`）：入力の写しの見出しを中国語にした（`dfed8f9`。訳は既存の `case "cn":` の語を優先し、日本語の字が混じる既存の訳「要件荷重」「開始」「結尾」は「构件载重」「开始」「结尾」に）。ただしデスクトップの投影 `PrintProjection.ValidateSelection`（`PrintProjection.cs:253`）が ja・en 以外を拒むので、FrameWebforCS・Headless から cn は出せない（FramePrintPDF の中だけで動く）。`TITLE :` の行は `PdfDocument.cs` が MS 明朝で書く。
+
 ### 設計の考え方
 
 - 作業者の新しい体裁は、`ReferenceResultLayout.FrameGDisplacements` と同じく「見本の座標（pt）を定数で持ち、右揃えの値を列の右端に置く」書き方にする。表の自動の幅の計算（`Table`）は使わない。
