@@ -79,12 +79,14 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 #### W2 COMBINE・PICK UP の数表（作業者 B）　見本 21〜128 頁
 
-- [ ] W2-1 1 つの COMBINE／PICKUP につき MOMENT・SHEAR・AXIAL の MAX・MIN の 6 頁（各 1 頁）。
-- [ ] W2-2 CASE の欄 `( 1+2+3+4+5+8-10 )`、PICK UP は `( 2 :1+2+3+4+8-10 )`。
-- [ ] W2-3 見出し（`COMBINE  1  名称`、下線、`MOMENT MAX.`、列見出し `DIST. M S N CASE` / `COM: CASE`）の位置。
-- [ ] W2-4 `SHARE` を `SHEAR` に（見本との比較ではこの語だけ例外）。
+- [x] ✅ W2-1 1 つの COMBINE／PICKUP につき MOMENT・SHEAR・AXIAL の MAX・MIN の 6 頁（各 1 頁）。
+- [x] ✅ W2-2 CASE の欄 `( 1+2+3+4+5+8-10 )`、PICK UP は `( 2 :1+2+3+4+8-10 )`。
+- [x] ✅ W2-3 見出し（`COMBINE  1  名称`、下線、`MOMENT MAX.`、列見出し `DIST. M S N CASE` / `COM: CASE`）の位置。
+- [x] ✅ W2-4 `SHARE` を `SHEAR` に（見本との比較ではこの語だけ例外）。
 
 確かめ方：`page_map.py` で COMBINE・PICK UP の全頁が 1 対 1、各頁 1 mm 超 0。
+
+結果（`eef4d77`、作業者 B の `01d1884` を取り込み）：見本 21〜128 頁と出力 94〜201 頁が 1 対 1（108 頁）、1 mm 超 0。例外は値の 0.01 の丸め 1552 行と、同点で別のケースを採った 57 行（その頁で見ている力は 0.01 以内で一致し、一緒に書く M・N と CASE だけが違う。N4 と同じ計算の側の差）と、その行の閉じ括弧の 15 語。余白の差は最大 0.2 mm。電算出力は 261 頁 → 201 頁。新しいファイル `PrintResult/FrameGEnvelopeLayout.cs`、試験 `FrameGEnvelopeLayoutTests.cs`（11 件）。
 
 #### W3 荷重図（作業者 C）　見本 `見本_荷重図.pdf` 1〜7 頁
 
@@ -129,6 +131,25 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 - `PrintProjection.Build` は入力の節（`node`・`member`・`element`・`notice_points` など）を保存形式の JSON からそのまま写す（`PrintProjection.cs:222`）。保存形式に足した項目は印刷側で読めば届く。
 - W5 の前提：`PDF_Manager` の `PrintInput` は FrameWebforCS（`DirectPdfGenerator.Generate`）のほかに Web 版 `FramePrintAzure/Function1.cs`・`Function2.cs` と `PDF_Test*` からも呼ばれ、Web 版の JSON にはフラグが無い。フラグを消して「2D なら常に FrameG」にすると Web 版の 2D が変わり、制約（Web 版は変えない）に反する。DESIGN.md 2026-10-28 の捨てた案に「FrameWebforCS だけが出すメタデータ無しで Web・3D に体裁を当てる」がある。→ 2026-10-29 にユーザーが決定：Web 版も含めて 2D は全て FrameG の体裁（入口で切り替える案は捨てた）。W5 ではフラグを消し、2D なら FrameG の体裁にする。Web 版の JSON（メタデータ無し）で組めることを試験で確かめる。
 
+- COMBINE・PICK UP の見本の寸法（pt。x は文字の左端、値は列の右端）：
+
+  | 項目 | COMBINE | PICK UP |
+  |---|---|---|
+  | 見出し `COMBINE n  名称` | 88.6 | 91.9 |
+  | 下線（太さ 0.12、文字の下端 + 1.1） | 81.5 から | 84.8 から |
+  | 力の名 `MOMENT MAX.` | 276.6 | 266.4 |
+  | 列見出し DIST. / M / S / N | 181.4 / 250.2 / 304.3 / 358.6 | 171.2 / 240.0 / 294.1 / 348.5 |
+  | CASE の欄 | 393.6 | 383.5 |
+  | 部材の見出し | 105.6 | 91.9 |
+  | 着目点のラベル（右揃え） | 159.8 | 149.6 |
+  | 値の右端 DIST / M / S / N | 202.9 / 267.5 / 321.6 / 376.0 | 192.7 / 257.4 / 311.4 / 365.8 |
+
+  行の間隔 8.975 pt、見出し・力の名・列見出し・部材の見出し・部材の最初の行の間は 1.5 行。単位の行は無い。下線の右端は FrameG が比例幅で測っているらしく規則が一つに決まらないので「`COMBINE n` の幅 + 5.7」（誤差 0.7 pt 以内）。列見出しは COMBINE が `CASE`、PICK UP が `COM:    CASE`（空白 4 つ）。力の名は 6 文字の欄に左詰め（`SHEAR  MAX.`）。
+- CASE の欄：DEFINE で「無し」を選んだもの（0）を省き、2 つ目から +・- を付ける。PICK UP は「採った COMBINE の番号 :その式の中のケース」。COMBINE は `caseStr`、PICK UP は `comb` の式（項ごとに最後の `*` の後）から作る。
+- 見本は全部 1 頁に収まり頁送りの例が無い。変位量と同じ規則（残りに収まらない部材は次の頁から、1 頁より長い部材は見出しを繰り返す）にした。
+- 罠：見本の値の文字は末尾に空白が付く（`"0.000 "`）。`layout_compare.py` は span の幅を字数で割るので、右端は「span の右端 − 1 字」で読む。試験の PDF は `fsecCombineName` が無いと COMBINE の節が出ない（`PrintData.cs:119`）。
+- W5 で見ること：縦の条件を外すと `ReferenceResultLayout.ReportFont` が横向きで 10 pt にする。FrameG の体裁では向きに関係なく 9.06 pt に。古い横向きの分岐（`ReferenceResultLayout.Forces`）は `SHARE` のまま（W5 で消す）。
+
 ### 設計の考え方
 
 - 作業者の新しい体裁は、`ReferenceResultLayout.FrameGDisplacements` と同じく「見本の座標（pt）を定数で持ち、右揃えの値を列の右端に置く」書き方にする。表の自動の幅の計算（`Table`）は使わない。
@@ -137,8 +158,12 @@ worktree にする理由：同じ作業ツリーで 4 人が `dotnet build` す�
 
 | 試験 | 理由 |
 |---|---|
+| `TransverseReportCompositionTests.PortraitPickupReferenceCaptionAndColumnsUseCentralGrid`（W2） | 以前の見本の CASE の書き方 `(6:1.1*1+1.367*4+5)` を前提にしていた。今回の見本の `( 6 :1+4+5 )` に直した（位置の範囲はそのまま）。 |
+| `TransverseReportCompositionTests.PortraitPickupUsesSeparateOrderedExtremumFlowsAndPrintsSelectedCases`（旧 `…AndPreservesWeightedSources`、W2） | 今回の見本は係数を出さず、`SHARE` を `SHEAR` にする。`( 6 :1+4+5 )`・`SHARE` が出ないこと・`SHEAR  MAX.` を確かめる。 |
+| `TransverseReportCompositionTests.PortraitMinOnlyPickupKeepsCorrelatedVectorAndWrappedSourceAcrossPages`（W2） | CASE を `( 77 :CASE_A001+…+CASE_A070 )` に。CASE の欄が x = 383.5 になったので折り返しを拾う下限を 385 → 380、列見出しを `COM:    CASE` に。頁をまたぐ折返しは今も確かめる。 |
 
 ### Tips
 
+- COMBINE・PICK UP の 108 頁は `tools/envelope_compare.py <見本> <denzan.pdf> [--detail]` で一度に比べられる（見出しで頁を対応させ、行を丸め・同点・その他に分ける。4 秒）。
 - 比較の道具は `.tmp/harajuku-0404-parity/tools/`。PyMuPDF は `uv run --no-project --with pymupdf --with pillow python -X utf8 -I tools/<script>.py ...`（`-I` は `PYTHONIOENCODING` を無視するので `-X utf8` が要る）。PowerShell では `[Console]::OutputEncoding=[Text.Encoding]::UTF8` も。
 - PDF を作る：`dotnet build .tmp/harajuku-0404-parity/harness-src/Verification.csproj` の後、`.tmp/harajuku-0404-parity/harness-src/bin/Debug/net10.0-windows/FrameWebforCS.Tests.exe "<R>/source/0404_完成時.frd" "<R>/<out>" "0404_完成時FrameG"`。
