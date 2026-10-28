@@ -47,7 +47,7 @@ namespace PDF_Manager.Printing
 
         private double Bottom => document.currentPage.Height - document.Margine.Bottom;
 
-        private string L(string ja, string en) => data.language == "en" ? en : ja;
+        private string L(string ja, string en, string cn) => data.language switch { "en" => en, "cn" => cn, _ => ja };
 
         private T Section<T>(string key) where T : class => data.printDatas.TryGetValue(key, out var value) ? value as T : null;
 
@@ -208,8 +208,8 @@ namespace PDF_Manager.Printing
         {
             void Header(double h)
             {
-                Left(L("格 点 DATA", "NODE DATA"), 78.4, h);
-                Left(L("格点", "Node"), 89.5, h + 18.0);
+                Left(L("格 点 DATA", "NODE DATA", "节 点 DATA"), 78.4, h);
+                Left(L("格点", "Node", "节点"), 89.5, h + 18.0);
                 Left("No.", 95.5, h + 27.0);
                 Left("X (m)", 140.8, h + 27.0);
                 Left("Y (m)", 195.0, h + 27.0);
@@ -242,18 +242,18 @@ namespace PDF_Manager.Printing
         {
             void Header(double h)
             {
-                Left(L("部 材 DATA", "MEMBER DATA"), 78.4, h);
+                Left(L("部 材 DATA", "MEMBER DATA", "构 件 DATA"), 78.4, h);
                 double h1 = h + 17.8, h2 = h + 26.8;
-                Left(L("部材", "Member"), 94.0, h1);
-                Left(L("格点番号", "Nodes"), 136.7, h1);
-                Left(L("部材長", "Length"), 198.5, h1);
-                Left(L("ﾏｰｸ", "Mark"), 241.2, h1);
-                Left(L("部材名", "Name"), 272.9, h1);
-                Left(L("部材数", "Count"), 313.6, h1);
-                Left(L("弾性係数", "Elastic"), 356.9, h1);
-                Left(L("膨張係数", "Expansion"), 407.8, h1);
-                Left(L("断 面 積", "Area"), 453.7, h1);
-                Left(L("断面二次ﾓｰﾒﾝﾄ", "Inertia"), 493.9, h1);
+                Left(L("部材", "Member", "构件"), 94.0, h1);
+                Left(L("格点番号", "Nodes", "节点编码"), 136.7, h1);
+                Left(L("部材長", "Length", "构件长"), 198.5, h1);
+                Left(L("ﾏｰｸ", "Mark", "标记"), 241.2, h1);
+                Left(L("部材名", "Name", "构件名"), 272.9, h1);
+                Left(L("部材数", "Count", "构件数"), 313.6, h1);
+                Left(L("弾性係数", "Elastic", "弹性系数"), 356.9, h1);
+                Left(L("膨張係数", "Expansion", "膨胀系数"), 407.8, h1);
+                Left(L("断 面 積", "Area", "截面面积"), 453.7, h1);
+                Left(L("断面二次ﾓｰﾒﾝﾄ", "Inertia", "截面二次力矩"), 493.9, h1);
                 Left("No.", 105.7, h2);
                 Left("I-TAN", 127.2, h2);
                 Left("J-TAN", 157.7, h2);
@@ -286,20 +286,20 @@ namespace PDF_Manager.Printing
             if (rigids.Count == 0) return;
             void Header(double h)
             {
-                Left(L("部 材 DATA（剛域データ）", "MEMBER DATA (RIGID ZONES)"), 78.4, h);
-                Left(L("(( 剛 域 デ ー タ ))", "(( RIGID ZONE ))"), 298.0, h + 4.3);
+                Left(L("部 材 DATA（剛域データ）", "MEMBER DATA (RIGID ZONES)", "构 件 DATA（刚性区域数据）"), 78.4, h);
+                Left(L("(( 剛 域 デ ー タ ))", "(( RIGID ZONE ))", "(( 刚 性 区 域 数 据 ))"), 298.0, h + 4.3);
                 double h1 = h + 17.9, h2 = h + 26.9;
-                Left(L("部材", "Member"), 92.9, h1);
-                Left(L("部材長", "Length"), 134.0, h1);
-                Left(L("ﾏｰｸ", "Mark"), 166.7, h1);
-                Left(L("部材名", "Name"), 198.5, h1);
-                Left(L("剛域部材長(m)", "Rigid length(m)"), 254.8, h1);
-                Left(L("断 面 積", "Area"), 341.9, h1);
-                Left(L("断面二次ﾓｰﾒﾝﾄ", "Inertia"), 388.8, h1);
+                Left(L("部材", "Member", "构件"), 92.9, h1);
+                Left(L("部材長", "Length", "构件长"), 134.0, h1);
+                Left(L("ﾏｰｸ", "Mark", "标记"), 166.7, h1);
+                Left(L("部材名", "Name", "构件名"), 198.5, h1);
+                Left(L("剛域部材長(m)", "Rigid length(m)", "刚性区构件距离(m)"), 254.8, h1);
+                Left(L("断 面 積", "Area", "截面面积"), 341.9, h1);
+                Left(L("断面二次ﾓｰﾒﾝﾄ", "Inertia", "截面二次力矩"), 388.8, h1);
                 Left("No.", 99.0, h2);
                 Left("(m)", 138.5, h2);
-                Left(L("I端側", "I-end"), 247.7, h2);
-                Left(L("J端側", "J-end"), 286.1, h2);
+                Left(L("I端側", "I-end", "I端侧"), 247.7, h2);
+                Left(L("J端側", "J-end", "J端侧"), 286.1, h2);
                 Left("A (m2)", 346.4, h2);
                 Left("I (m4)", 402.8, h2);
             }
@@ -339,18 +339,18 @@ namespace PDF_Manager.Printing
                 double type = pair == 0 ? heading + headingToType : y + typeGap;
                 void Header(double? h, double t)
                 {
-                    if (h is double top) Left(L("部材バネ DATA", "MEMBER SPRING DATA"), 78.4, top);
+                    if (h is double top) Left(L("部材バネ DATA", "MEMBER SPRING DATA", "构件弹簧 DATA"), 78.4, top);
                     double h1 = t + 13.4, h2 = t + 22.4;
-                    Left(L("部材", "Member"), 97.4, h1);
-                    Left(L("部材名", "Name"), 127.2, h1);
-                    Left(L("部材数", "Count"), 167.9, h1);
+                    Left(L("部材", "Member", "构件"), 97.4, h1);
+                    Left(L("部材名", "Name", "构件名"), 127.2, h1);
+                    Left(L("部材数", "Count", "构件数"), 167.9, h1);
                     Left("No.", 99.0, h2);
                     for (int i = 0; i < shown.Count; i++)
                     {
                         double shift = i * 128.8;
                         Left($"( TYPE {shown[i].Key,2} )", 259.9 + shift, t);
-                        Left(L("部材直角方向", "Transverse"), 225.7 + shift, h1);
-                        Left(L("部材軸方向", "Axial"), 294.1 + shift, h1);
+                        Left(L("部材直角方向", "Transverse", "垂直于轴的方向"), 225.7 + shift, h1);
+                        Left(L("部材軸方向", "Axial", "构件轴向"), 294.1 + shift, h1);
                         Left("Kv(kN/m/m)", 230.3 + shift, h2);
                         Left("Ku(kN/m/m)", 291.2 + shift, h2);
                     }
@@ -399,9 +399,9 @@ namespace PDF_Manager.Printing
             const double pitch = 37.27;
             void Header(double h)
             {
-                Left(L("着目点 DATA", "NOTICE POINT DATA"), 78.4, h);
-                Left(L("部材No.", "Member No."), 87.4, h + 17.9);
-                Left(L("部材名", "Name"), 127.2, h + 17.9);
+                Left(L("着目点 DATA", "NOTICE POINT DATA", "焦距点 DATA"), 78.4, h);
+                Left(L("部材No.", "Member No.", "构件No."), 87.4, h + 17.9);
+                Left(L("部材名", "Name", "构件名"), 127.2, h + 17.9);
                 for (int k = 1; k <= perLine; k++)
                     Left($"L{k,2}", 180.2 + pitch * (k - 1), h + 17.9);
             }
@@ -418,7 +418,7 @@ namespace PDF_Manager.Printing
                 if (rigid != null && !double.IsNaN(length))
                     foreach (double end in new[] { rigid.Ilength, length - rigid.Jlength })
                         if (end > 0 && end < length && !named.Any(point => Math.Abs(point.Point - end) < 0.0005))
-                            named.Add((end, L("剛域", "Rigid")));
+                            named.Add((end, L("剛域", "Rigid", "刚性区")));
                 named = named.OrderBy(point => point.Point).ToList();
                 return new Row(13.5, (2 * Lines(named.Count, perLine) - 1) * Line, b =>
                 {
@@ -439,22 +439,22 @@ namespace PDF_Manager.Printing
         {
             void Header(double h)
             {
-                Left(L("基本荷重 DATA", "BASIC LOAD DATA"), 78.4, h);
-                Left(L("構造系条件", "Structure"), 421.9, h + 13.6);
-                Left(L("(非線形解析)", "(Nonlinear)"), 493.1, h + 13.6);
+                Left(L("基本荷重 DATA", "BASIC LOAD DATA", "基本载重 DATA"), 78.4, h);
+                Left(L("構造系条件", "Structure", "结构条件"), 421.9, h + 13.6);
+                Left(L("(非線形解析)", "(Nonlinear)", "(非线性分析)"), 493.1, h + 13.6);
                 Left("Case", 89.9, h + 18.0);
                 double h2 = h + 27.0;
                 Left("No.", 98.9, h2);
-                Left(L("割増係数", "Factor"), 126.5, h2);
-                Left(L("実荷重", "Load"), 164.5, h2);
-                Left(L("記号", "Symbol"), 197.0, h2);
-                Left(L("荷　重　名　称", "Load name"), 247.8, h2);
-                Left(L("支点", "Supp"), 407.2, h2);
-                Left(L("断面", "Sect"), 427.4, h2);
-                Left(L("バネ", "Spr"), 447.7, h2);
-                Left(L("結合", "Join"), 468.1, h2);
-                Left(L("部 材", "Memb"), 496.2, h2);
-                Left(L("地 盤", "Soil"), 526.7, h2);
+                Left(L("割増係数", "Factor", "附加系数"), 126.5, h2);
+                Left(L("実荷重", "Load", "实载重"), 164.5, h2);
+                Left(L("記号", "Symbol", "符号"), 197.0, h2);
+                Left(L("荷　重　名　称", "Load name", "载　重　名　称"), 247.8, h2);
+                Left(L("支点", "Supp", "支点"), 407.2, h2);
+                Left(L("断面", "Sect", "截面"), 427.4, h2);
+                Left(L("バネ", "Spr", "弹簧"), 447.7, h2);
+                Left(L("結合", "Join", "连接"), 468.1, h2);
+                Left(L("部 材", "Memb", "构 件"), 496.2, h2);
+                Left(L("地 盤", "Soil", "地 基"), 526.7, h2);
             }
             string Condition(int value) => value > 0 ? value.ToString(CultureInfo.InvariantCulture) : "";
             var rows = names.OrderBy(name => name.Key).Select(name => new Row(Line, 0, b =>
@@ -502,7 +502,7 @@ namespace PDF_Manager.Printing
             const double nextLine = 18.0, continuedHeader = 96.5, memberLabel = 31.4, nodeLabel = 22.3, firstRow = 13.5;
             double heading = Heading(27.0, 17.8 + (blocks[0].Member ? memberLabel : nodeLabel) + firstRow +
                 (blocks[0].Rows - 1) * Line + nextLine);
-            Left(L("実荷重 DATA", "LOAD DATA"), 78.4, heading);
+            Left(L("実荷重 DATA", "LOAD DATA", "实载重 DATA"), 78.4, heading);
             bool? type = null;
             int memberSerial = 0, nodeSerial = 0;
             for (int index = 0; index < blocks.Count; index++)
@@ -524,13 +524,13 @@ namespace PDF_Manager.Printing
                 {
                     if (member)
                     {
-                        Left(L("部材荷重", "Member load"), 102.1, start);
-                        Left(L("部材番号", "Member No."), 157.0, start);
+                        Left(L("部材荷重", "Member load", "构件载重"), 102.1, start);
+                        Left(L("部材番号", "Member No.", "构件编码"), 157.0, start);
                         Left("V/H", 441.1, start);
                         double h2 = start + Line;
-                        Left(L("ｽﾀｰﾄ", "Start"), 155.4, h2);
-                        Left(L("ｴﾝﾄﾞ", "End"), 182.5, h2);
-                        Left(L("ﾏｰｸ", "Mark"), 220.9, h2);
+                        Left(L("ｽﾀｰﾄ", "Start", "开始"), 155.4, h2);
+                        Left(L("ｴﾝﾄﾞ", "End", "结尾"), 182.5, h2);
+                        Left(L("ﾏｰｸ", "Mark", "标记"), 220.9, h2);
                         Left("L1", 262.6, h2);
                         Left("L2", 306.6, h2);
                         Left("P1", 357.5, h2);
@@ -540,8 +540,8 @@ namespace PDF_Manager.Printing
                     }
                     else
                     {
-                        Left(L("節点荷重", "Nodal load"), 102.1, start);
-                        Left(L("節点番号", "Node No."), 157.0, start);
+                        Left(L("節点荷重", "Nodal load", "节点载重"), 102.1, start);
+                        Left(L("節点番号", "Node No.", "节点编码"), 157.0, start);
                         Left("F.X", 241.2, start);
                         Left("F.Y", 309.0, start);
                         Left("M", 379.0, start);
@@ -551,7 +551,7 @@ namespace PDF_Manager.Printing
                 }
                 double label = start + LabelOffset(header);
                 names.TryGetValue(caseId, out var name);
-                Left(L("Ｃase", "Case") + " " + caseId.ToString(CultureInfo.InvariantCulture) + "  " + name?.name, 91.9, label);
+                Left(L("Ｃase", "Case", "Case") + " " + caseId.ToString(CultureInfo.InvariantCulture) + "  " + name?.name, 91.9, label);
                 double baseline = label + firstRow;
                 Load load = loads[caseId];
                 if (member)
@@ -630,8 +630,8 @@ namespace PDF_Manager.Printing
                 Left("Comb", 77.5, h + 17.8);
                 double h2 = h + 26.8;
                 Left("No.", 82.0, h2);
-                Left(L("割増係数", "Factor"), 102.8, h2);
-                Left(L("荷 重 名 称", "Load name"), 160.6, h2);
+                Left(L("割増係数", "Factor", "附加系数"), 102.8, h2);
+                Left(L("荷 重 名 称", "Load name", "载 重 名 称"), 160.6, h2);
                 for (int k = 1; k <= perLine; k++)
                     Left($"C{k,2}", 305.5 + pitch * (k - 1), h2);
             }
@@ -660,7 +660,7 @@ namespace PDF_Manager.Printing
                 Left("PickUp", 99.1, h + 18.0);
                 double h2 = h + 27.0;
                 Left("No.", 112.3, h2);
-                Left(L("荷 重 名 称", "Load name"), 153.0, h2);
+                Left(L("荷 重 名 称", "Load name", "载 重 名 称"), 153.0, h2);
                 for (int k = 1; k <= perLine; k++)
                     Left($"C{k,2}", 295.3 + pitch * (k - 1), h2);
             }

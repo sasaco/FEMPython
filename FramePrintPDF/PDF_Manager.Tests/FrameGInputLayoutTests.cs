@@ -146,6 +146,32 @@ public sealed class FrameGInputLayoutTests
     }
 
     [Fact]
+    public void ChineseKeepsThePositionsWithinThePageAndLeavesNoJapaneseLabel()
+    {
+        var root = Model();
+        root["language"] = "cn";
+        var japanese = Pdf(Model()).Runs;
+
+        var pdf = Pdf(root);
+
+        Assert.Equal(87.5, Baseline(pdf.Single("节 点 DATA")), 1);
+        Assert.Equal(78.4, pdf.Single("节 点 DATA").X, 1);
+        Assert.Contains(pdf.Runs, run => run.Text == "Case 1  固定死荷重");
+        // Every label of the Japanese report is translated; only the model's own names stay as entered
+        // (and 支点, which is the same word in Chinese).
+        string[] data = { "剛域", "上床版", "固定死荷重", "付加死荷重", "安全性", "破壊", "支点" };
+        var labels = japanese.Select(run => run.Text)
+            .Where(text => Regex.IsMatch(text, @"[぀-ヿ一-鿿｡-ﾟＡ-Ｚ]"))
+            .Where(text => !data.Any(text.Contains)).Distinct().ToList();
+        Assert.NotEmpty(labels);
+        Assert.All(labels, label => Assert.DoesNotContain(pdf.Runs, run => run.Text == label));
+        Assert.DoesNotContain(pdf.Runs, run => Regex.IsMatch(run.Text, @"[぀-ヿ｡-ﾟ]"));
+        // FrameG's coordinates hold: nothing passes the sample's right extent (PickUp C10 ends at 565.2 pt).
+        Assert.All(pdf.Runs, run => Assert.True(run.X + run.Width <= 566, run.Text));
+        Assert.All(pdf.Sizes, size => Assert.Equal(PdfDocument.ReferencePortraitFontSize, size, 3));
+    }
+
+    [Fact]
     public void WithoutTheReferenceFlagTheGenericTablesRemain()
     {
         var root = Model();
