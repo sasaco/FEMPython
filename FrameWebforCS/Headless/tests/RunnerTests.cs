@@ -74,8 +74,34 @@ public sealed class RunnerTests
             (defaults.PdfPaper, defaults.PdfOrientation, defaults.LoadDiagramLayout, defaults.LoadDiagramAxis));
     }
 
+    [Fact]
+    public void LoadDiagramSingleCasesAreParsed()
+    {
+        var options = RunOptions.Parse(["run", "--input", "C:\\input.json", "--output-dir", "C:\\output",
+            "--pdf-sections", "load_diagram", "--load-diagram-layout", "split_horizontal",
+            "--load-diagram-single-cases", "1,2"]);
+        Assert.Equal(new[] { "1", "2" }, options.LoadDiagramSingleCases);
+        Assert.Null(RunOptions.Parse(["run", "--input", "C:\\input.json", "--output-dir", "C:\\output",
+            "--pdf-sections", "load_diagram", "--load-diagram-layout", "split_horizontal"]).LoadDiagramSingleCases);
+    }
+
+    [Theory]
+    [InlineData("split_horizontal", "1,1")]
+    [InlineData("split_horizontal", "1,")]
+    [InlineData("split_horizontal", "")]
+    [InlineData("single", "1")]
+    public void InvalidLoadDiagramSingleCasesAreRejected(string layout, string cases)
+    {
+        var error = Assert.Throws<RunnerException>(() => RunOptions.Parse(["run", "--input", "C:\\input.json",
+            "--output-dir", "C:\\output", "--pdf-sections", "load_diagram", "--load-diagram-layout", layout,
+            "--load-diagram-single-cases", cases]));
+        Assert.Equal("INVALID_ARGUMENT", error.Code);
+        Assert.Contains("--load-diagram-single-cases", error.Message);
+    }
+
     [Theory]
     [InlineData("--pdf-sections", "input", "--load-diagram-layout", "single")]
+    [InlineData("--pdf-sections", "input", "--load-diagram-single-cases", "1")]
     [InlineData("--generate-pdf", "false", "--load-diagram-axis", "false")]
     [InlineData("--generate-pdf", "false", "--pdf-paper", "A4")]
     [InlineData("--pdf-sections", "load_diagram", "--load-diagram-layout", "split_horizontal3")]
@@ -283,6 +309,41 @@ public sealed class RunnerTests
         Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(pdf)), root.GetProperty("artifacts")[0].GetProperty("sha256").GetString());
         // One case without the axis page is one page: no blank page before the diagram.
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(Encoding.Latin1.GetString(pdf), @"/Type\s*/Page(?![s\w])"));
+    }
+
+    [Theory]
+    // Three cases two a page: case 1 alone, then 2 and 3 together (2 pages); without single cases 1・2 and 3 (2 pages);
+    // cases 1 and 3 alone put 2 on its own page as well (3 pages).
+    [InlineData(null, 2)]
+    [InlineData("1", 2)]
+    [InlineData("1,3", 3)]
+    public async Task LoadDiagramSingleCasesTakeAPageEach(string? cases, int pages)
+    {
+        using var job = new Job(SavedModel.Replace("\"load\":{\"1\":{\"symbol\":\"DL\",", "\"load\":{" +
+            "\"2\":{\"symbol\":\"L2\",\"fix_node\":1,\"load_node\":[{\"row\":1,\"n\":\"2\",\"ty\":1}]}," +
+            "\"3\":{\"symbol\":\"L3\",\"fix_node\":1,\"load_node\":[{\"row\":1,\"n\":\"2\",\"ty\":2}]}," +
+            "\"1\":{\"symbol\":\"DL\",", StringComparison.Ordinal));
+        string[] arguments = ["--generate-pik", "false", "--pdf-sections", "load_diagram",
+            "--load-diagram-layout", "split_horizontal", "--load-diagram-axis", "false"];
+        var response = await Run(job, cases is null ? arguments : [.. arguments, "--load-diagram-single-cases", cases]);
+        Assert.Equal(0, response.ExitCode);
+        using var envelope = JsonDocument.Parse(response.Stdout);
+        Assert.True(envelope.RootElement.GetProperty("ok").GetBoolean(), response.Stderr);
+        Assert.Equal(3, envelope.RootElement.GetProperty("summary").GetProperty("cases").GetInt32());
+        byte[] pdf = File.ReadAllBytes(Path.Combine(job.Output, "report.pdf"));
+        Assert.Equal(pages, System.Text.RegularExpressions.Regex.Matches(Encoding.Latin1.GetString(pdf), @"/Type\s*/Page(?![s\w])").Count);
+    }
+
+    [Fact]
+    public async Task LoadDiagramSingleCasesMustBeLoadCases()
+    {
+        using var job = new Job(SavedModel);
+        var response = await Run(job, "--generate-pik", "false", "--pdf-sections", "load_diagram",
+            "--load-diagram-layout", "split_horizontal", "--load-diagram-single-cases", "1,9");
+        Assert.NotEqual(0, response.ExitCode);
+        using var document = JsonDocument.Parse(response.Stdout);
+        Assert.Equal("LOAD_DIAGRAM_UNKNOWN_CASE", document.RootElement.GetProperty("errors")[0].GetProperty("code").GetString());
+        Assert.False(Directory.Exists(job.Output));
     }
 
     [Theory]

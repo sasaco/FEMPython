@@ -60,6 +60,7 @@ internal sealed class PrintDialogForm : Form
     private readonly CheckedListBox _sectionComponents = new() { Name = "sectionForceComponents", Dock = DockStyle.Fill, CheckOnClick = true };
     private readonly CheckedListBox _diagramComponents = new() { Name = "resultDiagramComponents", Dock = DockStyle.Fill, CheckOnClick = true };
     private readonly CheckedListBox _loadDiagramComponents = new() { Name = "loadDiagramComponents", Dock = DockStyle.Fill, CheckOnClick = true };
+    private readonly CheckedListBox _loadDiagramSingleCases = new() { Name = "loadDiagramSingleCases", Dock = DockStyle.Fill, CheckOnClick = true, Enabled = false };
     private readonly TextBox _nodes = new() { Dock = DockStyle.Fill, PlaceholderText = "空欄: 全ノード。例: 1, 2" };
     private readonly TextBox _members = new() { Dock = DockStyle.Fill, PlaceholderText = "空欄: 全部材。例: 1, 2" };
     private readonly TextBox _title = new() { Dock = DockStyle.Fill };
@@ -109,6 +110,7 @@ internal sealed class PrintDialogForm : Form
             if (!_updatingDiagramDefaults) _layoutEdited = true;
         };
         _layout.SelectionChangeCommitted += (_, _) => _layoutEdited = true;
+        _layout.SelectedIndexChanged += (_, _) => UpdateLoadDiagramSingleCases(null);
         _scaleX.TextChanged += (_, _) =>
         {
             if (!_updatingDiagramDefaults) _scaleXEdited = true;
@@ -121,6 +123,7 @@ internal sealed class PrintDialogForm : Form
         {
             if (_unavailableOptions.Contains(args.Index)) args.NewValue = args.CurrentValue;
             UpdateDiagramDefaults(args);
+            UpdateLoadDiagramSingleCases(args);
         };
         Shown += async (_, _) => await InitializePreviewAsync();
         FormClosing += (_, _) => { _closing = true; _generation?.Cancel(); };
@@ -149,6 +152,20 @@ internal sealed class PrintDialogForm : Form
             if (!_scaleYEdited) _scaleY.Text = sectionDiagram ? "" : "1";
         }
         finally { _updatingDiagramDefaults = false; }
+    }
+
+    /// <summary>
+    /// The single-case list applies only to a split load diagram (FrameG's two-tier pages); otherwise it is
+    /// disabled and not sent. <paramref name="change"/> is the pending option check, if any.
+    /// </summary>
+    private void UpdateLoadDiagramSingleCases(ItemCheckEventArgs? change)
+    {
+        bool loadDiagram = Enumerable.Range(0, _options.Items.Count).Any(index =>
+            (change is not null && index == change.Index ? change.NewValue == CheckState.Checked : _options.GetItemChecked(index)) &&
+            ((ChoiceItem<PrintOption>)_options.Items[index]).Value == PrintOption.LoadDiagram);
+        _loadDiagramSingleCases.Enabled = InputDataService.Instance.dimension == 2 && loadDiagram &&
+            _layout.SelectedItem is PrintLayout layout &&
+            layout != PrintLayout.Single && _loadDiagramSingleCases.Items.Count > 0;
     }
 
     private void BuildControls()
@@ -188,6 +205,8 @@ internal sealed class PrintDialogForm : Form
         AddSection(settings, "断面力成分・最大/最小 (未選択時は全成分)", _sectionComponents, 105);
         AddSection(settings, "結果図の成分 (未選択時は全成分)", _diagramComponents, 90);
         AddSection(settings, "荷重図の成分 (未選択時は全成分)", _loadDiagramComponents, 55);
+        if (InputDataService.Instance.dimension == 2)
+            AddSection(settings, "荷重図で 1 頁に 1 ケース (分割配置のとき)", _loadDiagramSingleCases, 90);
         AddSection(settings, "ノード ID (カンマ区切り)", _nodes, 28);
         AddSection(settings, "部材 ID (カンマ区切り)", _members, 28);
         AddSection(settings, "タイトル", _title, 28);
@@ -252,12 +271,18 @@ internal sealed class PrintDialogForm : Form
             if (option == PrintOption.Input) _options.SetItemChecked(index, true);
             if (unavailable) _unavailableOptions.Add(index);
         }
-        if (JsonSerializer.SerializeToNode(InputDataService.Instance.GetSaveJson()) is JsonObject saved &&
-            saved["bridge_loads"]?["cases"] is JsonObject bridgeCases)
+        var saved = JsonSerializer.SerializeToNode(InputDataService.Instance.GetSaveJson()) as JsonObject;
+        if (saved?["bridge_loads"]?["cases"] is JsonObject bridgeCases)
             foreach (var entry in bridgeCases.Where(entry => entry.Value is JsonArray { Count: > 0 }))
             {
                 string name = saved["load"]?[entry.Key]?["name"]?.ToString() ?? "";
                 _inputCases.Items.Add(new ChoiceItem<string>(entry.Key, $"{entry.Key} {name}".Trim()));
+            }
+        if (saved?["load"] is JsonObject loads)
+            foreach (var entry in loads)
+            {
+                string name = entry.Value?["name"]?.ToString() ?? "";
+                _loadDiagramSingleCases.Items.Add(new ChoiceItem<string>(entry.Key, $"{entry.Key} {name}".Trim()));
             }
         _bridgeViews.Items.Add(new ChoiceItem<string>("plan", "平面図"), true);
         _bridgeViews.Items.Add(new ChoiceItem<string>("iso", "鳥瞰図"));
@@ -298,6 +323,7 @@ internal sealed class PrintDialogForm : Form
             DiagramComponents: CheckedComponents(_diagramComponents),
             LoadDiagramComponents: CheckedComponents(_loadDiagramComponents),
             InputCaseIds: CheckedValues(_inputCases),
+            LoadDiagramSingleCaseIds: _loadDiagramSingleCases.Enabled ? CheckedValues(_loadDiagramSingleCases) : null,
             BridgeDiagramViews: CheckedValues(_bridgeViews),
             BridgeShowMesh: _bridgeMesh.Checked, BridgeShowLabels: _bridgeLabels.Checked,
             Layout: (PrintLayout)_layout.SelectedItem!,

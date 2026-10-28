@@ -12,7 +12,8 @@ internal sealed record RunOptions(string Input, string OutputDirectory, bool Gen
     bool GeneratePickupDisplacementCsv = false, bool GeneratePickupReactionCsv = false,
     string PdfPaper = "A4", string PdfOrientation = "vertical",
     string LoadDiagramLayout = "single", bool LoadDiagramAxis = true,
-    string SectionDiagramLayout = "single", IReadOnlyList<string>? SectionDiagramComponents = null)
+    string SectionDiagramLayout = "single", IReadOnlyList<string>? SectionDiagramComponents = null,
+    IReadOnlyList<string>? LoadDiagramSingleCases = null)
 {
     internal static readonly string[] DefaultSections =
         ["input", "section_force", "pickup_section_force", "displacement", "pickup_displacement"];
@@ -21,7 +22,8 @@ internal sealed record RunOptions(string Input, string OutputDirectory, bool Gen
     internal const string PickupSectionDiagramSection = "pickup_section_diagram";
     internal static readonly string[] SectionDiagramSections = [SectionDiagramSection, PickupSectionDiagramSection];
     internal static readonly string[] SupportedSections = [.. DefaultSections, LoadDiagramSection, .. SectionDiagramSections];
-    private static readonly string[] LoadDiagramOptions = ["--load-diagram-layout", "--load-diagram-axis"];
+    private static readonly string[] LoadDiagramOptions = ["--load-diagram-layout", "--load-diagram-axis",
+        "--load-diagram-single-cases"];
     private static readonly string[] SectionDiagramOptions = ["--section-diagram-layout", "--section-diagram-components"];
     /// <summary>The components a section diagram may draw; a PICKUP diagram has no displacement.</summary>
     internal static readonly string[] SectionDiagramComponentNames = ["mz", "fy", "fx", "disg"];
@@ -87,6 +89,19 @@ internal sealed record RunOptions(string Input, string OutputDirectory, bool Gen
             loadLayout != sectionLayout)
             throw new RunnerException("INVALID_ARGUMENT",
                 "The load diagram and section diagram layouts must be the same in one PDF.");
+        string[]? singleCases = null;
+        if (values.TryGetValue("--load-diagram-single-cases", out string? singleText))
+        {
+            // Load cases printed alone on a page of a split load diagram (FrameG's two-tier pages).
+            singleCases = singleText.Split(',');
+            if (singleCases.Any(string.IsNullOrWhiteSpace) ||
+                singleCases.Distinct(StringComparer.Ordinal).Count() != singleCases.Length)
+                throw new RunnerException("INVALID_ARGUMENT",
+                    "--load-diagram-single-cases must be distinct load case keys separated by commas.");
+            if (loadLayout == "single")
+                throw new RunnerException("INVALID_ARGUMENT",
+                    "--load-diagram-single-cases requires --load-diagram-layout split_horizontal or split_vertical.");
+        }
         string[]? components = null;
         if (values.TryGetValue("--section-diagram-components", out string? componentText))
         {
@@ -104,6 +119,6 @@ internal sealed record RunOptions(string Input, string OutputDirectory, bool Gen
             Flag("--generate-pickup-displacement-csv", false), Flag("--generate-pickup-reaction-csv", false),
             Choice("--pdf-paper", "A4", "A4", "A3"),
             Choice("--pdf-orientation", "vertical", "vertical", "horizontal"),
-            loadLayout, Flag("--load-diagram-axis"), sectionLayout, components);
+            loadLayout, Flag("--load-diagram-axis"), sectionLayout, components, singleCases);
     }
 }

@@ -50,6 +50,11 @@ The `load_diagram` section draws the saved load cases of a 2D model (every case 
 `load`, in order). `--load-diagram-layout` (`single`, `split_horizontal` for two cases
 per page one above the other, or `split_vertical`; default `single`) and
 `--load-diagram-axis` (`true` draws the axis page first; default `true`) require it.
+`--load-diagram-single-cases` lists, as distinct comma-separated keys of `load` (for example `1,2`),
+the cases a split layout prints alone on a page; the others share pages two by two in order
+(FrameG's two-tier load diagram, whose format `1.2` prints cases 1 and 2 alone). It requires
+`--load-diagram-layout split_horizontal` or `split_vertical`; a key that is not a load case fails with
+`LOAD_DIAGRAM_UNKNOWN_CASE`. Without it every case shares a page.
 When the load diagram is the only output (`--pdf-sections load_diagram`,
 `--generate-pik false`, no node CSV), the runner neither starts Python nor calculates:
 it validates the document, draws `report.pdf`, publishes no `result.json`, and reports
@@ -60,7 +65,7 @@ document without load cases with `LOAD_DIAGRAM_REQUIRES_LOADS`.
 & FrameWebforCS/Headless/bin/Release/net10.0-windows/FrameWebforCS.Headless.exe run `
   --input 'C:\jobs\input.json' --output-dir 'C:\jobs\output' `
   --generate-pik false --pdf-sections load_diagram --pdf-paper A4 --pdf-orientation vertical `
-  --load-diagram-layout split_horizontal --load-diagram-axis false
+  --load-diagram-layout split_horizontal --load-diagram-axis false --load-diagram-single-cases 1,2
 ```
 
 The `section_diagram` section draws the section-force diagrams of every calculated

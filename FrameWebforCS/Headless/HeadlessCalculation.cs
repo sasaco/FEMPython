@@ -31,6 +31,10 @@ internal static class HeadlessCalculation
             if (!saved.RootElement.TryGetProperty("load", out JsonElement loads) ||
                 loads.ValueKind != JsonValueKind.Object || !loads.EnumerateObject().Any())
                 throw new RunnerException("LOAD_DIAGRAM_REQUIRES_LOADS", "The load diagram requires at least one load case.");
+            string? unknown = options.LoadDiagramSingleCases?.FirstOrDefault(id => !loads.TryGetProperty(id, out _));
+            if (unknown is not null)
+                throw new RunnerException("LOAD_DIAGRAM_UNKNOWN_CASE",
+                    $"--load-diagram-single-cases names a load case that is not in the document: {unknown}");
         }
         if (options.HasSectionDiagram && dimension != 2)
             throw new RunnerException("SECTION_DIAGRAM_REQUIRES_2D", "The section diagram is drawn for a 2D model only.");
@@ -184,7 +188,8 @@ internal static class HeadlessCalculation
             Orientation: options.PdfOrientation == "horizontal" ? PrintOrientation.Horizontal : PrintOrientation.Vertical,
             Paper: options.PdfPaper == "A3" ? PrintPaper.A3 : PrintPaper.A4,
             DiagramComponents: options.SectionDiagramComponents,
-            LoadDiagramComponents: options.LoadDiagramAxis ? ["axis", "load"] : ["load"]);
+            LoadDiagramComponents: options.LoadDiagramAxis ? ["axis", "load"] : ["load"],
+            LoadDiagramSingleCaseIds: options.LoadDiagramSingleCases);
         var printSnapshot = new PrintSnapshot(selection, savedJson, 0, 0, presentation, derived, []);
         byte[] pdf = await Task.Run(() => DirectPdfGenerator.Generate(
             PrintProjection.Build(printSnapshot), cancellationToken), cancellationToken).WaitAsync(cancellationToken);
