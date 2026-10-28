@@ -467,13 +467,14 @@ public sealed class CanonicalSectionDiagramTests
 
     private static JObject Config(params string[] outputs) => new()
     {
-        ["canonicalStations"] = true, ["yUp"] = true, ["referenceLayout"] = true,
+        // These tests cover the earlier canonical layout; FrameG's layout (referenceLayout) has FrameGSectionDiagramTests.
+        ["canonicalStations"] = true, ["yUp"] = true, ["referenceLayout"] = false,
         ["layout"] = "splitHorizontal", ["output"] = new JArray(outputs),
         ["displacementLabelScale"] = 1000,
         ["caseLabels"] = new JObject { ["Case/A/Static/0"] = "Case A: Service load" },
     };
 
-    private static JObject Job()
+    internal static JObject Job()
     {
         JArray forces = Rows("beam/A", 5, 10, 5);
         foreach (JObject row in Rows("pile/B", 2, 4, 2)) { row["l"] = (double)row["l"]! * 10; forces.Add(row); }
@@ -503,11 +504,11 @@ public sealed class CanonicalSectionDiagramTests
         ["fx"] = value * 2, ["fy"] = value * 3, ["mx"] = 0, ["my"] = 0, ["fz"] = 0, ["dummy"] = false,
     }));
 
-    private sealed record Run(string Text, double X, double Y, int Page, bool Blue, double Angle);
-    private sealed record Stroke(List<(double X, double Y)> Points, int Page, bool Blue);
-    private sealed record PdfResult(int Pages, List<Run> Runs, List<Stroke> Strokes, string Content)
+    internal sealed record Run(string Text, double X, double Y, int Page, bool Blue, double Angle);
+    internal sealed record Stroke(List<(double X, double Y)> Points, int Page, bool Blue);
+    internal sealed record PdfResult(int Pages, List<Run> Runs, List<Stroke> Strokes, string Content)
     { public string Text => string.Join("\n", Runs.Select(r => r.Text)); }
-    private sealed record PdfMatrix(double A, double B, double C, double D, double E, double F)
+    internal sealed record PdfMatrix(double A, double B, double C, double D, double E, double F)
     {
         internal static PdfMatrix Identity => new(1, 0, 0, 1, 0, 0);
         internal (double X, double Y) Point(double x, double y) => (A * x + C * y + E, B * x + D * y + F);
@@ -516,7 +517,7 @@ public sealed class CanonicalSectionDiagramTests
             A * right.E + C * right.F + E, B * right.E + D * right.F + F);
     }
 
-    private static PdfResult Render(JObject root)
+    internal static PdfResult Render(JObject root)
     {
         byte[] bytes = [];
         Assert.Null(Record.Exception(() => bytes = DirectPdfGenerator.Generate(root.ToString())));

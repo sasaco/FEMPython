@@ -199,6 +199,10 @@ namespace PDF_Manager.Printing
             this.Margine.Bottom = 25;
         }
 
+        /// <summary>The pages print their own header (FrameG's 断面力図 pages); NewPage adds no "TITLE :" or page number.</summary>
+        internal bool OwnPageHeader;
+        internal string Title => title;
+
         internal const double FrameGLeft = 71.6;
         internal const double FrameGBottom = 60.0;
 
@@ -224,6 +228,12 @@ namespace PDF_Manager.Printing
             this.currentPos.Y += printManager.titlePos.Y;
             this.currentPos.X += printManager.titlePos.X;
 
+            if (OwnPageHeader)
+            {
+                this.initialPos = this.currentPos;
+                indexPage++;
+                return;
+            }
             if (referenceResultLayout && this.pageOrientation == PageOrientation.Portrait)
             {
                 this.currentPos = new XPoint(71.6, 70.7);

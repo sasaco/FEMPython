@@ -33,9 +33,10 @@ public sealed class SectionDiagramProjectionTests
 
         foreach (var (key, caseId, label) in new[]
         {
+            // FrameG's captions (原宿ボックス 0404): "Case 1 固定死荷重:D1", "COMBINE 1 名称".
             ("PrintDiagram", "1/Static/0", "Case 1 Dead load"),
-            ("CombPrintDiagram", "1", "Combine 1 Combination One"),
-            ("PickPrintDiagram", "1", "Pickup Table 1 Envelope One"),
+            ("CombPrintDiagram", "1", "COMBINE 1 Combination One"),
+            ("PickPrintDiagram", "1", "PICKUP 1 Envelope One"),
         })
         {
             JsonNode details = mixed[key]!["diagramResult"]!;
@@ -425,11 +426,11 @@ public sealed class SectionDiagramProjectionTests
         Assert.Equal("1.1", raw["dy_max"]!["2"]!["case"]!.GetValue<string>());
     }
 
-    private static JsonObject Project(CalculationResultPresentation? presentation, JsonObject saved,
+    internal static JsonObject Project(CalculationResultPresentation? presentation, JsonObject saved,
         PrintSelection selection) => JsonNode.Parse(PrintProjection.Build(new PrintSnapshot(
             selection, saved.ToJsonString(), 1, 1, presentation, presentation?.Derived, [])))!.AsObject();
 
-    private static CalculationResultPresentation Presentation(JsonObject fixture, JsonObject saved, int dimension = 2)
+    internal static CalculationResultPresentation Presentation(JsonObject fixture, JsonObject saved, int dimension = 2)
     {
         AnalysisResultSet result = AnalysisResultSetJson.Deserialize(fixture.ToJsonString());
         using JsonDocument doc = JsonDocument.Parse(saved.ToJsonString());
@@ -439,7 +440,7 @@ public sealed class SectionDiagramProjectionTests
         return new(result, derived, dimension);
     }
 
-    private static JsonObject Saved() => JsonNode.Parse("""
+    internal static JsonObject Saved() => JsonNode.Parse("""
         {"dimension":2,"node":{"1":{"x":0,"y":0,"z":0},"2":{"x":1,"y":0,"z":0}},
          "member":{"M1":{"ni":"1","nj":"2","name":"Beam"}},"shell":{},"element":{},
          "load":{"1":{"name":"Dead load"}},"notice_points":[],"rigid":[],
@@ -448,7 +449,7 @@ public sealed class SectionDiagramProjectionTests
          "pickup":{"1":{"row":1,"name":"Envelope One","C1":1}}}
         """)!.AsObject();
 
-    private static JsonObject Fixture()
+    internal static JsonObject Fixture()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);
         while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "FrameWeb")))

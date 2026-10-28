@@ -11,7 +11,7 @@ namespace PDF_Manager.Printing
     /// Private desktop diagram boundary. Stations are distances along original members;
     /// identifiers and force vectors remain the same objects used by the report tables.
     /// </summary>
-    internal sealed class CanonicalSectionDiagram
+    internal sealed partial class CanonicalSectionDiagram
     {
         private readonly JObject settings;
         private readonly string[] outputs;
@@ -46,10 +46,17 @@ namespace PDF_Manager.Printing
                     if (!notices.TryGetValue(member, out var positions)) notices.Add(member, positions = new List<double>());
                     if (row["Points"] is JArray points) positions.AddRange(points.Values<double>());
                 }
+            frameGLayout = settings["referenceLayout"]?.Value<bool>() ?? false;
+            if (frameGLayout) ReadFrameGSettings(root);
         }
 
         internal void Print(PdfDocument document, PrintData data, ref int pageIndex)
         {
+            if (frameGLayout)
+            {
+                PrintFrameG(document, data, ref pageIndex);
+                return;
+            }
             var nodes = ((InputNode)data.printDatas[InputNode.KEY]).Nodes;
             var members = ((InputMember)data.printDatas[InputMember.KEY]).members;
             if (nodes.Count == 0 || members.Count == 0)
@@ -98,11 +105,11 @@ namespace PDF_Manager.Printing
                 displacements.disgs.TryGetValue(pair.Key, out var displacement);
                 yield return new DiagramCase(pair.Key, pair.Value as List<Fsec>,
                     pair.Value is Dictionary<string, object> envelope ? ResultFsecCombine.getFsecCombine(envelope) : null,
-                    DisplacementPaths(displacement));
+                    DisplacementPaths(displacement), ResultFsec.KEY);
             }
             foreach (string family in new[] { ResultFsecCombine.KEY, ResultFsecPickup.KEY })
                 foreach (var pair in ((ResultFsecCombine)data.printDatas[family]).Fsecs)
-                    yield return new DiagramCase(pair.Key, null, pair.Value, null);
+                    yield return new DiagramCase(pair.Key, null, pair.Value, null, family);
         }
 
         private static List<List<Disg>> DisplacementPaths(object value)
@@ -373,8 +380,10 @@ namespace PDF_Manager.Printing
             internal readonly List<Fsec> Rows;
             internal readonly FsecCombine Envelope;
             internal readonly List<List<Disg>> Displacements;
-            internal DiagramCase(string id, List<Fsec> rows, FsecCombine envelope, List<List<Disg>> displacements)
-            { Id = id; Rows = rows; Envelope = envelope; Displacements = displacements; }
+            internal readonly string Family;
+            internal DiagramCase(string id, List<Fsec> rows, FsecCombine envelope, List<List<Disg>> displacements,
+                string family)
+            { Id = id; Rows = rows; Envelope = envelope; Displacements = displacements; Family = family; }
         }
 
         private sealed class MemberGeometry
@@ -409,6 +418,18 @@ namespace PDF_Manager.Printing
                 scaleY = ymax == ymin ? scaleX : height / (ymax - ymin);
                 if (settings["scaleX"] != null) scaleX = settings["scaleX"].Value<double>() * unitScale * 72 / 25.4;
                 if (settings["scaleY"] != null) scaleY = settings["scaleY"].Value<double>() * unitScale * 72 / 25.4;
+                if (!Finite(scaleX) || !Finite(scaleY) || scaleX <= 0 || scaleY <= 0)
+                    throw new InvalidOperationException("Invalid canonical diagram scale.");
+                ySign = yUp ? -1 : 1;
+            }
+            // FrameG layout: the frame's centre at a given page point with given scales (pt per model unit).
+            internal PlotTransform(IEnumerable<Vector3> source, XPoint center, double scaleX, double scaleY, bool yUp)
+            {
+                Vector3[] nodes = source.ToArray();
+                centerX = (nodes.Min(node => node.x) + nodes.Max(node => node.x)) / 2;
+                centerY = (nodes.Min(node => node.y) + nodes.Max(node => node.y)) / 2;
+                originX = center.X; originY = center.Y;
+                this.scaleX = scaleX; this.scaleY = scaleY;
                 if (!Finite(scaleX) || !Finite(scaleY) || scaleX <= 0 || scaleY <= 0)
                     throw new InvalidOperationException("Invalid canonical diagram scale.");
                 ySign = yUp ? -1 : 1;

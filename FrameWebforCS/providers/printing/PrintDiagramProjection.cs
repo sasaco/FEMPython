@@ -16,6 +16,7 @@ internal static class PrintDiagramProjection
         details["yUp"] = false;
         details["referenceLayout"] = true;
         details["caseLabels"] = CaseLabels(root, presentation, option);
+        AddFrameGGeometry(root, details);
         // Physical drawing scales need this conversion even for force-only diagrams.
         details["displacementLabelScale"] = PrintProjection.DisplacementLengthScale(
             presentation.ResultSet.Units.Length);
@@ -63,24 +64,72 @@ internal static class PrintDiagramProjection
         {
             string name = names.GetValueOrDefault(key) ?? "";
             string id = key;
+            // FrameG's captions (原宿ボックス 0404): "Case 1 固定死荷重:D1", "COMBINE 1 名称".
             string prefix = option switch
             {
-                PrintOption.CombinedSectionDiagram => "Combine",
-                PrintOption.PickupSectionDiagram => "Pickup Table",
+                PrintOption.CombinedSectionDiagram => "COMBINE",
+                PrintOption.PickupSectionDiagram => "PICKUP",
                 _ => "Case",
             };
+            string symbol = "";
             if (option == PrintOption.SectionDiagram)
             {
                 CalculationResultPage page = pages[key];
                 id = page.Case.CaseId;
+                // An unnamed case shows its symbol in place of the name; a named one adds ":symbol".
                 if (!string.IsNullOrWhiteSpace(page.Case.Symbol) &&
                     (name == id || page.Case.Name == id && name == page.Label))
                     name = page.Case.Symbol + name[id.Length..];
+                // The symbol as entered: a case without one shows none (the solver's placeholder is not shown).
+                else if (root["load"]?[id]?["symbol"] is JsonValue entered &&
+                    entered.TryGetValue(out string? text) && !string.IsNullOrWhiteSpace(text))
+                    symbol = ":" + text;
             }
             labels[key] = $"{prefix} {id}" +
-                (string.IsNullOrWhiteSpace(name) || name == id ? "" : " " + name);
+                (string.IsNullOrWhiteSpace(name) || name == id ? "" : " " + name) + symbol;
         }
         return labels;
+    }
+
+    // FrameG draws rigid members and rigid zones thick. A rigid member uses the rigid zones' material
+    // (the FrameG converter gives the zones the same E, Xp, A and I as the frd's 剛域 members).
+    private static void AddFrameGGeometry(JsonObject root, JsonObject details)
+    {
+        var zones = new JsonObject();
+        var materials = new HashSet<string>(StringComparer.Ordinal);
+        foreach (JsonObject row in (root["rigid"] as JsonArray)?.OfType<JsonObject>() ?? [])
+        {
+            string? member = Text(row["m"]);
+            if (member is null) continue;
+            zones[member] = new JsonArray(Number(row["Ilength"]), Number(row["Jlength"]));
+            if (Text(row["e"]) is { } material) materials.Add(material);
+        }
+        details["rigidZones"] = zones;
+
+        // The first TYPE sheet of the materials, keyed by material number.
+        var sheet = (root["element"] as JsonObject)?.Select(pair => pair.Value).OfType<JsonObject>().FirstOrDefault();
+        string Properties(string? material) => material is not null && sheet?[material] is JsonObject element
+            ? string.Join(",", new[] { "E", "Xp", "A", "Iz" }.Select(key =>
+                Number(element[key]).ToString("R", System.Globalization.CultureInfo.InvariantCulture)))
+            : "";
+        var rigid = materials.Select(Properties).Where(value => value.Length > 0).ToHashSet(StringComparer.Ordinal);
+        var members = new JsonArray();
+        foreach (var (id, value) in (root["member"] as JsonObject) ?? [])
+            if (value is JsonObject member && rigid.Contains(Properties(Text(member["e"]))))
+                members.Add(id);
+        details["rigidMembers"] = members;
+
+        // FrameG prints every bend of a displacement curve on members with ground springs (any TYPE).
+        var springs = new SortedSet<string>(StringComparer.Ordinal);
+        foreach (JsonArray rows in (root["fix_member"] as JsonObject)?.Select(pair => pair.Value).OfType<JsonArray>() ?? [])
+            foreach (JsonObject row in rows.OfType<JsonObject>())
+                if (Text(row["m"]) is { } member && (Number(row["tx"]) != 0 || Number(row["ty"]) != 0))
+                    springs.Add(member);
+        details["springMembers"] = new JsonArray(springs.Select(id => (JsonNode?)JsonValue.Create(id)).ToArray());
+
+        static string? Text(JsonNode? node) => node is JsonValue value
+            ? value.TryGetValue(out string? text) ? text : value.ToJsonString() : null;
+        static double Number(JsonNode? node) => node is JsonValue value && value.TryGetValue(out double number) ? number : 0;
     }
 
     private static JsonObject DisplacementStations(CalculationResultPresentation presentation,
