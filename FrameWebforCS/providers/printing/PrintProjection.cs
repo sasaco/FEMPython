@@ -45,7 +45,8 @@ internal sealed record PrintSelection(
     IReadOnlyList<string>? InputCaseIds = null,
     IReadOnlyList<string>? BridgeDiagramViews = null,
     bool BridgeShowMesh = true,
-    bool BridgeShowLabels = true);
+    bool BridgeShowLabels = true,
+    IReadOnlyList<string>? LoadDiagramSingleCaseIds = null);
 
 internal sealed record PrintSectionForcePoint(int MemberId, float Location, float Value,
     bool IsMaximum);
@@ -179,6 +180,7 @@ internal static class PrintProjection
             LoadDiagramComponents = selection.LoadDiagramComponents?.ToArray(),
             InputCaseIds = selection.InputCaseIds?.ToArray(),
             BridgeDiagramViews = selection.BridgeDiagramViews?.ToArray(),
+            LoadDiagramSingleCaseIds = selection.LoadDiagramSingleCaseIds?.ToArray(),
         };
         IReadOnlyList<PrintDiagramRequest> diagrams = MakeDiagramRequests(frozenSelection,
             current, JsonNode.Parse(detached)!.AsObject());
@@ -261,7 +263,8 @@ internal static class PrintProjection
             selection.NodeIds, selection.MemberIds, selection.Components,
             selection.DisplacementComponents, selection.ReactionComponents,
             selection.SectionForceComponents, selection.DiagramComponents,
-            selection.LoadDiagramComponents, selection.InputCaseIds, selection.BridgeDiagramViews })
+            selection.LoadDiagramComponents, selection.InputCaseIds, selection.BridgeDiagramViews,
+            selection.LoadDiagramSingleCaseIds })
             if (ids is { Count: > 10_000 } || ids?.Any(id => string.IsNullOrWhiteSpace(id)) == true)
                 throw new PrintProjectionException("A print filter is invalid or too large.");
         if (selection.Components is not null && selection.Components.Any(component =>
@@ -721,6 +724,13 @@ internal static class PrintProjection
             var details = new JsonObject { ["layout"] = layout,
                 ["output"] = new JsonArray(selected.Select(value =>
                     (JsonNode?)JsonValue.Create(value)).ToArray()) };
+            if (option == PrintOption.LoadDiagram && choice.LoadDiagramSingleCaseIds is { Count: > 0 } single)
+            {
+                // Cases printed alone on a page within a split layout (FrameG 書式 "n.k"); indices follow the load order.
+                var loadIds = (root["load"] as JsonObject)?.Select(item => item.Key).ToList() ?? new List<string>();
+                details["single_layout_cases"] = new JsonArray(single.Select(id => loadIds.IndexOf(id))
+                    .Where(index => index >= 0).Distinct().Select(index => (JsonNode?)JsonValue.Create(index)).ToArray());
+            }
             if (choice.ScaleX is { } sx) details["scaleX"] = 1 / sx;
             if (choice.ScaleY is { } sy) details["scaleY"] = 1 / sy;
             var diagram = new JsonObject { [config] = details,

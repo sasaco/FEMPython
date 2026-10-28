@@ -167,6 +167,11 @@ namespace PDF_Manager
                     printLoadData.Add("pageOrientation", pageOrientation);
 
                 printLoadData.Add(InputElement.KEY, data[InputElement.KEY]);
+                // FrameG の体裁の荷重図（DiagramInput）は剛域と体裁の切替えも読む
+                if (data.ContainsKey(InputRigid.KEY))
+                    printLoadData.Add(InputRigid.KEY, data[InputRigid.KEY]);
+                if (data.ContainsKey("referenceResultLayout"))
+                    printLoadData.Add("referenceResultLayout", data["referenceResultLayout"]);
                 if (data.ContainsKey(InputFixMember.KEY))
                     printLoadData.Add(InputFixMember.KEY, data[InputFixMember.KEY]);
                 if(data.ContainsKey(InputFixNode.KEY))

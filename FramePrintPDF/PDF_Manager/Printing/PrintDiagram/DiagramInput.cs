@@ -21,6 +21,9 @@ namespace PDF_Manager.Printing
         // 分割なしページに出力する荷重ケース番号
         private readonly List<int> single_layout_cases = new List<int>();
 
+        // 荷重の行（FrameG の体裁は M/S の区別 ms も読む）
+        private readonly JObject loadRows;
+
         public DiagramInput(Dictionary<string, object> value)
         {
             if (!value.ContainsKey(KEY))
@@ -28,6 +31,8 @@ namespace PDF_Manager.Printing
 
             //荷重図の設定データを取得する
             var target = JObject.FromObject(value[KEY]).ToObject<Dictionary<string, object>>();
+            if (value.TryGetValue(InputLoad.KEY, out object rows) && rows != null)
+                loadRows = JObject.FromObject(rows);
 
             // 骨組の描画クラスを生成する
             Frame = new DiagramFrame(target);
@@ -154,6 +159,14 @@ namespace PDF_Manager.Printing
         /// <param name="data">入力データ</param>
         private void printLoad(PdfDocument mc, PrintData data, ref int indexPage)
         {
+            if (data.dimension == 2 && data.referenceResultLayout)
+            {
+                // FrameG の体裁（原宿ボックス 0404）：上下 2 段書き、single_layout_cases は 1 頁に 1 ケース
+                new FrameGLoadDiagram(mc, data).Print(loadRows ?? new JObject(),
+                    (InputLoadName)data.printDatas[InputLoadName.KEY], Frame.mode != Layout.Default, single_layout_cases, ref indexPage);
+                return;
+            }
+
             Frame.SetLayout(mc);
 
             var loadData = (InputLoad)data.printDatas[InputLoad.KEY];
