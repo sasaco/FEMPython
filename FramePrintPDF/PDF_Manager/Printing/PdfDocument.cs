@@ -203,6 +203,9 @@ namespace PDF_Manager.Printing
 
         /// <summary>The pages print their own header (FrameG's 荷重図 and 断面力図 pages); NewPage adds no "TITLE :" or page number.</summary>
         private bool ownPageHeader;
+        // The last page of the latest own-header pages: diagrams draw without moving currentPos, so
+        // this page holds a drawing even when currentPos is still at initialPos.
+        private PdfPage lastOwnHeaderPage;
         internal string Title => title;
 
         /// <summary>
@@ -212,7 +215,7 @@ namespace PDF_Manager.Printing
         internal void BeginOwnHeaderPages(ref int indexPage)
         {
             ownPageHeader = true;
-            if (currentPos.Equals(initialPos))
+            if (currentPos.Equals(initialPos) && currentPage != lastOwnHeaderPage)
             {
                 gfx.Dispose();
                 gfx = null;
@@ -223,7 +226,11 @@ namespace PDF_Manager.Printing
         }
 
         /// <summary>Later pages carry the text pages' header again.</summary>
-        internal void EndOwnHeaderPages() => ownPageHeader = false;
+        internal void EndOwnHeaderPages()
+        {
+            ownPageHeader = false;
+            lastOwnHeaderPage = currentPage;
+        }
 
         internal const double FrameGLeft = 71.6;
         internal const double FrameGBottom = 60.0;

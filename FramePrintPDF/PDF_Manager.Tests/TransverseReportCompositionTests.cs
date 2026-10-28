@@ -741,6 +741,44 @@ public sealed class TransverseReportCompositionTests
     }
 
     [Fact]
+    public void LongBasicCaseHeadingWrapsWithinThePage()
+    {
+        var root = Root();
+        root["pageOrientation"] = "Vertical";
+        string name = string.Concat(Enumerable.Repeat("地表面上の変動作用による鉛直土圧と水平土圧の長い名称 ", 4)).TrimEnd();
+        root["fsec"] = new JObject { ["1"] = PortraitForceRows() };
+        root["fsecName"] = new JArray { new JArray("1", name) };
+        var pdf = Pdf(root, "long-basic-heading");
+        using var measurement = new PdfSharpCore.Pdf.PdfDocument();
+        using var graphics = PdfSharpCore.Drawing.XGraphics.FromPdfPage(measurement.AddPage());
+        var font = new PdfSharpCore.Drawing.XFont("MS Mincho", PdfDocument.ReferencePortraitFontSize);
+        // FrameG's case heading column (132.6 pt); the lines keep the whole name inside the page.
+        var lines = pdf.Runs.Where(run => run.Page == 1 && Math.Abs(run.X - 132.6) < 0.5).ToArray();
+        Assert.True(lines.Length > 1);
+        Assert.Equal("CASE  1 : " + name, string.Concat(lines.Select(run => run.Text)));
+        Assert.All(lines, run => Assert.True(run.X + graphics.MeasureString(run.Text, font).Width <= 595 - 25 + 0.01, run.Text));
+        Assert.Contains("123.45", pdf.Text);
+    }
+
+    [Fact]
+    public void OwnHeaderPagesKeepAPreviousDiagramPageThatDidNotMoveTheTextPosition()
+    {
+        var root = Root();
+        root["pageOrientation"] = "Vertical";
+        int page = 1;
+        using var document = new PdfDocument(new PrintData(root), ref page);
+        // A diagram draws without moving currentPos; the next diagram must not take its page for an empty one.
+        document.BeginOwnHeaderPages(ref page);
+        document.gfx.DrawLine(PdfSharpCore.Drawing.XPens.Black, 100, 100, 200, 200);
+        document.EndOwnHeaderPages();
+        document.BeginOwnHeaderPages(ref page);
+        document.EndOwnHeaderPages();
+        Assert.Equal(2, page - 1);
+        using var pdf = PdfReader.Open(new MemoryStream(document.GetPDFBytes()), PdfDocumentOpenMode.Import);
+        Assert.Equal(2, pdf.PageCount);
+    }
+
+    [Fact]
     public void LongMemberCaptionWrapsAndRepeatsEveryLineOnContinuationPages()
     {
         var root = Root();

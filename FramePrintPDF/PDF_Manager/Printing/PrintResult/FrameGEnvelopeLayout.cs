@@ -87,13 +87,18 @@ namespace PDF_Manager.Printing
                 document.currentPos = new XPoint(x, baseline);
                 Text.PrtText(document, text, font, right ? XStringFormats.BottomRight : null);
             }
+            // FrameG's heading is one line; a longer name wraps within the page and moves the table down.
+            var headingLines = ReferenceResultLayout.Wrap(document, font, heading,
+                document.currentPage.Width - document.Margine.Right - columns.Heading);
             void Header()
             {
                 if (!document.currentPos.Equals(document.initialPos)) document.NewPage(ref pageNo);
                 double top = document.initialPos.Y;
-                Put(heading, columns.Heading, top);
+                for (int line = 0; line < headingLines.Count; line++)
+                    Put(headingLines[line], columns.Heading, top + line * RowPitch);
                 document.gfx.DrawLine(new XPen(XColors.Black, 0.12), columns.Heading - UnderlineLead, top + UnderlineDrop,
                     columns.Heading + document.gfx.MeasureString(label, font).Width + UnderlineTail, top + UnderlineDrop);
+                top += (headingLines.Count - 1) * RowPitch;
                 Put(focus, columns.Focus, top + Gap);
                 y = top + 2 * Gap;
                 Put("DIST.", columns.DistHeading, y);

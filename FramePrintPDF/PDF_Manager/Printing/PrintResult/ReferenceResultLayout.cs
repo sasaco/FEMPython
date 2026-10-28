@@ -102,7 +102,11 @@ namespace PDF_Manager.Printing
             if (referenceBasic)
             {
                 widths = new double[] { 137, 69, 58, 58, 58 };
-                headers = new[] { headers[1], headers[0] };
+                // The case heading is one line in FrameG; a longer one wraps within the page (BasicCaseX on).
+                var caseHeading = headers[0];
+                headers = new[] { headers[1] }.Concat(Wrap(document, font, caseHeading[0] ?? "",
+                        document.currentPage.Width - document.Margine.Right - BasicCaseX)
+                    .Select(line => { var row = new string[caseHeading.Length]; row[0] = line; return row; })).ToArray();
                 wrapFirstHeader = false;
             }
             else
@@ -181,8 +185,9 @@ namespace PDF_Manager.Printing
                 if (pageRows.Count == 0) { document.NewPage(ref page); continue; }
                 var table = new Table(pageHeaders.Length + pageRows.Count, widths.Length) { LineSpacing3 = lineHeight };
                 for (int column = 0; column < widths.Length; column++) table.ColWidth[column] = widths[column];
-                if (referenceBasic && pageHeaders.Length == 2)
+                if (referenceBasic && pageHeaders.Length >= 2)
                 {
+                    // A wrapped case heading continues at the line pitch.
                     table.RowHeight[0] = 11.6;
                     table.RowHeight[1] = 11.6;
                 }
@@ -195,7 +200,7 @@ namespace PDF_Manager.Printing
                     // FrameG right-aligns the basic values on its own column edges; drawn below.
                     bool basicLabelOrValue = referenceBasic && dataRow;
                     bool basicCaption = referenceBasic && column == 0 &&
-                        (row == 1 || row >= pageHeaders.Length && pageRows[row - pageHeaders.Length].IsCaption);
+                        (row >= 1 && row < pageHeaders.Length || row >= pageHeaders.Length && pageRows[row - pageHeaders.Length].IsCaption);
                     table[row, column] = basicLabelOrValue || basicCaption ? "" : cells[row][column];
                     table.AlignX[row, column] = referenceBasic ? (dataRow && column == 0 ? "R" : "L")
                         : dataRow && (column == 0 || column == 5) ? "C"
@@ -228,9 +233,9 @@ namespace PDF_Manager.Printing
                         for (int row = 0; row < cells.Length; row++)
                         {
                             baselineY += table.RowHeight[row] > 0 ? table.RowHeight[row] : lineHeight;
-                            if (row == 1)
+                            if (row >= 1 && row < pageHeaders.Length)
                             {
-                                document.currentPos = new XPoint(132.6, baselineY);
+                                document.currentPos = new XPoint(BasicCaseX, baselineY);
                                 Text.PrtText(document, cells[row][0], font);
                             }
                             if (row < pageHeaders.Length) continue;
@@ -364,7 +369,9 @@ namespace PDF_Manager.Printing
                 ? text.Substring(1) : text;
         }
 
-        // Right edges of DIST, M, S and N from the table's left edge in FrameG's member forces.
+        // FrameG's member forces: the case heading's left edge, and the right edges of DIST, M, S and N
+        // from the table's left edge.
+        private const double BasicCaseX = 132.6;
         private static readonly double[] BasicValueRight = { 158.4, 222.8, 280.4, 337.9 };
 
         // The paired COMBINE displacements ("Combine変位量", not part of the FrameG comparison).

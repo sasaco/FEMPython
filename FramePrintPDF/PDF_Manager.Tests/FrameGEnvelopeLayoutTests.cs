@@ -102,6 +102,26 @@ public sealed class FrameGEnvelopeLayoutTests
         Assert.All(pdf.Runs, run => Assert.True(PageHeight - run.Y <= PageHeight - PdfDocument.FrameGBottom));
     }
 
+    [Fact]
+    public void ALongCombineNameWrapsWithinThePageAndMovesTheTableDown()
+    {
+        var root = Portrait();
+        string name = string.Concat(Enumerable.Repeat("安全性（破壊）：全部材の長い名称 ", 6)).TrimEnd();
+        root["fsecCombine"] = new JObject { ["1"] = Modes("1,2", "1.1*1 + 1.2*2") };
+        root["fsecCombineName"] = new JArray { new JArray("1", name) };
+        var pdf = TransverseReportCompositionTests.Pdf(root, "framegenvelope-long-name");
+
+        var runs = pdf.Runs.Where(run => run.Page == 1).ToArray();
+        var lines = runs.Where(run => PageHeight - run.Y < 100 && Math.Abs(run.X - 88.6) <= Tolerance).ToArray();
+        Assert.True(lines.Length > 1);
+        Assert.Equal("COMBINE 1  " + name, string.Concat(lines.Select(run => run.Text)));
+        Assert.All(lines, run => Assert.True(run.X + Width(run.Text) <= 595 - 25 + 0.01, run.Text));
+        // The focus line and the table keep their distances below the last heading line.
+        double last = lines.Max(run => PageHeight - run.Y);
+        AssertAt(runs, "MOMENT MAX.", 276.6, last + 13.46);
+        AssertAt(runs, "DIST.", 181.4, last + 2 * 13.46);
+    }
+
     private static Dictionary<string, object> Portrait()
     {
         var root = TransverseReportCompositionTests.Root();
