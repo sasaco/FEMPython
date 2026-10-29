@@ -147,11 +147,11 @@ y 上向きで書かれたデータ：K: の `線路直角方向.json`（杭が 
 
 - `referenceResultLayout` を撤去した。FramePrintPDF は次元だけで体裁を決め、2D は常に FrameG の体裁（用紙が横向き・A3 でも A4 縦の座標のまま）。3D は元のまま。
 - 荷重図の「1 頁に 1 ケース」は印刷の画面と Headless の `--load-diagram-single-cases` で選ぶ（見本の頁割りは `split_horizontal` と `1,2`）。
-- 結果（HEAD `99b47fb`、`.tmp/harajuku-0404-parity/20261029T000216/final/`）：
+- 結果（HEAD `0daeb98`、`.tmp/harajuku-0404-parity/20261029T000216/final2/`）：
 
 | 帳票 | 頁数（見本） | 対になった語の 1 mm 超 | 残る差 |
 |---|---|---|---|
-| 電算出力 | 200（128）。入力 4・MEMBER FORCES 11・変位量 2・COMBINE 66・PICK UP 42 は見本と同じ。違いは見本の変位量 5 頁のうち COMB. の変位の 3 頁に代わる、対象外の「Combine変位量」75 頁 | 0（入力 4 頁・MEMBER FORCES・変位量・COMBINE・PICK UP） | 丸め 0.01、同点の 57 行、ﾏｰｸと着目点の名前の空欄 |
+| 電算出力 | 154（128）。入力 4・MEMBER FORCES 11・変位量 2・COMBINE 66・PICK UP 42 は見本と同じ。違いは見本の変位量 5 頁のうち COMB. の変位の 3 頁に代わる、対象外の「Combine変位量」29 頁（入力の節点だけ） | 0（入力 4 頁・MEMBER FORCES・変位量・COMBINE・PICK UP） | 丸め 0.01、同点の 57 行、ﾏｰｸと着目点の名前の空欄 |
 | 荷重図 | 7（7） | 0 | 1 mm 内に相手の無い線の画素は 2 頁で計 36 |
 | 断面力図 | 44（44、付記の 1 頁を除く） | 288 語（1900 語中） | FrameG の置き方が揃わない所の 2 mm 前後（決定 Q11 で認めた） |
 
