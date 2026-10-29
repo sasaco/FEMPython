@@ -37,8 +37,9 @@ public sealed class CalculationRequestTests
         Assert.True(JsonNode.DeepEquals(JsonNode.Parse(angular), actual), actual?.ToJsonString());
     }
 
-    // Member rows follow the captured Angular projection for 1 m members. Case IDs
-    // deliberately promote the first real moving load to restore desktop grouping.
+    // Member rows follow the captured Angular projection for 1 m members. The moving
+    // load at position zero sits on the i-end and acts, so it is the parent case
+    // (Angular drops it; FrameWebforJS #714).
     [Fact]
     public void MemberRangesMatchAngularWhileMovingCaseHasAnIntegralParent()
     {
@@ -55,7 +56,7 @@ public sealed class CalculationRequestTests
         Assert.False(root.TryGetProperty("three", out _));
         Assert.False(root.TryGetProperty("result", out _));
         Assert.False(root.TryGetProperty("define", out _));
-        Assert.Equal(new[] { "1", "2", "2.2" }, root.GetProperty("load").EnumerateObject().Select(item => item.Name));
+        Assert.Equal(new[] { "1", "2", "2.1", "2.2" }, root.GetProperty("load").EnumerateObject().Select(item => item.Name));
         var first = root.GetProperty("load").GetProperty("1").GetProperty("load_member");
         Assert.Equal(new[] { 1, 2 }, first.EnumerateArray().Select(item => item.GetProperty("m").GetInt32()));
         Assert.All(first.EnumerateArray(), item =>
@@ -66,13 +67,15 @@ public sealed class CalculationRequestTests
             Assert.Equal(20, item.GetProperty("P2").GetDouble());
         });
         Assert.All(root.GetProperty("load").GetProperty("2").GetProperty("load_member").EnumerateArray(),
+            item => Assert.Equal(0, item.GetProperty("L1").GetDouble(), 3));
+        Assert.All(root.GetProperty("load").GetProperty("2.1").GetProperty("load_member").EnumerateArray(),
             item => Assert.Equal(0.5, item.GetProperty("L1").GetDouble(), 3));
         Assert.All(root.GetProperty("load").GetProperty("2.2").GetProperty("load_member").EnumerateArray(),
             item => Assert.Equal(1, item.GetProperty("L1").GetDouble()));
     }
 
     [Fact]
-    public void EachMovingCasePromotesItsFirstEffectivePositionWithoutAddingAForce()
+    public void EachMovingCaseStartsAtTheIEndWithoutAddingAForce()
     {
         string saved = BaseSnapshot("""
             "1":{"symbol":"DL","fix_node":1,"element":1,
@@ -84,7 +87,7 @@ public sealed class CalculationRequestTests
             """);
         using var result = JsonDocument.Parse(CalculationRequestBuilder.FromSavedJson(saved).Json);
         var loads = result.RootElement.GetProperty("load");
-        Assert.Equal(new[] { "1", "2", "3", "2.2", "3.2" },
+        Assert.Equal(new[] { "1", "2", "3", "2.1", "2.2", "3.1", "3.2" },
             loads.EnumerateObject().Select(item => item.Name));
         foreach (string caseId in new[] { "2", "3" })
         {
@@ -94,7 +97,7 @@ public sealed class CalculationRequestTests
             Assert.Equal(2, members.Length);
             Assert.All(members, member =>
             {
-                Assert.Equal(0.5, member.GetProperty("L1").GetDouble(), 3);
+                Assert.Equal(0, member.GetProperty("L1").GetDouble(), 3);
                 Assert.Equal(caseId == "2" ? 10 : 20, member.GetProperty("P1").GetDouble());
             });
         }
@@ -322,6 +325,47 @@ public sealed class CalculationRequestTests
         Assert.Equal(0.3, rows[0].GetProperty("L2").GetDouble(), 3);
         Assert.Equal(0.8, rows[1].GetProperty("L1").GetDouble(), 3);
         Assert.Equal(0, rows[1].GetProperty("L2").GetDouble());
+    }
+
+    // FrameWebforJS #714: a point load at the i-end (L1 = 0, L2 blank) acts on the structure.
+    [Theory]
+    [InlineData("1")]
+    [InlineData("11")]
+    public void PointLoadAtTheIEndIsKept(string mark)
+    {
+        string saved = BaseSnapshot($$"""
+            "1":{"symbol":"DL","fix_node":1,"element":1,
+              "load_member":[{"row":1,"m1":"1","m2":"","direction":"y","mark":"{{mark}}","L1":"0","L2":"","P1":10,"P2":null}]}
+            """);
+        using var result = JsonDocument.Parse(CalculationRequestBuilder.FromSavedJson(saved).Json);
+        var member = Assert.Single(result.RootElement.GetProperty("load").GetProperty("1")
+            .GetProperty("load_member").EnumerateArray());
+        Assert.Equal(1, member.GetProperty("m").GetInt32());
+        Assert.Equal(0, member.GetProperty("L1").GetDouble());
+        Assert.Equal(10, member.GetProperty("P1").GetDouble());
+    }
+
+    // A member from x = 1.1 to 3.3 is 2.1999999999999997 long in floating point;
+    // a point load typed at its 2.2 m j-end still acts there.
+    [Theory]
+    [InlineData("1")]
+    [InlineData("11")]
+    public void PointLoadAtTheJEndIsKept(string mark)
+    {
+        string saved = """
+            {"dimension":2,
+             "node":{"1":{"x":1.1,"y":0},"2":{"x":3.3,"y":0}},
+             "member":{"1":{"ni":"1","nj":"2","e":"1"}},
+             "element":{"1":{"1":{"E":10000,"A":1,"Iz":1}}},
+             "fix_node":{"1":[{"n":"1","tx":1,"ty":1,"rz":1}]},
+             "load":{"1":{"symbol":"DL","fix_node":1,"element":1,
+               "load_member":[{"row":1,"m1":"1","m2":"","direction":"gy","mark":"MARK","L1":"2.2","L2":"","P1":10,"P2":null}]}}}
+            """.Replace("MARK", mark);
+        using var result = JsonDocument.Parse(CalculationRequestBuilder.FromSavedJson(saved).Json);
+        var member = Assert.Single(result.RootElement.GetProperty("load").GetProperty("1")
+            .GetProperty("load_member").EnumerateArray());
+        Assert.Equal(2.2, member.GetProperty("L1").GetDouble());
+        Assert.Equal(10, member.GetProperty("P1").GetDouble());
     }
 
     [Fact]

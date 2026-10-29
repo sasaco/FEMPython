@@ -2,6 +2,10 @@
 import copy
 import numpy as np
 
+# Member-load positions arrive rounded to a millimetre (the clients round L1/L2),
+# so a point load this close to an end is at that end (FrameWebforJS #714).
+POINT_LOAD_END_TOLERANCE = 0.0005
+
 
 def _spring_rows_by_member(rows):
     grouped = {}
@@ -175,6 +179,8 @@ def prepare_members(data, model_data):
                 for suffix in ('1', '2'):
                     p = float(load.get('L'+suffix, 0))
                     value = float(load.get('P'+suffix, 0))
+                    if length < p <= length + POINT_LOAD_END_TOLERANCE:
+                        p = length
                     if not 0 <= p <= length:
                         raise ValueError(f'Invalid point load position on member {mid}')
                     if value:

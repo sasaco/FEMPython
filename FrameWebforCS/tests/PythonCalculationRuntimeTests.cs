@@ -62,7 +62,9 @@ public sealed class PythonCalculationRuntimeTests
             Assert.Equal("1", Assert.Single(strict.Cases).CaseId);
             Assert.IsType<StaticAnalysisResult>(Assert.Single(strict.Results));
             await VerifyLlSweepMatchesCantileverEquilibrium(runtime);
-            await VerifyLlSweepWithEmptyInitialPositionKeepsMovingGroup(runtime);
+            await VerifyLlSweepStartingAtTheIEndKeepsMovingGroup(runtime);
+            await VerifyPointLoadAtTheIEndBendsTheCantilever(runtime);
+            await VerifyPointLoadAtTheJEndBendsTheCantilever(runtime);
             PythonCalculationException conversion = await Assert.ThrowsAsync<PythonCalculationException>(
                 () => runtime.CalculateAsync("{bad"));
             Assert.Equal(PythonCalculationStage.Conversion, conversion.Stage);
@@ -109,8 +111,9 @@ public sealed class PythonCalculationRuntimeTests
             .ToArray();
         Assert.All(tipDisplacements, value => Assert.True(double.IsFinite(value)));
         // Cantilever tip displacement under a point load at station a:
-        // P a^2 (3L - a) / (6 E I), with L = 2 m, E I = 10,000.
-        foreach ((int index, double station) in new[] { 0.5, 1.0, 1.5 }.Index())
+        // P a^2 (3L - a) / (6 E I), with L = 2 m, E I = 10,000. Station 0 is the
+        // fixed i-end: the load goes straight into the support (FrameWebforJS #714).
+        foreach ((int index, double station) in new[] { 0, 0.5, 1.0, 1.5 }.Index())
         {
             double expected = 10 * station * station * (6 - station) / 60_000;
             Assert.Equal(expected, Math.Abs(tipDisplacements[index]), 8);
@@ -121,7 +124,53 @@ public sealed class PythonCalculationRuntimeTests
         }
     }
 
-    private static async Task VerifyLlSweepWithEmptyInitialPositionKeepsMovingGroup(
+    // FrameWebforJS #714: the free tip is the member's i-end, and a point load
+    // there (L1 = 0, L2 blank) bends the whole cantilever: M = P L at the support.
+    private static async Task VerifyPointLoadAtTheIEndBendsTheCantilever(PythonCalculationRuntime runtime)
+    {
+        const string saved = """
+            {"dimension":2,
+             "node":{"1":{"x":0,"y":0},"2":{"x":2,"y":0}},
+             "member":{"1":{"ni":"1","nj":"2","e":"1"}},
+             "element":{"1":{"1":{"E":10000,"A":1,"Iz":1}}},
+             "fix_node":{"1":[{"n":"2","tx":1,"ty":1,"rz":1}]},
+             "load":{"1":{"symbol":"DL","fix_node":1,"element":1,
+               "load_member":[{"row":1,"m1":"1","m2":"","direction":"gy",
+                 "mark":"1","L1":"0","L2":"","P1":10,"P2":null}]}}}
+            """;
+        string json = await runtime.CalculateAsync(CalculationRequestBuilder.FromSavedJson(saved).Json)
+            .WaitAsync(TimeSpan.FromSeconds(30));
+        AnalysisResultSet result = AnalysisResultSetJson.Deserialize(Encoding.UTF8.GetBytes(json));
+        var support = ((StaticAnalysisResult)Assert.Single(result.Results)).SupportReactions
+            .Single(row => row.NodeId == "2");
+        Assert.Equal(10, Math.Abs(support.Components.Fy), 8);
+        Assert.Equal(20, Math.Abs(support.Components.Mz), 8);
+    }
+
+    // The member from x = 1.1 to 3.3 is 2.1999999999999997 long in floating point;
+    // a point load typed at its 2.2 m j-end (the free tip) gives M = P L = 22.
+    private static async Task VerifyPointLoadAtTheJEndBendsTheCantilever(PythonCalculationRuntime runtime)
+    {
+        const string saved = """
+            {"dimension":2,
+             "node":{"1":{"x":1.1,"y":0},"2":{"x":3.3,"y":0}},
+             "member":{"1":{"ni":"1","nj":"2","e":"1"}},
+             "element":{"1":{"1":{"E":10000,"A":1,"Iz":1}}},
+             "fix_node":{"1":[{"n":"1","tx":1,"ty":1,"rz":1}]},
+             "load":{"1":{"symbol":"DL","fix_node":1,"element":1,
+               "load_member":[{"row":1,"m1":"1","m2":"","direction":"gy",
+                 "mark":"1","L1":"2.2","L2":"","P1":10,"P2":null}]}}}
+            """;
+        string json = await runtime.CalculateAsync(CalculationRequestBuilder.FromSavedJson(saved).Json)
+            .WaitAsync(TimeSpan.FromSeconds(30));
+        AnalysisResultSet result = AnalysisResultSetJson.Deserialize(Encoding.UTF8.GetBytes(json));
+        var support = ((StaticAnalysisResult)Assert.Single(result.Results)).SupportReactions
+            .Single(row => row.NodeId == "1");
+        Assert.Equal(10, Math.Abs(support.Components.Fy), 8);
+        Assert.Equal(22, Math.Abs(support.Components.Mz), 8);
+    }
+
+    private static async Task VerifyLlSweepStartingAtTheIEndKeepsMovingGroup(
         PythonCalculationRuntime runtime)
     {
         const string saved = """
@@ -153,8 +202,9 @@ public sealed class PythonCalculationRuntimeTests
         Assert.NotEmpty(page.MovingChildren);
         var support = ((StaticAnalysisResult)page.Result).SupportReactions
             .Single(row => row.NodeId == "1");
+        // The parent case is the load at the fixed i-end: all force, no moment.
         Assert.Equal(10, Math.Abs(support.Components.Fy), 8);
-        Assert.Equal(5, Math.Abs(support.Components.Mz), 8);
+        Assert.Equal(0, Math.Abs(support.Components.Mz), 8);
     }
 
     [Fact]

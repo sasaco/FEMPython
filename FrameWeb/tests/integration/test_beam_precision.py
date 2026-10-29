@@ -200,3 +200,27 @@ def test_short_segment_sample_reaches_constitutive_equilibrium(case):
         nodal[start : start + 6] += load.forces
     free = [i for i in range(len(force)) if i not in prescribed]
     np.testing.assert_allclose(force[free], nodal[free], rtol=0, atol=1e-8)
+
+
+# FrameWebforJS #714: positions arrive rounded to a millimetre, so a point load
+# within half a millimetre of the member length acts at the j-end node.
+@pytest.mark.parametrize("start, end", [(1.1, 3.3), (0, 2.1996)])
+def test_point_load_typed_at_the_member_length_acts_at_the_j_end(start, end):
+    from tests.support.builders.linear_frame import cantilever, run
+
+    data = cantilever()
+    data["node"]["1"].update(x=start)
+    data["node"]["2"].update(x=end)
+    data["load"]["1"] = dict(load_member=[dict(m=1, mark=1, direction="gy", L1=2.2, P1=10)])
+    _, result = run(data)
+    assert result["reaction_forces"][1]["fy"] == pytest.approx(-10, abs=1e-10)
+    assert result["reaction_forces"][1]["mz"] == pytest.approx(-10 * (end - start), abs=1e-10)
+
+
+def test_point_load_beyond_the_member_length_is_rejected():
+    from tests.support.builders.linear_frame import cantilever, run
+
+    data = cantilever()
+    data["load"]["1"] = dict(load_member=[dict(m=1, mark=1, direction="gy", L1=2.001, P1=10)])
+    with pytest.raises(ValueError, match="Invalid point load position"):
+        run(data)

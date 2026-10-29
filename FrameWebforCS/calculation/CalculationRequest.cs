@@ -247,7 +247,7 @@ internal static class CalculationRequestBuilder
                     firstEffectiveId ??= id;
                 }
             }
-            // A moving load may not reach the structure at position zero. Keep the
+            // A moving load that starts before the member may not reach it at position zero. Keep the
             // first actual load under its integral case ID so result/print grouping
             // has a parent, independent of other load cases in the request.
             if (positions.Count > 1 && !projected.ContainsKey(caseId) && firstEffectiveId != null)
@@ -495,9 +495,13 @@ internal static class CalculationRequestBuilder
             int mark = (int)(Number(row["mark"]) ?? 0);
             if (mark is 1 or 11)
             {
-                if (start <= 0 && end <= 0) continue;
-                if (start < 0 || start > length) { start = 0; row["P1"] = 0; }
-                if (end < 0 || end > length) { end = 0; row["P2"] = 0; }
+                // A load at the i-end (position 0) acts on the structure (FrameWebforJS #714).
+                if (start < 0 && end <= 0) continue;
+                // Positions are in millimetres, so the j-end is the member length rounded
+                // to a millimetre (1.1 -> 3.3 is 2.1999999999999997 long, typed as 2.2).
+                double roundedLength = JsRound(length * 1000) / 1000;
+                if (start < 0 || JsRound(start * 1000) / 1000 > roundedLength) { start = 0; row["P1"] = 0; }
+                if (end < 0 || JsRound(end * 1000) / 1000 > roundedLength) { end = 0; row["P2"] = 0; }
             }
             else if (end < 0 || row["_relativeZeroLength"]?.GetValue<bool>() == true)
                 end = Math.Max(0, length - start - Math.Abs(end));
