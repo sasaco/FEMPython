@@ -142,4 +142,100 @@ public sealed class FrameGSectionDiagramTests
             Assert.Equal((height - 135.3 - 28.3) / 2, moment.Y - shear.Y, 0);
         }
     }
+
+    [Fact]
+    public void LongTitleAndCaptionWrapWithoutMovingThePanels()
+    {
+        JObject root = FrameGJob();
+        string title = string.Concat(Enumerable.Repeat("長い題名の帳票", 12));
+        string caption = "Case A " + string.Concat(Enumerable.Repeat("非常に長い荷重の名称", 8)) + ":D1";
+        root["title"] = title;
+        root["PrintDiagram"]!["diagramResult"]!["caseLabels"]!["Case/A/Static/0"] = caption;
+        var pdf = Render(root);
+        Run[] titles = pdf.Runs.Where(run => run.Page == 1 && run.Y > A4Height - 105).OrderByDescending(run => run.Y).ToArray();
+        Run[] captions = pdf.Runs.Where(run => run.Page == 1 && run.Y < A4Height - 110 && run.Y > A4Height - 135)
+            .OrderByDescending(run => run.Y).ToArray();
+        Assert.Equal(2, titles.Length);
+        Assert.Equal(2, captions.Length);
+        Assert.Equal(title, string.Concat(titles.Select(run => run.Text)));
+        Assert.Equal(" " + caption, string.Concat(captions.Select(run => run.Text)));
+        Assert.Equal(A4Height - 89.2, titles[0].Y, 1);
+        Assert.Equal(A4Height - 117.4, captions[0].Y, 1);
+        Assert.All(titles.Concat(captions), run => Assert.InRange(run.X, 80.3, 80.5));
+        // The panels keep the one-line positions.
+        Run moment = Assert.Single(pdf.Runs, run => run.Text == "　曲げモーメント図");
+        Assert.Equal(A4Height - 140.2, moment.Y, 1);
+    }
+
+    [Fact]
+    public void CaptionReachingThePanelsFailsClearly()
+    {
+        JObject root = FrameGJob();
+        root["PrintDiagram"]!["diagramResult"]!["caseLabels"]!["Case/A/Static/0"] =
+            "Case A " + string.Concat(Enumerable.Repeat("非常に長い荷重の名称", 20));
+        var error = Assert.Throws<InvalidOperationException>(() => PDF_Manager.DirectPdfGenerator.Generate(root.ToString()));
+        Assert.Contains("caption is too long", error.Message);
+    }
+
+    [Theory]
+    [InlineData("fx", true)]
+    [InlineData("mz", false)]
+    [InlineData("fy", false)]
+    public void EnvelopeEndsKeepTheGoverningSideAndAxialForceAlsoItsOppositeSign(string component, bool both)
+    {
+        // The sample's COMBINE 10 N prints 17.82 and -14.27 at the bottom slab's ends (見本 p.43); its M and S
+        // print one side only (COMBINE 3, p.28: 17.31 at node 6, not the other side's 13.47).
+        JObject root = FrameGJob();
+        root.Remove("PrintDiagram"); root.Remove("fsec"); root.Remove("fsecName");
+        ((JObject)root["member"]!).Remove("pile/B"); ((JObject)root["node"]!).Remove("node/C");
+        JArray Side(double value) => new(new[] { 0.0, 2.0 }.Select(position => new JObject
+        {
+            ["m"] = "beam/A", ["n"] = "S" + position, ["l"] = position, ["mz"] = 0, ["fy"] = 0, ["fx"] = 0,
+            [component] = value,
+        }));
+        root["fsecCombine"] = new JObject { ["1"] = new JObject
+            { [component + "_max"] = Side(5), [component + "_min"] = Side(-3) } };
+        root["fsecCombineName"] = new JArray { new JArray("1", "Envelope") };
+        var settings = new JObject { ["canonicalStations"] = true, ["yUp"] = false, ["layout"] = "single",
+            ["output"] = new JArray(component), ["displacementLabelScale"] = 1000 };
+        root["CombPrintDiagram"] = new JObject { ["diagramResult"] = settings };
+        var pdf = Render(root);
+        Assert.Equal(2, pdf.Runs.Count(run => run.Text == "5.00"));
+        Assert.Equal(both ? 2 : 0, pdf.Runs.Count(run => run.Text is "-3.00" or "3.00"));
+    }
+
+    [Fact]
+    public void OnlyABasicCaseSetsALongInteriorExtremeBetweenMemberAndCurve()
+    {
+        // 見本: case 1's 44.19 sits between the bottom slab and its curve; every COMBINE's slab extreme
+        // (pp.24-44, e.g. COMBINE 2's 75.18) sits beyond the curve.
+        JArray Beam() => new(new[] { (0.0, 0.0), (1.0, -10.0), (2.0, 0.0) }.Select(item => new JObject
+        {
+            ["m"] = "beam/A", ["n"] = "S" + item.Item1, ["l"] = item.Item1, ["mz"] = item.Item2, ["fy"] = 0, ["fx"] = 0,
+        }));
+        JObject Root()
+        {
+            JObject root = FrameGJob();
+            ((JObject)root["member"]!).Remove("pile/B"); ((JObject)root["node"]!).Remove("node/C");
+            root["PrintDiagram"]!["diagramResult"]!["output"] = new JArray("mz");
+            return root;
+        }
+        JObject basic = Root();
+        basic["fsec"]!["Case/A/Static/0"] = Beam();
+        JObject envelope = Root();
+        envelope.Remove("fsec"); envelope.Remove("fsecName");
+        envelope["fsecCombine"] = new JObject { ["1"] = new JObject { ["mz_max"] = Beam(), ["mz_min"] = Beam() } };
+        envelope["fsecCombineName"] = new JArray { new JArray("1", "Envelope") };
+        envelope["CombPrintDiagram"] = new JObject { ["diagramResult"] = envelope["PrintDiagram"]!["diagramResult"]!.DeepClone() };
+        envelope.Remove("PrintDiagram");
+        foreach (var (root, between) in new[] { (basic, true), (envelope, false) })
+        {
+            var pdf = Render(root);
+            // The negative moment is drawn above the beam (y down); the curve's peak is 10 mm above it.
+            double peak = pdf.Strokes.Where(stroke => stroke.Points.Count > 2).SelectMany(stroke => stroke.Points).Max(point => point.Y);
+            Run label = Assert.Single(pdf.Runs, run => run.Text == "10.00");
+            if (between) Assert.True(label.Y < peak, "A basic case's long extreme sits below its curve's peak.");
+            else Assert.True(label.Y > peak, "An envelope's extreme sits beyond its curve's peak.");
+        }
+    }
 }

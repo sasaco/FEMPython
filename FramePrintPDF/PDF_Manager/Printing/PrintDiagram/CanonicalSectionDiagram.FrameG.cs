@@ -23,6 +23,7 @@ namespace PDF_Manager.Printing
         private const double TitleBaseline = 89.2, CaptionBaseline = 117.4, PanelTop = 135.3;
         private const double HeadingIndent = 2.9, HeadingBaseline = 4.9;
         private const double TitleSize = 8.86, CaptionSize = 9.66, HeadingSize = 8.16, ValueSize = 6.70;
+        private const double HeaderLineSpacing = 1.2;
         // At 1:70 the sample's 4.75 m x 3.225 m frame takes 0.41 x 0.38 of a panel; 1:60 would exceed 0.44.
         private const double FrameShare = .44;
         private const double MaxOrdinate = 72 / 2.54;   // 10 mm for the largest force or displacement
@@ -122,15 +123,24 @@ namespace PDF_Manager.Printing
 
         private static void DrawFrameGHeader(PdfDocument document, string caption, string language)
         {
+            // A long title or case name wraps within the header's width. The caption and the panels stay
+            // where one-line texts put them (the sample's layout), so only a text reaching the next one fails.
+            double width = document.currentPage.Width.Point - FrameGLeft - FrameGRight;
             if (!string.IsNullOrEmpty(document.Title))
-                document.gfx.DrawString(document.Title, Mincho(TitleSize, language), XBrushes.Blue,
-                    new XPoint(FrameGLeft, TitleBaseline));
-            var font = Mincho(CaptionSize, language);
-            string text = " " + caption;
-            if (FrameGLeft + document.gfx.MeasureString(text, font).Width >
-                document.currentPage.Width.Point - FrameGRight)
-                throw new InvalidOperationException("The diagram case caption is too long for the page.");
-            document.gfx.DrawString(text, font, XBrushes.Blue, new XPoint(FrameGLeft, CaptionBaseline));
+                DrawHeaderLines(document, document.Title, Mincho(TitleSize, language), width, TitleBaseline,
+                    CaptionBaseline - CaptionSize, "The diagram page title is too long for the page.");
+            DrawHeaderLines(document, " " + caption, Mincho(CaptionSize, language), width, CaptionBaseline,
+                PanelTop, "The diagram case caption is too long for the page.");
+        }
+
+        private static void DrawHeaderLines(PdfDocument document, string text, XFont font, double width,
+            double baseline, double limit, string tooLong)
+        {
+            List<string> lines = ReferenceResultLayout.Wrap(document, font, text, width);
+            double spacing = font.Size * HeaderLineSpacing;
+            if (baseline + (lines.Count - 1) * spacing > limit) throw new InvalidOperationException(tooLong);
+            for (int line = 0; line < lines.Count; line++)
+                document.gfx.DrawString(lines[line], font, XBrushes.Blue, new XPoint(FrameGLeft, baseline + line * spacing));
         }
 
         private static XRect FrameGPanel(PdfDocument document, int count, int index, bool vertical)
@@ -285,9 +295,11 @@ namespace PDF_Manager.Printing
                     var label = new FrameGLabel(member, run[row].l, value,
                         face && !end && Text(nearest.getValue2D(component)) != Text(value));
                     // A basic case labels every end and both sides of a rigid-zone face; an envelope labels
-                    // each member end once, with its governing side, and no faces.
+                    // each member end once, with its governing side, and no faces. The sample's N keeps both
+                    // sides when they differ in sign (COMBINE 10, 見本 p.43: 17.82 and -14.27 at the slab ends);
+                    // its M and S never do (COMBINE 3, p.28: 17.31 at node 6, not the other side's 13.47).
                     if (item.Rows != null) (end ? ends : faces).Add(label);
-                    else if (end) Govern(ends, label);
+                    else if (end) Govern(ends, label, component == "fx");
                 }
                 // The member's interior extreme of M: its largest or smallest value when that is not at an end.
                 if (component == "mz")
@@ -312,15 +324,18 @@ namespace PDF_Manager.Printing
                     Tuple.Create(Origin(label.Member, zone.Item1), Origin(label.Member, label.Member.Length - zone.Item2)),
                     along);
             }
+            // A basic case may set its interior extreme between the member and the curve; the sample's
+            // envelopes always set it beyond the curve (COMBINE 1–11, 見本 pp.24–44: one per slab, beyond).
             foreach (FrameGLabel label in interior.Values)
                 labels.Add(Origin(label.Member, label.Distance), End(label.Member, label.Distance, label.Value),
-                    transform.Normal(label.Member), Text(label.Value), true);
+                    transform.Normal(label.Member), Text(label.Value), item.Rows != null);
         }
 
-        private static void Govern(List<FrameGLabel> labels, FrameGLabel label)
+        private static void Govern(List<FrameGLabel> labels, FrameGLabel label, bool keepOppositeSigns)
         {
             int existing = labels.FindIndex(other => other.Member == label.Member &&
-                Math.Abs(other.Distance - label.Distance) <= 1e-9 * Math.Max(1, label.Member.Length));
+                Math.Abs(other.Distance - label.Distance) <= 1e-9 * Math.Max(1, label.Member.Length) &&
+                (!keepOppositeSigns || Math.Sign(other.Value) == Math.Sign(label.Value)));
             if (existing < 0) labels.Add(label);
             else if (Math.Abs(label.Value) > Math.Abs(labels[existing].Value)) labels[existing] = label;
         }
@@ -451,8 +466,8 @@ namespace PDF_Manager.Printing
         /// <summary>
         /// FrameG's value labels: the text runs across the member (upward on a beam, rightward on a wall),
         /// beyond the drawn ordinate, centred on its station along the member and kept within the frame's
-        /// extent; a rigid-zone face's value stays over the flexible part. An interior extreme whose ordinate
-        /// is long enough sits between the member and the curve. FrameG does not move values that overlap.
+        /// extent; a rigid-zone face's value stays over the flexible part. A basic case's interior extreme whose
+        /// ordinate is long enough sits between the member and the curve. FrameG does not move values that overlap.
         /// </summary>
         private sealed class FrameGLabels
         {
@@ -476,7 +491,7 @@ namespace PDF_Manager.Printing
             // prints just before its station and always on the upper or right side of the member.
             internal enum Along { Centre, Start, Before }
 
-            internal void Add(XPoint origin, XPoint end, XPoint normal, string text, bool interior,
+            internal void Add(XPoint origin, XPoint end, XPoint normal, string text, bool mayBeBetween,
                 Tuple<XPoint, XPoint> flexible = null, Along along = Along.Centre)
             {
                 if (text == "0.00" || text == "-0.00") return;
@@ -489,7 +504,7 @@ namespace PDF_Manager.Printing
                 double ordinate = Dot(new XPoint(end.X - origin.X, end.Y - origin.Y), r);
                 double direction = ordinate < 0 ? -1 : 1;
                 double start;
-                if (interior && Math.Abs(ordinate) >= text.Length * EstimatedCharacter + BetweenSpare)
+                if (mayBeBetween && Math.Abs(ordinate) >= text.Length * EstimatedCharacter + BetweenSpare)
                     start = (Dot(origin, r) + Dot(end, r)) / 2 - direction * BetweenTowardMember - width / 2;
                 else if (along == Along.Before) start = Math.Max(Dot(origin, r), Dot(end, r)) + GapAway;
                 else start = direction > 0 ? Dot(end, r) + GapAway : Dot(end, r) - GapToward - width;
