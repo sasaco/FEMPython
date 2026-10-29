@@ -64,9 +64,13 @@ namespace PDF_Manager.Printing
         private const double AxialOffset = 4.92, AxialLength = 47.04, AxialDash = 3.72, AxialSpace = 1.92;
         private const double AxialHead = 3.36, AxialHeadHalf = 0.84;
         private const double AxialLabelInside = 8.74, AxialLabelOutside = 3.0;
+        private const double AxialRangeTick = 2.0;     // 載る範囲の両端の線（破線から両側へ）
 
         // 温度荷重
         private const double TemperatureLift = 11.1;
+
+        // 支点の回転ばね（弧の半径）
+        private const double SupportRotationRadius = 4.5;
 
         // ばね（Z の形と M の形の組）
         private const double SpringHorizontalStart = 5.64, SpringHorizontalEnd = 9.24, SpringHorizontalPitch = 9.8;
@@ -270,6 +274,10 @@ namespace PDF_Manager.Printing
             }
         }
 
+        /// <summary>
+        /// 支点（FrameWeb の値：1 は固定、0 は自由、それ以外はばね定数。support.py と同じ）。並進がすべて固定なら固定・ピン、
+        /// 一方だけ固定ならローラー。ばねの向きには三角形とばねの記号（旧来の荷重図の XSupport と同じ形）、回転ばねは弧。
+        /// </summary>
         private void DrawSupports(int type)
         {
             if (!fixNode.FixNodes.TryGetValue(type, out var rows)) return;
@@ -277,10 +285,10 @@ namespace PDF_Manager.Printing
             foreach (var row in rows)
             {
                 if (row.n == null || !nodes.ContainsKey(row.n)) continue;
-                bool tx = row.tx != 0, ty = row.ty != 0, rz = row.rz != 0;
-                if (!tx && !ty && !rz) continue;
+                bool Fixed(double v) => v == 1;
+                bool Spring(double v) => v != 0 && v != 1 && double.IsFinite(v);
                 var p = NodePoint(row.n);
-                if (rz)
+                if (Fixed(row.tx) && Fixed(row.ty) && Fixed(row.rz))
                 {
                     // 固定：節点の下に短い線とハッチ
                     mc.gfx.DrawLine(new XPen(XColors.Black, MemberPen), p.X - 5, p.Y + 1.5, p.X + 5, p.Y + 1.5);
@@ -288,57 +296,97 @@ namespace PDF_Manager.Printing
                         mc.gfx.DrawLine(pen, p.X + x, p.Y + 1.5, p.X + x - 2, p.Y + 4);
                     continue;
                 }
-                // ピン・ローラー：三角形（ローラーは下に線を足す）
-                mc.gfx.DrawPolygon(pen, new[] { p, new XPoint(p.X - 3.5, p.Y + 6), new XPoint(p.X + 3.5, p.Y + 6) });
-                if (!(tx && ty)) mc.gfx.DrawLine(pen, p.X - 4.5, p.Y + 7.5, p.X + 4.5, p.Y + 7.5);
+                bool roller = Fixed(row.tx) && row.ty == 0 || Fixed(row.ty) && row.tx == 0;
+                if (Fixed(row.tx) && Fixed(row.ty) || roller || Fixed(row.ty) && Spring(row.tx))
+                {
+                    // ピン・ローラー：三角形（ローラーは下に線を足す）。鉛直が固定で水平がばねなら三角形と横のばね
+                    mc.gfx.DrawPolygon(pen, new[] { p, new XPoint(p.X - 3.5, p.Y + 6), new XPoint(p.X + 3.5, p.Y + 6) });
+                    if (roller) mc.gfx.DrawLine(pen, p.X - 4.5, p.Y + 7.5, p.X + 4.5, p.Y + 7.5);
+                }
+                // ばね：鉛直のばねは節点の下、水平のばねは骨組の外側
+                if (Spring(row.ty)) SupportSpring(pen, p, new XPoint(0, 1));
+                if (Spring(row.tx)) SupportSpring(pen, p, new XPoint(p.X < FrameCentre.X ? -1 : 1, 0));
+                if (Spring(row.rz))
+                    mc.gfx.DrawArc(pen, p.X - SupportRotationRadius, p.Y - SupportRotationRadius,
+                        2 * SupportRotationRadius, 2 * SupportRotationRadius, 200, 140);
             }
+        }
+
+        /// <summary>ばねの支点：節点から <paramref name="d"/> の向きに三角形とばねの折れ線（旧来の XSupport.SpringParams の形）。</summary>
+        private void SupportSpring(XPen pen, XPoint p, XPoint d)
+        {
+            var n = new XPoint(-d.Y, d.X);
+            XPoint At(double across, double along) => new XPoint(p.X + n.X * across + d.X * along, p.Y + n.Y * across + d.Y * along);
+            mc.gfx.DrawPolygon(pen, new[] { At(0, 0.35), At(-3.5, 5.35), At(3.5, 5.35) });
+            mc.gfx.DrawLines(pen, new[] { At(-3.5, 6.85), At(3.5, 6.85), At(-3.5, 8.35), At(3.5, 8.35), At(-3.5, 9.85), At(3.5, 9.85) });
         }
 
         // ---- ばね ----
 
+        /// <summary>
+        /// 部材の地盤ばね。同じ部材の行は I 端から順に区間を積む（length が空の最後の行は残りの全長、すべて空なら各行が全長。
+        /// ソルバーの legacy_beam.py の _spring_intervals と同じ）。ばね定数が 0 の区間は描かない。
+        /// </summary>
         private void DrawSprings(int type)
         {
             if (!fixMember.FixMembers.TryGetValue(type, out var rows)) return;
             var pen = new XPen(XColors.Black, ArrowPen);
-            foreach (var row in rows)
+            foreach (var memberRows in rows.Where(r => r.m != null && members.ContainsKey(r.m)).GroupBy(r => r.m))
             {
-                if (row.m == null || !members.TryGetValue(row.m, out var m)) continue;
-                if (row.tx == 0 && row.ty == 0) continue;
-                XPoint i = NodePoint(m.I), j = NodePoint(m.J);
-                double length = Distance(i, j);
+                var m = members[memberRows.Key];
+                double length = Distance(nodes[m.I], nodes[m.J]);
                 if (length <= 0) continue;
-                if (row.length is double part && part > 0)
-                    length = Math.Min(length, part * length / Distance(nodes[m.I], nodes[m.J]));
-                var u = Unit(i, j);
-                var s = Outward(i, j);
-                bool horizontal = Math.Abs(u.X) >= Math.Abs(u.Y);
-                // 部材の始まりは左（水平）・上（鉛直）
-                XPoint start = i;
-                if (horizontal ? u.X < 0 : u.Y < 0) { start = Lerp(i, j, length / Distance(i, j)); u = new XPoint(-u.X, -u.Y); }
-                if (horizontal)
+                var list = memberRows.ToList();
+                bool whole = list.All(r => !(r.length is double value && value > 0));
+                double cursor = 0;
+                for (int k = 0; k < list.Count; k++)
                 {
-                    // 水平の部材：始まりから 5.64、終わりの 9.24 手前までに Z と M の組（間隔は 9.8 に近い等分）
-                    double span = length - SpringHorizontalStart - SpringHorizontalEnd;
-                    int count = Math.Max(1, (int)Math.Round(span / SpringHorizontalPitch) + 1);
-                    double pitch = count > 1 ? span / (count - 1) : 0;
-                    for (int k = 0; k < count; k++)
-                    {
-                        double t = SpringHorizontalStart + k * pitch;
-                        Polyline(pen, start, u, s, HorizontalZ, t);
-                        Polyline(pen, start, u, s, HorizontalM, t);
-                    }
+                    var row = list[k];
+                    double from = whole ? 0 : cursor;
+                    double to = whole ? length : row.length is double span && span > 0 ? Math.Min(length, cursor + span) : length;
+                    cursor = to;
+                    if (row.tx == 0 && row.ty == 0 || to <= from) continue;
+                    DrawSpringRun(pen, m, from / length, to / length);
                 }
-                else
+            }
+        }
+
+        /// <summary>部材 <paramref name="m"/> の I 端からの比 a〜b にばねの記号を並べる。</summary>
+        private void DrawSpringRun(XPen pen, Member m, double a, double b)
+        {
+            XPoint i = NodePoint(m.I), j = NodePoint(m.J);
+            XPoint pa = Lerp(i, j, a), pb = Lerp(i, j, b);
+            double length = Distance(pa, pb);
+            if (length <= 0) return;
+            var u = Unit(pa, pb);
+            var s = Outward(i, j);
+            bool horizontal = Math.Abs(u.X) >= Math.Abs(u.Y);
+            // 並べる始まりは左（水平）・上（鉛直）
+            XPoint start = pa;
+            if (horizontal ? u.X < 0 : u.Y < 0) { start = pb; u = new XPoint(-u.X, -u.Y); }
+            if (horizontal)
+            {
+                // 水平の部材：始まりから 5.64、終わりの 9.24 手前までに Z と M の組（間隔は 9.8 に近い等分）
+                double span = length - SpringHorizontalStart - SpringHorizontalEnd;
+                int count = Math.Max(1, (int)Math.Round(span / SpringHorizontalPitch) + 1);
+                double pitch = count > 1 ? span / (count - 1) : 0;
+                for (int k = 0; k < count; k++)
                 {
-                    // 鉛直の部材：部材ごとに 9.6 以下の等分
-                    int count = Math.Max(1, (int)Math.Ceiling(length / SpringVerticalPitch - 1e-9));
-                    double pitch = length / count;
-                    for (int k = 0; k < count; k++)
-                    {
-                        double t = (pitch - SpringStroke) / 2 + k * pitch;
-                        Polyline(pen, start, u, s, VerticalZ, t);
-                        Polyline(pen, start, u, s, VerticalM, t);
-                    }
+                    double t = SpringHorizontalStart + k * pitch;
+                    Polyline(pen, start, u, s, HorizontalZ, t);
+                    Polyline(pen, start, u, s, HorizontalM, t);
+                }
+            }
+            else
+            {
+                // 鉛直の部材：9.6 以下の等分
+                int count = Math.Max(1, (int)Math.Ceiling(length / SpringVerticalPitch - 1e-9));
+                double pitch = length / count;
+                for (int k = 0; k < count; k++)
+                {
+                    double t = (pitch - SpringStroke) / 2 + k * pitch;
+                    Polyline(pen, start, u, s, VerticalZ, t);
+                    Polyline(pen, start, u, s, VerticalM, t);
                 }
             }
         }
@@ -366,7 +414,9 @@ namespace PDF_Manager.Printing
             public int Row;
             public List<Member> Chain;
             public string Direction, Mark, MS;
-            public double L1, L2, P1, P2;
+            public double P1, P2;
+            // P1・P2 の位置（m、範囲の始まりから）。分布荷重は Start〜End に載り、範囲の外は描くときに切る。
+            public double Start, End;
         }
 
         /// <summary>同じ直線・同じ側に並ぶ荷重の段（部材に近い方から）。</summary>
@@ -391,6 +441,7 @@ namespace PDF_Manager.Printing
             public double P1, P2;
             public string[] Labels;                          // 外側から
             public bool Trapezoid;
+            public bool Signed;                              // 符号の変わる荷重の片側：値に符号を付ける
             public bool NeedsDimension;
         }
 
@@ -422,7 +473,7 @@ namespace PDF_Manager.Printing
                 if (row.MS == "M" || row.MS == "S")
                 {
                     partner = rows.FirstOrDefault(r => !used.Contains(r) && r.MS != row.MS && (r.MS == "M" || r.MS == "S") &&
-                        r.Mark == row.Mark && r.Direction == row.Direction && r.L1 == row.L1 && r.L2 == row.L2 &&
+                        r.Mark == row.Mark && r.Direction == row.Direction && r.Start == row.Start && r.End == row.End &&
                         r.Chain.SequenceEqual(row.Chain));
                     if (partner != null) used.Add(partner);
                 }
@@ -441,45 +492,72 @@ namespace PDF_Manager.Printing
             token == null || !double.TryParse(token.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double value)
                 || double.IsNaN(value) || double.IsInfinity(value) ? 0 : value;
 
+        /// <summary>
+        /// 部材荷重の行を、範囲の始まりからの位置（m）に直す。保存形式の意味（FrameWebforCS の CalculationRequest・
+        /// LoadMemberExpansion、旧来の DiagramMemberLoad と同じ）：
+        /// <list type="bullet">
+        /// <item>m2 が負なら m1〜|m2| を 1 本の部材とみなす。正の範囲は部材ごとに同じ L1・L2。</item>
+        /// <item>負の L1（「-0」を含む）は、すぐ前の行（行番号が 1 つ前）の荷重の終わりから |L1| 先。前の行が無いか、分布荷重で
+        /// 部材の範囲が違えば、範囲の始まりより手前（描くときに切る）。</item>
+        /// <item>負の L2 は荷重の幅（始まりから |L2|）。正の L2 は分布荷重では範囲の終わりからの距離、集中荷重では 2 つ目の位置。範囲の手前から始まる分布荷重では、正の L2 も終わりの位置（FrameWeb の展開と同じ）。</item>
+        /// </list>
+        /// 2D の図に描けない向き（z・gz・r など）の荷重は描かない。
+        /// </summary>
         private IEnumerable<MemberLoad> MemberLoads(JObject load)
         {
             if (!(load["load_member"] is JArray array)) yield break;
-            foreach (JObject row in array.OfType<JObject>())
+            int previousRow = int.MinValue;
+            double previousEnd = 0;
+            string previousRange = null;
+            foreach (JObject row in array.OfType<JObject>().OrderBy(r => r["row"]?.Value<int?>() ?? 0))
             {
+                int rowNumber = row["row"]?.Value<int?>() ?? 0;
+                bool continuation = previousRow != int.MinValue && previousRow + 1 == rowNumber;
+                previousRow = rowNumber;
                 string m1 = row["m1"]?.ToString(), m2 = row["m2"]?.ToString();
                 if (string.IsNullOrEmpty(m1)) m1 = m2;
                 if (string.IsNullOrEmpty(m2)) m2 = m1;
                 if (!int.TryParse(m1, out int first) || !int.TryParse(m2, out int last)) continue;
-                var common = new MemberLoad
-                {
-                    Row = row["row"]?.Value<int?>() ?? 0,
-                    Direction = row["direction"]?.ToString()?.Trim() ?? "",
-                    Mark = row["mark"]?.ToString()?.Trim() ?? "",
-                    MS = row["ms"]?.ToString()?.Trim().ToUpperInvariant() ?? "",
-                    L1 = Number(row["L1"]), L2 = Number(row["L2"]), P1 = Number(row["P1"]), P2 = Number(row["P2"]),
-                };
+                string mark = row["mark"]?.ToString()?.Trim() ?? "";
+                string direction = row["direction"]?.ToString()?.Trim().ToLowerInvariant() ?? "";
+                if (mark != "9" && !PlaneDirections.Contains(direction)) continue;
+                double l1 = Number(row["L1"]), l2 = Number(row["L2"]);
+                bool relativeStart = l1 < 0 || (row["L1"]?.ToString() ?? "").TrimStart().StartsWith("-", StringComparison.Ordinal);
+                string range = first + "," + last;
+                var chains = new List<List<Member>>();
                 if (last < 0)
                 {
-                    // 負の終わり：範囲の部材を 1 本の部材とみなす（FrameWeb・FrameG の範囲指定）
                     var chain = new List<Member>();
-                    for (int id = first; id <= -last; id++)
+                    for (int id = Math.Abs(first); id <= -last; id++)
                         if (members.TryGetValue(id.ToString(CultureInfo.InvariantCulture), out var m)) chain.Add(m);
-                    if (chain.Count == 0) continue;
-                    common.Chain = chain;
-                    yield return common;
+                    if (chain.Count > 0) chains.Add(chain);
                 }
                 else
-                {
                     for (int id = Math.Min(first, last); id <= Math.Max(first, last); id++)
-                        if (members.TryGetValue(id.ToString(CultureInfo.InvariantCulture), out var m))
-                            yield return new MemberLoad
-                            {
-                                Row = common.Row, Chain = new List<Member> { m }, Direction = common.Direction, Mark = common.Mark,
-                                MS = common.MS, L1 = common.L1, L2 = common.L2, P1 = common.P1, P2 = common.P2,
-                            };
+                        if (members.TryGetValue(id.ToString(CultureInfo.InvariantCulture), out var m)) chains.Add(new List<Member> { m });
+                double rowEnd = previousEnd;
+                foreach (var chain in chains)
+                {
+                    double length = chain.Sum(m => Distance(nodes[m.I], nodes[m.J]));
+                    bool point = mark == "1" || mark == "11";
+                    bool carried = relativeStart && continuation && (point || range == previousRange);
+                    double start = carried ? previousEnd + Math.Abs(l1) : relativeStart ? -Math.Abs(l1) : l1;
+                    // 範囲の手前から始まる分布荷重の正の L2 は、FrameWeb の展開（数値の位置）と同じく終わりの位置
+                    double end = l2 < 0 ? start + Math.Abs(l2) : point || start < 0 ? l2 : length - l2;
+                    rowEnd = end;
+                    yield return new MemberLoad
+                    {
+                        Row = rowNumber, Chain = chain, Direction = direction, Mark = mark,
+                        MS = row["ms"]?.ToString()?.Trim().ToUpperInvariant() ?? "",
+                        P1 = Number(row["P1"]), P2 = Number(row["P2"]), Start = start, End = end,
+                    };
                 }
+                previousEnd = rowEnd;
+                previousRange = range;
             }
         }
+
+        private static readonly string[] PlaneDirections = { "x", "y", "gx", "gy" };
 
         /// <summary>
         /// 帯の高さの基準 B（FrameG の BU荷重MAX）。部材に直角な分布荷重の最大値。見本のケース 1 では下床版（最も下の水平の部材）の
@@ -593,19 +671,46 @@ namespace PDF_Manager.Printing
                 }
         }
 
+        /// <summary>荷重の位置 Start〜End（m）を範囲 0〜長さに切り、切った端の値を直線で補う。載る部分が無ければ偽。</summary>
+        private static bool Clip(MemberLoad row, double length, out double from, out double to, out double p1, out double p2)
+        {
+            from = Math.Max(0, Math.Min(row.Start, row.End));
+            to = Math.Min(length, Math.Max(row.Start, row.End));
+            double At(double x) => row.End != row.Start ? row.P1 + (row.P2 - row.P1) * (x - row.Start) / (row.End - row.Start) : row.P1;
+            p1 = At(from);
+            p2 = At(to);
+            return to > from + 1e-9;
+        }
+
         private void DrawDistributed(List<Group> groups, MemberLoad row, MemberLoad partner, double reference)
         {
             var g = Geometry(row.Chain);
             if (g.Length <= 0 || g.ModelLength <= 0) return;
+            if (!Clip(row, g.ModelLength, out double from, out double to, out double p1, out double p2)) return;
             double scale = g.Length / g.ModelLength;
-            double from = Math.Max(0, row.L1) * scale, to = g.Length - Math.Max(0, row.L2) * scale;
-            if (to <= from) return;
-            double p = Math.Abs(row.P1) >= Math.Abs(row.P2) ? row.P1 : row.P2;
-            if (p == 0) return;
+            if (p1 == 0 && p2 == 0) return;
+            if (p1 * p2 < 0)
+            {
+                // 符号が変わる荷重：0 になる点で分け、両側に符号つきの値で描く
+                double zero = from + (to - from) * Math.Abs(p1) / (Math.Abs(p1) + Math.Abs(p2));
+                DrawBand(groups, row, null, reference, g, from * scale, zero * scale, p1, 0, true);
+                DrawBand(groups, row, null, reference, g, zero * scale, to * scale, 0, p2, true);
+                return;
+            }
+            DrawBand(groups, row, partner, reference, g, from * scale, to * scale, p1, p2, false);
+        }
+
+        /// <summary>
+        /// 一つの向きの分布荷重（from・to は範囲の始まりからの頁の長さ）。部材に平行な荷重（x、部材に平行な gx・gy）は破線の矢印。
+        /// </summary>
+        private void DrawBand(List<Group> groups, MemberLoad row, MemberLoad partner, double reference, ChainGeometry g,
+            double from, double to, double p1, double p2, bool signed)
+        {
+            double p = Math.Abs(p1) >= Math.Abs(p2) ? p1 : p2;
             var f = Force(g, row.Direction, Math.Sign(p));
             if (row.Direction == "x" || Math.Abs(f.X * g.U.Y - f.Y * g.U.X) < 1e-6)
             {
-                DrawAxial(g, row, f);
+                DrawAxial(g, from, to, p1, p2, f);
                 return;
             }
             var side = new XPoint(-f.X, -f.Y);
@@ -616,29 +721,37 @@ namespace PDF_Manager.Printing
             double t0 = T(group, g.Start), t1 = T(group, g.End);
             double a = T(group, Lerp(g.Start, g.End, from / g.Length)), b = T(group, Lerp(g.Start, g.End, to / g.Length));
             bool reversed = t1 < t0;
-            double p1 = reversed ? row.P2 : row.P1, p2 = reversed ? row.P1 : row.P2;
+            if (reversed) { (a, b) = (b, a); (p1, p2) = (p2, p1); }
             double chainA = Math.Min(t0, t1), chainB = Math.Max(t0, t1);
-            if (reversed) { double swap = a; a = b; b = swap; }
-            bool trapezoid = Math.Round(Math.Abs(row.P1), 2) != Math.Round(Math.Abs(row.P2), 2);
+            bool trapezoid = Math.Round(p1, 2) != Math.Round(p2, 2);
             bool steep = trapezoid && group.Vertical && Math.Max(Math.Abs(p1), Math.Abs(p2)) / reference > 0.2;
             var band = new Band
             {
-                ChainStart = chainA, ChainEnd = chainB, From = a, To = b, P1 = p1, P2 = p2, Trapezoid = trapezoid,
+                ChainStart = chainA, ChainEnd = chainB, From = a, To = b, P1 = p1, P2 = p2, Trapezoid = trapezoid, Signed = signed,
                 H1 = BandHeight(trapezoid ? p1 : p, reference, steep, !group.Vertical),
                 H2 = BandHeight(trapezoid ? p2 : p, reference, steep, !group.Vertical),
                 NeedsDimension = row.Chain.Count > 1 || from > 1e-6 || to < g.Length - 1e-6,
             };
             if (partner != null)
             {
+                // M/S の対：帯は M の値、文字は Ws（外）と Wm。両端の値が違えば「始まり～終わり」
                 var m = row.MS == "M" ? row : partner;
                 var s = row.MS == "M" ? partner : row;
-                double hm = BandHeight(Math.Abs(m.P1) >= Math.Abs(m.P2) ? m.P1 : m.P2, reference, false, !group.Vertical);
-                band.H1 = band.H2 = hm;
-                band.Labels = new[] { "  Ws=" + Value(s.P1), "  Wm=" + Value(m.P1) };
+                Clip(m, g.ModelLength, out _, out _, out double m1, out double m2);
+                Clip(s, g.ModelLength, out _, out _, out double s1, out double s2);
+                if (reversed) { (m1, m2) = (m2, m1); (s1, s2) = (s2, s1); }
+                band.H1 = BandHeight(m1, reference, false, !group.Vertical);
+                band.H2 = BandHeight(m2, reference, false, !group.Vertical);
+                band.Trapezoid = false;
+                band.Labels = new[] { "  Ws=" + Range(s1, s2), "  Wm=" + Range(m1, m2) };
             }
-            else if (!trapezoid) band.Labels = new[] { "  " + Value(p) };
+            else if (!trapezoid) band.Labels = new[] { "  " + Value(p, signed) };
             AddToLayer(group, band);
         }
+
+        /// <summary>両端が同じなら 1 つの値、違えば「始まり～終わり」。</summary>
+        private static string Range(double p1, double p2) =>
+            Math.Round(p1, 2) == Math.Round(p2, 2) ? Value(p1) : Value(p1, p1 * p2 < 0) + "～" + Value(p2, p1 * p2 < 0);
 
         private static void AddToLayer(Group group, Band band)
         {
@@ -714,7 +827,7 @@ namespace PDF_Manager.Printing
             else if (layer.Bands.Any(b => b.Trapezoid))
             {
                 double reserved = layer.Bands.Where(b => b.Trapezoid)
-                    .Max(b => Math.Max(Value(b.P1).Length, Value(b.P2).Length) + 5) * HalfWidth;
+                    .Max(b => Math.Max(Value(b.P1, b.Signed).Length, Value(b.P2, b.Signed).Length) + 5) * HalfWidth;
                 dimension = outer + (left ? EndLabelInner + reserved + EndLabelDimensionLeft : EndLabelOuter + reserved + EndLabelDimensionRight);
             }
             else dimension = outer + (left ? SideDimensionLeft : SideDimensionRight);
@@ -764,7 +877,7 @@ namespace PDF_Manager.Printing
                 double h = start ? band.H1 : band.H2;
                 var end = G(g, t, inner + h);
                 bool shared = layer.Bands.Any(o => o != band && Math.Abs((start ? o.To : o.From) - t) < 0.5);
-                string text = Value(p);
+                string text = Value(p, band.Signed);
                 double width = text.Length * HalfWidth;
                 double unitWidth = mc.gfx.MeasureString(" kN/m", unitFont).Width * TextStretch * TextStretch;
                 if (g.Vertical)
@@ -827,7 +940,9 @@ namespace PDF_Manager.Printing
             }
         }
 
-        private static string Value(double value) => Math.Abs(value).ToString("0.00", CultureInfo.InvariantCulture);
+        /// <summary>荷重の値。向きは図の側で分かるので絶対値（見本）。符号の変わる荷重だけ符号を付ける。</summary>
+        private static string Value(double value, bool signed = false) =>
+            (signed ? value : Math.Abs(value)).ToString("0.00", CultureInfo.InvariantCulture);
 
         /// <summary>帯の中央 (x, y) に値と単位。横書きは y が基線、回転は x が基線。</summary>
         private void ValueWithUnit(string text, string unit, double x, double y, bool rotated)
@@ -876,34 +991,51 @@ namespace PDF_Manager.Printing
             mc.gfx.Restore(state);
         }
 
-        private void DrawAxial(ChainGeometry g, MemberLoad row, XPoint f)
+        /// <summary>
+        /// 部材に平行な分布荷重：破線の矢印と「q =」（見本）。矢印は載る範囲の中央（範囲が全長なら剛域の部材を除いた中央に先）。
+        /// 範囲が全長でなければ両端に短い線を引く。両端の値が違えば「q =始まり～終わり」。
+        /// </summary>
+        private void DrawAxial(ChainGeometry g, double from, double to, double p1, double p2, XPoint f)
         {
             var gfx = mc.gfx;
             var pen = new XPen(XColors.Black, ArrowPen);
             var centre = FrameCentre;
             var normal = new XPoint(-g.U.Y, g.U.X);
-            var mid = Lerp(g.Start, g.End, (g.FreeFrom + g.FreeTo) / 2 / g.Length);
+            bool whole = from <= 1e-6 && to >= g.Length - 1e-6;
+            double middle = whole ? (g.FreeFrom + g.FreeTo) / 2 : (from + to) / 2;
+            var mid = Lerp(g.Start, g.End, middle / g.Length);
             if ((centre.X - mid.X) * normal.X + (centre.Y - mid.Y) * normal.Y < 0) normal = new XPoint(-normal.X, -normal.Y);
-            var tip = new XPoint(mid.X + normal.X * AxialOffset, mid.Y + normal.Y * AxialOffset);
-            var tail = new XPoint(tip.X - f.X * AxialLength, tip.Y - f.Y * AxialLength);
-            double shaft = AxialLength - AxialHead;
+            double length = whole ? AxialLength : Math.Min(AxialLength, to - from);
+            var line = new XPoint(mid.X + normal.X * AxialOffset, mid.Y + normal.Y * AxialOffset);
+            // 全長なら先が中央（見本）、一部なら矢印の中央が範囲の中央
+            var tip = whole ? line : new XPoint(line.X + f.X * length / 2, line.Y + f.Y * length / 2);
+            if (!whole)
+                foreach (double t in new[] { from, to })
+                {
+                    var end = Lerp(g.Start, g.End, t / g.Length);
+                    gfx.DrawLine(pen, new XPoint(end.X + normal.X * (AxialOffset - AxialRangeTick), end.Y + normal.Y * (AxialOffset - AxialRangeTick)),
+                        new XPoint(end.X + normal.X * (AxialOffset + AxialRangeTick), end.Y + normal.Y * (AxialOffset + AxialRangeTick)));
+                }
+            var tail = new XPoint(tip.X - f.X * length, tip.Y - f.Y * length);
+            double head = Math.Min(AxialHead, length / 2);
+            double shaft = length - head;
             for (double t = 0; t < shaft - 1e-6; t += AxialDash + AxialSpace)
-                gfx.DrawLine(pen, Lerp(tail, tip, t / AxialLength), Lerp(tail, tip, Math.Min(t + AxialDash, shaft) / AxialLength));
+                gfx.DrawLine(pen, Lerp(tail, tip, t / length), Lerp(tail, tip, Math.Min(t + AxialDash, shaft) / length));
             var side = new XPoint(-f.Y, f.X);
-            var back = new XPoint(tip.X - f.X * AxialHead, tip.Y - f.Y * AxialHead);
+            var back = new XPoint(tip.X - f.X * head, tip.Y - f.Y * head);
             gfx.DrawLine(pen, new XPoint(back.X + side.X * AxialHeadHalf, back.Y + side.Y * AxialHeadHalf), tip);
             gfx.DrawLine(pen, new XPoint(back.X - side.X * AxialHeadHalf, back.Y - side.Y * AxialHeadHalf), tip);
 
-            string text = "q =" + Value(Math.Abs(row.P1) >= Math.Abs(row.P2) ? row.P1 : row.P2);
+            string text = "q =" + Range(p1, p2);
             if (Math.Abs(g.U.Y) > Math.Abs(g.U.X))
             {
                 // 回転した文字は基線の左に字面がある。骨組の内側（右）なら破線の右、内側が左なら破線の左
-                double x = normal.X > 0 ? tip.X + AxialLabelInside : tip.X - AxialLabelOutside;
+                double x = normal.X > 0 ? line.X + AxialLabelInside : line.X - AxialLabelOutside;
                 DrawValue(text, " kN/m", x, Math.Max(tip.Y, tail.Y), true);
             }
             else
             {
-                double y = normal.Y > 0 ? tip.Y + LowerLabelDrop + 2 : tip.Y - 2;
+                double y = normal.Y > 0 ? line.Y + LowerLabelDrop + 2 : line.Y - 2;
                 DrawValue(text, " kN/m", Math.Min(tip.X, tail.X), y, false);
             }
         }
@@ -935,13 +1067,12 @@ namespace PDF_Manager.Printing
         {
             var g = Geometry(row.Chain);
             if (g.Length <= 0 || g.ModelLength <= 0) return;
-            double scale = g.Length / g.ModelLength;
-            foreach (var (distance, value) in new[] { (row.L1, row.P1), (row.L2, row.P2) })
+            foreach (var (distance, value) in new[] { (row.Start, row.P1), (row.End, row.P2) })
             {
-                if (value == 0) continue;
+                // 範囲の外の点は載らない（FrameWeb の展開と同じ）
+                if (value == 0 || distance < 0 || distance > g.ModelLength + 1e-9) continue;
                 var f = Force(g, row.Direction, Math.Sign(value));
-                var point = Lerp(g.Start, g.End, Math.Min(1, Math.Max(0, distance * scale / g.Length)));
-                Arrow(point, f, Math.Abs(value), "kN");
+                Arrow(Lerp(g.Start, g.End, distance / g.ModelLength), f, Math.Abs(value), "kN");
             }
         }
 
@@ -949,11 +1080,10 @@ namespace PDF_Manager.Printing
         {
             var g = Geometry(row.Chain);
             if (g.Length <= 0 || g.ModelLength <= 0) return;
-            double scale = g.Length / g.ModelLength;
-            foreach (var (distance, value) in new[] { (row.L1, row.P1), (row.L2, row.P2) })
+            foreach (var (distance, value) in new[] { (row.Start, row.P1), (row.End, row.P2) })
             {
-                if (value == 0) continue;
-                Moment(Lerp(g.Start, g.End, Math.Min(1, Math.Max(0, distance * scale / g.Length))), value);
+                if (value == 0 || distance < 0 || distance > g.ModelLength + 1e-9) continue;
+                Moment(Lerp(g.Start, g.End, distance / g.ModelLength), value);
             }
         }
 

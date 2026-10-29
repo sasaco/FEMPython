@@ -137,6 +137,155 @@ public sealed class FrameGLoadDiagramTests
         Near(pdf.Single(3, " Ｃase 4  永久作用としての側圧　EHP"), 78.0 / 595 * 842, 443.3 / 842 * 595, height: 595);
     }
 
+    // ---- 見本に無い荷重（WebPier・関内EVピットの帳票も通る）。長さ 10 m の水平の梁 1 本で確かめる ----
+
+    [Fact]
+    public void NegativeL1ContinuesFromThePreviousRowAndNegativeL2IsTheLoadedWidth()
+    {
+        // 行 1：1 m から幅 2 m（1〜3）。行 2：前の終わり 3 m から 1 m 空けて幅 3 m（4〜7）。
+        var pdf = Render(Beam("""
+            [{"row":1,"m1":"1","m2":"","direction":"y","mark":"2","L1":"1","L2":-2,"P1":5,"P2":5},
+             {"row":2,"m1":"1","m2":"","direction":"y","mark":"2","L1":"-1","L2":-3,"P1":6,"P2":6}]
+            """));
+        // 外の段（行 2）が上
+        Assert.Equal(["4.00", "3.00", "3.00", "1.00", "2.00", "7.00"], Dimensions(pdf));
+    }
+
+    [Fact]
+    public void ANegativeL1WithoutAPreviousRowStartsBeforeTheMemberAndIsCut()
+    {
+        // 続きでない負の L1：-1 m から 3 m（正の L2 は終わりの位置。FrameWeb の展開と同じ）を 0 m で切り、0 m の値を補う。
+        var pdf = Render(Beam("""
+            [{"row":5,"m1":"1","m2":"","direction":"y","mark":"2","L1":"-1","L2":3,"P1":0,"P2":8}]
+            """));
+        // 寸法 3.00・7.00 と、台形の両端の値 2.00（0 m の値 0 + 8·1/4）・8.00
+        Assert.Equal(["2.00", "3.00", "7.00", "8.00"], Dimensions(pdf).OrderBy(text => text, StringComparer.Ordinal).ToArray());
+    }
+
+    [Fact]
+    public void NegativeEndMemberRangeKeepsRelativeDistancesAlongTheRange()
+    {
+        // 部材 1〜2（範囲指定、合わせて 10 m）に 6 m から幅 3 m。
+        var pdf = Render(Beam("""
+            [{"row":1,"m1":"1","m2":"-2","direction":"y","mark":"2","L1":"6","L2":-3,"P1":5,"P2":5}]
+            """, split: true));
+        Assert.Equal(["6.00", "3.00", "1.00"], Dimensions(pdf));
+    }
+
+    [Fact]
+    public void PartialSpringIntervalsFollowEachOtherAndZeroStiffnessIsNotDrawn()
+    {
+        JObject root = Beam("[]");
+        root["fix_member"] = JObject.Parse("""
+            {"1":[{"row":1,"m":"1","length":4,"tx":0,"ty":100},{"row":2,"m":"1","length":3,"tx":0,"ty":0},
+                  {"row":3,"m":"1","tx":0,"ty":200}]}
+            """);
+        var pdf = Render(root);
+        var (x0, scale, _) = BeamLine(pdf);
+        var springs = pdf.Strokes.Where(s => s.Width == 0.36 && s.Points.Count == 6).Select(s => (s.Points.Min(p => p.X) - x0) / scale).ToList();
+        Assert.Contains(springs, x => x < 4);
+        Assert.Contains(springs, x => x > 7);
+        Assert.DoesNotContain(springs, x => x > 4.05 && x < 6.95);
+    }
+
+    [Fact]
+    public void ALoadThatChangesSignIsDrawnOnBothSidesWithSignedValues()
+    {
+        var pdf = Render(Beam("""
+            [{"row":1,"m1":"1","m2":"","direction":"y","mark":"2","L1":"0","L2":0,"P1":-10,"P2":20}]
+            """));
+        var (_, _, y) = BeamLine(pdf);
+        Assert.Contains(pdf.Runs, r => r.Text.Trim() == "-10.00");
+        Assert.Contains(pdf.Runs, r => r.Text.Trim() == "20.00");
+        var outlines = pdf.Strokes.Where(s => s.Width == 0.48).SelectMany(s => s.Points).ToList();
+        Assert.Contains(outlines, p => p.Y > y + 3);   // PDF の y は上向き：部材の上
+        Assert.Contains(outlines, p => p.Y < y - 3);   // 部材の下
+    }
+
+    [Fact]
+    public void AnMsPairWithDifferentEndsShowsBothEnds()
+    {
+        var pdf = Render(Beam("""
+            [{"row":1,"m1":"1","m2":"","direction":"y","mark":"2","L1":"0","L2":0,"P1":10,"P2":20,"ms":"M"},
+             {"row":2,"m1":"1","m2":"","direction":"y","mark":"2","L1":"0","L2":0,"P1":12,"P2":24,"ms":"S"}]
+            """));
+        Assert.Contains(pdf.Runs, r => r.Text.Trim() == "Ws=12.00～24.00");
+        Assert.Contains(pdf.Runs, r => r.Text.Trim() == "Wm=10.00～20.00");
+    }
+
+    [Fact]
+    public void AnAxialLoadShowsItsRangeAndBothValues()
+    {
+        var pdf = Render(Beam("""
+            [{"row":1,"m1":"1","m2":"","direction":"x","mark":"2","L1":"2","L2":3,"P1":4,"P2":6}]
+            """));
+        var (x0, scale, _) = BeamLine(pdf);
+        Assert.Contains(pdf.Runs, r => r.Text == "q =4.00～6.00");
+        // 範囲の両端の印（2 m と 7 m）
+        var ticks = pdf.Strokes.Where(s => s.Width == 0.36 && s.Points.Count == 2 && Math.Abs(s.Points[0].X - s.Points[1].X) < 0.01)
+            .Select(s => Math.Round((s.Points[0].X - x0) / scale, 2)).ToList();
+        Assert.Contains(2.0, ticks);
+        Assert.Contains(7.0, ticks);
+    }
+
+    [Theory]
+    [InlineData(1, 1, 1, false)]
+    [InlineData(1, 5000, 0, true)]
+    [InlineData(2000, 1, 0, true)]
+    public void SpringSupportsUseTheSpringSymbol(double tx, double ty, double rz, bool spring)
+    {
+        JObject root = Beam("[]");
+        root["fix_node"] = JObject.Parse($$"""{"1":[{"row":1,"n":"1","tx":{{tx}},"ty":{{ty}},"rz":{{rz}}}]}""");
+        var pdf = Render(root);
+        bool zigzag = pdf.Strokes.Any(s => s.Points.Count >= 5 && s.Width == 0.36);
+        Assert.Equal(spring, zigzag);
+    }
+
+    [Theory]
+    [InlineData("z")]
+    [InlineData("gz")]
+    [InlineData("r")]
+    public void OutOfPlaneMemberLoadsAreNotDrawnAsLocalY(string direction)
+    {
+        var pdf = Render(Beam($$"""
+            [{"row":1,"m1":"1","m2":"","direction":"{{direction}}","mark":"2","L1":"0","L2":0,"P1":5,"P2":5}]
+            """));
+        Assert.DoesNotContain(pdf.Runs, r => r.Text.Contains("5.00"));
+        Assert.DoesNotContain(pdf.Strokes, s => s.Width == 0.48);
+    }
+
+    /// <summary>寸法の文字（頁・上から下・左から右の順）。</summary>
+    private static string[] Dimensions(PdfResult pdf) => pdf.Runs
+        .Where(r => Regex.IsMatch(r.Text, @"^\d+\.\d+$")).OrderByDescending(r => Math.Round(r.Y, 1)).ThenBy(r => r.X)
+        .Select(r => r.Text).ToArray();
+
+    /// <summary>梁の線（0.84）の左端の x・1 m の pt・y（PDF の座標）。</summary>
+    private static (double X0, double Scale, double Y) BeamLine(PdfResult pdf)
+    {
+        var lines = pdf.Strokes.Where(s => s.Width == 0.84).ToList();
+        double left = lines.Min(s => s.Points.Min(p => p.X)), right = lines.Max(s => s.Points.Max(p => p.X));
+        return (left, (right - left) / 10, lines[0].Points[0].Y);
+    }
+
+    /// <summary>長さ 10 m の水平の梁（<paramref name="split"/> なら 4 m と 6 m の 2 部材）と 1 ケースの部材荷重。</summary>
+    private static JObject Beam(string memberLoads, bool split = false)
+    {
+        var root = JObject.Parse(split ? """
+            {"node":{"1":{"x":0,"y":0},"2":{"x":4,"y":0},"3":{"x":10,"y":0}},
+             "member":{"1":{"ni":"1","nj":"2","e":"1"},"2":{"ni":"2","nj":"3","e":"1"}}}
+            """ : """
+            {"node":{"1":{"x":0,"y":0},"2":{"x":10,"y":0}},"member":{"1":{"ni":"1","nj":"2","e":"1"}}}
+            """);
+        root.Merge(JObject.Parse("""
+            {"dimension":2,"language":"ja","pageSize":"A4","pageOrientation":"Vertical","ver":"2.5.12","title":"Beam",
+             "element":{"1":{"1":{"E":1,"A":1,"Iz":1,"n":"梁"}}},"fix_node":{"1":[]},"fix_member":{"1":[]},
+             "PrintLoad":{"diagramInput":{"layout":"single","output":["load"]},"pageOrientation":"Vertical"}}
+            """));
+        root["load"] = new JObject { ["1"] = new JObject { ["fix_node"] = 1, ["fix_member"] = 1, ["symbol"] = "L",
+            ["name"] = "荷重", ["load_node"] = new JArray(), ["load_member"] = JArray.Parse(memberLoads) } };
+        return root;
+    }
+
 
     private static bool Close((double X, double Y) point, double x, double top) =>
         Math.Abs(point.X - x) < 0.5 && Math.Abs(842 - point.Y - top) < 0.5;
