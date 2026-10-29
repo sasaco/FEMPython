@@ -520,7 +520,10 @@ namespace PDF_Manager.Printing
                 if (!int.TryParse(m1, out int first) || !int.TryParse(m2, out int last)) continue;
                 string mark = row["mark"]?.ToString()?.Trim() ?? "";
                 string direction = row["direction"]?.ToString()?.Trim().ToLowerInvariant() ?? "";
-                if (mark != "9" && !PlaneDirections.Contains(direction)) continue;
+                // The plane's forces are along x, y, gx and gy; its moments (mark 11) are about z or gz, which
+                // the solver applies as rz. A temperature change has no direction.
+                bool inPlane = mark == "9" || (mark == "11" ? PlaneMomentDirections : PlaneDirections).Contains(direction);
+                if (!inPlane) continue;
                 double l1 = Number(row["L1"]), l2 = Number(row["L2"]);
                 bool relativeStart = l1 < 0 || (row["L1"]?.ToString() ?? "").TrimStart().StartsWith("-", StringComparison.Ordinal);
                 string range = first + "," + last;
@@ -558,6 +561,7 @@ namespace PDF_Manager.Printing
         }
 
         private static readonly string[] PlaneDirections = { "x", "y", "gx", "gy" };
+        private static readonly string[] PlaneMomentDirections = { "z", "gz" };
 
         /// <summary>
         /// 帯の高さの基準 B（FrameG の BU荷重MAX）。部材に直角な分布荷重の最大値。見本のケース 1 では下床版（最も下の水平の部材）の

@@ -254,6 +254,20 @@ public sealed class FrameGLoadDiagramTests
         Assert.DoesNotContain(pdf.Strokes, s => s.Width == 0.48);
     }
 
+    [Theory]
+    [InlineData("z", true)]
+    [InlineData("gz", true)]
+    [InlineData("y", false)]
+    [InlineData("gx", false)]
+    public void AMemberMomentAboutZIsInThePlane(string direction, bool drawn)
+    {
+        // In 2D a moment load (mark 11) about z or gz is the solver's rz; about x or y it is out of the plane.
+        var pdf = Render(Beam($$"""
+            [{"row":1,"m1":"1","m2":"","direction":"{{direction}}","mark":"11","L1":"1","L2":0,"P1":7,"P2":0}]
+            """));
+        Assert.Equal(drawn, pdf.Runs.Any(r => r.Text.Contains("7.00")));
+    }
+
     /// <summary>寸法の文字（頁・上から下・左から右の順）。</summary>
     private static string[] Dimensions(PdfResult pdf) => pdf.Runs
         .Where(r => Regex.IsMatch(r.Text, @"^\d+\.\d+$")).OrderByDescending(r => Math.Round(r.Y, 1)).ThenBy(r => r.X)
