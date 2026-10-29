@@ -243,6 +243,8 @@ namespace PDF_Manager.Printing
         {
             // 要素を取得できる状態にする
             Member = (InputMember)data.printDatas[InputMember.KEY];
+            // The member table may not have been printed (FrameG's input copy prints its own).
+            Member.UseNodes((InputNode)data.printDatas[InputNode.KEY]);
 
             printInit(mc, data);
 

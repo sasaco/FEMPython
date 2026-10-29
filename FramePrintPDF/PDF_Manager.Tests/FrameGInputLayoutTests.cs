@@ -201,6 +201,125 @@ public sealed class FrameGInputLayoutTests
             Assert.Contains(pdf.Runs, run => run.Text == value);
     }
 
+    [Fact]
+    public void MaterialsOfEveryTypeArePrintedWhenThereIsMoreThanOneSheet()
+    {
+        // FrameG's member table shows the first TYPE; the other TYPEs must not be dropped.
+        var root = Model();
+        root["element"]!["2"] = JObject.Parse("""{ "2": { "E": 26500000, "Xp": 1e-05, "A": 0.777, "Iz": 0.004321, "n": "上床版" } }""");
+
+        var pdf = Pdf(root);
+
+        Assert.Contains(pdf.Runs, run => run.Text == "部 材 DATA");
+        Assert.Contains(pdf.Runs, run => run.Text == "材料データ");
+        Assert.Contains(pdf.Runs, run => run.Text == "0.7770");
+        Assert.Contains(pdf.Runs, run => run.Text == "0.004321");
+    }
+
+    [Fact]
+    public void AMemberWithAMissingMaterialShowsTheGenericMemberAndMaterialTables()
+    {
+        var root = Model();
+        root["member"]!["3"]!["e"] = "9";
+
+        var pdf = Pdf(root);
+
+        Assert.Contains(pdf.Runs, run => run.Text == "部材データ"); // the generic table lists the material number
+        Assert.Contains(pdf.Runs, run => run.Text == "材料データ");
+    }
+
+    [Fact]
+    public void OnlyAWholeNumberTooWideForItsFieldIsPrintedAsAnInteger()
+    {
+        var root = Model();
+        root["element"]!["1"]!["2"]!["A"] = 12.3456;
+        root["element"]!["1"]!["2"]!["Iz"] = 10.5;
+
+        var pdf = Pdf(root);
+
+        AssertRight(pdf.Single("12.3456"), 481.9);
+        AssertRight(pdf.Single("10.500000"), 536.4);
+        Assert.DoesNotContain(pdf.Runs, run => run.Text is "12" or "10");
+        // The rigid zone's 1000 keeps FrameG's place.
+        Assert.Equal(481.9 - 5 * Half, pdf.Runs.First(run => run.Text == "1000").X, 1);
+    }
+
+    [Fact]
+    public void ACaseLongerThanAPageContinuesWithItsHeadersOnTheNextPage()
+    {
+        var root = Model();
+        var rows = new JArray();
+        for (int row = 1; row <= 150; row++)
+            rows.Add(JObject.Parse($$"""{ "row": {{row}}, "m1": "2", "m2": "", "direction": "y", "mark": "2", "L1": "0.000", "L2": 0, "P1": {{row}}, "P2": {{row}} }"""));
+        root["load"]!["2"]!["load_member"] = rows;
+
+        var pdf = Pdf(root);
+
+        Assert.All(pdf.Runs, run => Assert.True(Baseline(run) <= PageHeight - 60 + 0.01, run.Text));
+        Assert.Contains(pdf.Runs, run => run.Text == "(.150)");
+        Assert.Contains(pdf.Runs, run => run.Text == "150.00");
+        var labels = pdf.Runs.Where(run => run.Text == "Ｃase 2  付加死荷重").ToList();
+        Assert.True(labels.Count >= 2);
+        // FrameG's continued page: no section heading, the load header from 96.5.
+        var continued = pdf.Runs.Where(run => run.Text == "部材荷重" && run.Page == labels.Last().Page).ToList();
+        Assert.Equal(96.5, Baseline(Assert.Single(continued)), 1);
+        Assert.DoesNotContain(pdf.Runs, run => run.Text == "実荷重 DATA" && run.Page == labels.Last().Page);
+    }
+
+    [Fact]
+    public void RigidZonesFrameGCannotShowKeepTheGenericTable()
+    {
+        var root = Model();
+        root["rigid"] = JArray.Parse("""
+            [ { "m": "3", "Ilength": 0.0, "Jlength": 0.1, "e": 1 }, { "m": "3", "Ilength": 0.2, "Jlength": 0.0, "e": 1 },
+              { "m": "7", "Ilength": 0.3, "Jlength": 0.0, "e": 1 } ]
+            """);
+
+        var pdf = Pdf(root);
+
+        Assert.DoesNotContain(pdf.Runs, run => run.Text == "部 材 DATA（剛域データ）");
+        Assert.Contains(pdf.Runs, run => run.Text == "剛域データ");
+        foreach (string value in new[] { "0.10", "0.20", "0.30" })
+            Assert.Contains(pdf.Runs, run => run.Text == value);
+    }
+
+    [Fact]
+    public void LongNamesWrapWithinTheirColumns()
+    {
+        var root = Model();
+        string longName = string.Concat(Enumerable.Repeat("長い名称", 8));
+        root["load"]!["1"]!["name"] = longName;
+        root["combine"]!["1"]!["name"] = longName;
+        root["pickup"]!["1"]!["name"] = longName;
+        root["element"]!["1"]!["2"]!["n"] = longName;
+
+        var pdf = Pdf(root);
+
+        var parts = pdf.Runs.Where(run => Regex.IsMatch(run.Text, "^[長い名称]+$")).ToList();
+        Assert.DoesNotContain(pdf.Runs, run => run.Text == longName); // only the load caption (its own line) holds it whole
+        // Basic load name: up to the support column; COMBINE name: before the DEFINE numbers;
+        // PickUp name: before the COMBINE numbers; member table name: between the mark and E columns.
+        Assert.All(parts.Where(run => Math.Abs(run.X - 227.5) < 0.5), run => Assert.True(run.X + run.Width <= 414.0, run.Text));
+        Assert.All(parts.Where(run => Math.Abs(run.X - 153.0) < 0.5), run => Assert.True(run.X + run.Width <= 304.0, run.Text));
+        Assert.All(parts.Where(run => Math.Abs(run.X - 146.2) < 0.5), run => Assert.True(run.X + run.Width <= 296.0, run.Text));
+        var member = parts.Where(run => run.X > 240 && run.X < 340).ToList();
+        Assert.NotEmpty(member);
+        Assert.All(member, run => Assert.True(run.X >= 245 && run.X + run.Width <= 356, run.Text));
+        Assert.Equal(longName.Length, parts.Where(run => Math.Abs(run.X - 227.5) < 0.5).Sum(run => run.Text.Length));
+    }
+
+    [Fact]
+    public void AnOutOfPlaneLoadShowsItsDirection()
+    {
+        var root = Model();
+        ((JArray)root["load"]!["2"]!["load_member"]!).Add(JObject.Parse(
+            """{ "row": 1, "m1": "2", "m2": "", "direction": "z", "mark": "2", "L1": "0.000", "L2": 0, "P1": 4, "P2": 4 }"""));
+
+        var pdf = Pdf(root);
+
+        Assert.Contains(pdf.Runs, run => run.Text == "z" && Math.Abs(run.X - 443.3) < 0.5);
+    }
+
     private static void AssertRight((string Text, double X, double Y, double Width, int Page) run, double right) =>
         Assert.InRange(run.X + run.Width, right - Tolerance, right + Tolerance);
 

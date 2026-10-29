@@ -56,10 +56,27 @@ namespace PDF_Manager.Printing
             var members = Section<InputMember>(InputMember.KEY)?.members ?? new Dictionary<string, Member>();
             var sheets = Section<InputElement>(InputElement.KEY)?.Sheets;
             var materials = sheets == null || sheets.Count == 0 ? new Dictionary<string, Element>() : sheets[sheets.Keys.Min()];
+            var rigids = Section<InputRigid>(InputRigid.KEY)?.rigids ?? new List<Rigid>();
 
             Nodes(nodes);
             Members(nodes, members, materials);
-            Rigid(nodes, members, materials);
+            // FrameG has at most one rigid zone row per member, with its own A and I. Other rows keep the
+            // generic table, which prints every row with its material number.
+            if (rigids.GroupBy(rigid => rigid.m).Any(rows => rows.Count() > 1) ||
+                rigids.Any(rigid => !members.ContainsKey(rigid.m ?? "") || !materials.ContainsKey(rigid.e ?? "")))
+                Legacy(InputRigid.KEY);
+            else
+                Rigid(nodes, members, materials, rigids);
+            // FrameG's member table shows the first TYPE's material of each member. Other TYPEs, or a member
+            // whose material is not in the first TYPE, add the generic material table; the generic member table
+            // then gives the material numbers when they are not the member numbers.
+            bool missing = members.Values.Any(member => !string.IsNullOrEmpty(member.e) && !materials.ContainsKey(member.e));
+            if (missing || sheets?.Count > 1)
+            {
+                if (missing || members.Any(member => member.Value.e != member.Key))
+                    Legacy(InputMember.KEY);
+                Legacy(InputElement.KEY);
+            }
             // FrameG's sample has no supports or joints; they keep their own tables here.
             Legacy(InputFixNode.KEY);
             Legacy(InputJoint.KEY);
@@ -171,13 +188,26 @@ namespace PDF_Manager.Printing
         private static string Exponent(double value) =>
             double.IsNaN(value) ? "" : value.ToString("0.00E+0", CultureInfo.InvariantCulture);
 
-        // FrameG's area (0.0000) and inertia (0.000000) fields: a value too wide for the field, like a rigid
-        // zone's 1000, is printed as an integer one character in from the field's left edge.
+        // FrameG's area (0.0000) and inertia (0.000000) fields: a whole number too wide for the field, like a
+        // rigid zone's 1000, is printed as an integer one character in from the field's left edge. Any other
+        // value keeps its decimals and extends to the left.
         private void Field(double value, int digits, int width, double right, double baseline)
         {
             string text = Fixed(value, digits);
-            if (text.Length <= width) Right(text, right, baseline);
-            else Left(Math.Round(value).ToString(CultureInfo.InvariantCulture), right - (width - 1) * Half, baseline);
+            if (text.Length > width && value == Math.Round(value))
+                Left(value.ToString("0", CultureInfo.InvariantCulture), right - (width - 1) * Half, baseline);
+            else
+                Right(text, right, baseline);
+        }
+
+        // A name in the lines that fit its column.
+        private List<string> Wrapped(string text, double width) =>
+            string.IsNullOrEmpty(text) ? new List<string> { "" } : ReferenceResultLayout.Wrap(document, font, text, width);
+
+        private static void DrawLines(IReadOnlyList<string> lines, double x, double baseline, Action<string, double, double> draw)
+        {
+            for (int i = 0; i < lines.Count; i++)
+                draw(lines[i], x, baseline + i * Line);
         }
 
         private static IEnumerable<KeyValuePair<string, T>> ById<T>(IEnumerable<KeyValuePair<string, T>> items) =>
@@ -223,15 +253,17 @@ namespace PDF_Manager.Printing
             Table(31.5, Header, 44.9, rows);
         }
 
+        // Rows of members; a member name wider than its column continues on the following lines.
         private List<Row> GroupedRows(IEnumerable<KeyValuePair<string, Member>> members, IDictionary<string, Element> materials,
-            Action<KeyValuePair<string, Member>, double> draw)
+            double nameWidth, Action<KeyValuePair<string, Member>, double, List<string>> draw)
         {
             var rows = new List<Row>();
             string group = null;
             foreach (var member in members)
             {
                 string next = Group(materials, member.Value);
-                rows.Add(new Row(group == null || group == next ? Line : GroupLine, 0, b => draw(member, b)));
+                var name = Wrapped(Material(materials, member.Value)?.name, nameWidth);
+                rows.Add(new Row(group == null || group == next ? Line : GroupLine, (name.Count - 1) * Line, b => draw(member, b, name)));
                 group = next;
             }
             return rows;
@@ -262,7 +294,8 @@ namespace PDF_Manager.Printing
                 Left("A (m2)", 458.3, h2);
                 Left("I (m4)", 505.9, h2);
             }
-            var rows = GroupedRows(ById(members), materials, (member, b) =>
+            // The name is centred between the mark and E columns.
+            var rows = GroupedRows(ById(members), materials, 72.0, (member, b, name) =>
             {
                 Right(member.Key, 105.5, b);
                 Right(member.Value.ni, 146.0, b);
@@ -270,7 +303,7 @@ namespace PDF_Manager.Printing
                 Right(Fixed(Length(nodes, member.Value), 3), 223.3, b);
                 Element material = Material(materials, member.Value);
                 if (material == null) return;
-                Center(material.name, 286.4, b);
+                DrawLines(name, 286.4, b, Center);
                 Right(Exponent(material.E), 390.4, b);
                 Right(Exponent(material.Xp), 438.0, b);
                 Field(material.A, 4, 6, 481.9, b);
@@ -279,9 +312,10 @@ namespace PDF_Manager.Printing
             Table(31.5, Header, 44.8, rows);
         }
 
-        private void Rigid(Dictionary<string, Vector3> nodes, Dictionary<string, Member> members, IDictionary<string, Element> materials)
+        // One row per member, with the member's rigid zones (at most one row each; the caller checks).
+        private void Rigid(Dictionary<string, Vector3> nodes, Dictionary<string, Member> members, IDictionary<string, Element> materials,
+            List<Rigid> rigids)
         {
-            var rigids = Section<InputRigid>(InputRigid.KEY)?.rigids ?? new List<Rigid>();
             if (rigids.Count == 0) return;
             void Header(double h)
             {
@@ -302,16 +336,17 @@ namespace PDF_Manager.Printing
                 Left("A (m2)", 346.4, h2);
                 Left("I (m4)", 402.8, h2);
             }
-            var rows = GroupedRows(ById(members), materials, (member, b) =>
+            // The name is centred between the mark and the rigid lengths.
+            var rows = GroupedRows(ById(members), materials, 52.0, (member, b, name) =>
             {
                 Right(member.Key, 107.1, b);
                 Right(Fixed(Length(nodes, member.Value), 3), 157.2, b);
-                Center(Material(materials, member.Value)?.name, 211.5, b);
+                DrawLines(name, 211.5, b, Center);
                 Rigid rigid = rigids.FirstOrDefault(item => item.m == member.Key);
                 if (rigid == null) return;
                 Right(NonZero(rigid.Ilength, 3), 271.8, b);
                 Right(NonZero(rigid.Jlength, 3), 305.6, b);
-                if (!materials.TryGetValue(rigid.e ?? "", out var zone)) return;
+                Element zone = materials[rigid.e];
                 Field(zone.A, 4, 6, 350.9 + 5 * Half, b);
                 Field(zone.Iz, 6, 8, 411.8 + 7 * Half, b);
             });
@@ -421,9 +456,8 @@ namespace PDF_Manager.Printing
             {
                 members.TryGetValue(row.m, out var member);
                 var named = row.Points.Where(point => !double.IsNaN(point)).Select(point => (Point: point, Name: "")).ToList();
-                Rigid rigid = rigids.FirstOrDefault(item => item.m == row.m);
                 double length = Length(nodes, member);
-                if (rigid != null && !double.IsNaN(length))
+                foreach (Rigid rigid in rigids.Where(item => item.m == row.m && !double.IsNaN(length)))
                     foreach (double end in new[] { rigid.Ilength, length - rigid.Jlength })
                         if (end > 0 && end < length && !named.Any(point => Math.Abs(point.Point - end) < 0.0005))
                             named.Add((end, L("剛域", "Rigid", "刚性区")));
@@ -465,14 +499,17 @@ namespace PDF_Manager.Printing
                 Left(L("地 盤", "Soil", "地 基"), 526.7, h2);
             }
             string Condition(int value) => value > 0 ? value.ToString(CultureInfo.InvariantCulture) : "";
-            var rows = names.OrderBy(name => name.Key).Select(name => new Row(Line, 0, b =>
+            // A name runs up to the support column (FrameG's longest in the sample ends at 408.8).
+            var rows = names.OrderBy(name => name.Key).Select(name => (Case: name, Lines: Wrapped(name.Value.name, 186.0))).Select(item =>
+                new Row(Line, (item.Lines.Count - 1) * Line, b =>
             {
+                var name = item.Case;
                 string id = name.Key.ToString(CultureInfo.InvariantCulture);
                 Right(id, 105.6, b);
                 Right(Fixed(name.Value.rate, 4), 153.2, b);
                 Right(id, 180.0, b); // FrameWeb's case is its own real load
                 Left(name.Value.symbol, 197.0, b);
-                Left(name.Value.name, 227.5, b);
+                DrawLines(item.Lines, 227.5, b, Left);
                 Right(Condition(name.Value.fix_node), 419.0, b);
                 Right(Condition(name.Value.element), 439.3, b);
                 Right(Condition(name.Value.fix_member), 459.6, b);
@@ -490,80 +527,25 @@ namespace PDF_Manager.Printing
                 case "gy": return (load.mark, "V", load.P1, load.P2);
                 case "gx": return (load.mark, "H", -load.P1, -load.P2); // the converter turned FrameG's H over
                 case "x": return (known && (mark == 1 || mark == 2) ? (mark + 4).ToString(CultureInfo.InvariantCulture) : load.mark, "", load.P1, load.P2);
-                default: return (load.mark, load.ms ?? "", load.P1, load.P2);
+                case "y": case "": case null: return (load.mark, load.ms ?? "", load.P1, load.P2);
+                // Directions FrameG has no column for (z, gz) are shown as written in the generic load table.
+                default: return (load.mark, load.direction, load.P1, load.P2);
             }
         }
 
         private static string Serial(int number) => "(" + number.ToString(CultureInfo.InvariantCulture).PadLeft(4, '.') + ")";
 
         // Each case's member loads, then its nodal loads. A type's header is printed when the type changes and at
-        // the top of each page; a case is kept whole.
+        // the top of each page; a case is kept whole when it fits on a page, and otherwise continues on the next
+        // page under its type's header and case caption again.
         private void Loads(Dictionary<int, LoadName> names, Dictionary<int, Load> loads)
         {
-            var blocks = new List<(bool Member, int Case, int Rows)>();
+            int memberSerial = 0, nodeSerial = 0;
+            var blocks = new List<(bool Member, int Case, List<Action<double>> Rows)>();
             foreach (var load in loads.OrderBy(load => load.Key))
             {
-                if (load.Value.load_member?.Length > 0) blocks.Add((true, load.Key, load.Value.load_member.Length));
-                if (load.Value.load_node?.Length > 0) blocks.Add((false, load.Key, load.Value.load_node.Length));
-            }
-            if (blocks.Count == 0) return;
-            const double nextLine = 18.0, continuedHeader = 96.5, memberLabel = 31.4, nodeLabel = 22.3, firstRow = 13.5;
-            double heading = Heading(27.0, 17.8 + (blocks[0].Member ? memberLabel : nodeLabel) + firstRow +
-                (blocks[0].Rows - 1) * Line + nextLine);
-            Left(L("実荷重 DATA", "LOAD DATA", "实载重 DATA"), 78.4, heading);
-            bool? type = null;
-            int memberSerial = 0, nodeSerial = 0;
-            for (int index = 0; index < blocks.Count; index++)
-            {
-                var (member, caseId, count) = blocks[index];
-                double start = index == 0 ? heading + 17.8 : y + nextLine;
-                double LabelOffset(bool header) => header ? (member ? memberLabel : nodeLabel) : 0;
-                bool header = type != member;
-                double last = start + LabelOffset(header) + firstRow + (count - 1) * Line;
-                // FrameG keeps a case whole and leaves room for the line after it.
-                if (index > 0 && last + nextLine > Bottom)
-                {
-                    NewPage();
-                    pageStarted = true;
-                    start = continuedHeader;
-                    header = true;
-                }
-                if (header)
-                {
-                    if (member)
-                    {
-                        Left(L("部材荷重", "Member load", "构件载重"), 102.1, start);
-                        Left(L("部材番号", "Member No.", "构件编码"), 157.0, start);
-                        Left("V/H", 441.1, start);
-                        double h2 = start + Line;
-                        Left(L("ｽﾀｰﾄ", "Start", "开始"), 155.4, h2);
-                        Left(L("ｴﾝﾄﾞ", "End", "结尾"), 182.5, h2);
-                        Left(L("ﾏｰｸ", "Mark", "标记"), 220.9, h2);
-                        Left("L1", 262.6, h2);
-                        Left("L2", 306.6, h2);
-                        Left("P1", 357.5, h2);
-                        Left("P2", 408.4, h2);
-                        Left("M/S", 441.1, h2);
-                        Rule(h2);
-                    }
-                    else
-                    {
-                        Left(L("節点荷重", "Nodal load", "节点载重"), 102.1, start);
-                        Left(L("節点番号", "Node No.", "节点编码"), 157.0, start);
-                        Left("F.X", 241.2, start);
-                        Left("F.Y", 309.0, start);
-                        Left("M", 379.0, start);
-                        Rule(start);
-                    }
-                    type = member;
-                }
-                double label = start + LabelOffset(header);
-                names.TryGetValue(caseId, out var name);
-                Left(L("Ｃase", "Case", "Case") + " " + caseId.ToString(CultureInfo.InvariantCulture) + "  " + name?.name, 91.9, label);
-                double baseline = label + firstRow;
-                Load load = loads[caseId];
-                if (member)
-                    foreach (LoadMember row in load.load_member)
+                if (load.Value.load_member?.Length > 0)
+                    blocks.Add((true, load.Key, load.Value.load_member.Select(row => (Action<double>)(baseline =>
                     {
                         var (mark, column, p1, p2) = FrameGLoad(row);
                         Right(row.m1, 169.9, baseline);
@@ -575,20 +557,98 @@ namespace PDF_Manager.Printing
                         Right(NonZero(p2, 2), 420.8, baseline);
                         Left(column, 443.3, baseline);
                         Left(Serial(++memberSerial), 488.6, baseline);
-                        y = baseline;
-                        baseline += Line;
-                    }
-                else
-                    foreach (LoadNode row in load.load_node)
+                    })).ToList()));
+                if (load.Value.load_node?.Length > 0)
+                    blocks.Add((false, load.Key, load.Value.load_node.Select(row => (Action<double>)(baseline =>
                     {
                         Right(row.n, 186.7, baseline);
                         Right(NonZero(row.tx, 2), 261.4, baseline);
                         Right(NonZero(row.ty, 2), 329.2, baseline);
                         Right(NonZero(row.rz, 2), 397.0, baseline);
                         Left(Serial(++nodeSerial), 488.6, baseline);
-                        y = baseline;
-                        baseline += Line;
+                    })).ToList()));
+            }
+            if (blocks.Count == 0) return;
+            const double nextLine = 18.0, continuedHeader = 96.5, memberLabel = 31.4, nodeLabel = 22.3, firstRow = 13.5;
+            List<string> Caption(int caseId)
+            {
+                names.TryGetValue(caseId, out var name);
+                return Wrapped(L("Ｃase", "Case", "Case") + " " + caseId.ToString(CultureInfo.InvariantCulture) + "  " + name?.name,
+                    RuleRight - 91.9);
+            }
+            void TypeHeader(bool member, double start)
+            {
+                if (member)
+                {
+                    Left(L("部材荷重", "Member load", "构件载重"), 102.1, start);
+                    Left(L("部材番号", "Member No.", "构件编码"), 157.0, start);
+                    Left("V/H", 441.1, start);
+                    double h2 = start + Line;
+                    Left(L("ｽﾀｰﾄ", "Start", "开始"), 155.4, h2);
+                    Left(L("ｴﾝﾄﾞ", "End", "结尾"), 182.5, h2);
+                    Left(L("ﾏｰｸ", "Mark", "标记"), 220.9, h2);
+                    Left("L1", 262.6, h2);
+                    Left("L2", 306.6, h2);
+                    Left("P1", 357.5, h2);
+                    Left("P2", 408.4, h2);
+                    Left("M/S", 441.1, h2);
+                    Rule(h2);
+                }
+                else
+                {
+                    Left(L("節点荷重", "Nodal load", "节点载重"), 102.1, start);
+                    Left(L("節点番号", "Node No.", "节点编码"), 157.0, start);
+                    Left("F.X", 241.2, start);
+                    Left("F.Y", 309.0, start);
+                    Left("M", 379.0, start);
+                    Rule(start);
+                }
+            }
+            double LabelOffset(bool member, bool header) => header ? (member ? memberLabel : nodeLabel) : 0;
+            var first = blocks[0];
+            double heading = Heading(27.0, 17.8 + LabelOffset(first.Member, true) + (Caption(first.Case).Count - 1) * Line +
+                firstRow + (first.Rows.Count - 1) * Line + nextLine);
+            Left(L("実荷重 DATA", "LOAD DATA", "实载重 DATA"), 78.4, heading);
+            bool? type = null;
+            for (int index = 0; index < blocks.Count; index++)
+            {
+                var (member, caseId, rows) = blocks[index];
+                var caption = Caption(caseId);
+                double start = index == 0 ? heading + 17.8 : y + nextLine;
+                bool header = type != member;
+                double last = start + LabelOffset(member, header) + (caption.Count - 1) * Line + firstRow + (rows.Count - 1) * Line;
+                // FrameG keeps a case whole and leaves room for the line after it.
+                if (index > 0 && last + nextLine > Bottom)
+                {
+                    NewPage();
+                    pageStarted = true;
+                    start = continuedHeader;
+                    header = true;
+                }
+                double Begin()
+                {
+                    if (header) TypeHeader(member, start);
+                    type = member;
+                    double label = start + LabelOffset(member, header);
+                    DrawLines(caption, 91.9, label, Left);
+                    return label + (caption.Count - 1) * Line + firstRow;
+                }
+                double baseline = Begin();
+                foreach (var row in rows)
+                {
+                    if (baseline > Bottom)
+                    {
+                        // A case longer than a page.
+                        NewPage();
+                        pageStarted = true;
+                        start = continuedHeader;
+                        header = true;
+                        baseline = Begin();
                     }
+                    row(baseline);
+                    y = baseline;
+                    baseline += Line;
+                }
             }
         }
 
@@ -646,11 +706,12 @@ namespace PDF_Manager.Printing
             var rows = combines.OrderBy(combine => combine.Key).Select(combine =>
             {
                 var terms = Columns(combine.Value.coef).ToList();
-                return new Row(13.5, (2 * Lines(terms.Count, perLine) - 1) * Line, b =>
+                var name = Wrapped(combine.Value.name, 150.0); // before the DEFINE numbers
+                return new Row(13.5, Math.Max(2 * Lines(terms.Count, perLine) - 1, name.Count - 1) * Line, b =>
                 {
                     Right(combine.Key.ToString(CultureInfo.InvariantCulture), 92.0, b);
                     Right(Fixed(1, 4), 132.9, b); // FrameWeb has no factor for the whole combination
-                    Left(combine.Value.name, 153.0, b);
+                    DrawLines(name, 153.0, b, Left);
                     Cells(terms.Select(term => term.Key.ToString(CultureInfo.InvariantCulture)).ToList(), perLine, 322.4, pitch, b, 2 * Line);
                     Cells(terms.Select(term => Fixed(term.Value, 3)).ToList(), perLine, 322.6, pitch, b + Line, 2 * Line);
                 });
@@ -675,10 +736,11 @@ namespace PDF_Manager.Printing
             var rows = pickups.OrderBy(pickup => pickup.Key).Select(pickup =>
             {
                 var combines = Columns(pickup.Value.com).Select(item => item.Value.ToString(CultureInfo.InvariantCulture)).ToList();
-                return new Row(13.48, (Lines(combines.Count, perLine) - 1) * Line, b =>
+                var name = Wrapped(pickup.Value.name, 148.0); // before the COMBINE numbers
+                return new Row(13.48, (Math.Max(Lines(combines.Count, perLine), name.Count) - 1) * Line, b =>
                 {
                     Right(pickup.Key.ToString(CultureInfo.InvariantCulture), 125.8, b);
-                    Left(pickup.Value.name, 146.2, b);
+                    DrawLines(name, 146.2, b, Left);
                     Cells(combines, perLine, 308.7, pitch, b, Line);
                 });
             }).ToList();

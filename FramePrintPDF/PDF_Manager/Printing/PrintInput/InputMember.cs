@@ -283,6 +283,9 @@ namespace PDF_Manager.Printing
 
         #region 他のモジュールのヘルパー関数
 
+        // 部材長に使う格点。部材の表を印刷しないとき（FrameG の入力の写し）に他の表が渡す。
+        internal void UseNodes(InputNode node) => Node = node;
+
         /// <summary>
         /// 部材にの長さを取得する
         /// </summary>
