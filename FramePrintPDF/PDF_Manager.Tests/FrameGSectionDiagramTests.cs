@@ -60,6 +60,33 @@ public sealed class FrameGSectionDiagramTests
     }
 
     [Fact]
+    public void DisplacementFrameIsClosedWithItsRigidPartsThicker()
+    {
+        // FrameG draws the whole undeflected frame under the displacement curve (原宿ボックス 0404, 4-33):
+        // flexible parts 0.24 pt, rigid members and rigid zones 0.48 pt, so the frame does not break at them.
+        JObject root = FrameGJob();
+        var settings = (JObject)root["PrintDiagram"]!["diagramResult"]!;
+        settings["rigidMembers"] = new JArray("pile/B");
+        settings["rigidZones"] = new JObject { ["beam/A"] = new JArray(0.5, 0) };
+        var pdf = Render(root);
+        // The lower panel of page 2 (its top 135.3 + 339.2 pt from the top of the page) holds the displacement.
+        var frame = pdf.Strokes.Where(stroke => stroke.Page == 2 && stroke.Points.Count == 2 && stroke.Width < .5 &&
+            stroke.Points.All(point => point.Y < A4Height - 135.3 - 339.2)).ToList();
+        double Length(Stroke stroke) => Math.Sqrt(Math.Pow(stroke.Points[1].X - stroke.Points[0].X, 2) +
+            Math.Pow(stroke.Points[1].Y - stroke.Points[0].Y, 2));
+        var thin = frame.Where(stroke => Math.Abs(stroke.Width - .24) < .001).ToList();
+        var rigid = frame.Where(stroke => Math.Abs(stroke.Width - .48) < .001).ToList();
+        // The beam's flexible part (1.5 m), its rigid zone (0.5 m) and the rigid pile (20 m), end to end.
+        Assert.Single(thin);
+        Assert.Equal(2, rigid.Count);
+        double zone = rigid.Select(Length).Min(), pile = rigid.Select(Length).Max();
+        Assert.Equal(Length(thin[0]) / 3, zone, 1);
+        Assert.Equal(40 * zone, pile, 1);
+        Assert.Contains(rigid, stroke => stroke.Points.Any(point =>
+            Math.Abs(point.X - thin[0].Points[0].X) < .01 && Math.Abs(point.Y - thin[0].Points[0].Y) < .01));
+    }
+
+    [Fact]
     public void FrameUsesARoundScaleWithinItsShareOfThePanel()
     {
         // The 20 m pile limits the scale: 0.44 x 339.2 pt / 20 m is 1:380, rounded up to 1:400.

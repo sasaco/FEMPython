@@ -616,6 +616,13 @@ namespace PDF_Manager.Printing
         #region PrintableBaseC.printPDF()用メソッド定義
         public new void printPDF(PdfDocument mc, PrintData data, ref int indexPage)
         {
+            // 2D displacements list the input nodes only, as the basic cases do (ResultDisg);
+            // generated stations (load points, notice points) are internal to the calculation.
+            if (data.dimension == 2 && data.printDatas.TryGetValue(InputNode.KEY, out var section) &&
+                section is InputNode input && input.Nodes.Count > 0)
+                foreach (DisgCombine combine in disgs.Values)
+                    foreach (var field in typeof(DisgCombine).GetFields().Where(field => field.FieldType == typeof(List<Disg>)))
+                        ((List<Disg>)field.GetValue(combine)).RemoveAll(row => !input.Nodes.ContainsKey(row.id));
             if (data.dimension != 2 || ordinaryCombinations.Count == 0)
             { base.printPDF(mc, data, ref indexPage); return; }
             List<Disg> Vector(DisgCombine value) => Enumerable.Range(0, 6)

@@ -740,6 +740,26 @@ public sealed class TransverseReportCompositionTests
         Assert.Equal(active, PdfDocument.ActiveDocumentCount);
     }
 
+    [Theory]
+    [InlineData("disgCombine")]
+    [InlineData("disgPickup")]
+    public void CombinedDisplacementsListTheInputNodesOnly(string family)
+    {
+        // Generated stations (load points, notice points) are internal, as in the basic displacements.
+        var root = Root();
+        root["pageOrientation"] = "Vertical";
+        root["node"] = JObject.Parse("""{"1":{"x":0,"y":0,"z":0}}""");
+        root[family] = JObject.Parse("""
+            {"1":{"dx_max":{"1":{"dx":1.2345,"dy":2,"rz":3,"case":"1"},"generated:11:S9":{"dx":9.8765,"dy":4,"rz":5,"case":"2"}},
+                  "dx_min":{"1":{"dx":-1.2345,"dy":2,"rz":3,"case":"1"},"generated:11:S9":{"dx":-9.8765,"dy":4,"rz":5,"case":"2"}}}}
+            """);
+        root[family + "Name"] = JArray.Parse("""[["1","Envelope"]]""");
+        var pdf = Pdf(root, "combined-displacement-input-nodes-" + family);
+        Assert.Contains("1.2345", pdf.Text);
+        Assert.DoesNotContain("generated", pdf.Text);
+        Assert.DoesNotContain("9.8765", pdf.Text);
+    }
+
     [Fact]
     public void LongBasicCaseHeadingWrapsWithinThePage()
     {

@@ -27,7 +27,9 @@ namespace PDF_Manager.Printing
         // At 1:70 the sample's 4.75 m x 3.225 m frame takes 0.41 x 0.38 of a panel; 1:60 would exceed 0.44.
         private const double FrameShare = .44;
         private const double MaxOrdinate = 72 / 2.54;   // 10 mm for the largest force or displacement
-        private const double MemberPen = .72, RigidPen = 1.08, CurvePen = .48, DisplacementFramePen = .24;
+        private const double MemberPen = .72, RigidPen = 1.08, CurvePen = .48;
+        // The undeflected frame under a displacement curve: thin, its rigid parts a little thicker.
+        private const double DisplacementFramePen = .24, DisplacementRigidPen = .48;
         // Displacement curves bend at about 0.4 m intervals of a member's flexible part, at most 10 per part.
         private const double DisplacementDivision = .4;
         private const int MaxDisplacementDivisions = 10;
@@ -199,8 +201,8 @@ namespace PDF_Manager.Printing
         private Tuple<double, double> RigidZone(MemberGeometry member) =>
             rigidZones.TryGetValue(member.Id, out var zone) ? zone : Tuple.Create(0d, 0d);
 
-        // Rigid members and rigid zones are drawn thick; the displacement panel shows only the flexible
-        // parts, thin, under the deflected shape.
+        // Rigid members and rigid zones are drawn thick; the displacement panel draws the whole frame
+        // thinner under the deflected shape (原宿ボックス 0404, 4-33: flexible parts 0.24 pt, rigid parts 0.48 pt).
         private void DrawFrameGMembers(PdfDocument document, IEnumerable<MemberGeometry> members,
             PlotTransform transform, bool displacement)
         {
@@ -215,15 +217,12 @@ namespace PDF_Manager.Printing
                 }
                 var zone = RigidZone(member);
                 bool rigid = rigidMembers.Contains(member.Id);
-                if (displacement)
-                {
-                    if (!rigid) Line(zone.Item1, member.Length - zone.Item2, DisplacementFramePen);
-                    continue;
-                }
-                if (rigid) { Line(0, member.Length, RigidPen); continue; }
-                Line(0, zone.Item1, RigidPen);
-                Line(zone.Item1, member.Length - zone.Item2, MemberPen);
-                Line(member.Length - zone.Item2, member.Length, RigidPen);
+                double flexiblePen = displacement ? DisplacementFramePen : MemberPen;
+                double rigidPen = displacement ? DisplacementRigidPen : RigidPen;
+                if (rigid) { Line(0, member.Length, rigidPen); continue; }
+                Line(0, zone.Item1, rigidPen);
+                Line(zone.Item1, member.Length - zone.Item2, flexiblePen);
+                Line(member.Length - zone.Item2, member.Length, rigidPen);
             }
         }
 

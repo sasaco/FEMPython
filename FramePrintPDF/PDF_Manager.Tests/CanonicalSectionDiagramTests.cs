@@ -532,7 +532,7 @@ public sealed class CanonicalSectionDiagramTests
     }));
 
     internal sealed record Run(string Text, double X, double Y, int Page, bool Blue, double Angle);
-    internal sealed record Stroke(List<(double X, double Y)> Points, int Page, bool Blue);
+    internal sealed record Stroke(List<(double X, double Y)> Points, int Page, bool Blue, double Width = 0);
     internal sealed record PdfResult(int Pages, List<Run> Runs, List<Stroke> Strokes, string Content)
     { public string Text => string.Join("\n", Runs.Select(r => r.Text)); }
     internal sealed record PdfMatrix(double A, double B, double C, double D, double E, double F)
@@ -572,23 +572,24 @@ public sealed class CanonicalSectionDiagramTests
                     }
                 maps[font] = map;
             }
-            string selectedFont = ""; double x = 0, y = 0; bool fillBlue = false, strokeBlue = false;
+            string selectedFont = ""; double x = 0, y = 0, width = 1; bool fillBlue = false, strokeBlue = false;
             PdfMatrix transform = PdfMatrix.Identity, textMatrix = PdfMatrix.Identity;
-            var state = new Stack<(PdfMatrix Matrix, bool FillBlue, bool StrokeBlue)>();
+            var state = new Stack<(PdfMatrix Matrix, bool FillBlue, bool StrokeBlue, double Width)>();
             var points = new List<(double X, double Y)>();
             foreach (COperator op in ContentReader.ReadContent(page).OfType<COperator>())
             {
                 content.AppendLine(op.ToString());
                 double Number(int i) => double.Parse(op.Operands[i].ToString(), CultureInfo.InvariantCulture);
                 string name = op.OpCode.Name;
-                if (name == "q") state.Push((transform, fillBlue, strokeBlue));
-                if (name == "Q") (transform, fillBlue, strokeBlue) = state.Pop();
+                if (name == "q") state.Push((transform, fillBlue, strokeBlue, width));
+                if (name == "Q") (transform, fillBlue, strokeBlue, width) = state.Pop();
+                if (name == "w") width = Number(0);
                 if (name == "cm") transform = transform.Multiply(new(Number(0), Number(1), Number(2), Number(3), Number(4), Number(5)));
                 if (name == "rg") fillBlue = Number(2) > 0.5 && Number(0) < 0.5;
                 if (name == "RG") strokeBlue = Number(2) > 0.5 && Number(0) < 0.5;
                 if (name == "m") points = [transform.Point(Number(0), Number(1))];
                 if (name == "l") points.Add(transform.Point(Number(0), Number(1)));
-                if (name == "S") { if (points.Count > 0) strokes.Add(new(points.ToList(), pageIndex + 1, strokeBlue)); points.Clear(); }
+                if (name == "S") { if (points.Count > 0) strokes.Add(new(points.ToList(), pageIndex + 1, strokeBlue, width)); points.Clear(); }
                 if (name == "BT") { x = 0; y = 0; textMatrix = PdfMatrix.Identity; }
                 if (name is "Td" or "TD")
                 { x += textMatrix.A * Number(0) + textMatrix.C * Number(1); y += textMatrix.B * Number(0) + textMatrix.D * Number(1); }
