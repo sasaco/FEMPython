@@ -130,6 +130,8 @@ def make_model(case_name: str) -> dict:
     increment = ndt.target/ndt.steps
     return {
         "dimension": 2,
+        # GLOSSARY 2D非線形モード: the desktop opens and saves the model as nonlinear.
+        "nonlinear": True,
         "title": f"P7 {ndt.title} {case_name.split('_')[1]} (rho_m {ndt.rho_m}, alpha_f {ndt.alpha_f})",
         "node": {str(n): {"x": x, "y": y, "z": 0.0} for n, (x, y) in sorted(ndt.joints.items())},
         "member": {str(n): {"ni": e[0], "nj": e[1], "e": 2 if e[2] == 1 else 1}

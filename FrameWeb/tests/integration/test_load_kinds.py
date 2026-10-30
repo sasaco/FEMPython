@@ -161,6 +161,39 @@ def test_kind_without_nonlinear_combine_is_rejected():
         build_analysis_result_set(data)
 
 
+def test_a_declared_nonlinear_model_solves_its_combinations():
+    """GLOSSARY 2D非線形モード: the desktop saves "nonlinear": true beside the table."""
+    data = _model()
+    data["nonlinear"] = True
+    result_set = build_analysis_result_set(data)
+    assert [case["case_id"] for case in result_set["cases"]] == ["1"]
+
+
+@pytest.mark.parametrize("edit, message", [
+    (lambda d: d.pop("nonlinear_combine"), "nonlinear_combine"),
+    (lambda d: d.update(nonlinear_combine={}), "nonlinear_combine"),
+    (lambda d: d.update(nonlinear=False), "nonlinear"),
+])
+def test_a_declared_nonlinear_model_needs_its_combinations(edit, message):
+    data = _model()
+    data["nonlinear"] = True
+    # Without kinds, only the declaration can reject the missing table.
+    for case in data["load"].values():
+        case.pop("kind")
+        case.pop("limit", None)
+    edit(data)
+    with pytest.raises(InputValidationError, match=message):
+        build_analysis_result_set(data)
+
+
+@pytest.mark.parametrize("value", [1, "true", None])
+def test_the_nonlinear_declaration_is_a_boolean(value):
+    data = _model()
+    data["nonlinear"] = value
+    with pytest.raises(InputValidationError, match="nonlinear must be true or false"):
+        build_analysis_result_set(data)
+
+
 @pytest.mark.parametrize("edit, message", [
     (lambda d: d["load"]["1"].update(kind="permanent"), "Unknown load kind"),
     (lambda d: d["load"]["3"].pop("limit"), "finite positive limit"),

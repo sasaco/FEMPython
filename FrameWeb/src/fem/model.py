@@ -32,6 +32,7 @@ from .elements import (
 from .elements.nonlinear_bar_element import NonlinearBarElement
 from .load_kinds import row_kind
 from .result_processor import ResultProcessor
+import dataclasses
 import math
 
 
@@ -973,6 +974,8 @@ class FemModel:
                     beta=nl_mat.beta,
                     K_min=nl_mat.K_min
                 )
+                if nl_mat.rotation_skeleton:
+                    params = _curvature_from_rotation(params, self._member_length(node_ids))
 
                 for dof in hysteresis_dofs:
                     element.set_hysteresis_model(dof, params)
@@ -995,6 +998,10 @@ class FemModel:
             raise ValueError('Member releases, foundation and distributed loads require a Bernoulli beam')
         self.elements[elem_id] = element
         
+    def _member_length(self, node_ids) -> float:
+        ends = [np.asarray(self.mesh.nodes[node_id], dtype=float) for node_id in node_ids[:2]]
+        return float(np.linalg.norm(ends[1]-ends[0]))
+
     def _get_bar_parameter(self, section_id: int, material_id: int) -> BarParameter:
         """断面からbar要素パラメータを取得または作成"""
         # 既存のパラメータを確認
@@ -1700,3 +1707,14 @@ class FemModel:
             'distributed': distributed_loads,
             'concentrated': concentrated_loads
         }
+
+
+def _curvature_from_rotation(params: JRStiffnessReductionParams, length: float) -> JRStiffnessReductionParams:
+    """A JRSNAP M-theta skeleton on a member of ``length``: curvature = rotation / length."""
+    if not math.isfinite(length) or length <= 0:
+        raise ValueError('An m_theta skeleton needs a member of positive length')
+    changes = {name: getattr(params, name)/length for name in params.__dataclass_fields__
+               if name.startswith('delta_') and getattr(params, name) is not None}
+    if params.K_min is not None:
+        changes['K_min'] = params.K_min*length
+    return dataclasses.replace(params, **changes)

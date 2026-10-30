@@ -14,6 +14,7 @@ from .legacy_beam import select_case
 from .model import FemModel
 from .nonlinear_combine import KEY as COMBINATION_KEY
 from .nonlinear_combine import (
+    check_declaration,
     has_combinations,
     reject_kinds_without_combinations,
     select_combination,
@@ -214,6 +215,10 @@ def _enumerate_cases(data: Any) -> list[_CaseInput]:
         load_cases = data.get("load")
         if not isinstance(load_cases, Mapping) or not load_cases:
             raise InputValidationError("Legacy analysis requires at least one load case")
+        try:
+            check_declaration(data)
+        except ValueError as error:
+            raise InputValidationError(str(error)) from error
         if has_combinations(data):
             return _enumerate_combinations(data)
         try:

@@ -1,5 +1,6 @@
 {
  "dimension": 2,
+ "nonlinear": true,
  "title": "P7 線路方向 Case1 (rho_m 1.0, alpha_f 1.0)",
  "node": {
   "1": {

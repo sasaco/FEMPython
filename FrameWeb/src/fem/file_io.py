@@ -362,6 +362,11 @@ def _read_legacy_json_model(data: Dict[str, Any], model_data: Dict[str, Any]) ->
                     if nl_type == 'jr_stiffness_reduction':
                         # 対称スケルトンカーブかどうか
                         symmetric = nl_data.get('symmetric', True)
+                        # JRSNAP M-theta: rotations theta_k stand in for delta_k (GLOSSARY: 骨格曲線)
+                        rotation_skeleton = _rotation_skeleton(nl_data)
+                        if rotation_skeleton:
+                            nl_data = {(f'delta{key[5:]}' if key.startswith('theta_') else key): value
+                                       for key, value in nl_data.items()}
 
                         # 正側パラメータ
                         delta_1 = nl_data.get('delta_1', 0.001)
@@ -419,7 +424,8 @@ def _read_legacy_json_model(data: Dict[str, Any], model_data: Dict[str, Any]) ->
                             P_4_neg=P_4_neg,
                             beta=beta,
                             K_min=K_min,
-                            density=elem_def.get('den')
+                            density=elem_def.get('den'),
+                            rotation_skeleton=rotation_skeleton,
                         )
 
                         model_data['material'].add_nonlinear_material(material_id, nl_mat)
@@ -1020,3 +1026,25 @@ def write_vtk(model_data: Dict[str, Any], result_data: Dict[str, Any], file_path
         writer.write_cells(mesh.elements)
         writer.write_point_data(_vtk_point_data(mesh.nodes, result_data))
         writer.write_cell_data(_vtk_cell_data(mesh.elements, result_data))
+
+
+_ROTATION_POINTS = ('theta_1', 'theta_2', 'theta_3')
+
+
+def _rotation_skeleton(nl_data: dict) -> bool:
+    """Whether a JR skeleton is written as M-theta rotations ("skeleton": "m_theta")."""
+    skeleton = nl_data.get('skeleton')
+    rotations = [key for key in nl_data if key.startswith('theta_')]
+    if skeleton is None:
+        if rotations:
+            raise ValueError(f'{sorted(rotations)[0]} requires "skeleton": "m_theta"')
+        return False
+    if skeleton != 'm_theta':
+        raise ValueError(f'Unknown nonlinear skeleton: {skeleton!r}')
+    curvatures = sorted(key for key in nl_data if key.startswith('delta_'))
+    if curvatures:
+        raise ValueError(f'{curvatures[0]} cannot be mixed with an m_theta skeleton')
+    for key in _ROTATION_POINTS:
+        if key not in nl_data:
+            raise ValueError(f'An m_theta skeleton requires {key}')
+    return True

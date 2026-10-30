@@ -34,6 +34,19 @@ def has_combinations(data: Mapping[str, Any]) -> bool:
     return isinstance(rows, Mapping) and bool(rows)
 
 
+def check_declaration(data: Mapping[str, Any]) -> None:
+    """``"nonlinear": true`` (GLOSSARY: 2D非線形モード) promises the table; false forbids it."""
+    if 'nonlinear' not in data:
+        return
+    declared = data['nonlinear']
+    if not isinstance(declared, bool):
+        raise ValueError('nonlinear must be true or false')
+    if declared and not has_combinations(data):
+        raise ValueError('A nonlinear model ("nonlinear": true) needs nonlinear_combine rows')
+    if not declared and KEY in data:
+        raise ValueError('nonlinear_combine requires "nonlinear": true when nonlinear is given')
+
+
 def basic_case_kind(case_id: str, case: Mapping[str, Any]) -> LoadKind:
     try:
         return LoadKind.from_json(case)

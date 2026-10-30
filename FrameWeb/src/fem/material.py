@@ -142,6 +142,9 @@ class NonlinearMaterialProperty:
     P_4_pos: Optional[float] = None
     delta_4_neg: Optional[float] = None
     P_4_neg: Optional[float] = None
+    # True when delta_* hold JRSNAP M-theta rotations; each member divides them by its
+    # own length (curvature = rotation / L) when its law is built.
+    rotation_skeleton: bool = False
 
     def __post_init__(self):
         """負側パラメータが省略された場合は正側と同じ値を設定"""
