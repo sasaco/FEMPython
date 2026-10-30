@@ -1,0 +1,1 @@
+{"protocolVersion":1,"engine":"fempython","engineVersion":"1.0.0\u002Bda2d03d977967884a1cb0b202cc20f240375e4b8","readiness":"experimental","ok":false,"executionStatus":"failed","engineeringStatus":"not_applicable","summary":{},"messages":[],"artifacts":[],"errors":[{"code":"CANCELED","message":"Calculation was canceled or exceeded ten minutes.","category":"canceled"}]}
