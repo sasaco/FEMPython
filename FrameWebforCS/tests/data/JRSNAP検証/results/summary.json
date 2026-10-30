@@ -1,0 +1,562 @@
+{
+ "線路方向_Case1": {
+  "base_shear": {
+   "max_difference": 0.001552686858903502,
+   "at_step": 211,
+   "final_frameweb": -10701.447347412728,
+   "final_jrsnap": -10707.6423733,
+   "jrsnap_peak": 10707.6423733
+  },
+  "foundation_moment": {
+   "max_difference": 0.0010816845502922016,
+   "at_step": 229,
+   "final_frameweb": -79846.44279767138,
+   "final_jrsnap": -79809.1404951,
+   "jrsnap_peak": 79809.1404951
+  },
+  "foundation_rotation": {
+   "max_difference": 0.004866725654780916,
+   "at_step": 229,
+   "final_frameweb": -0.018994817587805583,
+   "final_jrsnap": -0.0189557601181,
+   "jrsnap_peak": 0.0189557601181
+  },
+  "mtheta_moment": {
+   "max_difference": 0.0011010216262061058,
+   "at_step": 216,
+   "final_frameweb": -59045.096446531126,
+   "final_jrsnap": -59045.7557463,
+   "jrsnap_peak": 59045.7557463
+  },
+  "mtheta_rotation": {
+   "max_difference": 0.014340476926936073,
+   "at_step": 229,
+   "final_frameweb": -0.009170659915151784,
+   "final_jrsnap": -0.00924364830636,
+   "jrsnap_peak": 0.00924364830636,
+   "frameweb_off_own_skeleton": 6.94366190533019e-15,
+   "jrsnap_off_own_skeleton": 0.05588581760943076
+  },
+  "top_dx": {
+   "max_difference": 0.00017892305091828895,
+   "at_step": 229,
+   "final_frameweb": -0.3374751326421863,
+   "final_jrsnap": -0.337525144305,
+   "jrsnap_peak": 0.337525144305
+  },
+  "events": {
+   "mtheta_past_point_1": {
+    "frameweb": 21,
+    "jrsnap": 21
+   },
+   "mtheta_past_point_2": {
+    "frameweb": 229,
+    "jrsnap": 227
+   },
+   "mtheta_past_point_3": {
+    "frameweb": null,
+    "jrsnap": null
+   },
+   "foundation_second_branch": {
+    "frameweb": 13,
+    "jrsnap": 13
+   }
+  },
+  "peak_base_shear": {
+   "frameweb": -10701.447347412728,
+   "jrsnap": -10707.6423733
+  },
+  "within_tolerance": false,
+  "seconds": 4.2
+ },
+ "線路方向_Case2": {
+  "base_shear": {
+   "max_difference": 0.0016424278047851106,
+   "at_step": 293,
+   "final_frameweb": -11586.382041295385,
+   "final_jrsnap": -11591.3267632,
+   "jrsnap_peak": 11591.3267632
+  },
+  "foundation_moment": {
+   "max_difference": 0.0010553617982622687,
+   "at_step": 295,
+   "final_frameweb": -86764.7270155002,
+   "final_jrsnap": -86695.3594584,
+   "jrsnap_peak": 86695.3594584
+  },
+  "foundation_rotation": {
+   "max_difference": 0.004118691185375566,
+   "at_step": 295,
+   "final_frameweb": -0.024255932683482882,
+   "final_jrsnap": -0.0241794830743,
+   "jrsnap_peak": 0.0241794830743
+  },
+  "mtheta_moment": {
+   "max_difference": 0.0012028161136462363,
+   "at_step": 293,
+   "final_frameweb": -64243.869410760715,
+   "final_jrsnap": -64219.3019318,
+   "jrsnap_peak": 64219.3019318
+  },
+  "mtheta_rotation": {
+   "max_difference": 0.05208724292762786,
+   "at_step": 295,
+   "final_frameweb": -0.002715325713835761,
+   "final_jrsnap": -0.00283535829255,
+   "jrsnap_peak": 0.00283535829255,
+   "frameweb_off_own_skeleton": 1.896636058186382e-14,
+   "jrsnap_off_own_skeleton": 0.18191972325172148
+  },
+  "top_dx": {
+   "max_difference": 0.00021315236766255498,
+   "at_step": 295,
+   "final_frameweb": -0.33580505677791245,
+   "final_jrsnap": -0.335869782424,
+   "jrsnap_peak": 0.335869782424
+  },
+  "events": {
+   "mtheta_past_point_1": {
+    "frameweb": 21,
+    "jrsnap": 21
+   },
+   "mtheta_past_point_2": {
+    "frameweb": 295,
+    "jrsnap": 293
+   },
+   "mtheta_past_point_3": {
+    "frameweb": null,
+    "jrsnap": null
+   },
+   "foundation_second_branch": {
+    "frameweb": 13,
+    "jrsnap": 13
+   }
+  },
+  "peak_base_shear": {
+   "frameweb": -11586.382041295385,
+   "jrsnap": -11591.3267632
+  },
+  "within_tolerance": false,
+  "seconds": 4.1
+ },
+ "線路方向_Case3": {
+  "base_shear": {
+   "max_difference": 0.0015892532153193584,
+   "at_step": 77,
+   "final_frameweb": -9635.934619233603,
+   "final_jrsnap": -9640.47211569,
+   "jrsnap_peak": 10788.9538297
+  },
+  "foundation_moment": {
+   "max_difference": 0.0007550414660855651,
+   "at_step": 80,
+   "final_frameweb": -71516.42711107866,
+   "final_jrsnap": -71464.0550043,
+   "jrsnap_peak": 80439.8295508
+  },
+  "foundation_rotation": {
+   "max_difference": 0.0009795863911733777,
+   "at_step": 80,
+   "final_frameweb": -0.004957088131464259,
+   "final_jrsnap": -0.00495402292119,
+   "jrsnap_peak": 0.00529556433451
+  },
+  "mtheta_moment": {
+   "max_difference": 0.0009592065541776022,
+   "at_step": 79,
+   "final_frameweb": -52785.47209755379,
+   "final_jrsnap": -52769.5027734,
+   "jrsnap_peak": 59518.909891
+  },
+  "mtheta_rotation": {
+   "max_difference": 0.0009370384970618722,
+   "at_step": 300,
+   "final_frameweb": -0.026344438755805714,
+   "final_jrsnap": -0.0263691476623,
+   "jrsnap_peak": 0.0263691476623,
+   "frameweb_off_own_skeleton": 2.3682997241677994e-15,
+   "jrsnap_off_own_skeleton": 0.00894340165868876
+  },
+  "top_dx": {
+   "max_difference": 8.972074505158747e-05,
+   "at_step": 299,
+   "final_frameweb": -0.3418633972900936,
+   "final_jrsnap": -0.34189401839,
+   "jrsnap_peak": 0.34189401839
+  },
+  "events": {
+   "mtheta_past_point_1": {
+    "frameweb": 21,
+    "jrsnap": 21
+   },
+   "mtheta_past_point_2": {
+    "frameweb": 80,
+    "jrsnap": 80
+   },
+   "mtheta_past_point_3": {
+    "frameweb": 224,
+    "jrsnap": 224
+   },
+   "foundation_second_branch": {
+    "frameweb": 13,
+    "jrsnap": 13
+   }
+  },
+  "peak_base_shear": {
+   "frameweb": -10781.587891873725,
+   "jrsnap": -10788.9538297
+  },
+  "within_tolerance": true,
+  "seconds": 3.7
+ },
+ "線路方向_Case4": {
+  "base_shear": {
+   "max_difference": 0.0015392536204169318,
+   "at_step": 84,
+   "final_frameweb": -10608.170135806982,
+   "final_jrsnap": -10612.4158402,
+   "jrsnap_peak": 11750.4339396
+  },
+  "foundation_moment": {
+   "max_difference": 0.0007402601433528995,
+   "at_step": 90,
+   "final_frameweb": -79117.21581387923,
+   "final_jrsnap": -79058.0150315,
+   "jrsnap_peak": 87951.6299503
+  },
+  "foundation_rotation": {
+   "max_difference": 0.000950874167779759,
+   "at_step": 90,
+   "final_frameweb": -0.005532073204051415,
+   "final_jrsnap": -0.00552854011327,
+   "jrsnap_peak": 0.00586699222886
+  },
+  "mtheta_moment": {
+   "max_difference": 0.0009578845837228534,
+   "at_step": 89,
+   "final_frameweb": -58497.115847764224,
+   "final_jrsnap": -58479.3593519,
+   "jrsnap_peak": 65166.898071
+  },
+  "mtheta_rotation": {
+   "max_difference": 0.0010009550132133722,
+   "at_step": 300,
+   "final_frameweb": -0.025604900902544414,
+   "final_jrsnap": -0.025630555936,
+   "jrsnap_peak": 0.025630555936,
+   "frameweb_off_own_skeleton": 2.4365466473339104e-15,
+   "jrsnap_off_own_skeleton": 0.008256790246279977
+  },
+  "top_dx": {
+   "max_difference": 9.131151561485102e-05,
+   "at_step": 299,
+   "final_frameweb": -0.34163503490160657,
+   "final_jrsnap": -0.34166613069,
+   "jrsnap_peak": 0.34166613069
+  },
+  "events": {
+   "mtheta_past_point_1": {
+    "frameweb": 21,
+    "jrsnap": 21
+   },
+   "mtheta_past_point_2": {
+    "frameweb": 90,
+    "jrsnap": 90
+   },
+   "mtheta_past_point_3": {
+    "frameweb": 232,
+    "jrsnap": 231
+   },
+   "foundation_second_branch": {
+    "frameweb": 13,
+    "jrsnap": 13
+   }
+  },
+  "peak_base_shear": {
+   "frameweb": -11743.259576996894,
+   "jrsnap": -11750.4339396
+  },
+  "within_tolerance": true,
+  "seconds": 3.6
+ },
+ "線路直角方向_Case1": {
+  "base_shear": {
+   "max_difference": 0.0014060167862855932,
+   "at_step": 142,
+   "final_frameweb": 11600.822901781961,
+   "final_jrsnap": 11598.6049878,
+   "jrsnap_peak": 11879.4930264
+  },
+  "foundation_moment": {
+   "max_difference": 0.0010486584520939587,
+   "at_step": 158,
+   "final_frameweb": 126657.6219421778,
+   "final_jrsnap": 126536.677246,
+   "jrsnap_peak": 129604.955218
+  },
+  "foundation_rotation": {
+   "max_difference": 0.005828373966594631,
+   "at_step": 158,
+   "final_frameweb": 0.01053546916027396,
+   "final_jrsnap": 0.0105131932771,
+   "jrsnap_peak": 0.0105547260761
+  },
+  "mtheta_moment": {
+   "max_difference": 0.0010901148548862528,
+   "at_step": 149,
+   "final_frameweb": 103738.89244444855,
+   "final_jrsnap": 103678.455269,
+   "jrsnap_peak": 106193.225166
+  },
+  "mtheta_rotation": {
+   "max_difference": 0.00461760714808441,
+   "at_step": 158,
+   "final_frameweb": 0.0172820342165819,
+   "final_jrsnap": 0.0173252653709,
+   "jrsnap_peak": 0.0173252653709,
+   "frameweb_off_own_skeleton": 2.703423748420236e-15,
+   "jrsnap_off_own_skeleton": 0.020289598681730317
+  },
+  "top_dx": {
+   "max_difference": 2.4409378273237514e-07,
+   "at_step": 0,
+   "final_frameweb": 0.34987691937009696,
+   "final_jrsnap": 0.349877002632,
+   "jrsnap_peak": 0.349877002632
+  },
+  "events": {
+   "mtheta_past_point_1": {
+    "frameweb": 14,
+    "jrsnap": 14
+   },
+   "mtheta_past_point_2": {
+    "frameweb": 158,
+    "jrsnap": 157
+   },
+   "mtheta_past_point_3": {
+    "frameweb": 332,
+    "jrsnap": 332
+   },
+   "foundation_second_branch": {
+    "frameweb": 9,
+    "jrsnap": 9
+   }
+  },
+  "peak_base_shear": {
+   "frameweb": 11874.7361823809,
+   "jrsnap": 11879.4930264
+  },
+  "within_tolerance": true,
+  "seconds": 5.0
+ },
+ "線路直角方向_Case2": {
+  "base_shear": {
+   "max_difference": 0.0019009223260961705,
+   "at_step": 200,
+   "final_frameweb": 12941.035599373128,
+   "final_jrsnap": 12943.6261496,
+   "jrsnap_peak": 12943.6261496
+  },
+  "foundation_moment": {
+   "max_difference": 0.0012468334766920217,
+   "at_step": 200,
+   "final_frameweb": 141296.49714968004,
+   "final_jrsnap": 141243.784629,
+   "jrsnap_peak": 141243.784629
+  },
+  "foundation_rotation": {
+   "max_difference": 0.004796431881497455,
+   "at_step": 207,
+   "final_frameweb": 0.013767210184329283,
+   "final_jrsnap": 0.0137440341148,
+   "jrsnap_peak": 0.0137440341148
+  },
+  "mtheta_moment": {
+   "max_difference": 0.0016271051231452262,
+   "at_step": 200,
+   "final_frameweb": 115730.43850277482,
+   "final_jrsnap": 115734.95233,
+   "jrsnap_peak": 115734.95233
+  },
+  "mtheta_rotation": {
+   "max_difference": 0.006502406308363929,
+   "at_step": 207,
+   "final_frameweb": 0.01345260245854852,
+   "final_jrsnap": 0.0134968629956,
+   "jrsnap_peak": 0.0134968629956,
+   "frameweb_off_own_skeleton": 3.2131975343869347e-15,
+   "jrsnap_off_own_skeleton": 0.02502438423439731
+  },
+  "top_dx": {
+   "max_difference": 2.440940770240074e-07,
+   "at_step": 296,
+   "final_frameweb": 0.34987691937009696,
+   "final_jrsnap": 0.349876998754,
+   "jrsnap_peak": 0.349876998754
+  },
+  "events": {
+   "mtheta_past_point_1": {
+    "frameweb": 14,
+    "jrsnap": 14
+   },
+   "mtheta_past_point_2": {
+    "frameweb": 207,
+    "jrsnap": 206
+   },
+   "mtheta_past_point_3": {
+    "frameweb": null,
+    "jrsnap": null
+   },
+   "foundation_second_branch": {
+    "frameweb": 9,
+    "jrsnap": 9
+   }
+  },
+  "peak_base_shear": {
+   "frameweb": 12941.035599373128,
+   "jrsnap": 12943.6261496
+  },
+  "within_tolerance": true,
+  "seconds": 5.0
+ },
+ "線路直角方向_Case3": {
+  "base_shear": {
+   "max_difference": 0.0010824732673509615,
+   "at_step": 62,
+   "final_frameweb": 10067.221889583889,
+   "final_jrsnap": 10068.9360379,
+   "jrsnap_peak": 11879.2968392
+  },
+  "foundation_moment": {
+   "max_difference": 0.000634917554904525,
+   "at_step": 64,
+   "final_frameweb": 109906.4048683715,
+   "final_jrsnap": 109839.425136,
+   "jrsnap_peak": 129602.275327
+  },
+  "foundation_rotation": {
+   "max_difference": 0.0008781381863182713,
+   "at_step": 64,
+   "final_frameweb": 0.0027858236660832803,
+   "final_jrsnap": 0.00278438559738,
+   "jrsnap_peak": 0.00305504104604
+  },
+  "mtheta_moment": {
+   "max_difference": 0.0007076638753705225,
+   "at_step": 63,
+   "final_frameweb": 90017.00546705129,
+   "final_jrsnap": 89995.3850598,
+   "jrsnap_peak": 106190.937648
+  },
+  "mtheta_rotation": {
+   "max_difference": 0.000606754105332791,
+   "at_step": 349,
+   "final_frameweb": 0.026412006450561486,
+   "final_jrsnap": 0.0264277947538,
+   "jrsnap_peak": 0.0264277947538,
+   "frameweb_off_own_skeleton": 1.837923208494969e-15,
+   "jrsnap_off_own_skeleton": 0.004499607774420735
+  },
+  "top_dx": {
+   "max_difference": 2.4409378237238466e-07,
+   "at_step": 0,
+   "final_frameweb": 0.34987691937009696,
+   "final_jrsnap": 0.349877003148,
+   "jrsnap_peak": 0.349877003148
+  },
+  "events": {
+   "mtheta_past_point_1": {
+    "frameweb": 14,
+    "jrsnap": 14
+   },
+   "mtheta_past_point_2": {
+    "frameweb": 64,
+    "jrsnap": 64
+   },
+   "mtheta_past_point_3": {
+    "frameweb": 229,
+    "jrsnap": 229
+   },
+   "foundation_second_branch": {
+    "frameweb": 9,
+    "jrsnap": 9
+   }
+  },
+  "peak_base_shear": {
+   "frameweb": 11874.440473610932,
+   "jrsnap": 11879.2968392
+  },
+  "within_tolerance": true,
+  "seconds": 4.6
+ },
+ "線路直角方向_Case4": {
+  "base_shear": {
+   "max_difference": 0.0010645379204976058,
+   "at_step": 66,
+   "final_frameweb": 11088.985739805115,
+   "final_jrsnap": 11088.5837002,
+   "jrsnap_peak": 12992.0662656
+  },
+  "foundation_moment": {
+   "max_difference": 0.0007410082725948224,
+   "at_step": 73,
+   "final_frameweb": 121066.92700963463,
+   "final_jrsnap": 120988.837405,
+   "jrsnap_peak": 141728.095256
+  },
+  "foundation_rotation": {
+   "max_difference": 0.0010729452627267905,
+   "at_step": 73,
+   "final_frameweb": 0.0031046455474659585,
+   "final_jrsnap": 0.00310302022147,
+   "jrsnap_peak": 0.00338701631975
+  },
+  "mtheta_moment": {
+   "max_difference": 0.0006861667610181853,
+   "at_step": 71,
+   "final_frameweb": 99159.23213371076,
+   "final_jrsnap": 99135.3940039,
+   "jrsnap_peak": 116124.290725
+  },
+  "mtheta_rotation": {
+   "max_difference": 0.0006254250463420604,
+   "at_step": 350,
+   "final_frameweb": 0.02600620152944268,
+   "final_jrsnap": 0.0260224766381,
+   "jrsnap_peak": 0.0260224766381,
+   "frameweb_off_own_skeleton": 1.599900117212025e-15,
+   "jrsnap_off_own_skeleton": 0.003406922224492538
+  },
+  "top_dx": {
+   "max_difference": 2.4409378443217545e-07,
+   "at_step": 0,
+   "final_frameweb": 0.34987691937009696,
+   "final_jrsnap": 0.349877000195,
+   "jrsnap_peak": 0.349877000195
+  },
+  "events": {
+   "mtheta_past_point_1": {
+    "frameweb": 14,
+    "jrsnap": 14
+   },
+   "mtheta_past_point_2": {
+    "frameweb": 73,
+    "jrsnap": 73
+   },
+   "mtheta_past_point_3": {
+    "frameweb": 235,
+    "jrsnap": 235
+   },
+   "foundation_second_branch": {
+    "frameweb": 9,
+    "jrsnap": 9
+   }
+  },
+  "peak_base_shear": {
+   "frameweb": 12984.630857961065,
+   "jrsnap": 12992.0662656
+  },
+  "within_tolerance": true,
+  "seconds": 4.4
+ }
+}
