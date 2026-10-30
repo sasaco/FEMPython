@@ -4,7 +4,7 @@ from typing import Callable
 
 from .hysteresis.jrsnap_support import (
     BILINEAR, TRILINEAR, JrsnapSupportParams, JrsnapSupportState,
-    evaluate_jrsnap_support, parse_jrsnap_support)
+    evaluate_jrsnap_support, jrsnap_support_points_passed, parse_jrsnap_support)
 from .hysteresis.slip import SlipSpringParams, SlipSpringState, evaluate_slip, parse_slip_spring
 
 
@@ -16,14 +16,17 @@ class SupportLaw:
     parse: Callable
     evaluate: Callable
     model_id: str
+    # Skeleton points passed by the largest deformation so far (GLOSSARY: 部材の状態);
+    # None for a law without a skeleton (slip).
+    points_passed: Callable | None = None
 
 
 LAWS = {law.type: law for law in (
     SupportLaw('slip', SlipSpringParams, SlipSpringState, parse_slip_spring, evaluate_slip, 'slip_v1'),
     SupportLaw(BILINEAR, JrsnapSupportParams, JrsnapSupportState, parse_jrsnap_support,
-               evaluate_jrsnap_support, 'jrsnap_bilinear_v1'),
+               evaluate_jrsnap_support, 'jrsnap_bilinear_v1', jrsnap_support_points_passed),
     SupportLaw(TRILINEAR, JrsnapSupportParams, JrsnapSupportState, parse_jrsnap_support,
-               evaluate_jrsnap_support, 'jrsnap_trilinear_v1'),
+               evaluate_jrsnap_support, 'jrsnap_trilinear_v1', jrsnap_support_points_passed),
 )}
 
 

@@ -486,7 +486,8 @@ public sealed class LoadStepAnalysisResult : ForceAnalysisResult
         IEnumerable<MemberSectionForces> memberSectionForces,
         IEnumerable<ShellResult> shellResults,
         IEnumerable<SolidResult> solidResults,
-        LoadStepDiagnostics diagnostics)
+        LoadStepDiagnostics diagnostics,
+        NonlinearResponse? nonlinearResponse = null)
         : base(
             caseId,
             state,
@@ -497,12 +498,36 @@ public sealed class LoadStepAnalysisResult : ForceAnalysisResult
             solidResults)
     {
         Diagnostics = diagnostics;
+        NonlinearResponse = nonlinearResponse;
     }
 
     public new LoadStepResultState State => (LoadStepResultState)base.State;
 
     public LoadStepDiagnostics Diagnostics { get; }
+
+    /// <summary>Member and support-spring states (GLOSSARY: 部材の状態); null in results written before them.</summary>
+    public NonlinearResponse? NonlinearResponse { get; }
 }
+
+public sealed class NonlinearResponse
+{
+    public NonlinearResponse(IEnumerable<NonlinearMemberState> members, IEnumerable<NonlinearSupportState> supports)
+    {
+        Members = Frozen.List(members, nameof(members));
+        Supports = Frozen.List(supports, nameof(supports));
+    }
+
+    public IReadOnlyList<NonlinearMemberState> Members { get; }
+
+    public IReadOnlyList<NonlinearSupportState> Supports { get; }
+}
+
+public sealed record NonlinearMemberState(string MemberId, IReadOnlyDictionary<string, NonlinearComponentState> Components);
+
+public sealed record NonlinearSupportState(string NodeId, IReadOnlyDictionary<string, NonlinearComponentState> Components);
+
+/// <param name="PointsPassed">Skeleton points passed by the largest deformation so far; null for a law without a skeleton.</param>
+public sealed record NonlinearComponentState(string Branch, double Deformation, double Force, int? PointsPassed);
 
 public sealed class ModalAnalysisResult : AnalysisResult
 {

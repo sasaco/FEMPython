@@ -22,7 +22,9 @@ SLIP_FINAL_RESPONSE = {'30': {'x': {
     'type': 'slip', 'deformation': .04, 'force': 13., 'tangent': 100., 'branch': 'skeleton_pos',
     'direction': 1, 'delta_max_pos': .04, 'delta_max_neg': -.03, 'force_at_max_pos': 13.,
     'force_at_max_neg': -12., 'zero_pos': .027, 'zero_neg': -.018,
-    'yielded_pos': True, 'yielded_neg': True}}}
+    'yielded_pos': True, 'yielded_neg': True,
+    # GLOSSARY 部材の状態: a slip spring has no skeleton points.
+    'points_passed': None}}}
 
 
 def _run(raw=None, path=None):

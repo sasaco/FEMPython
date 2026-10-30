@@ -391,8 +391,12 @@ def _validate_static_result(value: Mapping[str, Any], path: str, case: dict[str,
 
 
 def _validate_load_step_result(value: Mapping[str, Any], path: str, case: dict[str, Any], topology: dict[str, Any]) -> dict[str, Any]:
-    result = _object(value, path, {"case_id", "state", "node_displacements", "support_reactions", "member_section_forces", "shell_results", "solid_results", "diagnostics"})
+    # nonlinear_response is optional: results written before it existed stay valid.
+    optional = {"nonlinear_response"} if isinstance(value, Mapping) and "nonlinear_response" in value else set()
+    result = _object(value, path, {"case_id", "state", "node_displacements", "support_reactions", "member_section_forces", "shell_results", "solid_results", "diagnostics"} | optional)
     state = _object(result["state"], f"{path}.state", {"kind", "index", "load_factor", "is_final"})
+    if optional:
+        _validate_nonlinear_response(result["nonlinear_response"], f"{path}.nonlinear_response", case, topology)
     if state["kind"] != "load_step":
         _fail(f"{path}.state.kind", "must equal 'load_step'")
     _integer(state["index"], f"{path}.state.index", minimum=0)
@@ -415,6 +419,39 @@ def _validate_load_step_result(value: Mapping[str, Any], path: str, case: dict[s
         if type(iteration["converged"]) is not bool:
             _fail(f"{iteration_path}.converged", "must be a boolean")
     return cast(dict[str, Any], result)
+
+
+# GLOSSARY 部材の状態: skeleton points 1..4 of a JR skeleton; support springs have at most 2.
+_MAX_SKELETON_POINTS = 4
+
+
+def _validate_nonlinear_response(value: Any, path: str, case: dict[str, Any], topology: dict[str, Any]) -> None:
+    response = _object(value, path, {"members", "supports"})
+    for rows_key, id_key, known in (("members", "member_id", set(topology["member_ids"])),
+                                    ("supports", "node_id", set(case["support_node_ids"]))):
+        seen = []
+        for index, item in enumerate(_array(response[rows_key], f"{path}.{rows_key}")):
+            item_path = f"{path}.{rows_key}[{index}]"
+            row = _object(item, item_path, {id_key, "components"})
+            row_id = _id(row[id_key], f"{item_path}.{id_key}")
+            if row_id not in known:
+                _fail(f"{item_path}.{id_key}", f"references unknown {id_key}")
+            seen.append(row_id)
+            components = row["components"]
+            if not isinstance(components, Mapping) or not components:
+                _fail(f"{item_path}.components", "must be a non-empty object")
+            for name, component in components.items():
+                component_path = f"{item_path}.components.{name}"
+                fields = _object(component, component_path, {"branch", "deformation", "force", "points_passed"})
+                if not isinstance(fields["branch"], str) or not fields["branch"]:
+                    _fail(f"{component_path}.branch", "must be a non-empty string")
+                _finite(fields["deformation"], f"{component_path}.deformation")
+                _finite(fields["force"], f"{component_path}.force")
+                if fields["points_passed"] is not None and not (
+                        0 <= _integer(fields["points_passed"], f"{component_path}.points_passed", minimum=0)
+                        <= _MAX_SKELETON_POINTS):
+                    _fail(f"{component_path}.points_passed", f"must be at most {_MAX_SKELETON_POINTS}")
+        _unique(seen, f"{path}.{rows_key}", id_key)
 
 
 def _validate_modal_result(value: Mapping[str, Any], path: str, case: dict[str, Any], topology: dict[str, Any]) -> dict[str, Any]:

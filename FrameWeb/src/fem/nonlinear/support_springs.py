@@ -66,7 +66,9 @@ class SupportSprings:
         result = {}
         for dof, state in (self._committed if states is None else states).items():
             node, direction, params = self.definitions[dof]
-            result.setdefault(node, {})[direction] = dict(type=law_of(params).type, **asdict(state))
+            law = law_of(params)
+            points = None if law.points_passed is None else law.points_passed(params, state)
+            result.setdefault(node, {})[direction] = dict(type=law.type, **asdict(state), points_passed=points)
         return result
 
 

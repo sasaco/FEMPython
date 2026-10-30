@@ -196,7 +196,26 @@
       "properties": {
         "case_id": {"$ref": "#/$defs/id"}, "state": {"type": "object", "additionalProperties": false, "required": ["kind", "index", "load_factor", "is_final"], "properties": {"kind": {"const": "load_step"}, "index": {"type": "integer", "minimum": 0}, "load_factor": {"$ref": "#/$defs/number"}, "is_final": {"type": "boolean"}}},
         "node_displacements": {"type": "array", "items": {"$ref": "#/$defs/nodeDisplacement"}}, "support_reactions": {"type": "array", "items": {"$ref": "#/$defs/supportReaction"}},
-        "member_section_forces": {"type": "array", "items": {"$ref": "#/$defs/memberSectionForces"}}, "shell_results": {"type": "array", "items": {"$ref": "#/$defs/shellResult"}}, "solid_results": {"type": "array", "items": {"$ref": "#/$defs/solidResult"}}, "diagnostics": {"$ref": "#/$defs/loadStepDiagnostics"}
+        "member_section_forces": {"type": "array", "items": {"$ref": "#/$defs/memberSectionForces"}}, "shell_results": {"type": "array", "items": {"$ref": "#/$defs/shellResult"}}, "solid_results": {"type": "array", "items": {"$ref": "#/$defs/solidResult"}}, "diagnostics": {"$ref": "#/$defs/loadStepDiagnostics"},
+        "nonlinear_response": {"$ref": "#/$defs/nonlinearResponse"}
+      }
+    },
+    "nonlinearComponentState": {
+      "type": "object", "additionalProperties": false,
+      "required": ["branch", "deformation", "force", "points_passed"],
+      "properties": {
+        "branch": {"type": "string", "minLength": 1}, "deformation": {"$ref": "#/$defs/number"}, "force": {"$ref": "#/$defs/number"},
+        "points_passed": {"oneOf": [{"type": "integer", "minimum": 0, "maximum": 4}, {"type": "null"}]}
+      }
+    },
+    "nonlinearResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["members", "supports"],
+      "properties": {
+        "members": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["member_id", "components"],
+          "properties": {"member_id": {"$ref": "#/$defs/id"}, "components": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/nonlinearComponentState"}}}}},
+        "supports": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["node_id", "components"],
+          "properties": {"node_id": {"$ref": "#/$defs/id"}, "components": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/nonlinearComponentState"}}}}}
       }
     },
     "modalResult": {

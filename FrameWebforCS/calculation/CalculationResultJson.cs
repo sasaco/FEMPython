@@ -221,8 +221,20 @@ public static class AnalysisResultSetJson
                     iteration.Index,
                     iteration.ResidualNorm,
                     iteration.CorrectionNorm,
-                    iteration.Converged))));
+                    iteration.Converged))),
+            value.NonlinearResponse is { } response ? Map(response) : null);
     }
+
+    private static NonlinearResponse Map(NonlinearResponseWire value) => new(
+        value.Members.Select(member => new NonlinearMemberState(member.MemberId, Map(member.Components))),
+        value.Supports.Select(support => new NonlinearSupportState(support.NodeId, Map(support.Components))));
+
+    private static IReadOnlyDictionary<string, NonlinearComponentState> Map(
+        Dictionary<string, NonlinearComponentStateWire> components) =>
+        new System.Collections.ObjectModel.ReadOnlyDictionary<string, NonlinearComponentState>(
+            components.ToDictionary(item => item.Key, item => new NonlinearComponentState(
+                item.Value.Branch, item.Value.Deformation, item.Value.Force, item.Value.PointsPassed),
+                StringComparer.Ordinal));
 
     private static ModalAnalysisResult MapModal(ModalResultWire value)
     {
@@ -693,6 +705,51 @@ public static class AnalysisResultSetJson
 
         [JsonPropertyName("diagnostics")]
         public required LoadStepDiagnosticsWire Diagnostics { get; init; }
+
+        [JsonPropertyName("nonlinear_response")]
+        public NonlinearResponseWire? NonlinearResponse { get; init; }
+    }
+
+    private sealed class NonlinearResponseWire
+    {
+        [JsonPropertyName("members")]
+        public required List<NonlinearMemberStateWire> Members { get; init; }
+
+        [JsonPropertyName("supports")]
+        public required List<NonlinearSupportStateWire> Supports { get; init; }
+    }
+
+    private sealed class NonlinearMemberStateWire
+    {
+        [JsonPropertyName("member_id")]
+        public required string MemberId { get; init; }
+
+        [JsonPropertyName("components")]
+        public required Dictionary<string, NonlinearComponentStateWire> Components { get; init; }
+    }
+
+    private sealed class NonlinearSupportStateWire
+    {
+        [JsonPropertyName("node_id")]
+        public required string NodeId { get; init; }
+
+        [JsonPropertyName("components")]
+        public required Dictionary<string, NonlinearComponentStateWire> Components { get; init; }
+    }
+
+    private sealed class NonlinearComponentStateWire
+    {
+        [JsonPropertyName("branch")]
+        public required string Branch { get; init; }
+
+        [JsonPropertyName("deformation")]
+        public required double Deformation { get; init; }
+
+        [JsonPropertyName("force")]
+        public required double Force { get; init; }
+
+        [JsonPropertyName("points_passed")]
+        public required int? PointsPassed { get; init; }
     }
 
     private sealed class ModalResultWire

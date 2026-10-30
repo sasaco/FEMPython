@@ -52,7 +52,7 @@ def project_analysis_results(
 
     warnings = getattr(model.solver, "analysis_warnings", ())
     snapshots = normalize_solver_snapshots(solver_result, warnings=warnings)
-    return [
+    results = [
         {
             "case_id": case_id,
             "state": dict(snapshot.state),
@@ -73,6 +73,60 @@ def project_analysis_results(
         }
         for snapshot in snapshots
     ]
+    for result, snapshot in zip(results, snapshots, strict=True):
+        if snapshot.state["kind"] == "load_step":
+            result["nonlinear_response"] = _project_nonlinear_response(
+                model, snapshot.values, topology, node_map)
+    return results
+
+
+# Hysteresis component keys of the solver's section response (moment axis) and their public names.
+_SECTION_COMPONENTS = {"y": "moment_y", "z": "moment_z"}
+
+
+def _component_state(branch, deformation, force, points_passed):
+    return {
+        "branch": str(branch),
+        "deformation": _finite(deformation, "nonlinear deformation"),
+        "force": _finite(force, "nonlinear force"),
+        "points_passed": None if points_passed is None else int(points_passed),
+    }
+
+
+def _project_nonlinear_response(model, snapshot, topology, node_map):
+    """GLOSSARY 部材の状態: each nonlinear member's and support spring's state at a load step.
+
+    A member split into several solved elements reports its most advanced element
+    (the most skeleton points passed), as JRSNAP reports one state per member.
+    """
+    # The JSON-able solver result keys elements by text.
+    sections = {int(element): value for element, value in (snapshot.get("section_response") or {}).items()}
+    members = []
+    for member in topology["members"]:
+        member_id = str(member["member_id"])
+        components = {}
+        for element_id in member_element_ids(model, member_id):
+            for axis, state in (sections.get(element_id) or {}).get("center", {}).items():
+                name = _SECTION_COMPONENTS.get(axis, axis)
+                candidate = _component_state(state["branch"], state["curvature"], state["moment"],
+                                             state.get("points_passed"))
+                held = components.get(name)
+                if held is None or (candidate["points_passed"] or 0) > (held["points_passed"] or 0):
+                    components[name] = candidate
+        if components:
+            members.append({"member_id": member_id, "components": components})
+    supports = []
+    # The JSON-able solver result keys support nodes by text.
+    springs_by_node = {node_map[int(node)]: springs
+                       for node, springs in (snapshot.get("support_response") or {}).items()}
+    for node_id, springs in sorted(springs_by_node.items()):
+        supports.append({
+            "node_id": node_id,
+            "components": {direction: _component_state(state["branch"], state["deformation"],
+                                                       state["force"], state.get("points_passed"))
+                           for direction, state in springs.items()},
+        })
+    return {"members": members, "supports": supports}
 
 
 def _project_static_diagnostics(model, snapshot, node_map):

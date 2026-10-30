@@ -347,6 +347,12 @@ class NonlinearBarElement(MemberLineLoads, TBarElement):
                                if getattr(model.params, f'delta_{i}_{side}') is not None]
                         for side in ('pos', 'neg')
                     },
+                    # GLOSSARY 部材の状態: skeleton points passed by the largest curvature so far.
+                    'points_passed': max(
+                        sum(extreme >= getattr(model.params, f'delta_{i}_{side}')
+                            for i in (1, 2, 3, 4) if getattr(model.params, f'delta_{i}_{side}') is not None)
+                        for side, extreme in (('pos', response.state.history.delta_max_pos),
+                                              ('neg', response.state.history.delta_max_neg))),
                 }
         f_local = self.length * b.T @ p
         k_local = self.length * b.T @ tangent @ b

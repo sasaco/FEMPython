@@ -240,3 +240,15 @@ def evaluate_jrsnap_support(params, committed, deformation, *, direction_hint=0)
                    direction=direction, zero_position=p,
                    delta_max_pos=max(committed.delta_max_pos, delta),
                    delta_max_neg=min(committed.delta_max_neg, delta))
+
+
+def jrsnap_support_points_passed(params, state):
+    """Skeleton break points (x1, and x2 for a trilinear) passed by the largest deformation so far."""
+    passed = 0
+    for side, extreme in (('pos', state.delta_max_pos), ('neg', -state.delta_max_neg)):
+        law = params.side(side)
+        if law.cut_off:
+            continue
+        points = (law.x1,) if params.type == BILINEAR else (law.x1, law.x2)
+        passed = max(passed, sum(extreme >= point for point in points))
+    return passed
