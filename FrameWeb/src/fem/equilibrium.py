@@ -28,6 +28,12 @@ from .diagnostics import (
 
 logger = logging.getLogger(__name__)
 
+# Backtracking on the displacement-control Newton step. A kink of a skeleton
+# (stiff to nearly flat) makes the full Newton step cycle between iterates; the
+# cycle can end on a spurious equilibrium far along the opposite skeleton.
+LINE_SEARCH_HALVINGS = 10
+LINE_SEARCH_SUFFICIENT_DECREASE = 1e-4
+
 class NonlinearConvergenceError(RuntimeError):
     """荷重ステップ失敗。displacementは最後に収束した変位のコピー。"""
 
@@ -465,23 +471,32 @@ def displacement_control_iteration(
             [csr_matrix(selector[None, :]), csr_matrix((1, 1))],
         ], format='csr')
 
+    control_scale = length if control_dof % max_dof_per_node < 3 else 1.0
+
+    def evaluate(displacement, factor):
+        """Internal force, equilibrium and relative residuals at a trial point."""
+        internal = self._assemble_internal_forces(mesh, elements, displacement, max_dof_per_node)
+        state = evaluate_equilibrium(
+            resolved, load_pattern.at(factor), internal, displacement, length=length,
+            reference_load=load_pattern.reference, dof_indices=active)
+        displacement_scale = max(
+            abs(target)/control_scale, abs(displacement[control_dof])/control_scale, 1.0
+        )
+        relative_constraint = abs(target-displacement[control_dof])/control_scale/displacement_scale
+        return internal, state, float(state.relative_residual), relative_constraint
+
     du = np.zeros_like(u)
     dlambda = 0.0
+    # The accepted line-search trial is the last point the elements evaluated.
+    trial = None
 
     for iteration in range(max_iter):
-        F_int = self._assemble_internal_forces(mesh, elements, u, max_dof_per_node)
-        equilibrium = evaluate_equilibrium(
-            resolved, load_pattern.at(load_factor), F_int, u, length=length,
-            reference_load=load_pattern.reference, dof_indices=active)
+        F_int, equilibrium, relative_residual, relative_constraint = (
+            trial if trial is not None else evaluate(u, load_factor))
+        trial = None
         residual_free = equilibrium.residual[active]
         constraint = target-u[control_dof]
         residual_norm, force_scale = equilibrium.residual_norm, equilibrium.residual_scale
-        control_scale = length if control_dof % max_dof_per_node < 3 else 1.0
-        displacement_scale = max(
-            abs(target)/control_scale, abs(u[control_dof])/control_scale, 1.0
-        )
-        relative_residual = equilibrium.relative_residual
-        relative_constraint = abs(constraint)/control_scale/displacement_scale
         if iteration:
             du_norm = generalized_displacement_norm(
                 du, stride=max_dof_per_node, length=length
@@ -532,12 +547,23 @@ def displacement_control_iteration(
             increment = self._solve_newton_system(augmented, rhs)
         except ValueError:
             return False, u, iteration+1, load_factor
-        du = np.zeros_like(u)
-        du[active] = increment[:-1]
-        dlambda = float(increment[-1])
-        u += du
-        load_factor += dlambda
-        if not np.all(np.isfinite(u)) or not np.isfinite(load_factor):
+        newton_du = np.zeros_like(u)
+        newton_du[active] = increment[:-1]
+        newton_dlambda = float(increment[-1])
+        if not np.all(np.isfinite(newton_du)) or not np.isfinite(newton_dlambda):
             return False, u, iteration+1, load_factor
+        merit = np.hypot(relative_residual, relative_constraint)
+        step = 1.0
+        if merit >= tol:
+            for halving in range(LINE_SEARCH_HALVINGS+1):
+                step = 0.5**halving
+                trial = evaluate(u+step*newton_du, load_factor+step*newton_dlambda)
+                trial_merit = np.hypot(trial[2], trial[3])
+                if trial_merit < tol or trial_merit <= (1-LINE_SEARCH_SUFFICIENT_DECREASE*step)*merit:
+                    break
+        du = step*newton_du
+        dlambda = step*newton_dlambda
+        u = u+du
+        load_factor += dlambda
 
     return False, u, max_iter, load_factor
