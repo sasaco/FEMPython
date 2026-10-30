@@ -1,12 +1,12 @@
 # 合成桁の設計例で橋面荷重を検証する
 
-`../合成桁の設計例と解説.pdf` の 36〜40 頁（本文の頁番号 24〜28。5.1 設計方針〜5.4.1 断面力）に示された格子解析を、FEMPython の橋面荷重（`bridge_loads`）で解き直し、結果を比べた記録です（2026-10-30、engineVersion 1.0.0+da2d03d）。
+`合成桁の設計例と解説.pdf`（このフォルダ）の 36〜40 頁（本文の頁番号 24〜28。5.1 設計方針〜5.4.1 断面力）に示された格子解析を、FEMPython の橋面荷重（`bridge_loads`）で解き直し、結果を比べた記録です（2026-10-30、engineVersion 1.0.0+da2d03d）。
 
 ## 結論
 
 - **荷重の配分は設計例と一致しました。** 橋面荷重の合計は全ケースで手計算と同じです（合成前 2824.2 kN、合成後 522.2 kN）。G1 の結果から逆算した合成後の線荷重 7.214 kN/m は、てこの原理の 7.218 kN/m とも、設計例の値から同じ方法で逆算した 7.22 kN/m とも合います。
 - **断面力はおおむね ±1% で合いました。** ずれが大きいのは合成後死荷重の曲げモーメント Mvd で、G1 は小さく G2 は大きく、±3〜5% です。原因は荷重ではなく格子の剛性の仮定です（後述）。
-- **FEMPython の側で直すべき問題が見つかりました。** 橋面荷重の準備が三角形の数の2乗で遅く、細かいモデルは runner の 10 分の上限を超えます（後述）。
+- **FEMPython の側で直すべき問題が見つかり、直しました。** 橋面荷重の準備が三角形の数の2乗で遅く、細かいモデルは runner の 10 分の上限を超えていました。直した後は、0.25 m 間隔の 12 ケースが runner で 141 秒です（後述）。
 
 ## 設計例の読み取り
 
@@ -101,28 +101,82 @@
 
 ## 見つかった問題
 
-1. **橋面荷重の準備が、三角形の数の2乗で遅い**（`FrameWeb/src/fem/spatial_loads/validation.py` の `prepare_geometry`）
-   - 載荷メッシュ（`loading_nodes`）が無いとき、`prepare_panel` は `domain_cells = cells` とします。そのため `for cell in panel.cells: for domain in panel.domain_cells or panel.cells:` が、面荷重の帯ごとにセルを総当たりで切り抜きます。
-   - 三角形 140 個の面荷重2つで `clip_polygon` が 78,400 回呼ばれ、1 ケース 10 秒かかりました。
-   - runner の時間：三角形 140 個（2.75 m 間隔）・12 ケースで 25 秒。360 個（1.0 m 間隔）では 10 分の上限を超えて `CANCELED`（`results/runner_1.0m_canceled.json`）。1,320 個（0.25 m 間隔）も同じでした。
-   - 検証では `scripts/drive.py patch` で「載荷メッシュが無いときは当のセルだけで切る」に差し替えました（リポジトリは変えていません）。粗いモデルで差し替えの前後を比べ、反力・変位の差は 0、速さは 5 倍でした。
-   - 0.25 m 間隔の値はこの方法で FemModel を直接動かして出しました。それでも面荷重のケースは 1 ケース 60〜85 秒かかります（`results/time_0.25m_*.log`）。ほかにも遅い所が残っています。
+1. **橋面荷重の準備が、三角形の数の2乗で遅かった（直しました、2026-10-30）**
+   - **症状**：runner は三角形 140 個（2.75 m 間隔）・12 ケースで 25 秒でした。360 個（1.0 m 間隔）では 10 分の上限を超えて `CANCELED`（`results/runner_1.0m_canceled.json`）になり、1,320 個（0.25 m 間隔）も同じでした。
+   - **原因1**（`FrameWeb/src/fem/spatial_loads/validation.py` の `prepare_panel` と `prepare_geometry`）：載荷メッシュ（`loading_nodes`）が無いとき、`prepare_panel` は `domain_cells = cells` としていました。そのため `for cell in panel.cells: for domain in panel.domain_cells or panel.cells:` が、面荷重の帯ごとにセルを総当たりで切り抜いていました。三角形 140 個の面荷重2つで `clip_polygon` が 78,400 回です。
+   - **原因2**（`FrameWeb/src/fem/spatial_loads/geometry.py` の `validate_partition`）：セルが重ならないことの検査が、全部の組を `clip_polygon` で切り抜いていました。三角形 1,320 個で約 87 万回です。
+   - **直し方1**：載荷メッシュが無いときは `domain_cells` を空（＝構造のセルが載荷範囲）のままにしました。面荷重の切り抜きは、空なら当のセルだけで切ります。検査済みのセルは重ならないので、ほかの組の面積は 0 です。
+   - **直し方2**：`bounding_box_pairs` を足しました。x の順に並べて掃引し、外接矩形が両方の軸で正の幅で重なる組だけを切り抜きます。外接矩形が離れているか接するだけの組は、重なりの面積が 0 なので省けます。
+   - **回帰テスト**（`FrameWeb/tests/spatial_loads/test_geometry.py`）：
+     - 帯状のグリッド（三角形 80 個）で、`prepare_geometry` と `prepare_panel` の `clip_polygon` の回数がセル数の 5 倍未満であること。直す前は 12,842 回と 3,160 回で失敗しました。
+     - 全面の面荷重で、各セルに一度だけそのセルの面積が配られること。
+     - `bounding_box_pairs` が、接する場合を含む乱数のセルで総当たりと同じ組を返すこと。
+   - **効果**：0.25 m 間隔の 12 ケースが、FemModel を直接動かして 145 秒（`results/time_0.25m_none_after_fix.log`）、runner で 141 秒（`results/runner_0.25m_after_fix.json`）になりました。結果は直す前と同じです（最大差 0）。
+     - 直す前の記録 `results/time_0.25m_{none,cross}.log`（面荷重のケースが 1 ケース 60〜85 秒）は、原因1だけを検証のスクリプトの中で差し替えて測ったものです。
+     - 直した後も、面荷重のケースは 1 ケース 16〜21 秒かかります。内訳は積分とパネルの準備です。
 2. **張出しには作り込みが要る**：橋面荷重は構造の外へ載せられないので、上の「張出しの荷重をてこの原理で配る方法」が必要でした。
 3. **3D の runner は PIK を止める必要がある**：`--generate-pik false` が要ります（既定のままだと `PIK_REQUIRES_2D`）。
+
+## デスクトップで目で確かめる
+
+`合成桁格子_橋面荷重検証.json` を FrameWebforCS で開きます。
+
+- **中身**：節点 2.75 m 間隔、せん断変形なしのモデル（`models/model_2.75m_none.json`）に、ケース名・記号と組合せを付けたもの。`scripts/make-visual.mjs` で作りました。
+- **計算時間**：12 ケースで 30 秒ほどです。
+
+確かめたこと：
+
+- デスクトップの読込（`InputDataService.JsonDataOpen`）→ 保存（`GetSaveJson`）を通しても、節点・部材・結合・支点・荷重・組合せ・橋面荷重（パネル 1、三角形 140、経路 33、ケース別の荷重 41）の数は変わりません。計算要求（`CalculationRequestBuilder.FromSavedJson`）も作れました。
+- 保存し直したファイルを runner で解いた結果は、`results/summary_2.75m_none_runner.json` と一致しました（最大差 5×10⁻¹³）。
+
+### 番号の目印
+
+| 対象 | 節点 | 部材 |
+|---|---|---|
+| 床版の左端 E（y＝−1.025） | 1〜15 | 片持ち（要素 7）。G1 と結ぶ |
+| G1（y＝0） | 16〜30（J1＝20、中央＝23、支点＝16・30） | 1〜14（J1 から始まる部材 5、中央から始まる部材 8） |
+| G2（y＝2.55） | 31〜45（J1＝35、中央＝38、支点＝31・45） | 15〜28（J1 は 19、中央は 22） |
+| G3（y＝5.10） | 46〜60（J1＝50、中央＝53） | 29〜42 |
+| G4（y＝7.65） | 61〜75（J1＝65、中央＝68） | 43〜56 |
+| 床版の右端 E2（y＝8.675） | 76〜90 | 片持ち（要素 7）。G4 と結ぶ |
+| 荷重分配横桁（x＝16.5） | | 57（G1–G2、G1 側ピン）、58（G2–G3）、59（G3–G4、G4 側ピン） |
+| 張出しの伝達部材（要素 6） | | 各断面に G1→G2 と G4→G3（G2・G3 側ピン） |
+
+橋軸方向の節点は x＝0、2.75、5.5、8.25、10.25（J1）、11、13.75、16.5（中央）、19.25、22、22.75（J2）、24.75、27.5、30.25、33 です。
+
+### 見るところ
+
+1. **入力の橋面荷重**（3つのタブ）：パネルの三角形が床版の全幅を覆っていること。舗装・活荷重が地覆の内側（y＝−0.425〜8.075）に、地覆・防護柵が床版の端から 0.300 m と 0.250 m に載っていること。p1 の範囲がケースごとに違うこと。
+2. **3D 表示**：ケースを切り替えて線荷重・面荷重の位置と向き（下向き）を見ます。解析後は等価節点荷重を表示して、張出しの荷重が床版の端の節点に配られていることを見ます。床版の端の節点は片持ちと伝達の部材を通して G1・G2 に伝わります。
+3. **結合**：部材 57 の i 端と 59 の j 端、伝達の部材の G2・G3 側がピンであること。
+4. **断面力**：主桁の曲げモーメント（全体の Y 軸まわり）と支点反力を、上の「結果」の表と比べます。runner の 2.75 m 間隔の値は次のとおりです（`results/summary_2.75m_none_runner.json`）。表の値は「下側引張を正」にそろえたもので、部材 i 端の My の符号を逆にしています。runner の組合せの結果では、主桁の下側引張は My の負の値です（例：組合せ1 の部材 8 の i 端が −3945.8）。
+
+| ケース・組合せ | G1 J1 ／ 中央 | G2 J1 ／ 中央 | 反力 G1 ／ G2 | 設計例 |
+|---|---|---|---|---|
+| ケース1 Db | 2555 ／ 2997 | 2434 ／ 2828 | 361.9 ／ 347.6 | Ms 2562 ／ 3008、2427 ／ 2817、Rs 361 ／ 345 |
+| ケース2 Da | 528 ／ 478 | 395 ／ 599 | 87.0 ／ 44.2 | Mvd 542 ／ 500、381 ／ 577、Rvd 90 ／ 41 |
+| 組合せ1・2 Mv（G1） | 3255 ／ 3946 | | | 3278 ／ 3981 |
+| 組合せ3・4 Mv（G2） | | 3008 ／ 3377 | | 2987 ／ 3360 |
+| 組合せ5・6 S(R) | | | 839.0 ／ 847.9 | 837 ／ 845 |
+
+組合せ1〜4は、それぞれの着目点（組合せの名前に書いた主桁と位置）の値だけが設計例に当たります。ケース3〜6 は横分配の確認用で、G1 中央の曲げモーメントを 825 kN·m（＝100 kN × 33 m ÷ 4）で割ると、設計例の 0.731 ／ 0.367 ／ 0.072 ／ −0.170 に当たります（2.75 m 間隔で 0.721 ／ 0.368 ／ 0.073 ／ −0.177）。
 
 ## ファイル
 
 | パス | 内容 |
 |---|---|
+| `合成桁格子_橋面荷重検証.json` | FrameWebforCS で開く入力ファイル（上の「デスクトップで目で確かめる」） |
+| `scripts/make-visual.mjs` | 上の入力ファイルを作る（`node make-visual.mjs ../models/model_2.75m_none.json ../合成桁格子_橋面荷重検証.json`） |
 | `models/model_2.75m_{none,cross,all}.json` | runner で解ける保存形式の JSON（12 ケース）。`.map.json` は節点・部材番号の対応 |
-| `models/model_0.25m_{none,cross}.json` | 0.25 m 間隔のモデル。runner では 10 分を超える |
+| `models/model_0.25m_{none,cross}.json` | 0.25 m 間隔のモデル。runner で 141 秒（直す前は 10 分を超えた） |
 | `results/summary_*.json` | `read.mjs` が取り出した主桁の曲げモーメント（下側引張が正）・反力・横桁のせん断力・橋面荷重の合計（ケースの順は上の表） |
-| `results/time_0.25m_*.log` | `drive.py` の 1 ケースごとの時間 |
+| `results/time_0.25m_{none,cross}.log` | 直す前（原因1だけ差し替え）の `drive.py` の 1 ケースごとの時間 |
+| `results/time_0.25m_none_after_fix.log`、`results/runner_0.25m_after_fix.json` | 直した後の時間と runner の応答 |
 | `scripts/gen.mjs` | モデルを作る |
 | `scripts/live.json` | 活荷重の載荷位置 |
 | `scripts/read.mjs` | 結果から比べる値を取り出す |
 | `scripts/onecase.mjs` | 保存形式から1ケースの旧 JSON を作る（`load[case].spatial_loads` に展開） |
-| `scripts/drive.py` | 旧 JSON を FemModel で解いて result.json にまとめる（`patch` で上の差し替え） |
+| `scripts/drive.py` | 旧 JSON を FemModel で解いて result.json にまとめる |
 | `scripts/profile_case.py` | 1 ケースの時間の内訳 |
 | `scripts/render_pages.py` | PDF の頁を PNG にする（PDF は文字が取れないため） |
 
@@ -141,12 +195,12 @@ New-Item -ItemType Directory C:\tmp\grid-run
   --generate-pik false --generate-pdf false
 node "$d/scripts/read.mjs" C:\tmp\grid-run\result.json "$d/models/model_2.75m_none.map.json"
 
-# FemModel を直接（0.25 m 間隔、差し替えあり）
+# FemModel を直接（0.25 m 間隔。runner でも解ける）
 New-Item -ItemType Directory C:\tmp\grid-fine
 $cases = foreach ($c in 1..12) {
   node "$d/scripts/onecase.mjs" "$d/models/model_0.25m_none.json" $c "C:\tmp\grid-fine\m_case$c.json"
   "C:\tmp\grid-fine\m_case$c.json"
 }
-uv run --project FrameWeb --locked python "$d/scripts/drive.py" C:\tmp\grid-fine\result.json patch @cases
+uv run --project FrameWeb --locked python "$d/scripts/drive.py" C:\tmp\grid-fine\result.json @cases
 node "$d/scripts/read.mjs" C:\tmp\grid-fine\result.json "$d/models/model_0.25m_none.map.json"
 ```

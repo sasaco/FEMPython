@@ -3,7 +3,9 @@ import numpy as np
 import pytest
 
 from fem.spatial_loads import GeometryTolerance, SpatialLoad, SpatialLoadDefinitions, SpatialLoadPath
-from fem.spatial_loads.geometry import PlanarFrame, clip_polygon, signed_area, triangulate_convex
+from fem.spatial_loads.geometry import (
+    PlanarFrame, bounding_box_pairs, clip_polygon, signed_area, triangulate_convex,
+)
 from fem.spatial_loads.interpolation import natural_coordinates, q4_shape, shape_values
 from fem.spatial_loads.validation import prepare_geometry, prepare_panel
 from tests.support.builders.spatial_loads import geometry_model
@@ -101,3 +103,80 @@ def test_tiny_geometry_uses_configured_length_tolerance():
     mesh, definition = geometry_model(points=[(0, 0), (1e-8, 0), (0, 1e-8)], cells=[(1, 2, 3)],
                                       tolerance=GeometryTolerance(1e-14, 1e-9))
     assert abs(signed_area(prepare_panel(definition, mesh).boundary)) == pytest.approx(5e-17)
+
+
+def _strip_grid(columns, rows=2):
+    """Unit-square cells, each split into two triangles: a long deck-like panel."""
+    points = [(x, y) for y in range(rows + 1) for x in range(columns + 1)]
+    node = lambda x, y: y * (columns + 1) + x + 1
+    cells = [cell for y in range(rows) for x in range(columns)
+             for cell in ((node(x, y), node(x + 1, y), node(x + 1, y + 1)),
+                          (node(x, y), node(x + 1, y + 1), node(x, y + 1)))]
+    return geometry_model(points=points, cells=cells)
+
+
+def _full_area_load(columns, rows=2):
+    paths = (SpatialLoadPath(1, ((0, 0, 0), (columns, 0, 0))),
+             SpatialLoadPath(2, ((0, rows, 0), (columns, rows, 0))))
+    return paths, SpatialLoad(9, 7, (1, 2), ((-1, -1), (-1, -1)))
+
+
+def test_area_clipping_without_loading_mesh_scales_with_cell_count(monkeypatch):
+    """Structural cells do not overlap, so each one is clipped only against itself."""
+    import fem.spatial_loads.validation as validation
+
+    calls = 0
+    original = validation.clip_polygon
+
+    def counting_clip(*args):
+        nonlocal calls
+        calls += 1
+        return original(*args)
+
+    monkeypatch.setattr(validation, 'clip_polygon', counting_clip)
+    columns = 20
+    mesh, panel = _strip_grid(columns)
+    paths, load = _full_area_load(columns)
+    prepared, = prepare_geometry(SpatialLoadDefinitions((panel,), paths, (load,)), mesh)
+    cells = len(prepared.panel.cells)
+    assert cells == 4 * columns
+    assert calls < 5 * cells
+
+
+def test_area_pieces_without_loading_mesh_cover_each_cell_once():
+    columns = 6
+    mesh, panel = _strip_grid(columns)
+    paths, load = _full_area_load(columns)
+    prepared, = prepare_geometry(SpatialLoadDefinitions((panel,), paths, (load,)), mesh)
+    area = {}
+    for piece in prepared.area_pieces:
+        area[piece.cell_index] = area.get(piece.cell_index, 0) + abs(signed_area(piece.triangle))
+    assert sorted(area) == list(range(len(prepared.panel.cells)))
+    assert all(value == pytest.approx(.5) for value in area.values())
+
+
+def test_partition_overlap_check_scales_with_cell_count(monkeypatch):
+    """Only cells with overlapping bounding boxes need an exact overlap clip."""
+    import fem.spatial_loads.geometry as geometry
+
+    calls = 0
+    original = geometry.clip_polygon
+
+    def counting_clip(*args):
+        nonlocal calls
+        calls += 1
+        return original(*args)
+
+    monkeypatch.setattr(geometry, 'clip_polygon', counting_clip)
+    mesh, panel = _strip_grid(20)
+    cells = len(prepare_panel(panel, mesh).cells)
+    assert calls < 5 * cells
+
+
+def test_bounding_box_pairs_match_brute_force_including_touching_boxes():
+    rng = np.random.default_rng(7)
+    polygons = [tuple(map(tuple, rng.integers(0, 6, size=(3, 2)).astype(float))) for _ in range(60)]
+    boxes = [(np.min(p, axis=0), np.max(p, axis=0)) for p in map(np.array, polygons)]
+    expected = [(i, j) for i in range(len(boxes)) for j in range(i + 1, len(boxes))
+                if all(min(boxes[i][1][k], boxes[j][1][k]) > max(boxes[i][0][k], boxes[j][0][k]) for k in (0, 1))]
+    assert bounding_box_pairs(polygons) == expected

@@ -84,6 +84,25 @@ def validate_polygon(points, eps, label='polygon', *, strict=False, convex=True)
     return orientation
 
 
+def bounding_box_pairs(polygons):
+    """Return sorted index pairs whose bounding boxes overlap with positive area.
+
+    Boxes that are disjoint or only touch cannot hold a positive-area overlap,
+    so a sweep along x avoids clipping every pair of a large partition.
+    """
+    boxes = [(np.min(p, axis=0), np.max(p, axis=0)) for p in map(np.asarray, polygons)]
+    order = sorted(range(len(boxes)), key=lambda k: boxes[k][0][0])
+    pairs = []
+    for position, i in enumerate(order):
+        low, high = boxes[i]
+        for j in order[position + 1:]:
+            if boxes[j][0][0] >= high[0]:
+                break
+            if all(min(high[k], boxes[j][1][k]) > max(low[k], boxes[j][0][k]) for k in (0, 1)):
+                pairs.append((min(i, j), max(i, j)))
+    return sorted(pairs)
+
+
 def contains_point(polygon, point, eps):
     p = np.asarray(polygon)
     sign = 1 if signed_area(p) > 0 else -1
@@ -321,11 +340,10 @@ def validate_partition(cells, eps, label, *, holes=()):
             if i > 0 and (contains_simple(first, second[0], eps) or contains_simple(second, first[0], eps)):
                 raise ValueError(f'{label}: nested holes')
     scale = np.linalg.norm(np.ptp(np.array(boundary), axis=0))
-    for i, first in enumerate(cells):
-        for second in cells[i + 1:]:
-            overlap = clip_polygon(first.points, second.points, eps)
-            if abs(signed_area(overlap)) > eps * scale:
-                raise ValueError(f'{label}: overlapping cell interiors')
+    for i, j in bounding_box_pairs([cell.points for cell in cells]):
+        overlap = clip_polygon(cells[i].points, cells[j].points, eps)
+        if abs(signed_area(overlap)) > eps * scale:
+            raise ValueError(f'{label}: overlapping cell interiors')
     if abs(sum(abs(signed_area(c.points)) for c in cells)
            - abs(signed_area(boundary)) + sum(abs(signed_area(p)) for p in polygons[1:])) > eps * scale:
         raise ValueError(f'{label}: cells do not cover the boundary')

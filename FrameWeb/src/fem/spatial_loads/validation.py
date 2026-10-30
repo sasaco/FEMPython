@@ -77,7 +77,8 @@ def prepare_panel(panel, mesh):
     else:
         boundary = validate_partition(cells, frame.eps, label, holes=panel.holes)
         holes = tuple(tuple(coordinates[n] for n in ring) for ring in panel.holes)
-        domain_cells = cells
+        # Empty means the structural cells themselves are the loading domain.
+        domain_cells = ()
     return PanelGeometry(panel.id, frame, cells, boundary, holes, domain_cells)
 
 
@@ -127,7 +128,9 @@ def prepare_geometry(definitions, mesh):
         for strip_index, strip in enumerate(strips):
             triangles = []
             for cell_index, cell in enumerate(panel.cells):
-                for domain in panel.domain_cells or panel.cells:
+                # Validated structural cells do not overlap, so without an
+                # independent loading mesh a cell is its only domain.
+                for domain in panel.domain_cells or (cell,):
                     clipped = clip_polygon(strip.points, domain.points, panel.frame.eps)
                     clipped = clip_polygon(clipped, cell.points, panel.frame.eps)
                     for triangle in triangulate_convex(clipped, panel.frame.eps):
