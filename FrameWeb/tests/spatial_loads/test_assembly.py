@@ -164,10 +164,11 @@ def test_independent_audits_reject_corrupted_basis(monkeypatch, defect, reason):
     basis = assembler.shape_values
 
     def broken(*args, **kwargs):
+        # Nodes are the last axis: one point gives (nodes,), many points (n, nodes).
         result = basis(*args, **kwargs)
-        result[0] += .01
+        result[..., 0] += .01
         if defect == 'moment':
-            result[1] -= .01
+            result[..., 1] -= .01
         return result
 
     monkeypatch.setattr(assembler, 'shape_values', broken)

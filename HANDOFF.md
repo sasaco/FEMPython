@@ -12,6 +12,8 @@ This file is the work request for a fresh session. Read it fully before acting.
 > - **4**: `.claude/skills/headless-runner/SKILL.md` and structural-mcp `skills/structural-fempython/SKILL.md`.
 > - **5**: recorded as 未確認 in the verification README ("設計例との差を調べたこと"): the 87.6 mm deflection matches simple-beam theory with the example's own I and Ms (88 mm); a cross beam about 0.7× as stiff reproduces Mvd and the cross-beam force but not G2–G4 influence values.
 >
+> - **Third round** (after the user asked for more speed, TDD): quadrature points evaluated together (`shape_values`/`natural_coordinates`/`StripCell.intensity` accept (n, 2) points; parallelograms inverted in closed form), integrands return only the touched components (`integrate_pieces` component indices and `size`), node-overlap check by sweep (`close_point_pairs`), line split no longer computes the intervals twice. 0.25 m model 66 s → 33 s (FemModel), runner 141 s → 40 s. Differences are roundoff only (max relative 2.6×10⁻¹⁴). `test_independent_audits_reject_corrupted_basis` was adapted to corrupt the basis the same way for arrays of points. Spatial gate 356 passed, integration gate 161 passed.
+>
 > The sections below are the original request, kept for the record.
 
 The full Japanese record of the verification is `FrameWebforCS/tests/data/合成桁格子検証/README.md`. It covers:

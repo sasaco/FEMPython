@@ -164,23 +164,24 @@ def _compile_load(prepared, mesh, tolerance):
     active = set()
 
     def integrand(cell_index, intensity):
+        """(callback, components): only this cell's nodes and the six audit components."""
         active.add(cell_index)
         cell = cells[cell_index]
+        nodes = len(cell.node_ids)
 
-        def evaluate(point):
-            q = intensity(point)
-            value = np.zeros(count + 6)
-            value[offsets[cell_index]:offsets[cell_index + 1]] = (
-                # Cells were validated by prepare_panel; points are still contained.
-                shape_values(cell.points, point, panel.frame.eps, label, validated=True) * q
-            )
+        def evaluate(points):
+            # All (n, 2) points of one quadrature rule at once, one row each.
+            q = intensity(points)
+            value = np.empty((len(points), nodes + 6))
+            # Cells were validated by prepare_panel; points are still contained.
+            value[:, :nodes] = shape_values(cell.points, points, panel.frame.eps, label, validated=True) * q[:, None]
             # Evaluated from the physical load position, not interpolated nodes.
-            position = panel.frame.lift(point)
-            force = load_direction * q
-            value[count:count + 3] = force
-            value[count + 3:] = np.cross(position, force)
+            position = panel.frame.lift(points)
+            force = q[:, None] * load_direction
+            value[:, nodes:nodes + 3] = force
+            value[:, nodes + 3:] = np.cross(position, force)
             return value
-        return evaluate
+        return evaluate, np.r_[offsets[cell_index]:offsets[cell_index + 1], count:count + 6]
 
     length, area = 0., 0.
     if prepared.line_pieces:
@@ -189,21 +190,21 @@ def _compile_load(prepared, mesh, tolerance):
             a, b = np.asarray(piece.start), np.asarray(piece.end)
             direction = b - a
 
-            def intensity(point, a=a, direction=direction, piece=piece):
-                t = np.dot(point - a, direction) / np.dot(direction, direction)
+            def intensity(points, a=a, direction=direction, piece=piece):
+                t = (points - a) @ direction / np.dot(direction, direction)
                 s = piece.s0 + t * (piece.s1 - piece.s0)
                 return (1-s)*p0 + s*p1
 
-            pieces.append((integrand(piece.cell_index, intensity), (a, b)))
+            callback, components = integrand(piece.cell_index, intensity)
+            pieces.append((callback, (a, b), components))
             length += float(np.linalg.norm(direction))
         kind, degree = 'line', 3
     else:
         for piece in prepared.area_pieces:
             strip = prepared.strip_cells[piece.strip_index]
-            pieces.append((integrand(piece.cell_index,
-                                     lambda point, strip=strip: strip.intensity(
-                                         point, panel.frame.eps, label, validated=True)),
-                           piece.triangle))
+            callback, components = integrand(piece.cell_index, lambda point, strip=strip: strip.intensity(
+                point, panel.frame.eps, label, validated=True))
+            pieces.append((callback, piece.triangle, components))
             area += abs(signed_area(piece.triangle))
         kind, degree = 'triangle', 4
     if any(not _affine(cells[i].points) for i in active) or any(
@@ -214,7 +215,8 @@ def _compile_load(prepared, mesh, tolerance):
     absolute = np.r_[np.full(count, tolerance.force_absolute / max(count, 1)),
                      np.full(3, tolerance.force_absolute), np.full(3, tolerance.moment_absolute)]
     integral = integrate_pieces(pieces, kind=kind, degree=degree, atol=absolute,
-                                rtol=tolerance.relative, max_depth=tolerance.max_depth, label=label)
+                                rtol=tolerance.relative, max_depth=tolerance.max_depth, label=label,
+                                batch=True, size=count + 6)
     contributions, node_forces = [], {}
     for i in sorted(active):
         cell = cells[i]

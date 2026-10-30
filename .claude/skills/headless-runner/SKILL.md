@@ -132,4 +132,4 @@ dotnet test FrameWebforCS/Headless/tests/FrameWebforCS.Headless.Tests.csproj -c 
 - 計算：3D なので `--generate-pik false`（既定だと `PIK_REQUIRES_2D`）。荷重図 `load_diagram` も 2D だけ。
 - 監査：`result.json` の各ケースの `diagnostics.spatial_loads`（`resultant`・`moment`・`nodal_resultant`・誤差・荷重ごとの積分）。`resultant.z` が手計算の合計と合うかで、荷重が全部配られたかを確かめられる。PDF にするなら `bridge_audit`。
 - パネルの外へは載せられない（外挿は拒否）。床版の張出しの荷重は、床版の端に節点を置いて片持ちの部材で主桁に剛結し、張出しの荷重を隣の主桁へ回す伝達の部材（相手側の回転を解放）を足して、てこの原理で配った（README の「張出しの荷重をてこの原理で配る方法」）。
-- 速さ（2026-10-30 に2回直した後）：三角形 1,320 個のパネルで、面荷重のあるケースは FemModel を直接動かして 1 ケース 7〜8 秒。三角形の数の2乗で遅くなる箇所は直したが、点ごとの積分は重い（README の「見つかった問題」1）。
+- 速さ（2026-10-30 に3回直した後）：三角形 1,320 個のパネルで、面荷重のあるケースは FemModel を直接動かして 1 ケース 3.1〜3.6 秒、橋面荷重の無いケースは 1.6 秒。12 ケースが runner で 40 秒（最初は 10 分の上限を超えた）。runner はケースごとにパネルの準備をやり直す（README の「見つかった問題」1）。

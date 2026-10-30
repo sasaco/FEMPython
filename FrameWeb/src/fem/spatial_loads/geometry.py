@@ -53,15 +53,8 @@ def segments_intersect(a, b, c, d, eps):
             and cross(d - c, a - c) * cross(d - c, b - c) < 0)
 
 
-def _nearby_edge_pairs(p, eps):
-    """Sorted index pairs of ring edges whose bounding boxes lie within 2 eps.
-
-    segments_intersect accepts a point at most eps across and eps beyond an
-    edge, i.e. at most eps * sqrt(2) outside its box per axis, so farther
-    pairs cannot intersect. Touching and zero-width boxes are kept.
-    """
-    ends = np.roll(p, -1, axis=0)
-    low, high = np.minimum(p, ends) - eps, np.maximum(p, ends) + eps
+def _touching_box_pairs(low, high):
+    """Sorted index pairs of 2D boxes that overlap or touch (an x sweep)."""
     order = np.argsort(low[:, 0], kind='stable')
     pairs = []
     for position, i in enumerate(order):
@@ -71,6 +64,24 @@ def _nearby_edge_pairs(p, eps):
             if low[j, 1] <= high[i, 1] and low[i, 1] <= high[j, 1]:
                 pairs.append((int(min(i, j)), int(max(i, j))))
     return sorted(pairs)
+
+
+def _nearby_edge_pairs(p, eps):
+    """Sorted index pairs of ring edges whose bounding boxes lie within 2 eps.
+
+    segments_intersect accepts a point at most eps across and eps beyond an
+    edge, i.e. at most eps * sqrt(2) outside its box per axis, so farther
+    pairs cannot intersect. Touching and zero-width boxes are kept.
+    """
+    ends = np.roll(p, -1, axis=0)
+    return _touching_box_pairs(np.minimum(p, ends) - eps, np.maximum(p, ends) + eps)
+
+
+def close_point_pairs(points, eps):
+    """Sorted index pairs of points at most eps apart, without comparing every pair."""
+    p = np.asarray(points, dtype=float)
+    return [(i, j) for i, j in _touching_box_pairs(p - eps, p + eps)
+            if np.linalg.norm(p[i] - p[j]) <= eps]
 
 
 def validate_polygon(points, eps, label='polygon', *, strict=False, convex=True):
@@ -127,6 +138,16 @@ def contains_point(polygon, point, eps):
     sign = 1 if signed_area(p) > 0 else -1
     return all(sign * cross(b - a, point - a) >= -eps * np.linalg.norm(b - a)
                for a, b in zip(p, np.roll(p, -1, axis=0)))
+
+
+def contains_points(polygon, points, eps):
+    """contains_point for many points of one convex polygon: one boolean per point."""
+    p, q = np.asarray(polygon, dtype=float), np.asarray(points, dtype=float)
+    sign = 1 if signed_area(p) > 0 else -1
+    edge = np.roll(p, -1, axis=0) - p
+    offset = q[:, None, :] - p[None, :, :]
+    turn = edge[None, :, 0] * offset[..., 1] - edge[None, :, 1] * offset[..., 0]
+    return np.all(sign * turn >= -eps * np.linalg.norm(edge, axis=1), axis=1)
 
 
 def contains_simple(polygon, point, eps):
@@ -430,8 +451,10 @@ def split_line(panel, points, parameters, label='line'):
         length = np.linalg.norm(b - a)
         intervals = [(j, interval) for j, cell in enumerate(panel.cells)
                      if (interval := _segment_interval(cell.points, a, b, eps)) is not None]
-        domain_intervals = [(j, interval) for j, cell in enumerate(panel.domain_cells or panel.cells)
-                            if (interval := _segment_interval(cell.points, a, b, eps)) is not None]
+        # Without a loading mesh the structural cells are the loading domain.
+        domain_intervals = intervals if not panel.domain_cells else [
+            (j, interval) for j, cell in enumerate(panel.domain_cells)
+            if (interval := _segment_interval(cell.points, a, b, eps)) is not None]
         cuts = sorted({0., 1., *(t for _, pair in intervals for t in pair),
                        *(t for _, pair in domain_intervals for t in pair)})
         unique = [cuts[0]]

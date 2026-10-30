@@ -1,0 +1,13 @@
+case 1: 15.7 s
+case 2: 17.5 s
+case 3: 1.8 s
+case 4: 1.7 s
+case 5: 1.7 s
+case 6: 1.7 s
+case 7: 15.6 s
+case 8: 15.6 s
+case 9: 16.7 s
+case 10: 17.0 s
+case 11: 17.7 s
+case 12: 20.9 s
+total 145 s (drive.py, 修正後の FrameWeb/src)

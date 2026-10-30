@@ -284,3 +284,108 @@ def test_boundary_self_intersection_matches_every_pair_check():
         checked += 1
         rejected += expected
     assert checked > 100 and 0 < rejected < checked
+
+
+def test_load_compilation_checks_containment_per_cell_not_per_quadrature_point(monkeypatch):
+    """Quadrature points of one piece are evaluated together, not one Python call each."""
+    import fem.spatial_loads.geometry as geometry
+    import fem.spatial_loads.interpolation as interpolation
+    from fem.spatial_loads import compile_spatial_loads
+
+    calls = 0
+    original = geometry.contains_point
+
+    def counting_contains(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return original(*args, **kwargs)
+
+    for module in (geometry, interpolation):
+        monkeypatch.setattr(module, 'contains_point', counting_contains)
+    columns = 20
+    mesh, panel = _strip_grid(columns)
+    paths, area = _full_area_load(columns)
+    line = SpatialLoad(10, 7, (1,), ((-1, -1),))
+    compile_spatial_loads(SpatialLoadDefinitions((panel,), paths, (area, line)), mesh)
+    assert calls < 5 * 4 * columns
+
+
+@pytest.mark.parametrize('vertices', [
+    [(0, 0), (2, 0), (0, 1)],                     # T3
+    [(0, 0), (2, .5), (3, 2.5), (1, 2)],          # parallelogram Q4
+    [(0, 0), (2, 0), (2.4, 1.7), (-.3, 1.1)],     # distorted Q4
+])
+def test_shape_values_of_many_points_match_one_point_at_a_time(vertices):
+    from fem.spatial_loads.interpolation import shape_values
+
+    rng = np.random.default_rng(3)
+    p = np.array(vertices, float)
+    weights = rng.dirichlet(np.ones(len(p)), size=25)
+    points = weights @ p
+    batch = shape_values(vertices, points, 1e-10)
+    assert batch.shape == (25, len(p))
+    for point, row in zip(points, batch):
+        np.testing.assert_allclose(row, shape_values(vertices, point, 1e-10), rtol=0, atol=1e-13)
+    np.testing.assert_allclose(batch @ p, points, atol=1e-12)
+
+
+@pytest.mark.parametrize('vertices', [[(0, 0), (2, 0), (0, 1)], [(0, 0), (2, .5), (3, 2.5), (1, 2)]])
+def test_shape_values_of_many_points_reject_any_point_outside(vertices):
+    from fem.spatial_loads.interpolation import shape_values
+
+    points = np.array([(.2, .1), (5., 5.)])
+    with pytest.raises(ValueError, match='extrapolation is forbidden'):
+        shape_values(vertices, points, 1e-10)
+
+
+def test_strip_intensity_of_many_points_matches_one_point_at_a_time():
+    from fem.spatial_loads.interpolation import StripCell
+
+    strip = StripCell(((0., 0.), (4., 0.), (5., 2.), (1., 2.)), .25, .75, ((1., 3.), (5., -2.)))
+    points = np.array([(.5, .5), (2., 1.), (4.6, 1.9), (1., 2.), (4., 0.)])
+    batch = strip.intensity(points, 1e-10)
+    assert batch.shape == (5,)
+    np.testing.assert_allclose(batch, [strip.intensity(point, 1e-10) for point in points], rtol=0, atol=1e-13)
+
+
+def test_close_point_pairs_match_every_pair_check_including_exact_tolerance():
+    from fem.spatial_loads.geometry import close_point_pairs
+
+    rng = np.random.default_rng(5)
+    eps = .5
+    # Integer grid points plus points exactly eps away along an axis and a diagonal.
+    points = rng.integers(0, 12, size=(150, 2)).astype(float)
+    points = np.vstack((points, points[:10] + (eps, 0), points[10:20] + (eps / np.sqrt(2), eps / np.sqrt(2))))
+    expected = [(i, j) for i in range(len(points)) for j in range(i + 1, len(points))
+                if np.linalg.norm(points[i] - points[j]) <= eps]
+    assert close_point_pairs(points, eps) == expected
+    assert expected
+
+
+def test_panel_rejects_structural_nodes_closer_than_tolerance():
+    from fem.spatial_loads import GeometryTolerance
+
+    mesh, panel = geometry_model(points=[(0, 0), (1, 0), (0, 1), (1, 1e-12)], cells=[(1, 2, 3), (2, 4, 3)],
+                                 tolerance=GeometryTolerance(1e-9, 1e-9))
+    with pytest.raises(ValueError, match='coincident structural nodes'):
+        prepare_panel(panel, mesh)
+
+
+def test_line_split_without_loading_mesh_intersects_each_cell_once(monkeypatch):
+    import fem.spatial_loads.geometry as geometry
+
+    calls = 0
+    original = geometry._segment_interval
+
+    def counting_interval(*args):
+        nonlocal calls
+        calls += 1
+        return original(*args)
+
+    monkeypatch.setattr(geometry, '_segment_interval', counting_interval)
+    columns = 20
+    mesh, panel = _strip_grid(columns)
+    paths, _ = _full_area_load(columns)
+    line = SpatialLoad(10, 7, (1,), ((-1, -1),))
+    prepared, = prepare_geometry(SpatialLoadDefinitions((panel,), paths[:1], (line,)), mesh)
+    assert calls == len(prepared.panel.cells)

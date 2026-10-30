@@ -1,0 +1,14 @@
+case 1: 3.6 s
+case 2: 3.6 s
+case 3: 1.6 s
+case 4: 1.6 s
+case 5: 1.6 s
+case 6: 1.6 s
+case 7: 3.1 s
+case 8: 3.1 s
+case 9: 3.2 s
+case 10: 3.3 s
+case 11: 3.2 s
+case 12: 3.3 s
+total 33 s (drive.py, 3 回目の修正後の FrameWeb/src。2 回目の修正後との差は丸めだけ：数値 243,874 個で最大の絶対差 7.3e-12、相対差 2.6e-14)
+runner (FrameWebforCS.Headless.exe run --generate-pik false --generate-pdf false, 12 ケース) 40 s。応答は runner_0.25m_after_fix3.json

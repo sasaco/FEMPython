@@ -5,7 +5,7 @@ import numpy as np
 
 from .definitions import SpatialLoadDefinitions
 from .geometry import (
-    PanelCell, PanelGeometry, PlanarFrame, clip_polygon, frozen_points,
+    PanelCell, PanelGeometry, PlanarFrame, clip_polygon, close_point_pairs, frozen_points,
     points_array, signed_area, split_line, triangulate_convex, triangulate_simple, validate_partition,
 )
 from .interpolation import build_strip, project_path
@@ -44,9 +44,8 @@ def prepare_panel(panel, mesh):
         frame = PlanarFrame(plane.origin, plane.axis_u, plane.axis_v,
                             tuple(np.cross(plane.axis_u, plane.axis_v)), frame.scale, frame.eps)
     projected = frame.project(vertices, label)
-    for i, point in enumerate(projected):
-        if any(np.linalg.norm(point - other) <= frame.eps for other in projected[i + 1:]):
-            raise ValueError(f'{label}: coincident structural nodes')
+    if close_point_pairs(projected, frame.eps):
+        raise ValueError(f'{label}: coincident structural nodes')
     coordinates = dict(zip(panel.nodes, frozen_points(projected)))
     cells = []
     connectivity = ((eid, tuple(mesh.elements[eid]['nodes']), eid) for eid in panel.elements)

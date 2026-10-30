@@ -155,3 +155,22 @@ def test_nonfinite_integrand_and_degenerate_domain_are_rejected():
         integrate_lines(lambda p: np.nan, [[(0, 0), (1, 0)]])
     with pytest.raises(ValueError, match='degenerate'):
         integrate_triangles(lambda p: 1., [[(0, 0), (1, 0), (2, 0)]])
+
+
+@pytest.mark.parametrize('degree', [2, None])
+def test_pieces_with_component_indices_scatter_into_one_shared_total(degree):
+    """A piece may return only the components it touches; totals and budget are shared."""
+    from fem.spatial_loads.quadrature import integrate_pieces
+
+    # Two segments: x**2 into components (0, 2) and exp(x) into (1, 2). Closed forms:
+    # int_0^1 x**2 = 1/3, int_0^1 exp(x) = e - 1.
+    square = lambda points: np.column_stack((points[:, 0]**2, points[:, 0]**2))
+    growth = lambda points: np.column_stack((np.exp(points[:, 0]), np.exp(points[:, 0])))
+    pieces = [(square, [(0, 0), (1, 0)], (0, 2)), (growth, [(0, 1), (1, 1)], (1, 2))]
+    result = integrate_pieces(pieces, kind='line', degree=degree, atol=1e-12, rtol=0, batch=True, size=3)
+    if degree is not None:   # a fixed rule is exact only for the polynomial; check that one
+        assert result.value[0] == pytest.approx(1/3, abs=1e-14)
+        return
+    np.testing.assert_allclose(result.value, [1/3, exp(1) - 1, 1/3 + exp(1) - 1], rtol=0, atol=1e-11)
+    assert np.all(result.estimated_error <= 1e-12)
+    np.testing.assert_allclose(result.absolute_integral, result.value, rtol=1e-12)

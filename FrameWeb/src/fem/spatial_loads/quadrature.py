@@ -61,9 +61,14 @@ class IntegralResult:
     subdivisions: int
 
 
-def _evaluate(function, rule, label):
+def _evaluate(function, rule, label, batch=False):
     points, weights = rule
-    values = np.asarray([function(point) for point in points], dtype=float)
+    if batch:
+        values = np.asarray(function(points), dtype=float)
+        if values.ndim == 0 or len(values) != len(points):
+            raise ValueError(f'{label}: a batch integrand must return one row per point')
+    else:
+        values = np.asarray([function(point) for point in points], dtype=float)
     if not np.all(np.isfinite(values)):
         raise ValueError(f'{label}: non-finite quadrature integrand')
     result = np.tensordot(weights, values, axes=(0, 0))
@@ -83,7 +88,20 @@ def _children(domain, kind):
     return ((a, ab, ca), (ab, b, bc), (ca, bc, c), (ab, bc, ca))
 
 
-def _integrate(function, domains, kind, *, degree, atol, rtol, max_depth, label):
+def _scatter(parts, indices, size, label):
+    """Sum per-piece results; with component indices, each piece adds into its own slots."""
+    if indices is None:
+        return np.sum(parts, axis=0)
+    total = np.zeros(size)
+    for part, index in zip(parts, indices):
+        if np.shape(part) != (len(index),):
+            raise ValueError(f'{label}: an integrand must return one value per component index')
+        total[index] += part
+    return total
+
+
+def _integrate(function, domains, kind, *, degree, atol, rtol, max_depth, label, batch=False,
+               indices=None, size=None):
     if not isinstance(max_depth, Integral) or isinstance(max_depth, bool) or max_depth < 0:
         raise ValueError(f'{label}: max_depth must be a nonnegative integer')
     absolute, relative = np.asarray(atol, dtype=float), np.asarray(rtol, dtype=float)
@@ -102,27 +120,28 @@ def _integrate(function, domains, kind, *, degree, atol, rtol, max_depth, label)
     rule = (lambda d, n: line_rule(*d, n)) if kind == 'line' else triangle_rule
     if degree is not None:
         order = max(1, (degree + (2 if kind == 'line' else 3)) // 2)
-        results = [_evaluate(f, rule(d, order), label) for f, d in zip(functions, domains)]
-        value = np.sum([r[0] for r in results], axis=0)
-        magnitude = np.sum([r[1] for r in results], axis=0)
+        results = [_evaluate(f, rule(d, order), label, batch) for f, d in zip(functions, domains)]
+        value = _scatter([r[0] for r in results], indices, size, label)
+        magnitude = _scatter([r[1] for r in results], indices, size, label)
         if not np.all(np.isfinite(value)) or not np.all(np.isfinite(magnitude)):
             raise ValueError(f'{label}: summed quadrature overflow')
         return IntegralResult(value, np.zeros_like(value), magnitude,
                               len(domains) * order**(1 if kind == 'line' else 2), 0)
     evaluations, subdivisions = 0, 0
 
-    def estimate(function, domain, depth):
+    def estimate(function, domain, depth, index):
         nonlocal evaluations
-        low, _ = _evaluate(function, rule(domain, 4), label)
-        high, magnitude = _evaluate(function, rule(domain, 8), label)
+        low, _ = _evaluate(function, rule(domain, 4), label, batch)
+        high, magnitude = _evaluate(function, rule(domain, 8), label, batch)
         evaluations += 12 if kind == 'line' else 80
-        return (domain, depth, high, np.abs(high - low), magnitude, function)
+        return (domain, depth, high, np.abs(high - low), magnitude, function, index)
 
-    leaves = [estimate(f, d, 0) for f, d in zip(functions, domains)]
+    leaves = [estimate(f, d, 0, i) for f, d, i in zip(functions, domains, indices or [None] * len(domains))]
+    leaf_indices = lambda: None if indices is None else [leaf[6] for leaf in leaves]
     while True:
-        value = np.sum([leaf[2] for leaf in leaves], axis=0)
-        error = np.sum([leaf[3] for leaf in leaves], axis=0)
-        magnitude = np.sum([leaf[4] for leaf in leaves], axis=0)
+        value = _scatter([leaf[2] for leaf in leaves], leaf_indices(), size, label)
+        error = _scatter([leaf[3] for leaf in leaves], leaf_indices(), size, label)
+        magnitude = _scatter([leaf[4] for leaf in leaves], leaf_indices(), size, label)
         if not all(np.all(np.isfinite(v)) for v in (value, error, magnitude)):
             raise ValueError(f'{label}: summed quadrature overflow')
         # The error is summed across ALL pieces before acceptance. Each
@@ -137,9 +156,12 @@ def _integrate(function, domains, kind, *, degree, atol, rtol, max_depth, label)
         if not candidates:
             raise ValueError(f'{label}: quadrature did not converge at subdivision limit {max_depth}')
         tiny = np.finfo(float).tiny
-        index = max(candidates, key=lambda i: float(np.max(leaves[i][3] / np.maximum(budget, tiny))))
-        domain, depth, _, _, _, function = leaves.pop(index)
-        leaves.extend(estimate(function, child, depth + 1) for child in _children(domain, kind))
+        def share(i):
+            local = budget if indices is None or budget.shape == () else budget[leaves[i][6]]
+            return float(np.max(leaves[i][3] / np.maximum(local, tiny)))
+        index = max(candidates, key=share)
+        domain, depth, _, _, _, function, components = leaves.pop(index)
+        leaves.extend(estimate(function, child, depth + 1, components) for child in _children(domain, kind))
         subdivisions += 1
 
 
@@ -158,14 +180,28 @@ def integrate_triangles(function, triangles, *, degree=None, atol=1e-10, rtol=1e
 
 
 def integrate_pieces(pieces, *, kind, degree=None, atol=1e-10, rtol=1e-9,
-                     max_depth=8, label='spatial load'):
+                     max_depth=8, label='spatial load', batch=False, size=None):
     """Integrate (callback, physical domain) pairs with ONE load-wide budget.
 
     Callbacks must return the same component layout. A piece retains its
     structural cell and load-field owner throughout adaptive refinement.
+    With ``batch`` a callback takes all (n, 2) points of a rule at once and
+    returns one row per point. A piece given as (callback, domain, component
+    indices) returns only those components of a total of length ``size``;
+    the totals and the shared error budget are the same as for full rows.
     """
     if kind not in ('line', 'triangle'):
         raise ValueError(f'{label}: integration kind must be line or triangle')
     pieces = tuple(pieces)
+    indices = None
+    if pieces and all(len(p) == 3 for p in pieces):
+        if isinstance(size, bool) or not isinstance(size, Integral) or size < 1:
+            raise ValueError(f'{label}: component indices require a positive size')
+        indices = [np.asarray(p[2], dtype=int) for p in pieces]
+        if any(i.ndim != 1 or len(np.unique(i)) != len(i) or np.any((i < 0) | (i >= size)) for i in indices):
+            raise ValueError(f'{label}: component indices must be distinct and below size')
+    elif any(len(p) != 2 for p in pieces) or size is not None:
+        raise ValueError(f'{label}: give component indices for every piece, with size, or for none')
     return _integrate(tuple(p[0] for p in pieces), [p[1] for p in pieces], kind,
-                      degree=degree, atol=atol, rtol=rtol, max_depth=max_depth, label=label)
+                      degree=degree, atol=atol, rtol=rtol, max_depth=max_depth, label=label, batch=batch,
+                      indices=indices, size=size)
