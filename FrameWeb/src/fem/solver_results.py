@@ -100,7 +100,7 @@ def build_result_metadata(model, analysis_type, solver_snapshot):
         residual_scale = float(history[-1]["residual_scale"])
         relative_residual = float(history[-1]["relative_residual"])
     elif analysis_type == "static" and solver.displacement is not None:
-        applied = solver.load_factor * solver.load_vector
+        applied = solver.load_pattern.at(solver.load_factor)
         resolved = solver._resolve_boundary_dofs(
             model.boundary, len(solver.displacement), solver.layout.stride
         )

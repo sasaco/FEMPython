@@ -5,6 +5,7 @@ JavaScript版のBoundaryCondition機能に対応
 from typing import Dict, List, Optional, Tuple
 import numpy as np
 from enum import Enum
+from .load_kinds import INCREMENTAL, LoadKind
 from .spatial_loads import SpatialLoadDefinitions
 
 
@@ -143,7 +144,8 @@ class BoundaryCondition:
         self.restraints: Dict[int, Restraint] = {}
         self.spring_supports: Dict[int, dict] = {}
         self.nonlinear_spring_supports: Dict[int, dict] = {}
-        self.loads: Dict[int, Load] = {}
+        # Nodal loads by kind (fem.load_kinds); ``loads`` is the incremental set.
+        self.load_sets: Dict[LoadKind, Dict[int, Load]] = {INCREMENTAL: {}}
         self.distributed_loads: List[DistributedLoad] = []
         self.temperatures: Dict[int, Temperature] = {}
         self.heat_transfers: List[HeatTransferBound] = []
@@ -155,13 +157,19 @@ class BoundaryCondition:
         """拘束条件を追加"""
         self.restraints[node_id] = Restraint(node_id, dof_restraints, values)
         
-    def add_load(self, node_id: int, forces: List[float]) -> None:
+    @property
+    def loads(self) -> Dict[int, Load]:
+        """増分荷重の節点荷重（区別のない荷重はすべてここに入る）"""
+        return self.load_sets[INCREMENTAL]
+
+    def add_load(self, node_id: int, forces: List[float], kind: LoadKind = INCREMENTAL) -> None:
         """節点荷重を追加"""
-        if node_id in self.loads:
+        loads = self.load_sets.setdefault(kind, {})
+        if node_id in loads:
             # 既存の荷重に加算（float64型として追加）
-            self.loads[node_id].forces += np.array(forces, dtype=np.float64)
+            loads[node_id].forces += np.array(forces, dtype=np.float64)
         else:
-            self.loads[node_id] = Load(node_id, forces)
+            loads[node_id] = Load(node_id, forces)
             
     def add_distributed_load(self, element_id: int, load_type: str, 
                            values: List[float], face: Optional[int] = None) -> None:
@@ -225,7 +233,7 @@ class BoundaryCondition:
         self.restraints.clear()
         self.spring_supports.clear()
         self.nonlinear_spring_supports.clear()
-        self.loads.clear()
+        self.load_sets = {INCREMENTAL: {}}
         self.distributed_loads.clear()
         self.temperatures.clear()
         self.heat_transfers.clear()

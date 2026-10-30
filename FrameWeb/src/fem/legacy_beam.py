@@ -2,6 +2,8 @@
 import copy
 import numpy as np
 
+from .load_kinds import INCREMENTAL, ROW_KEY, row_kind
+
 # Member-load positions arrive rounded to a millimetre (the clients round L1/L2),
 # so a point load this close to an end is at that end (FrameWebforJS #714).
 POINT_LOAD_END_TOLERANCE = 0.0005
@@ -185,8 +187,10 @@ def prepare_members(data, model_data):
                         raise ValueError(f'Invalid point load position on member {mid}')
                     if value:
                         positions.add(p)
-                        points.append((p, value, load.get('direction', 'y'), mark))
+                        points.append((p, value, load.get('direction', 'y'), mark, row_kind(load)))
             elif mark == 9:
+                if row_kind(load) != INCREMENTAL:
+                    raise ValueError(f'Temperature loads on member {mid} must be incremental loads')
                 thermal += float(load.get('P1', 0))
             elif mark == 0:
                 continue  # Disabled editor row, even when stale values remain.
@@ -198,6 +202,8 @@ def prepare_members(data, model_data):
             # Integrate its actual loading directly onto the ORIGINAL endpoints.
             if rigid or any(str(s['m']) == mid for s in springs):
                 raise ValueError('Load-transfer members cannot have rigid zones or foundations')
+            if any(row_kind(load) != INCREMENTAL for load in loads):
+                raise ValueError(f'Load-transfer member {mid} carries only incremental loads')
             from .elements.loaded_bar_element import LoadedBarElement
             transfer = LoadedBarElement(int(mid), [ni, nj], original['material_id'],
                                         original['section_id'], float(member.get('cg') or 0))
@@ -212,7 +218,7 @@ def prepare_members(data, model_data):
                 first = a*total+(b-a)**2*(q0+2*q1)/6
                 endpoint[0, :4] += total-first/length
                 endpoint[1, :4] += first/length
-            for p, value, direction, mark in points:
+            for p, value, direction, mark, _ in points:
                 transfer.line_load[:] = 0.
                 transfer.set_line_load(direction, [value, value])
                 vector = transfer.line_load[:3, 0]
@@ -232,7 +238,7 @@ def prepare_members(data, model_data):
         positions = set(unique)
         snap = lambda x: min(unique, key=lambda p: abs(p-x))
         distributed = [(snap(a), snap(b), load) for a,b,load in distributed]
-        points = [(snap(p), value, direction, mark) for p,value,direction,mark in points]
+        points = [(snap(p), value, direction, mark, kind) for p,value,direction,mark,kind in points]
         coordinates = {}
         active_points = {p for p, *_ in points} | {p for a,b,_ in distributed for p in (a,b)}
         n_count = l_count = 0
@@ -294,13 +300,16 @@ def prepare_members(data, model_data):
                 if a >= left and b <= right:
                     q0, q1 = float(load.get('P1', 0)), float(load.get('P2', 0))
                     values = [q0+(q1-q0)*(x-left)/(right-left) for x in (a, b)]
-                    props['line_loads'].append(dict(direction=load.get('direction', 'y'), values=values))
+                    kind = row_kind(load)
+                    props['line_loads'].append(dict(
+                        direction=load.get('direction', 'y'), values=values,
+                        **({ROW_KEY: kind.to_json()} if kind != INCREMENTAL else {})))
             mesh.elements[eid] = props
         # Local force transformation depends only on original geometry and cg.
         from .elements.bar_element import BEBarElement
         orient = BEBarElement(0, [ni, nj], 1, 1, float(member.get('cg') or 0))
         orient.set_node_coordinates(mesh.nodes)
-        for p, value, direction, mark in points:
+        for p, value, direction, mark, kind in points:
             direction = {'x': 'Lx', 'y': 'Ly', 'z': 'Lz', 'gx': 'GX', 'gy': 'GY', 'gz': 'GZ'}.get(direction, direction)
             if direction not in ('Lx', 'Ly', 'Lz', 'GX', 'GY', 'GZ'):
                 raise ValueError(f'Unknown point load direction: {direction}')
@@ -313,7 +322,7 @@ def prepare_members(data, model_data):
                 force[:3] = vector
             else:
                 force[3:] = vector
-            boundary.add_load(coordinates[p], force)
+            boundary.add_load(coordinates[p], force, kind)
     # Splitting and case selection have already been done above.
     model_data.pop('notice_points', None)
     model_data.pop('load', None)

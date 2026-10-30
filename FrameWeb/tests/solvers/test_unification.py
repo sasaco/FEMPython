@@ -99,6 +99,25 @@ def test_newton_linear_algebra_does_not_replace_accepted_displacement():
     np.testing.assert_array_equal(solver.displacement, [7.0])
 
 
+def test_newton_system_accepts_a_backward_stable_solve_with_a_stiff_short_link():
+    """A 0.01 m link is ~1e14 times stiffer than its support, and a displacement
+    control step has a right side of 1e-3. Rounding in K @ du is then larger than
+    1e-8*|R| although the solve is exact to machine precision (backward error)."""
+    from fractions import Fraction
+
+    k, soft, ground = 3.5e14, 1e3, 7.0
+    stiffness = np.array([[k + soft, -k], [-k, k + ground]])
+    rhs = np.array([1e-3, 0.0])
+    increment = NonlinearSolver()._solve_newton_system(csr_matrix(stiffness), rhs)
+    backward = (np.abs(stiffness @ increment - rhs).max()
+                / (np.abs(stiffness) @ np.abs(increment) + np.abs(rhs)).max())
+    assert backward < 1e-15
+    # The forward error is bounded by condition number (~k/soft) times rounding.
+    det = Fraction(k + soft)*Fraction(k + ground) - Fraction(k)**2
+    exact = [float(Fraction(k + ground)*Fraction(1e-3)/det), float(Fraction(k)*Fraction(1e-3)/det)]
+    np.testing.assert_allclose(increment, exact, rtol=4*k/soft*np.finfo(float).eps)
+
+
 class TranslationElement:
     """Three independent grounded unit springs, arbitrary external node ID."""
     node_ids = [307]

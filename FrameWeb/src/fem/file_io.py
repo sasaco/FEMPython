@@ -10,6 +10,7 @@ import numpy as np
 from dataclasses import asdict
 from .mesh import MeshModel
 from .boundary_condition import BoundaryCondition
+from .load_kinds import INCREMENTAL, row_kind
 from .material import Material, MaterialProperty, ShellParameter, BarParameter, NonlinearMaterialProperty
 from .section import Section, CircleSection, RectSection, ISection, TubeSection
 from .spatial_loads.serialization import (
@@ -544,7 +545,7 @@ def _read_legacy_json_model(data: Dict[str, Any], model_data: Dict[str, Any]) ->
                         node_load.get('ry', 0.0),  # my
                         node_load.get('rz', 0.0)   # mz
                     ]
-                    model_data['boundary'].add_load(node_id, forces)
+                    model_data['boundary'].add_load(node_id, forces, row_kind(node_load))
             
             # 要素荷重の処理（load_member）
             if 'load_member' in case_data and len(case_data['load_member']) > 0:
@@ -730,7 +731,16 @@ def model_to_jsonable(model_data: Dict[str, Any]) -> Dict[str, Any]:
                 str(node_id): load.forces.tolist()
                 for node_id, load in boundary.loads.items()
             }
-            
+        kinded = [(kind, loads) for kind, loads in boundary.load_sets.items()
+                  if kind != INCREMENTAL and loads]
+        if kinded:
+            # Fixed and limited loads take part in the canonical input hash too.
+            output_data['boundary_conditions']['kinded_loads'] = [
+                {**kind.to_json(),
+                 'loads': {str(node_id): load.forces.tolist() for node_id, load in loads.items()}}
+                for kind, loads in kinded
+            ]
+
         # 面圧条件の書き込み（新規追加）
         if boundary.pressures:
             output_data['boundary_conditions']['pressures'] = [
@@ -792,6 +802,8 @@ def _write_fw3_model(model_data: Dict[str, Any], file_path: str) -> None:
                 f.write("\n")
                 
             # 荷重条件
+            if any(kind != INCREMENTAL and loads for kind, loads in boundary.load_sets.items()):
+                raise ValueError('FW3 cannot store fixed or limited loads')
             if boundary.loads:
                 f.write("*LOADS\n")
                 for node_id, load in sorted(boundary.loads.items()):

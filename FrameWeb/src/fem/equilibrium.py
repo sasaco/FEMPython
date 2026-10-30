@@ -13,6 +13,7 @@ from scipy.sparse.linalg import splu, MatrixRankWarning
 from .mesh import MeshModel
 from .material import Material
 from .boundary_condition import BoundaryCondition
+from .load_kinds import LoadPattern
 from .precision import sparse_product, add_correction
 from .convergence import (
     evaluate_equilibrium,
@@ -107,8 +108,11 @@ def solve_newton_system(K: csr_matrix, R: np.ndarray) -> np.ndarray:
     du = scaling * scaled_solution
     if not np.all(np.isfinite(du)):
         raise NumericalConditionError('Non-finite Newton increment')
+    # Componentwise backward error: rounding in K @ du scales with |K| |du|,
+    # which a stiff short element makes far larger than a small right side.
     error = np.linalg.norm(K @ du - R, ord=np.inf)
-    if error > 1e-8 * max(np.linalg.norm(R, ord=np.inf), 1.0):
+    bound = np.linalg.norm(abs(K) @ np.abs(du) + np.abs(R), ord=np.inf)
+    if error > 1e-8 * max(bound, 1.0):
         raise NumericalConditionError('Newton equation residual exceeds tolerance')
     return du
 
@@ -422,7 +426,7 @@ def displacement_control_iteration(
     boundary: BoundaryCondition,
     elements: Dict[int, Any],
     u_init: np.ndarray,
-    load_pattern: np.ndarray,
+    load_pattern: LoadPattern,
     control_dof: int,
     target: float,
     initial_load_factor: float,
@@ -432,9 +436,11 @@ def displacement_control_iteration(
 ) -> tuple:
     """Solve equilibrium with one displacement constraint and unknown lambda.
 
-    The Newton system is ``[K, -P; c.T, 0] [du, dlambda] = [R, g]``.
-    It remains regular at a simple load limit point and permits a negative
-    structural tangent. Snap-back still requires arc-length control.
+    The Newton system is ``[K, -P; c.T, 0] [du, dlambda] = [R, g]`` with
+    P = dF/dlambda of the load pattern (fixed loads do not vary; a limited
+    load stops at its limit). It remains regular at a simple load limit point
+    and permits a negative structural tangent. Snap-back still requires
+    arc-length control.
     """
     u = u_init.copy()
     load_factor = float(initial_load_factor)
@@ -449,12 +455,13 @@ def displacement_control_iteration(
     selector = np.zeros(len(active))
     selector[control_column] = 1.0
 
-    def augmented_tangent(displacement, direction_hint=None):
+    def augmented_tangent(displacement, factor, direction_hint=None):
         tangent = self._assemble_tangent_stiffness(
             mesh, material, elements, displacement, max_dof_per_node)
         supported = resolved.add_spring_stiffness(tangent, displacement, direction_hint=direction_hint)
+        rate = load_pattern.rate(factor)
         return bmat([
-            [supported[active][:, active], csr_matrix(-load_pattern[active, None])],
+            [supported[active][:, active], csr_matrix(-rate[active, None])],
             [csr_matrix(selector[None, :]), csr_matrix((1, 1))],
         ], format='csr')
 
@@ -464,8 +471,8 @@ def displacement_control_iteration(
     for iteration in range(max_iter):
         F_int = self._assemble_internal_forces(mesh, elements, u, max_dof_per_node)
         equilibrium = evaluate_equilibrium(
-            resolved, load_factor*load_pattern, F_int, u, length=length,
-            reference_load=load_pattern, dof_indices=active)
+            resolved, load_pattern.at(load_factor), F_int, u, length=length,
+            reference_load=load_pattern.reference, dof_indices=active)
         residual_free = equilibrium.residual[active]
         constraint = target-u[control_dof]
         residual_norm, force_scale = equilibrium.residual_norm, equilibrium.residual_scale
@@ -509,7 +516,7 @@ def displacement_control_iteration(
                 # As in load control, a zero residual is accepted only after
                 # proving that the augmented tangent has numerical rank.
                 if iteration == 0 or resolved.nonlinear_springs:
-                    augmented = augmented_tangent(u)
+                    augmented = augmented_tangent(u, load_factor)
                     try:
                         self._solve_newton_system(augmented, np.zeros(len(active)+1))
                     except ValueError:
@@ -519,7 +526,7 @@ def displacement_control_iteration(
 
         predictor = equilibrium.residual.copy()
         predictor[control_dof] = constraint
-        augmented = augmented_tangent(u, predictor)
+        augmented = augmented_tangent(u, load_factor, predictor)
         rhs = np.r_[residual_free, constraint]
         try:
             increment = self._solve_newton_system(augmented, rhs)

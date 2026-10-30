@@ -8,6 +8,8 @@ import math
 from scipy.linalg import expm
 
 from .bar_element import BEBarElement
+from .member_line_loads import MemberLineLoads
+from ..load_kinds import INCREMENTAL
 from ..precision import product_error as _product_error
 
 
@@ -109,16 +111,36 @@ def boundary_map(length, rigidity, foundation=0., bending=False, q=(0., 0.), she
     return (k+k.T)/2, -fixed
 
 
-class LoadedBarElement(BEBarElement):
+def beam_mode_system(length, material, section, foundation, line_load, shear_correction):
+    """Local stiffness and consistent end load of the axial/bending/torsion modes."""
+    k, f = np.zeros((12, 12)), np.zeros(12)
+    modes = [(0, [0, 6], material.E*section.area, False, [1, 1]),
+             (1, [1, 5, 7, 11], material.E*section.Iz, True, [1, 1, 1, 1]),
+             (2, [2, 4, 8, 10], material.E*section.Iy, True, [1, -1, 1, -1]),
+             (3, [3, 9], material.G*section.J, False, [1, 1])]
+    for mode, indices, rigidity, bending, signs in modes:
+        if rigidity == 0 and not foundation[mode] and not np.any(line_load[mode]):
+            continue
+        if rigidity <= 0:
+            raise ValueError('A loaded or supported beam mode requires positive rigidity')
+        km, fm = boundary_map(length, rigidity, foundation[mode], bending, line_load[mode],
+                               material.G*section.area*(section.kappa_y if mode == 1 else section.kappa_z)
+                               if bending and shear_correction else None)
+        signs = np.array(signs)
+        k[np.ix_(indices, indices)] = km*signs[:, None]*signs[None, :]
+        f[indices] = fm*signs
+    return k, f
+
+
+class LoadedBarElement(MemberLineLoads, BEBarElement):
     """Linear beam with optional shear, foundation, loads and end releases."""
     def __init__(self, *args, releases=(), foundation=(0., 0., 0., 0.), shear_correction=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.releases = sorted(set(releases))
         self.foundation = np.asarray(foundation, dtype=float)
         self.shear_correction = shear_correction
-        self.line_load = np.zeros((4, 2))
+        self._reset_line_loads()
         self.temperature_strain = 0.
-        self.load_factor = 1.
         self.transfer_load = np.zeros(12)
         self._cache = None
 
@@ -126,64 +148,50 @@ class LoadedBarElement(BEBarElement):
         super().set_node_coordinates(coordinates)
         self._cache = None
 
-    def set_line_load(self, direction, values):
-        directions = {'x': 'Lx', 'y': 'Ly', 'z': 'Lz', 'r': 'Lr',
-                      'gx': 'GX', 'gy': 'GY', 'gz': 'GZ'}
-        direction = directions.get(direction, direction)
-        if direction in ('GX', 'GY', 'GZ'):
-            loads = np.zeros((3, 2))
-            loads[('GX', 'GY', 'GZ').index(direction)] = values
-            self.line_load[:3] += self.transformation_matrix @ loads
-        elif direction in ('Lx', 'Ly', 'Lz', 'Lr'):
-            self.line_load[('Lx', 'Ly', 'Lz', 'Lr').index(direction)] += values
-        else:
-            raise ValueError(f'Unknown beam load direction: {direction}')
-        self._cache = None
-
     def _local_system(self):
+        """Local stiffness and the incremental consistent end load."""
+        k, loads = self._local_loads()
+        return k, loads[INCREMENTAL]
+
+    def local_member_loads(self):
+        return self._local_loads()[1]
+
+    def _local_loads(self):
         if self._cache is not None:
             return self._cache
         m = self.material.materials[self.material_id]
         p = self.bar_param
-        k, f = np.zeros((12, 12)), np.zeros(12)
         if all(getattr(p, name) == 0 for name in ('area', 'Iy', 'Iz', 'J')):
             if np.any(self.foundation):
                 raise ValueError('Load-transfer members cannot have foundations')
+            if set(self.line_loads) != {INCREMENTAL}:
+                raise ValueError('Load-transfer members carry only incremental loads')
             f = self.transfer_load.copy()
             q0, q1 = self.line_load.T
             f[:4] += self.length*(2*q0+q1)/6
             f[6:10] += self.length*(q0+2*q1)/6
-            self._cache = k, f
+            self._cache = np.zeros((12, 12)), {INCREMENTAL: f}
             return self._cache
-        modes = [(0, [0, 6], m.E*p.area, False, [1, 1]),
-                 (1, [1, 5, 7, 11], m.E*p.Iz, True, [1, 1, 1, 1]),
-                 (2, [2, 4, 8, 10], m.E*p.Iy, True, [1, -1, 1, -1]),
-                 (3, [3, 9], m.G*p.J, False, [1, 1])]
-        for mode, indices, rigidity, bending, signs in modes:
-            if rigidity == 0 and not self.foundation[mode] and not np.any(self.line_load[mode]):
-                continue
-            if rigidity <= 0:
-                raise ValueError('A loaded or supported beam mode requires positive rigidity')
-            km, fm = boundary_map(self.length, rigidity, self.foundation[mode], bending,
-                                   self.line_load[mode],
-                                   m.G*p.area*(p.kappa_y if mode == 1 else p.kappa_z)
-                                   if bending and self.shear_correction else None)
-            signs = np.array(signs)
-            k[np.ix_(indices, indices)] = km*signs[:, None]*signs[None, :]
-            f[indices] = fm*signs
-        f[[0, 6]] += m.E*p.area*self.temperature_strain*np.array([-1, 1])
+        loads = {}
+        for kind, line_load in self.line_loads.items():
+            k, loads[kind] = beam_mode_system(self.length, m, p, self.foundation, line_load,
+                                              self.shear_correction)
+        loads[INCREMENTAL][[0, 6]] += m.E*p.area*self.temperature_strain*np.array([-1, 1])
         if self.releases:
             r = self.releases
             # Released rotations are internal unknowns; static condensation
             # applies to the load vector as well as the stiffness.
             block = k[np.ix_(r, r)]
             inverse = np.linalg.pinv(block, rcond=1e-13)
-            if not np.allclose(block@inverse@f[r], f[r], rtol=1e-10, atol=1e-12):
-                raise ValueError('Unbalanced load on released beam mode')
-            f = f-k[:, r]@inverse@f[r]
+            for kind, f in loads.items():
+                if not np.allclose(block@inverse@f[r], f[r], rtol=1e-10, atol=1e-12):
+                    raise ValueError('Unbalanced load on released beam mode')
+                f = f-k[:, r]@inverse@f[r]
+                f[r] = 0.
+                loads[kind] = f
             k = k-k[:, r]@inverse@k[r, :]
-            k[r, :], k[:, r], f[r] = 0., 0., 0.
-        self._cache = k, f
+            k[r, :], k[:, r] = 0., 0.
+        self._cache = k, loads
         return self._cache
 
     def get_stiffness_matrix(self):
@@ -230,6 +238,6 @@ class LoadedBarElement(BEBarElement):
         return self.get_transformation_matrix(12).T@self._elastic_local_force(displacement, displacement_correction)
 
     def calculate_forces(self, displacement, displacement_correction=None):
-        _, f = self._local_system()
-        local = self._elastic_local_force(displacement, displacement_correction)-self.load_factor*f
+        local = (self._elastic_local_force(displacement, displacement_correction)
+                 - self.member_load_at(self.load_factor))
         return dict(i_end=local[:6].copy(), j_end=local[6:].copy())

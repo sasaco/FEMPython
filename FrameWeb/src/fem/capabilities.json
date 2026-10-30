@@ -113,7 +113,7 @@
         "nodal": {"status": "verified"},
         "prescribed_displacement": {"status": "verified"},
         "support_spring": {"status": "verified"},
-        "member_distributed": {"status": "unsupported", "reason": "Distributed member loads are not implemented directly on nonlinear_bar."},
+        "member_distributed": {"status": "implemented", "note": "線形梁と同じ整合荷重を節点に載せ、部材端力からその固定端力を差し引く。断面の履歴則は節点変位から求める中央の変形だけを受ける"},
         "temperature": {"status": "unsupported", "reason": "Temperature loads are not implemented directly on nonlinear_bar."},
         "foundation": {"status": "unsupported", "reason": "Distributed foundations are not implemented directly on nonlinear_bar."},
         "end_release": {"status": "unsupported", "reason": "End releases are not implemented directly on nonlinear_bar."},

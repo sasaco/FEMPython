@@ -57,7 +57,7 @@ def recover_free_branches(coords, elements, forces, loads, blocked, factor, tole
         # Retain constitutive actions in restrained directions (including the
         # auxiliary out-of-plane restraints of a planar frame).
         raw_local = np.r_[forces[key]['i_end'], forces[key]['j_end']]
-        raw_elastic = raw_local + factor*element._local_system()[1]
+        raw_elastic = raw_local + element.member_load_at(factor)
         raw_global = element.get_transformation_matrix(12).T@raw_elastic
         offset = 0 if node == ni else 6
         for dof in constrained.get(node, ()):
@@ -66,7 +66,7 @@ def recover_free_branches(coords, elements, forces, loads, blocked, factor, tole
         far[3:] -= np.cross(np.asarray(coords[node])-coords[other], near[:3])
         global_force = np.r_[near, far] if node == ni else np.r_[far, near]
         local = element.get_transformation_matrix(12) @ global_force
-        local -= factor*element._local_system()[1]
+        local -= element.member_load_at(factor)
         previous = np.r_[forces[key]['i_end'], forces[key]['j_end']]
         # Compare forces and moments in force units. A recovery cannot turn an
         # unconverged constitutive solution into an accepted result.

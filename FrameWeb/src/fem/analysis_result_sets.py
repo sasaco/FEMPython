@@ -12,6 +12,12 @@ from .diagnostics import InputValidationError
 from .file_io import _read_json_model, result_to_jsonable
 from .legacy_beam import select_case
 from .model import FemModel
+from .nonlinear_combine import KEY as COMBINATION_KEY
+from .nonlinear_combine import (
+    has_combinations,
+    reject_kinds_without_combinations,
+    select_combination,
+)
 from .result_contracts import (
     COORDINATE_SYSTEM,
     MAX_ITERATIONS_PER_STEP,
@@ -208,6 +214,12 @@ def _enumerate_cases(data: Any) -> list[_CaseInput]:
         load_cases = data.get("load")
         if not isinstance(load_cases, Mapping) or not load_cases:
             raise InputValidationError("Legacy analysis requires at least one load case")
+        if has_combinations(data):
+            return _enumerate_combinations(data)
+        try:
+            reject_kinds_without_combinations(load_cases)
+        except ValueError as error:
+            raise InputValidationError(str(error)) from error
         normalized_ids: set[str] = set()
         result: list[_CaseInput] = []
         for original_id, case_value in load_cases.items():
@@ -244,6 +256,35 @@ def _enumerate_cases(data: Any) -> list[_CaseInput]:
             )
         ]
     raise InputValidationError("Model must contain nodes")
+
+
+def _enumerate_combinations(data: dict[str, Any]) -> list[_CaseInput]:
+    """One static nonlinear analysis case per nonlinear_combine row."""
+
+    result: list[_CaseInput] = []
+    normalized_ids: set[str] = set()
+    for row_id, row in data[COMBINATION_KEY].items():
+        case_id = str(row_id)
+        if not case_id.strip() or case_id in normalized_ids:
+            raise InputValidationError(
+                f"nonlinear_combine row IDs must be unique and non-empty: {case_id!r}"
+            )
+        normalized_ids.add(case_id)
+        try:
+            selected = select_combination(data, row_id)
+        except (KeyError, TypeError, ValueError) as error:
+            raise InputValidationError(f"Analysis case {case_id}: {error}",
+                                       case_id=case_id) from error
+        labels = row if isinstance(row, Mapping) else {}
+        result.append(
+            _CaseInput(
+                case_id=case_id,
+                name=_case_label(labels.get("name"), case_id),
+                symbol=_case_label(labels.get("symbol"), case_id),
+                selected_data=selected,
+            )
+        )
+    return result
 
 
 def _case_label(value: Any, fallback: str) -> str:

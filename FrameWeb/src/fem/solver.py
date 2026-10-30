@@ -19,6 +19,7 @@ from .equilibrium import (
     NonlinearConvergenceError, direct_step, displacement_control_iteration,
     newton_iteration, solve_direct_system, solve_newton_system,
 )
+from .load_kinds import INCREMENTAL, LoadPattern
 from .solver_results import snapshot, final_result
 from .spatial_loads import compile_spatial_loads
 
@@ -39,6 +40,7 @@ class Solver:
         self.assembled_stiffness_correction = None
         self.assembled_mass = None
         self.load_vector = None
+        self.load_pattern = None
         self.displacement = None
         self.displacement_correction = None
         self.eigenvalues = None
@@ -62,6 +64,7 @@ class Solver:
         """Discard compiled data, including on preflight or solve failure."""
         if getattr(self, 'spatial_load_contribution', None) is not None:
             self.load_vector = None
+            self.load_pattern = None
         for result in getattr(self, 'step_results', ()):
             result.pop('spatial_load_contribution', None)
             result.pop('element_nodal_equilibrium_forces', None)
@@ -144,37 +147,53 @@ class Solver:
 
     def assemble_load_vector(self, mesh: MeshModel, boundary: BoundaryCondition,
                            elements: Dict[int, Any]) -> np.ndarray:
-        """荷重ベクトルを組み立て
-        
+        """荷重ベクトルを組み立て（すべての荷重を入力値のまま足したもの）
+
+        区別ごとのベクトルは self.load_pattern に残す。
+
         Args:
             mesh: メッシュデータ
             boundary: 境界条件
             elements: 要素オブジェクトの辞書
-            
+
         Returns:
             荷重ベクトル
         """
+        return self.assemble_load_pattern(mesh, boundary, elements).reference
+
+    def assemble_load_pattern(self, mesh: MeshModel, boundary: BoundaryCondition,
+                              elements: Dict[int, Any]) -> LoadPattern:
+        """固定・増分・限定増分の区別ごとに荷重ベクトルを組み立てる"""
         self.clear_spatial_load_state()
         self.load_vector = None
+        self.load_pattern = None
         self._set_dof_layout(mesh)
         contribution = (compile_spatial_loads(boundary.spatial_loads, mesh)
                         if boundary.spatial_loads.loads else None)
         shell_direct = {}
         max_dof_per_node = self.layout.stride
         n_dof = self.layout.size
-        F = np.zeros(n_dof)
-        
+        vectors = {INCREMENTAL: np.zeros(n_dof)}
+
         # 節点荷重の適用
-        for node_id, load in boundary.loads.items():
-            base_dof = self._node_dof_start(node_id, max_dof_per_node)
-            for i in range(min(max_dof_per_node, len(load.forces))):
-                if base_dof + i < n_dof:  # 範囲チェック追加
-                    F[base_dof + i] += load.forces[i]
-                
+        for kind, loads in boundary.load_sets.items():
+            vector = vectors.setdefault(kind, np.zeros(n_dof))
+            for node_id, load in loads.items():
+                base_dof = self._node_dof_start(node_id, max_dof_per_node)
+                for i in range(min(max_dof_per_node, len(load.forces))):
+                    if base_dof + i < n_dof:  # 範囲チェック追加
+                        vector[base_dof + i] += load.forces[i]
+
         # 分布荷重の適用
         for _, element, indices in self.layout.elements(elements):
-            if hasattr(element, 'get_member_load_vector'):
-                self.layout.add_vector(F, indices, element.get_member_load_vector())
+            if hasattr(element, 'get_member_load_vectors'):
+                for kind, load in element.get_member_load_vectors().items():
+                    self.layout.add_vector(vectors.setdefault(kind, np.zeros(n_dof)), indices, load)
+            elif hasattr(element, 'get_member_load_vector'):
+                self.layout.add_vector(vectors[INCREMENTAL], indices, element.get_member_load_vector())
+
+        # 以下の荷重は区別を持たず、増分荷重として扱う
+        F = vectors[INCREMENTAL]
 
         for dist_load in boundary.distributed_loads:
             elem_id = dist_load.element_id
@@ -215,12 +234,13 @@ class Solver:
             F += contribution.dof_loads
             for elem_id, values in contribution.shell_load_vectors().items():
                 shell_direct.setdefault(elem_id, np.zeros_like(values))[:] += values
-        if not np.all(np.isfinite(F)):
+        if not all(np.all(np.isfinite(vector)) for vector in vectors.values()):
             raise ValueError('Loads must be finite')
         self.spatial_load_contribution = contribution
         self._shell_direct_loads = shell_direct
-        self.load_vector = F
-        return F
+        self.load_pattern = LoadPattern(vectors)
+        self.load_vector = self.load_pattern.reference
+        return self.load_pattern
         
     @staticmethod
     def _get_max_dof_per_node(mesh: MeshModel) -> int:
@@ -400,14 +420,12 @@ class Solver:
                 element.load_factor = 0.0 if nonlinear else 1.0
         if boundary.spatial_loads.loads:
             # Geometry, quadrature and conservation must pass before K assembly.
-            total = self.assemble_load_vector(mesh, boundary, elements)
+            pattern = self.assemble_load_pattern(mesh, boundary, elements)
             self.create_stiffness_matrix(mesh, material, elements)
         else:
             if not nonlinear:
                 self.create_stiffness_matrix(mesh, material, elements)
-            total = self.assemble_load_vector(mesh, boundary, elements)
-        if not np.all(np.isfinite(total)):
-            raise ValueError('Loads must be finite')
+            pattern = self.assemble_load_pattern(mesh, boundary, elements)
         control = None
         if displacement_control is not None:
             control = self._prepare_displacement_control(
@@ -415,17 +433,23 @@ class Solver:
             )
             prescribed, _ = self._get_boundary_dofs(boundary, self.layout.size, stride)
             free = np.array([i for i in range(self.layout.size) if i not in prescribed])
-            if np.linalg.norm(total[free]) == 0:
+            if np.linalg.norm(pattern.varying[free]) == 0:
                 raise ValueError('Displacement control requires a nonzero free-DOF load pattern')
         u = np.zeros(self.layout.size)
         self.displacement = u.copy()
 
         schedule = ([(float(factor), None) for factor in factors] if control is None
                     else [(None, float(target)) for target in control['targets']])
+        if control is not None and pattern.has_fixed:
+            # The first state carries the fixed loads only; the control
+            # targets are displacements measured from that state.
+            schedule.insert(0, (0.0, None))
+        control_origin = 0.0
         for step, (factor, target) in enumerate(schedule, 1):
-            if control is not None:
+            if target is not None:
                 factor = self.load_factor
-            force = factor*total
+                target += control_origin
+            force = pattern.at(factor)
             committed_u = u.copy()
             committed_force = deepcopy(self._last_internal_force)
             previous_factors = {key: e.load_factor for key, e in elements.items()
@@ -435,15 +459,15 @@ class Solver:
             history_start = len(self.convergence_history)
             try:
                 if nonlinear:
-                    if control is None:
+                    if target is None:
                         converged, u, iterations = self._newton_raphson_iteration(
                             mesh, material, boundary, elements, u, force,
                             max_iter, tol, stride, factor)
                     else:
                         converged, u, iterations, factor = self._displacement_control_iteration(
-                            mesh, material, boundary, elements, u, total,
+                            mesh, material, boundary, elements, u, pattern,
                             control['dof'], target, factor, max_iter, tol, stride)
-                        force = factor*total
+                        force = pattern.at(factor)
                     if not converged:
                         raise NonlinearConvergenceError(step, factor, committed_u)
                     support_trial = (self.support_springs.evaluate(u)
@@ -496,6 +520,8 @@ class Solver:
                     control_dof=control['dof_name'],
                     control_displacement=float(u[control['dof']]),
                 )
+                if target is None:
+                    control_origin = float(u[control['dof']])
             self.step_results.append(accepted)
             if callback is not None:
                 callback(deepcopy(accepted) if not nonlinear else

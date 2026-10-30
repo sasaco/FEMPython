@@ -30,6 +30,7 @@ from .elements import (
     ShellElement, SolidElement, AdvancedElement
 )
 from .elements.nonlinear_bar_element import NonlinearBarElement
+from .load_kinds import row_kind
 from .result_processor import ResultProcessor
 import math
 
@@ -980,10 +981,15 @@ class FemModel:
             raise ValueError(f"Unknown element type: {elem_type} (original: {elem_data.get('type', 'N/A')})")
             
         element.set_node_coordinates(self.mesh.nodes)
-        if hasattr(element, 'set_line_load'):
+        if isinstance(element, NonlinearBarElement):
+            if elem_data.get('releases') or any(elem_data.get('foundation', [])) or elem_data.get('temperature'):
+                raise ValueError('Member releases, foundation and temperature loads require a linear beam')
+            for load in elem_data.get('line_loads', []):
+                element.set_line_load(load['direction'], load['values'], row_kind(load))
+        elif hasattr(element, 'set_line_load'):
             element.transfer_load = np.asarray(elem_data.get('transfer_load', np.zeros(12)), dtype=float)
             for load in elem_data.get('line_loads', []):
-                element.set_line_load(load['direction'], load['values'])
+                element.set_line_load(load['direction'], load['values'], row_kind(load))
             element.temperature_strain = (self.material.materials[material_id].alpha or 0.) * elem_data.get('temperature', 0.)
         elif elem_data.get('releases') or any(elem_data.get('foundation', [])) or elem_data.get('line_loads') or elem_data.get('temperature'):
             raise ValueError('Member releases, foundation and distributed loads require a Bernoulli beam')
@@ -1105,7 +1111,8 @@ class FemModel:
         snapshots = solver_snapshot.get('step_results', [solver_snapshot])
         for snapshot in snapshots:
             factor = snapshot.get('lambda', 1.)
-            loads = {n: factor*total[start:start+stride] for n, start in node_offsets.items()}
+            applied = solver.load_pattern.at(factor)
+            loads = {n: applied[start:start+stride] for n, start in node_offsets.items()}
             raw = snapshot['element_stresses']
             if 'precise_end_forces' in snapshot:
                 # These actions already satisfy the reassembled 70-digit

@@ -9,6 +9,9 @@ import copy
 import numpy as np
 
 from .bar_element import TBarElement
+from .loaded_bar_element import beam_mode_system
+from .member_line_loads import MemberLineLoads
+from ..load_kinds import INCREMENTAL
 from ..nonlinear.hysteresis import (
     HysteresisState, JRStiffnessReductionParams, JRStiffnessReductionModel,
 )
@@ -22,12 +25,14 @@ from ..nonlinear.axial_force_table import AxialForceTable
 from ..diagnostics import InputValidationError, NumericalConditionError
 
 
-class NonlinearBarElement(TBarElement):
+class NonlinearBarElement(MemberLineLoads, TBarElement):
     """One section state per law, indexed by ``center``.
 
     ``current_states`` is the candidate from the last force evaluation;
     ``committed_states`` is the only source of loading history. Tangent and
     output evaluations never change either. See the phase-2 plan for units.
+    Distributed member loads enter as the elastic beam's consistent end loads,
+    as on a linear member; the section laws see only the nodal deformation.
     """
 
     DOF_MAPPING = {
@@ -38,6 +43,8 @@ class NonlinearBarElement(TBarElement):
     def __init__(self, element_id: int, node_ids: List[int], material_id: int,
                  section_id: int, angle: float = 0.0, shear_correction: bool = True):
         super().__init__(element_id, node_ids, material_id, section_id, angle, shear_correction)
+        self._reset_line_loads()
+        self._cache = None
         self.hysteresis_models: Dict[str, JRStiffnessReductionModel] = {}
         self.axial_force_tables: Dict[str, AxialForceTable] = {}
         self.current_states: Dict[str, Dict[str, HysteresisState]] = {}
@@ -369,7 +376,18 @@ class NonlinearBarElement(TBarElement):
             local = response[1]
         else:
             local = self._evaluate(displacement)[0]
+        if any(np.any(table) for table in self.line_loads.values()):
+            local = local-self.member_load_at(self.load_factor)
         return {'i_end': local[:6].copy(), 'j_end': local[6:].copy()}
+
+    def local_member_loads(self):
+        material = self.material.materials[self.material_id]
+        return {kind: beam_mode_system(self.length, material, self.bar_param, np.zeros(4),
+                                       table, self.shear_correction)[1]
+                for kind, table in self.line_loads.items()}
+
+    def get_member_load_vector(self):
+        return self.get_member_load_vectors()[INCREMENTAL]
 
     def commit_state(self) -> None:
         self.committed_states = copy.deepcopy(self.current_states)
