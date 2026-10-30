@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace FrameWebforCS.components.input
 {
@@ -14,7 +15,20 @@ namespace FrameWebforCS.components.input
         public string? name;
         public Dictionary<int, T> Coefficients { get; } = new();
 
-        public bool IsEmpty => string.IsNullOrWhiteSpace(name) && Coefficients.Count == 0;
+        public virtual bool IsEmpty => string.IsNullOrWhiteSpace(name) && Coefficients.Count == 0;
+    }
+
+    // GLOSSARY: 非線形解析の組合せ. Coefficients refer to basic cases directly; the analysis
+    // settings are kept as written (targets/load_factors lists, doubles) until a screen edits them.
+    internal sealed class clsNonlinearCombine : clsCombine<double>
+    {
+        internal static readonly string[] AnalysisKeys =
+            { "n_load_steps", "max_iterations", "tolerance", "load_factors", "displacement_control" };
+
+        public string? symbol;
+        public JsonObject Analysis { get; } = new();
+
+        public override bool IsEmpty => base.IsEmpty && string.IsNullOrWhiteSpace(symbol) && Analysis.Count == 0;
     }
 
 
@@ -31,7 +45,9 @@ namespace FrameWebforCS.components.input
         private Dictionary<int, clsCombine<double>> _combine = new();
         private Dictionary<int, clsCombine<int>> _define = new();
         private Dictionary<int, clsCombine<int>> _pickup = new();
+        private Dictionary<int, clsNonlinearCombine> _nonlinear = new();
 
+        public IReadOnlyDictionary<int, clsNonlinearCombine> NonlinearRows => _nonlinear;
         public IReadOnlyDictionary<int, clsCombine<int>> DefineRows => _define;
         public IReadOnlyDictionary<int, clsCombine<double>> CombineRows => _combine;
         public IReadOnlyDictionary<int, clsCombine<int>> PickupRows => _pickup;
@@ -46,6 +62,7 @@ namespace FrameWebforCS.components.input
             _combine = new();
             _define = new();
             _pickup = new();
+            _nonlinear = new();
             DocumentReplacementNotifications.Publish(RowsReplaced, this, EventArgs.Empty);
             DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
@@ -57,46 +74,68 @@ namespace FrameWebforCS.components.input
         public void setCombineJson(JsonElement jsonData)
         {
             var parsed = ParseCombineJson(jsonData);
-            ApplyCombine(parsed.Combine, parsed.Define, parsed.Pickup);
+            ApplyCombine(parsed.Combine, parsed.Define, parsed.Pickup, parsed.Nonlinear);
         }
 
         internal static (Dictionary<int, clsCombine<double>> Combine,
             Dictionary<int, clsCombine<int>> Define,
-            Dictionary<int, clsCombine<int>> Pickup) ParseCombineJson(JsonElement jsonData)
+            Dictionary<int, clsCombine<int>> Pickup,
+            Dictionary<int, clsNonlinearCombine> Nonlinear) ParseCombineJson(JsonElement jsonData)
         {
             Dictionary<int, clsCombine<double>> combine =
-                JsonToDict(jsonData, "combine", ReadDouble);
+                JsonToDict(jsonData, "combine", ReadDouble, () => new clsCombine<double>());
             Dictionary<int, clsCombine<int>> define =
-                JsonToDict(jsonData, "define", ReadInt32);
+                JsonToDict(jsonData, "define", ReadInt32, () => new clsCombine<int>());
             Dictionary<int, clsCombine<int>> pickup =
-                JsonToDict(jsonData, "pickup", ReadInt32);
+                JsonToDict(jsonData, "pickup", ReadInt32, () => new clsCombine<int>());
+            Dictionary<int, clsNonlinearCombine> nonlinear =
+                JsonToDict(jsonData, "nonlinear_combine", ReadDouble, () => new clsNonlinearCombine(),
+                    ReadNonlinearSetting);
 
-            return (combine, define, pickup);
+            return (combine, define, pickup, nonlinear);
         }
 
         internal void ApplyCombine(Dictionary<int, clsCombine<double>> combine,
             Dictionary<int, clsCombine<int>> define,
-            Dictionary<int, clsCombine<int>> pickup)
+            Dictionary<int, clsCombine<int>> pickup,
+            Dictionary<int, clsNonlinearCombine>? nonlinear = null)
         {
-            // 3 種類をすべて検証してから置き換え、読込失敗時は現在値を保持する。
+            // 4 種類をすべて検証してから置き換え、読込失敗時は現在値を保持する。
             _combine = combine;
             _define = define;
             _pickup = pickup;
+            _nonlinear = nonlinear ?? new();
             DocumentReplacementNotifications.Publish(RowsReplaced, this, EventArgs.Empty);
             DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
-        private static Dictionary<int, clsCombine<T>> JsonToDict<T>(
+        private static bool ReadNonlinearSetting(clsNonlinearCombine item, JsonProperty property)
+        {
+            if (property.Name == "symbol")
+            {
+                if (property.Value.ValueKind is not (JsonValueKind.String or JsonValueKind.Null))
+                    return false;
+                item.symbol = property.Value.ValueKind == JsonValueKind.Null ? null : property.Value.GetString();
+                return true;
+            }
+            if (Array.IndexOf(clsNonlinearCombine.AnalysisKeys, property.Name) < 0) return false;
+            item.Analysis[property.Name] = JsonNode.Parse(property.Value.GetRawText());
+            return true;
+        }
+
+        private static Dictionary<int, TRow> JsonToDict<T, TRow>(
             JsonElement jsonData,
             string key,
-            Func<JsonElement, T> readCoefficient) where T : struct
+            Func<JsonElement, T> readCoefficient,
+            Func<TRow> create,
+            Func<TRow, JsonProperty, bool>? readOther = null) where T : struct where TRow : clsCombine<T>
         {
             if (!jsonData.TryGetProperty(key, out JsonElement combineJson))
-                return new Dictionary<int, clsCombine<T>>();
+                return new Dictionary<int, TRow>();
             if (combineJson.ValueKind != JsonValueKind.Object)
                 throw new JsonException($"{key} がJSONオブジェクトとして定義されていません。");
 
-            var combine = new Dictionary<int, clsCombine<T>>();
+            var combine = new Dictionary<int, TRow>();
             var occupiedIds = new HashSet<string>();
             var occupiedRows = new HashSet<int>();
             foreach (JsonProperty caseJson in combineJson.EnumerateObject())
@@ -104,7 +143,8 @@ namespace FrameWebforCS.components.input
                 if (caseJson.Value.ValueKind != JsonValueKind.Object)
                     throw new JsonException($"{key} '{caseJson.Name}' の値が不正です。");
 
-                var item = new clsCombine<T> { Id = caseJson.Name };
+                TRow item = create();
+                item.Id = caseJson.Name;
                 bool hasRow = false;
                 foreach (JsonProperty property in caseJson.Value.EnumerateObject())
                 {
@@ -145,7 +185,7 @@ namespace FrameWebforCS.components.input
                         if (!item.Coefficients.TryAdd(coefficientId, coefficient))
                             throw new JsonException($"{key} '{caseJson.Name}' の {property.Name} が重複しています。");
                     }
-                    else
+                    else if (readOther == null || !readOther(item, property))
                     {
                         throw new JsonException($"{key} '{caseJson.Name}' に未知の項目 {property.Name} があります。");
                     }
@@ -284,12 +324,27 @@ namespace FrameWebforCS.components.input
         {
             return ClassToDictionary(this._pickup);
         }
+        public Dictionary<string, object> getNonlinearCombineJson()
+        {
+            return ClassToDictionary<double, clsNonlinearCombine>(this._nonlinear, (item, row) =>
+            {
+                if (item.symbol != null)
+                    row["symbol"] = item.symbol;
+                foreach (var (name, value) in item.Analysis)
+                    row[name] = value?.DeepClone();
+            });
+        }
 
         private static Dictionary<string, object> ClassToDictionary<T>(
-            Dictionary<int, clsCombine<T>> source) where T : struct
+            Dictionary<int, clsCombine<T>> source) where T : struct =>
+            ClassToDictionary<T, clsCombine<T>>(source, null);
+
+        private static Dictionary<string, object> ClassToDictionary<T, TRow>(
+            Dictionary<int, TRow> source,
+            Action<TRow, Dictionary<string, object?>>? writeOther) where T : struct where TRow : clsCombine<T>
         {
             var combine = new Dictionary<string, object>();
-            foreach (clsCombine<T> item in source.Values)
+            foreach (TRow item in source.Values)
             {
                 var row = new Dictionary<string, object?>
                 {
@@ -301,6 +356,7 @@ namespace FrameWebforCS.components.input
 
                 foreach (KeyValuePair<int, T> coefficient in item.Coefficients)
                     row.Add("C" + coefficient.Key.ToString(CultureInfo.InvariantCulture), coefficient.Value);
+                writeOther?.Invoke(item, row);
                 combine.Add(item.Id, row);
             }
             return combine;

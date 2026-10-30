@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace FrameWebforCS.components.input
 {
@@ -17,6 +19,9 @@ namespace FrameWebforCS.components.input
         public float? Iy = null;
         public float? Iz = null;
         public string? n = null;
+        // The engine's nonlinear material object (GLOSSARY: 骨格曲線), kept as written so that
+        // fields the screens do not edit (_neg, laws, axial tables) and doubles survive a save.
+        public JsonObject? nonlinear = null;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -28,9 +33,10 @@ namespace FrameWebforCS.components.input
         public float? InertiaY { get => Iy; set { Iy = value; Changed(nameof(InertiaY)); } }
         public float? InertiaZ { get => Iz; set { Iz = value; Changed(nameof(InertiaZ)); } }
         public string? Name { get => n; set { n = value; Changed(nameof(Name)); } }
+        public JsonObject? Nonlinear { get => nonlinear; set { nonlinear = value; Changed(nameof(Nonlinear)); } }
 
         public bool IsEmpty => E == null && G == null && Xp == null && A == null && J == null &&
-            Iy == null && Iz == null && string.IsNullOrWhiteSpace(n);
+            Iy == null && Iz == null && string.IsNullOrWhiteSpace(n) && nonlinear == null;
 
         private void Changed(string name) => DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(name));
     }
@@ -95,6 +101,10 @@ namespace FrameWebforCS.components.input
                     string id = row.ToString(CultureInfo.InvariantCulture);
                     if (!seenRows.Add(id))
                         throw new JsonException($"Duplicate element row: {entry.Name}");
+                    if (entry.Value.ValueKind == JsonValueKind.Object &&
+                        entry.Value.TryGetProperty(nameof(clsElement.nonlinear), out JsonElement nonlinear) &&
+                        nonlinear.ValueKind != JsonValueKind.Object)
+                        throw new JsonException($"Invalid element nonlinear: {sheetEntry.Name}/{entry.Name}");
                     clsElement? element = DataHelperModule.JsonToClass<clsElement>(entry.Value);
                     if (element != null && !element.IsEmpty)
                         sheet.Add(id, element);
@@ -116,12 +126,23 @@ namespace FrameWebforCS.components.input
                 var rows = new Dictionary<string, object>();
                 foreach (var (id, element) in sheet)
                     if (!element.IsEmpty)
-                        rows.Add(id, DataHelperModule.ClassToDictionary(element));
+                    {
+                        var row = DataHelperModule.ClassToDictionary(element);
+                        // Linear rows keep their shape: the engine reads any nonlinear key.
+                        if (element.nonlinear == null) row.Remove(nameof(clsElement.nonlinear));
+                        else row[nameof(clsElement.nonlinear)] = element.nonlinear.DeepClone();
+                        rows.Add(id, row);
+                    }
                 if (rows.Count > 0)
                     elements.Add(sheetId, rows);
             }
             return elements;
         }
+
+        internal bool HasNonlinear => _element.Values.Any(sheet => sheet.Values.Any(row => row.nonlinear != null));
+
+        internal static bool HasNonlinearRows(Dictionary<string, Dictionary<string, clsElement>>? parsed) =>
+            parsed?.Values.Any(sheet => sheet.Values.Any(row => row.nonlinear != null)) == true;
 
         private void Rows_ListChanged(string sheetId, BindingList<clsElement> rows, ListChangedEventArgs e)
         {

@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace FrameWebforCS.components.input
 {
@@ -18,6 +19,9 @@ namespace FrameWebforCS.components.input
         public float? rx = null;
         public float? ry = null;
         public float? rz = null;
+        // Nonlinear support springs by component ("rz" -> {"type": "jrsnap_trilinear", ...}).
+        // Saved in place of that component's number, kept as written (doubles, unknown laws).
+        public Dictionary<string, JsonObject>? springs = null;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public string? N { get => n; set { n = value; Changed(nameof(N)); } }
@@ -27,7 +31,8 @@ namespace FrameWebforCS.components.input
         public float? Rx { get => rx; set { rx = value; Changed(nameof(Rx)); } }
         public float? Ry { get => ry; set { ry = value; Changed(nameof(Ry)); } }
         public float? Rz { get => rz; set { rz = value; Changed(nameof(Rz)); } }
-        public bool IsEmpty => string.IsNullOrWhiteSpace(n) && tx == null && ty == null && tz == null && rx == null && ry == null && rz == null;
+        public bool IsEmpty => string.IsNullOrWhiteSpace(n) && tx == null && ty == null && tz == null && rx == null && ry == null && rz == null &&
+            (springs == null || springs.Count == 0);
         private void Changed(string name) => DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(name));
     }
 
@@ -55,7 +60,8 @@ namespace FrameWebforCS.components.input
             _fix_node.TryGetValue(caseId, out var rows)
                 ? rows.Select(value => new clsFixNode { row = value.row, n = value.n,
                     tx = value.tx, ty = value.ty, tz = value.tz,
-                    rx = value.rx, ry = value.ry, rz = value.rz }).ToArray()
+                    rx = value.rx, ry = value.ry, rz = value.rz,
+                    springs = CloneSprings(value.springs) }).ToArray()
                 : Array.Empty<clsFixNode>();
 
         private InputFixNodeService()
@@ -85,15 +91,46 @@ namespace FrameWebforCS.components.input
         {
             if (!jsonData.TryGetProperty("fix_node", out var source)) return null;
             ValidateSource(source);
-            var loaded = DataHelperModule.JsonToDict(jsonData, "fix_node",
+            // Spring objects are lifted out before the numeric rows are read, then reattached.
+            var numeric = JsonNode.Parse(source.GetRawText())!.AsObject();
+            var springs = new Dictionary<(string Sheet, int Index), Dictionary<string, JsonObject>>();
+            foreach (var (sheetName, sheetRows) in numeric)
+                for (int index = 0; index < sheetRows!.AsArray().Count; index++)
+                {
+                    var row = sheetRows[index]!.AsObject();
+                    // Engine-format files (the P7 model, MCP inputs) carry no grid row number.
+                    if (!row.ContainsKey("row")) row["row"] = index + 1;
+                    foreach (string component in Components)
+                        if (row[component] is JsonObject spring)
+                        {
+                            row.Remove(component);
+                            if (!springs.TryGetValue((sheetName, index), out var bySide))
+                                springs[(sheetName, index)] = bySide = new Dictionary<string, JsonObject>();
+                            bySide[component] = spring;
+                        }
+                }
+            using var numericDocument = JsonDocument.Parse(new JsonObject { ["fix_node"] = numeric }.ToJsonString());
+            var loaded = DataHelperModule.JsonToDict(numericDocument.RootElement, "fix_node",
                 static json => DataHelperModule.JsonToList<clsFixNode>(json));
             if (loaded == null) throw new JsonException("Invalid fix_node data.");
             foreach (var sheet in source.EnumerateObject())
                 if (!loaded.TryGetValue(sheet.Name, out var rows) || rows.Count != sheet.Value.GetArrayLength())
                     throw new JsonException($"Invalid fix_node sheet: {sheet.Name}");
+            foreach (var ((sheetName, index), bySide) in springs)
+                loaded[sheetName][index].springs = bySide;
             ValidateRows(loaded);
             return loaded;
         }
+
+        private static readonly string[] Components = { "tx", "ty", "tz", "rx", "ry", "rz" };
+
+        internal static bool HasSpringRows(Dictionary<string, List<clsFixNode>>? parsed) =>
+            parsed?.Values.Any(rows => rows.Any(row => row.springs?.Count > 0)) == true;
+
+        internal bool HasSprings => HasSpringRows(_fix_node);
+
+        private static Dictionary<string, JsonObject>? CloneSprings(Dictionary<string, JsonObject>? springs) =>
+            springs?.ToDictionary(item => item.Key, item => item.Value.DeepClone().AsObject());
 
         private static void ValidateSource(JsonElement source)
         {
@@ -106,6 +143,12 @@ namespace FrameWebforCS.components.input
                     if (row.ValueKind != JsonValueKind.Object) throw new JsonException("fix_node row must be an object.");
                     foreach (var field in row.EnumerateObject())
                         if (field.Name is "tx" or "ty" or "tz" or "rx" or "ry" or "rz" &&
+                            field.Value.ValueKind == JsonValueKind.Object)
+                        {
+                            if (!field.Value.TryGetProperty("type", out var type) || type.ValueKind != JsonValueKind.String)
+                                throw new JsonException($"Invalid fix_node {field.Name} spring.");
+                        }
+                        else if (field.Name is "tx" or "ty" or "tz" or "rx" or "ry" or "rz" &&
                             field.Value.ValueKind != JsonValueKind.Null &&
                             (field.Value.ValueKind != JsonValueKind.Number ||
                              !field.Value.TryGetSingle(out float value) || !float.IsFinite(value)))
@@ -124,7 +167,14 @@ namespace FrameWebforCS.components.input
             {
                 var data = new List<Dictionary<string, object?>>();
                 foreach (var value in rows.OrderBy(value => value.row))
-                    if (!value.IsEmpty) data.Add(DataHelperModule.ClassToDictionary(value));
+                {
+                    if (value.IsEmpty) continue;
+                    var row = DataHelperModule.ClassToDictionary(value);
+                    row.Remove(nameof(clsFixNode.springs));
+                    foreach (var (component, spring) in value.springs ?? new())
+                        row[component] = spring.DeepClone();
+                    data.Add(row);
+                }
                 if (data.Count > 0) result.Add(sheet, data);
             }
             return result;

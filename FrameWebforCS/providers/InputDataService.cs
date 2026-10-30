@@ -70,6 +70,10 @@ namespace FrameWebforCS.providers
             set => SetDimension(value);
         }
 
+        // GLOSSARY: 2D非線形モード. Saved as "nonlinear": true beside dimension 2; a model is
+        // either linear (COMBINE/PICKUP) or nonlinear (nonlinear_combine), never both.
+        internal bool IsNonlinear { get; private set; }
+
         internal event Action<int>? DimensionChanged;
         internal int? ResultDimension { get; private set; }
         private bool _publishingDocumentReplacement;
@@ -144,6 +148,11 @@ namespace FrameWebforCS.providers
                 ["load"] = InputLoadService.Instance.getLoadJson(),
                 ["bridge_loads"] = InputBridgeLoadService.Instance.GetSaveJson(),
             };
+            if (IsNonlinear)
+            {
+                snapshot["nonlinear"] = true;
+                snapshot["nonlinear_combine"] = InputCombineService.Instance.getNonlinearCombineJson();
+            }
             return JsonSerializer.Serialize(snapshot);
         }
 
@@ -266,6 +275,12 @@ namespace FrameWebforCS.providers
                     loadedDimension is not (2 or 3))
                     throw new JsonException("dimension must be 2 or 3.");
             }
+            bool loadedNonlinear = ReadNonlinearMode(rootElement, loadedDimension);
+            ValidateModeContents(loadedNonlinear, preparedCombine.Combine.Count != 0 ||
+                    preparedCombine.Define.Count != 0 || preparedCombine.Pickup.Count != 0,
+                InputLoadService.HasKindRows(preparedLoads),
+                InputElementsService.HasNonlinearRows(preparedElements),
+                InputFixNodeService.HasSpringRows(preparedFixNodes));
 
             bool hasResultCases = hasResult && resultElement.ValueKind == JsonValueKind.Object &&
                 resultElement.EnumerateObject().Any();
@@ -307,6 +322,7 @@ namespace FrameWebforCS.providers
             }
             _cameraPosition = loadedCameraPosition;
             ResultDimension = loadedResultDimension;
+            IsNonlinear = loadedNonlinear;
 
             var combineCoordinator = ResultCombineDisgCoordinator.Instance;
             var combineFsecCoordinator = ResultCombineFsecCoordinator.Instance;
@@ -328,7 +344,7 @@ namespace FrameWebforCS.providers
                 InputBridgeLoadService.Instance.Apply(preparedBridge);
                 InputNoticePointsService.Instance.ApplyNoticePoints(preparedNoticePoints);
                 InputCombineService.Instance.ApplyCombine(preparedCombine.Combine,
-                    preparedCombine.Define, preparedCombine.Pickup);
+                    preparedCombine.Define, preparedCombine.Pickup, preparedCombine.Nonlinear);
                 ResultDisgService.Instance.ApplyDisg(preparedDisg);
                 ResultFsecService.Instance.ApplyFsec(preparedFsec);
                 ResultReacService.Instance.ApplyReac(preparedReac);
@@ -357,6 +373,34 @@ namespace FrameWebforCS.providers
             _publishingDocumentReplacement = true;
             try { notifications.Complete(); }
             finally { _publishingDocumentReplacement = false; }
+        }
+
+        // nonlinear_combine without the key is an older nonlinear file (P7, MCP inputs): it opens
+        // as 2D非線形 and gains the key on save.
+        private static bool ReadNonlinearMode(JsonElement root, int dimension)
+        {
+            bool nonlinear = root.TryGetProperty("nonlinear_combine", out _);
+            if (root.TryGetProperty("nonlinear", out var flag))
+            {
+                if (flag.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+                    throw new JsonException("nonlinear must be true or false.");
+                if (flag.ValueKind == JsonValueKind.False && nonlinear)
+                    throw new JsonException("nonlinear_combine requires a nonlinear model.");
+                nonlinear = flag.ValueKind == JsonValueKind.True;
+            }
+            if (nonlinear && dimension != 2)
+                throw new JsonException("A nonlinear model must be two-dimensional (dimension 2).");
+            return nonlinear;
+        }
+
+        private static void ValidateModeContents(bool nonlinear, bool hasLinearCombinations,
+            bool hasKinds, bool hasNonlinearMaterials, bool hasSprings)
+        {
+            if (nonlinear && hasLinearCombinations)
+                throw new JsonException("A nonlinear model cannot have define, combine or pickup.");
+            if (!nonlinear && (hasKinds || hasNonlinearMaterials || hasSprings))
+                throw new JsonException(
+                    "Load kinds, nonlinear materials and nonlinear springs require a nonlinear model.");
         }
 
         private static float ReadCameraCoordinate(JsonElement camera, string name)
@@ -395,10 +439,18 @@ namespace FrameWebforCS.providers
                 ["load"] = InputLoadService.Instance.getLoadJson(),
                 ["bridge_loads"] = InputBridgeLoadService.Instance.GetSaveJson(),
                 ["notice_points"] = InputNoticePointsService.Instance.getNoticePointsJson(),
-                ["define"] = InputCombineService.Instance.getDefineJson(),
-                ["combine"] = InputCombineService.Instance.getCombineJson(),
-                ["pickup"] = InputCombineService.Instance.getPickupJson(),
             };
+            if (IsNonlinear)
+            {
+                saved["nonlinear"] = true;
+                saved["nonlinear_combine"] = InputCombineService.Instance.getNonlinearCombineJson();
+            }
+            else
+            {
+                saved["define"] = InputCombineService.Instance.getDefineJson();
+                saved["combine"] = InputCombineService.Instance.getCombineJson();
+                saved["pickup"] = InputCombineService.Instance.getPickupJson();
+            }
 
             if (InputLoadService.Instance.AssignedIntensityRowIndices.Any())
                 saved["load_intensity_layout"] = InputLoadService.Instance.GetIntensityLayoutJson();

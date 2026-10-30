@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace FrameWebforCS.providers
 {
@@ -170,6 +171,9 @@ namespace FrameWebforCS.providers
 
                 return null;
             }
+
+            if (type == typeof(JsonObject))
+                return value.ValueKind == JsonValueKind.Object ? JsonNode.Parse(value.GetRawText())!.AsObject() : null;
 
             if (type == typeof(List<float>))
             {

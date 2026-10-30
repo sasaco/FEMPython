@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace FrameWebforCS.components.input
 {
@@ -44,6 +45,10 @@ namespace FrameWebforCS.components.input
         public string? symbol = null;
         public float? LL_pitch = null;
         public string? name = null;
+        // Static nonlinear basic-case kind (GLOSSARY: 固定荷重・増分荷重・限定増分荷重); null is incremental.
+        public string? kind = null;
+        // λ at which a limited load reaches its full value (GLOSSARY: 限定増分荷重).
+        public double? limit = null;
         public List<clsLoadNode>? load_node = null;
         public List<clsLoadMember>? load_member = null;
         public List<int>? input_rows = null;
@@ -71,7 +76,8 @@ namespace FrameWebforCS.components.input
         public event PropertyChangedEventHandler? PropertyChanged;
         public bool IsEmpty => Value.fix_node == null && Value.fix_member == null &&
             Value.element == null && Value.joint == null && string.IsNullOrWhiteSpace(Value.symbol) &&
-            Value.LL_pitch == null && string.IsNullOrWhiteSpace(Value.name);
+            Value.LL_pitch == null && string.IsNullOrWhiteSpace(Value.name) &&
+            Value.kind == null && Value.limit == null;
         private void Changed(string property) =>
             DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(property));
         public int? fix_node { get => Value.fix_node; set { Value.fix_node = value; Changed(nameof(fix_node)); } }
@@ -81,6 +87,8 @@ namespace FrameWebforCS.components.input
         public string? symbol { get => Value.symbol; set { Value.symbol = value; Changed(nameof(symbol)); } }
         public float? LL_pitch { get => Value.LL_pitch; set { Value.LL_pitch = value; Changed(nameof(LL_pitch)); } }
         public string? name { get => Value.name; set { Value.name = value; Changed(nameof(name)); } }
+        public string? kind { get => Value.kind; set { Value.kind = value; Changed(nameof(kind)); } }
+        public double? limit { get => Value.limit; set { Value.limit = value; Changed(nameof(limit)); } }
     }
 
     internal sealed class clsLoadIntensityRow : INotifyPropertyChanged
@@ -232,6 +240,26 @@ namespace FrameWebforCS.components.input
         }
 
         // Parse before mutating live rows so InputDataService can stage the whole file.
+        // Engine-format files (the P7 model, MCP inputs) carry no grid row numbers. Rows that lack
+        // one are numbered in order within their array, as the intensity sheet shows them.
+        private static JsonObject? NumberEngineFormatRows(JsonElement loadJson)
+        {
+            bool missing = loadJson.EnumerateObject().Any(caseJson =>
+                caseJson.Value.ValueKind == JsonValueKind.Object &&
+                new[] { "load_node", "load_member" }.Any(rowName =>
+                    caseJson.Value.TryGetProperty(rowName, out var rows) && rows.ValueKind == JsonValueKind.Array &&
+                    rows.EnumerateArray().Any(row => row.ValueKind == JsonValueKind.Object && !row.TryGetProperty("row", out _))));
+            if (!missing) return null;
+            var numbered = JsonNode.Parse(loadJson.GetRawText())!.AsObject();
+            foreach (var (_, caseNode) in numbered)
+                foreach (string rowName in new[] { "load_node", "load_member" })
+                    if (caseNode is JsonObject item && item[rowName] is JsonArray rows)
+                        for (int index = 0; index < rows.Count; index++)
+                            if (rows[index] is JsonObject row && !row.ContainsKey("row"))
+                                row["row"] = index + 1;
+            return numbered;
+        }
+
         internal static Dictionary<string, clsLoad> ParseLoadJson(JsonElement jsonData)
         {
             if (jsonData.ValueKind != JsonValueKind.Object)
@@ -242,6 +270,11 @@ namespace FrameWebforCS.components.input
                 return new Dictionary<string, clsLoad>();
             if (loadJson.ValueKind != JsonValueKind.Object)
                 throw new JsonException("load must be an object.");
+            if (NumberEngineFormatRows(loadJson) is { } numbered)
+            {
+                using var document = JsonDocument.Parse(new JsonObject { ["load"] = numbered }.ToJsonString());
+                return ParseLoadJson(document.RootElement);
+            }
             var caseIds = new HashSet<string>();
             foreach (JsonProperty caseJson in loadJson.EnumerateObject())
             {
@@ -688,7 +721,8 @@ namespace FrameWebforCS.components.input
             if (item.input_rows?.Count > 0) return true;
             if (item.fix_node != null || item.fix_member != null || item.element != null ||
                 item.joint != null || !string.IsNullOrWhiteSpace(item.symbol) ||
-                item.LL_pitch != null || !string.IsNullOrWhiteSpace(item.name))
+                item.LL_pitch != null || !string.IsNullOrWhiteSpace(item.name) ||
+                item.kind != null || item.limit != null)
                 return true;
             foreach (clsLoadNode node in item.load_node ?? new List<clsLoadNode>())
                 if (!string.IsNullOrWhiteSpace(node.n) || node.tx != null || node.ty != null ||
@@ -839,6 +873,13 @@ namespace FrameWebforCS.components.input
         private static clsLoad? ReadLoad(JsonElement json)
         {
             if (json.ValueKind != JsonValueKind.Object) return null;
+            if (json.TryGetProperty(nameof(clsLoad.kind), out JsonElement kind) &&
+                (kind.ValueKind != JsonValueKind.String || !LoadKinds.Contains(kind.GetString())))
+                throw new JsonException("kind must be fixed, incremental or limited.");
+            if (json.TryGetProperty(nameof(clsLoad.limit), out JsonElement limit) &&
+                (limit.ValueKind != JsonValueKind.Number || !limit.TryGetDouble(out double limitValue) ||
+                 !double.IsFinite(limitValue) || limitValue <= 0))
+                throw new JsonException("limit must be a positive number.");
 
             clsLoad load = DataHelperModule.JsonToClass<clsLoad>(json) ?? new clsLoad();
             if (json.TryGetProperty(nameof(clsLoad.load_node), out JsonElement loadNode))
@@ -862,9 +903,19 @@ namespace FrameWebforCS.components.input
             return load;
         }
 
+        internal static readonly string[] LoadKinds = { "fixed", "incremental", "limited" };
+
+        internal bool HasKinds => _load.Values.Any(item => item.kind != null || item.limit != null);
+
+        internal static bool HasKindRows(PreparedLoadData prepared) =>
+            prepared.Loads.Values.Any(item => item.kind != null || item.limit != null);
+
         private static Dictionary<string, object?> WriteLoad(clsLoad load)
         {
             var result = DataHelperModule.ClassToDictionary(load);
+            // Linear cases keep their shape: the engine rejects kind/limit without nonlinear_combine.
+            if (load.kind == null) result.Remove(nameof(clsLoad.kind));
+            if (load.limit == null) result.Remove(nameof(clsLoad.limit));
             WriteRows(result, nameof(clsLoad.load_node), load.load_node);
             WriteRows(result, nameof(clsLoad.load_member), load.load_member);
             var valueRows = (load.load_node?.Where(HasNodeValues).Select(row => row.row) ??
