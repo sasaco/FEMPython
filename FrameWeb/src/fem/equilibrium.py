@@ -31,6 +31,9 @@ logger = logging.getLogger(__name__)
 # Backtracking on the displacement-control Newton step. A kink of a skeleton
 # (stiff to nearly flat) makes the full Newton step cycle between iterates; the
 # cycle can end on a spurious equilibrium far along the opposite skeleton.
+# The first iteration of a step is taken whole: the control constraint is
+# linear, so that step meets it and later steps keep it met. Halving it would
+# leave the target mismatch in the merit and crawl towards the target.
 LINE_SEARCH_HALVINGS = 10
 LINE_SEARCH_SUFFICIENT_DECREASE = 1e-4
 
@@ -554,7 +557,7 @@ def displacement_control_iteration(
             return False, u, iteration+1, load_factor
         merit = np.hypot(relative_residual, relative_constraint)
         step = 1.0
-        if merit >= tol:
+        if iteration and merit >= tol:
             for halving in range(LINE_SEARCH_HALVINGS+1):
                 step = 0.5**halving
                 trial = evaluate(u+step*newton_du, load_factor+step*newton_dlambda)
