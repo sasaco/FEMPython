@@ -108,6 +108,7 @@ def prepare_geometry(definitions, mesh):
     validate_references(definitions, mesh)
     panels = {p.id: prepare_panel(p, mesh) for p in definitions.panels}
     path_definitions = {p.id: p for p in definitions.paths}
+    domains = {}
     prepared = []
     for load in definitions.loads:
         panel = panels[load.panel_id]
@@ -121,9 +122,13 @@ def prepare_geometry(definitions, mesh):
         strips = build_strip(*paths, load.end_intensities, panel.frame.eps, label)
         # Hole interiors are excluded explicitly. The outer boundary remains a
         # hard domain limit, so strips cannot bridge an exterior concave notch.
-        outer_triangles = triangulate_simple(panel.boundary, panel.frame.eps, label)
-        hole_triangles = tuple(t for ring in panel.holes
-                               for t in triangulate_simple(ring, panel.frame.eps, label))
+        # Triangulated once per panel and shared by its area loads.
+        if load.panel_id not in domains:
+            domains[load.panel_id] = (
+                triangulate_simple(panel.boundary, panel.frame.eps, label),
+                tuple(t for ring in panel.holes
+                      for t in triangulate_simple(ring, panel.frame.eps, label)))
+        outer_triangles, hole_triangles = domains[load.panel_id]
         pieces = []
         for strip_index, strip in enumerate(strips):
             triangles = []

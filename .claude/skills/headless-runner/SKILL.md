@@ -1,6 +1,6 @@
 ---
 name: headless-runner
-description: FrameWebforCS の Headless runner（FrameWebforCS.Headless.exe run・export-frd、FrameWebforCS/Headless）を使う・直す・作り直すときに使う。引数（--pdf-sections の input・section_force・pickup_section_force・displacement・pickup_displacement・load_diagram・section_diagram・pickup_section_diagram、--load-diagram-*・--section-diagram-layout・--section-diagram-components、PIK・ノードの CSV）、成果物（result.json・pickup.pik・report.pdf・CSV）と応答の JSON、PDF の節を足す方法（RunOptions.cs と HeadlessCalculation.cs から PrintSelection へ。描画はデスクトップの PrintProjection・FramePrintPDF のまま）、テストと exe の作り直し（bin/Release、WebPier・関内EVピットと共用）、engineVersion の読み方、PIK の書式と符号を扱う。保存形式の JSON を FrameG の .frd に書き出す export-frd（FRD_EXPORT_UNSUPPORTED と messages の FRD_* コード）、断面力図・荷重図が runner から出ない、数表しか出ない、引数がエラーになるときにも使う。
+description: FrameWebforCS の Headless runner（FrameWebforCS.Headless.exe run・export-frd、FrameWebforCS/Headless）を使う・直す・作り直すときに使う。引数（--pdf-sections の input・section_force・pickup_section_force・displacement・pickup_displacement・load_diagram・section_diagram・pickup_section_diagram・bridge_definitions・bridge_loads・bridge_audit、--load-diagram-*・--section-diagram-layout・--section-diagram-components、PIK・ノードの CSV）、成果物（result.json・pickup.pik・report.pdf・CSV）と応答の JSON、PDF の節を足す方法（RunOptions.cs と HeadlessCalculation.cs から PrintSelection へ。描画はデスクトップの PrintProjection・FramePrintPDF のまま）、テストと exe の作り直し（bin/Release、WebPier・関内EVピットと共用）、engineVersion の読み方、PIK の書式と符号を扱う。3D の橋面荷重（bridge_loads）の書き方・監査・張出しの扱い、保存形式の JSON を FrameG の .frd に書き出す export-frd（FRD_EXPORT_UNSUPPORTED と messages の FRD_* コード）、断面力図・荷重図が runner から出ない、数表しか出ない、引数がエラーになるときにも使う。
 ---
 
 # FrameWebforCS Headless runner
@@ -26,6 +26,9 @@ PIK・PDF・CSV を返す。仕様の正は `FrameWebforCS/Headless/README.md`�
 | `load_diagram` | 荷重図。これだけなら計算しない | LoadDiagram |
 | `section_diagram` | 基本ケースの断面力図（曲げモーメント図・せん断力図・軸方向力図・変位図） | SectionDiagram |
 | `pickup_section_diagram` | PICKUP ごとの最大・最小の包絡の断面力図（変位図は無い） | PickupSectionDiagram |
+| `bridge_definitions` | 橋面荷重のパネル・経路（3D だけ） | BridgeDefinitions |
+| `bridge_loads` | 橋面荷重のあるケースごとの入力強度と方向（3D だけ） | BridgeLoads |
+| `bridge_audit` | 解析時の荷重分配確認：入力と節点の合力・原点回りモーメント、保存誤差、荷重ごとの長さ・面積、等価節点荷重（3D だけ） | BridgeAudit |
 
 - `--section-diagram-components` は `mz`・`fy`・`fx`・`disg` の部分集合（既定は全部）。PICKUP の図では `disg` を飛ばすので、
   PICKUP だけの要求で `disg` だけなら引数エラー。`--section-diagram-layout` は `single`・`split_horizontal`（上下2段）・`split_vertical`。
@@ -33,6 +36,13 @@ PIK・PDF・CSV を返す。仕様の正は `FrameWebforCS/Headless/README.md`�
 - 断面力図は2次元だけ（3次元は `SECTION_DIAGRAM_REQUIRES_2D`。3次元の図はデスクトップの画面の撮影で、runner からは出せない）。
 - 頁数：上下2段で成分4つなら1ケース2頁、3つでも2頁（2頁目は1つ）。
 - デスクトップの「COMBINE 断面力図」（CombinedSectionDiagram）は runner に出していない。
+- 橋面荷重の3つの表（2026-10-30 に足した）：2D は `BRIDGE_LOADS_REQUIRE_3D`。`bridge_loads`・`bridge_audit` は橋面荷重のある
+  ケースが、`bridge_definitions` だけならパネルか経路が要り、無ければ `BRIDGE_LOADS_REQUIRED`（どちらも計算の前に落とす）。
+  橋面荷重図（BridgeLoadDiagram）はデスクトップが 3D 画面を撮影して作るので runner には出していない。
+- `bridge_audit` は `PrintSnapshot` の `resultInputRevision` が入力の版と同じでないと「入力が変更されています」で落ちる。
+  runner は入力そのものを解くので `PdfAsync` で 0 を渡している（足すときに一度これで落ちた）。
+- 合成桁格子（90 節点・12 ケース）で `input,bridge_definitions,bridge_loads,bridge_audit` は 36 頁・12 秒。監査の単位は
+  結果に単位が無いと「単位未指定」と出る。
 
 ## 節を足すとき
 
@@ -109,3 +119,17 @@ dotnet test FrameWebforCS/Headless/tests/FrameWebforCS.Headless.Tests.csproj -c 
 - 分布ばね `fix_member`：`{"<集合>": [{"m": "<部材>", "tx": 軸方向, "ty": 直角, "tz": null, "tr": null}]}`（kN/m/m、負の値は絶対値にされる）。荷重ケースの `fix_member` に集合の番号を書くと、**ケースごとにばねを替えられる**（例：永久作用は長期、変動作用は短期、地震は全周のばね）。`fix_node` の集合は無くてもよい（空の集合 1 が補われる）。
 - 分布ばねは剛域を含む部材の全長に付く。着目点（`notice_points`）を 0.125 m ごとに置いて部材を細かく分けると、0.025 m の梁要素に節点ばねを付けた独立の骨組と 0.01 kN·m まで合った。
 - 4 部材・着目点 約 150・9 ケース・組合せ 9・PICKUP 7 で、`--pdf-sections section_force,pickup_section_force` を含めて 1 回 15 秒。
+
+## 3D の橋面荷重（bridge_loads）を書くとき（2026-10-30、合成桁の設計例の格子 90 節点・12 ケースで本物の runner を実行して確認）
+
+記録・モデルを作るスクリプト・比べた値は `FrameWebforCS/tests/data/合成桁格子検証/README.md`（`scripts/gen.mjs` が書き方の見本）。
+
+- 形：`"bridge_loads": {"version": 1, "panels": [...], "paths": [...], "cases": {"<荷重ケース>": [...]}}`。
+  - パネル：`{"id", "name", "nodes": [構造の節点], "triangles": [[節点, 節点, 節点], ...]}`。三角形は荷重を配るためだけで剛性を足さない。節点はどれかの部材に使われていること。
+  - 経路：`{"id", "name", "points": [[x, y, z], ...]}`。パネルの面の上に置く。
+  - 荷重：`{"id", "name", "panel_id", "path_ids": [1本で線荷重、2本で面荷重], "end_intensities": [[始点, 終点], ...（経路ごと）], "direction": {"mode": "global", "vector": [0, 0, 1]}}`。強度の符号は `direction` の向きが正なので、鉛直下向きの荷重は `vector` を上向きにして負の強度で書いた。
+  - `load` の荷重ケースは別に要る（`element`・`fix_node`・`joint` の集合を指す）。`cases` のキーがそのケースの番号。
+- 計算：3D なので `--generate-pik false`（既定だと `PIK_REQUIRES_2D`）。荷重図 `load_diagram` も 2D だけ。
+- 監査：`result.json` の各ケースの `diagnostics.spatial_loads`（`resultant`・`moment`・`nodal_resultant`・誤差・荷重ごとの積分）。`resultant.z` が手計算の合計と合うかで、荷重が全部配られたかを確かめられる。PDF にするなら `bridge_audit`。
+- パネルの外へは載せられない（外挿は拒否）。床版の張出しの荷重は、床版の端に節点を置いて片持ちの部材で主桁に剛結し、張出しの荷重を隣の主桁へ回す伝達の部材（相手側の回転を解放）を足して、てこの原理で配った（README の「張出しの荷重をてこの原理で配る方法」）。
+- 速さ（2026-10-30 に2回直した後）：三角形 1,320 個のパネルで、面荷重のあるケースは FemModel を直接動かして 1 ケース 7〜8 秒。三角形の数の2乗で遅くなる箇所は直したが、点ごとの積分は重い（README の「見つかった問題」1）。

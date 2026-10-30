@@ -21,7 +21,16 @@ internal sealed record RunOptions(string Input, string OutputDirectory, bool Gen
     internal const string SectionDiagramSection = "section_diagram";
     internal const string PickupSectionDiagramSection = "pickup_section_diagram";
     internal static readonly string[] SectionDiagramSections = [SectionDiagramSection, PickupSectionDiagramSection];
-    internal static readonly string[] SupportedSections = [.. DefaultSections, LoadDiagramSection, .. SectionDiagramSections];
+    internal const string BridgeDefinitionsSection = "bridge_definitions";
+    internal const string BridgeLoadsSection = "bridge_loads";
+    internal const string BridgeAuditSection = "bridge_audit";
+    /// <summary>
+    /// The bridge-load tables of a 3D model. The bridge-load diagram is not offered: the desktop
+    /// captures it from the 3D view, which the runner does not have.
+    /// </summary>
+    internal static readonly string[] BridgeSections = [BridgeDefinitionsSection, BridgeLoadsSection, BridgeAuditSection];
+    internal static readonly string[] SupportedSections =
+        [.. DefaultSections, LoadDiagramSection, .. SectionDiagramSections, .. BridgeSections];
     private static readonly string[] LoadDiagramOptions = ["--load-diagram-layout", "--load-diagram-axis",
         "--load-diagram-single-cases"];
     private static readonly string[] SectionDiagramOptions = ["--section-diagram-layout", "--section-diagram-components"];
@@ -30,6 +39,7 @@ internal sealed record RunOptions(string Input, string OutputDirectory, bool Gen
     private static readonly string[] Layouts = ["single", "split_horizontal", "split_vertical"];
 
     internal bool HasSectionDiagram => GeneratePdf && PdfSections.Any(SectionDiagramSections.Contains);
+    internal bool HasBridgeSection => GeneratePdf && PdfSections.Any(BridgeSections.Contains);
 
     /// <summary>
     /// A load diagram draws the saved loads only; when it is the whole request the runner

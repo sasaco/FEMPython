@@ -53,6 +53,26 @@ def segments_intersect(a, b, c, d, eps):
             and cross(d - c, a - c) * cross(d - c, b - c) < 0)
 
 
+def _nearby_edge_pairs(p, eps):
+    """Sorted index pairs of ring edges whose bounding boxes lie within 2 eps.
+
+    segments_intersect accepts a point at most eps across and eps beyond an
+    edge, i.e. at most eps * sqrt(2) outside its box per axis, so farther
+    pairs cannot intersect. Touching and zero-width boxes are kept.
+    """
+    ends = np.roll(p, -1, axis=0)
+    low, high = np.minimum(p, ends) - eps, np.maximum(p, ends) + eps
+    order = np.argsort(low[:, 0], kind='stable')
+    pairs = []
+    for position, i in enumerate(order):
+        for j in order[position + 1:]:
+            if low[j, 0] > high[i, 0]:
+                break
+            if low[j, 1] <= high[i, 1] and low[i, 1] <= high[j, 1]:
+                pairs.append((int(min(i, j)), int(max(i, j))))
+    return sorted(pairs)
+
+
 def validate_polygon(points, eps, label='polygon', *, strict=False, convex=True):
     """Validate a simple polygon, optionally convex; return its orientation."""
     p = points_array(points, label=label)
@@ -61,13 +81,12 @@ def validate_polygon(points, eps, label='polygon', *, strict=False, convex=True)
     lengths = np.linalg.norm(np.roll(p, -1, axis=0) - p, axis=1)
     if np.any(lengths <= eps):
         raise ValueError(f'{label}: degenerate edge')
-    for i in range(len(p)):
-        for j in range(i + 1, len(p)):
-            if j == i + 1 or (i == 0 and j == len(p) - 1):
-                continue
-            if segments_intersect(p[i], p[(i + 1) % len(p)],
-                                  p[j], p[(j + 1) % len(p)], eps):
-                raise ValueError(f'{label}: self-intersecting boundary')
+    for i, j in _nearby_edge_pairs(p, eps):
+        if j == i + 1 or (i == 0 and j == len(p) - 1):
+            continue
+        if segments_intersect(p[i], p[(i + 1) % len(p)],
+                              p[j], p[(j + 1) % len(p)], eps):
+            raise ValueError(f'{label}: self-intersecting boundary')
     area = signed_area(p)
     scale = np.linalg.norm(np.ptp(p, axis=0))
     if abs(area) <= eps * scale:
@@ -164,11 +183,34 @@ def triangulate_convex(polygon, eps):
                  if abs(signed_area(t := p[[0, i, i + 1]])) > eps * scale)
 
 
+def _drop_collinear(p, eps):
+    """Ring indices without vertices lying on the segment between their neighbours.
+
+    Ear clipping drops such vertices without a triangle anyway; doing it first in
+    one stack pass keeps a long outline with many collinear vertices linear.
+    """
+    kept = []
+    for index in range(len(p)):
+        kept.append(index)
+        while len(kept) >= 3 and point_on_segment(p[kept[-2]], p[kept[-3]], p[kept[-1]], eps):
+            del kept[-2]
+    while len(kept) > 3:
+        if point_on_segment(p[kept[-1]], p[kept[-2]], p[kept[0]], eps):
+            del kept[-1]
+        elif point_on_segment(p[kept[0]], p[kept[-1]], p[kept[1]], eps):
+            del kept[0]
+        else:
+            break
+    return kept
+
+
 def triangulate_simple(polygon, eps, label='polygon'):
     """Ear clipping of a validated simple ring, solely for domain integration."""
     p = np.asarray(polygon)
     sign = validate_polygon(p, eps, label, convex=False)
-    remaining = list(range(len(p)))
+    remaining = _drop_collinear(p, eps)
+    if len(remaining) < 3:
+        raise ValueError(f'{label}: polygon triangulation failed')
     triangles = []
     while len(remaining) > 3:
         for i, node in enumerate(remaining):

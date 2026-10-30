@@ -171,7 +171,8 @@ def _compile_load(prepared, mesh, tolerance):
             q = intensity(point)
             value = np.zeros(count + 6)
             value[offsets[cell_index]:offsets[cell_index + 1]] = (
-                shape_values(cell.points, point, panel.frame.eps, label) * q
+                # Cells were validated by prepare_panel; points are still contained.
+                shape_values(cell.points, point, panel.frame.eps, label, validated=True) * q
             )
             # Evaluated from the physical load position, not interpolated nodes.
             position = panel.frame.lift(point)
@@ -200,7 +201,8 @@ def _compile_load(prepared, mesh, tolerance):
         for piece in prepared.area_pieces:
             strip = prepared.strip_cells[piece.strip_index]
             pieces.append((integrand(piece.cell_index,
-                                     lambda point, strip=strip: strip.intensity(point, panel.frame.eps, label)),
+                                     lambda point, strip=strip: strip.intensity(
+                                         point, panel.frame.eps, label, validated=True)),
                            piece.triangle))
             area += abs(signed_area(piece.triangle))
         kind, degree = 'triangle', 4

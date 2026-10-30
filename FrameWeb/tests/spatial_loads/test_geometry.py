@@ -180,3 +180,107 @@ def test_bounding_box_pairs_match_brute_force_including_touching_boxes():
     expected = [(i, j) for i in range(len(boxes)) for j in range(i + 1, len(boxes))
                 if all(min(boxes[i][1][k], boxes[j][1][k]) > max(boxes[i][0][k], boxes[j][0][k]) for k in (0, 1))]
     assert bounding_box_pairs(polygons) == expected
+
+
+def test_load_compilation_validates_cells_once_not_per_quadrature_point(monkeypatch):
+    """Cells and strips are validated during preparation; integrand points reuse that."""
+    import fem.spatial_loads.geometry as geometry
+    import fem.spatial_loads.interpolation as interpolation
+    from fem.spatial_loads import compile_spatial_loads
+
+    calls = 0
+    original = geometry.validate_polygon
+
+    def counting_validate(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return original(*args, **kwargs)
+
+    for module in (geometry, interpolation):
+        monkeypatch.setattr(module, 'validate_polygon', counting_validate)
+    columns = 20
+    mesh, panel = _strip_grid(columns)
+    paths, area = _full_area_load(columns)
+    line = SpatialLoad(10, 7, (1,), ((-1, -1),))
+    compile_spatial_loads(SpatialLoadDefinitions((panel,), paths, (area, line)), mesh)
+    cells = 4 * columns
+    assert calls < 5 * cells
+
+
+def _long_rectangle_ring(per_side=100, length=100., width=7.):
+    """A deck outline: many collinear vertices along both long edges."""
+    xs = np.linspace(0, length, per_side + 1)
+    return ([(x, 0.) for x in xs] + [(length, width / 2)]
+            + [(x, width) for x in xs[::-1]] + [(0., width / 2)])
+
+
+def test_simple_triangulation_of_collinear_outline_scales_with_vertex_count(monkeypatch):
+    import fem.spatial_loads.geometry as geometry
+
+    calls = 0
+    original = geometry.contains_point
+
+    def counting_contains(*args):
+        nonlocal calls
+        calls += 1
+        return original(*args)
+
+    monkeypatch.setattr(geometry, 'contains_point', counting_contains)
+    ring = _long_rectangle_ring()
+    triangles = geometry.triangulate_simple(ring, 1e-9)
+    assert calls < 10 * len(ring)
+    assert sum(abs(signed_area(t)) for t in triangles) == pytest.approx(100. * 7.)
+
+
+def test_boundary_self_intersection_check_scales_with_vertex_count(monkeypatch):
+    import fem.spatial_loads.geometry as geometry
+
+    calls = 0
+    original = geometry.segments_intersect
+
+    def counting_intersect(*args):
+        nonlocal calls
+        calls += 1
+        return original(*args)
+
+    monkeypatch.setattr(geometry, 'segments_intersect', counting_intersect)
+    ring = _long_rectangle_ring()
+    geometry.validate_polygon(ring, 1e-9, convex=False)
+    assert calls < 10 * len(ring)
+
+
+def test_boundary_edges_touching_within_tolerance_are_rejected():
+    """A vertex eps/2 from a non-adjacent edge counts as touching it."""
+    from fem.spatial_loads.geometry import validate_polygon
+
+    eps = 1e-3
+    ring = [(0., 0.), (10., 0.), (10., 10.), (5., eps / 2), (0., 10.)]
+    with pytest.raises(ValueError, match='self-intersecting boundary'):
+        validate_polygon(ring, eps, convex=False)
+    # The same vertex 2 eps away is clear of the edge.
+    ring[3] = (5., 2 * eps)
+    assert validate_polygon(ring, eps, convex=False) in (1, -1)
+
+
+def test_boundary_self_intersection_matches_every_pair_check():
+    from fem.spatial_loads.geometry import segments_intersect, validate_polygon
+
+    rng = np.random.default_rng(11)
+    eps = .3
+    checked = rejected = 0
+    for _ in range(400):
+        ring = rng.integers(0, 8, size=(int(rng.integers(4, 9)), 2)).astype(float)
+        if np.any(np.linalg.norm(np.roll(ring, -1, axis=0) - ring, axis=1) <= eps):
+            continue
+        n = len(ring)
+        expected = any(segments_intersect(ring[i], ring[(i + 1) % n], ring[j], ring[(j + 1) % n], eps)
+                       for i in range(n) for j in range(i + 2, n) if not (i == 0 and j == n - 1))
+        try:
+            validate_polygon(ring, eps, convex=False)
+            intersected = False
+        except ValueError as error:
+            intersected = 'self-intersecting boundary' in str(error)
+        assert intersected == expected
+        checked += 1
+        rejected += expected
+    assert checked > 100 and 0 < rejected < checked

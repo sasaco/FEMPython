@@ -379,6 +379,65 @@ public sealed class RunnerTests
         Assert.False(Directory.Exists(job.Output));
     }
 
+    // A 3D cantilever with one bridge panel: case 7 a line load, case 9 an area load.
+    private const string BridgeModel = """
+        {"dimension":3,"node":{"1":{"x":0,"y":0,"z":0},"2":{"x":4,"y":0,"z":0},"3":{"x":0,"y":4,"z":0}},
+         "member":{"1":{"ni":"1","nj":"2","e":"1"},"2":{"ni":"2","nj":"3","e":"1"}},
+         "element":{"1":{"1":{"E":200000000,"G":80000000,"A":1,"J":1,"Iy":1,"Iz":1}}},
+         "fix_node":{"1":[{"row":1,"n":"1","tx":1,"ty":1,"tz":1,"rx":1,"ry":1,"rz":1}]},
+         "load":{"7":{"name":"橋面A","fix_node":1,"element":1},"9":{"name":"橋面B","fix_node":1,"element":1}},
+         "bridge_loads":{"version":1,
+          "panels":[{"id":1,"name":"伝達面","nodes":[1,2,3],"triangles":[[1,2,3]]}],
+          "paths":[{"id":1,"name":"線A","points":[[0.5,0,0],[2,0,0]]},
+                   {"id":2,"name":"線B","points":[[0,1,0],[2,1,0]]}],
+          "cases":{"7":[{"id":11,"name":"線荷重","panel_id":1,"path_ids":[1],"end_intensities":[[-3,-5]]}],
+                   "9":[{"id":12,"panel_id":1,"path_ids":[1,2],"end_intensities":[[-1,-2],[-3,-4]]}]}}}
+        """;
+
+    [Fact]
+    public void BridgeLoadSectionsAreParsed()
+    {
+        var options = RunOptions.Parse(["run", "--input", "C:\\input.json", "--output-dir", "C:\\output",
+            "--pdf-sections", "bridge_definitions,bridge_loads,bridge_audit"]);
+        Assert.Equal(["bridge_definitions", "bridge_loads", "bridge_audit"], options.PdfSections);
+        Assert.Throws<RunnerException>(() => RunOptions.Parse(["run", "--input", "C:\\input.json",
+            "--output-dir", "C:\\output", "--pdf-sections", "bridge_load_diagram"]));
+    }
+
+    [Fact]
+    public async Task BridgeLoadSectionsPrintInputAndSolverAudit()
+    {
+        using var job = new Job(BridgeModel);
+        var response = await Run(job, "--generate-pik", "false",
+            "--pdf-sections", "input,bridge_definitions,bridge_loads,bridge_audit");
+        Assert.True(response.ExitCode == 0, response.Stdout + response.Stderr);
+        using var envelope = JsonDocument.Parse(response.Stdout);
+        var root = envelope.RootElement;
+        Assert.Equal(["input", "bridge_definitions", "bridge_loads", "bridge_audit"],
+            root.GetProperty("summary").GetProperty("pdfSections").EnumerateArray().Select(item => item.GetString()));
+        Assert.Equal(new[] { "report.pdf", "result.json" }, Directory.GetFiles(job.Output).Select(Path.GetFileName).Order());
+        using var inputOnly = new Job(BridgeModel);
+        Assert.Equal(0, (await Run(inputOnly, "--generate-pik", "false", "--pdf-sections", "input")).ExitCode);
+        int Pages(Job item) => System.Text.RegularExpressions.Regex.Matches(Encoding.Latin1.GetString(
+            File.ReadAllBytes(Path.Combine(item.Output, "report.pdf"))), @"/Type\s*/Page(?![s\w])").Count;
+        Assert.True(Pages(job) > Pages(inputOnly));
+    }
+
+    [Theory]
+    [InlineData("{\"dimension\":2,\"load\":{\"1\":{}}}", "bridge_loads", "BRIDGE_LOADS_REQUIRE_3D")]
+    [InlineData("{\"dimension\":3,\"load\":{\"1\":{}}}", "bridge_definitions", "BRIDGE_LOADS_REQUIRED")]
+    [InlineData("{\"dimension\":3,\"load\":{\"1\":{}},\"bridge_loads\":{\"version\":1,\"cases\":{\"1\":[]}}}",
+        "bridge_audit", "BRIDGE_LOADS_REQUIRED")]
+    public async Task BridgeLoadSectionsRequireThreeDimensionalBridgeLoads(string input, string section, string code)
+    {
+        using var job = new Job(input);
+        var response = await Run(job, "--generate-pik", "false", "--pdf-sections", section);
+        Assert.NotEqual(0, response.ExitCode);
+        using var document = JsonDocument.Parse(response.Stdout);
+        Assert.Equal(code, document.RootElement.GetProperty("errors")[0].GetProperty("code").GetString());
+        Assert.False(Directory.Exists(job.Output));
+    }
+
     [Theory]
     [InlineData("{\"dimension\":3,\"load\":{\"1\":{}}}", "LOAD_DIAGRAM_REQUIRES_2D")]
     [InlineData("{\"dimension\":2,\"load\":{}}", "LOAD_DIAGRAM_REQUIRES_LOADS")]

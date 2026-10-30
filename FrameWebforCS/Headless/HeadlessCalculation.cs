@@ -38,6 +38,8 @@ internal static class HeadlessCalculation
         }
         if (options.HasSectionDiagram && dimension != 2)
             throw new RunnerException("SECTION_DIAGRAM_REQUIRES_2D", "The section diagram is drawn for a 2D model only.");
+        if (options.HasBridgeSection)
+            ValidateBridgeSections(options, dimension, savedJson);
         if (options.LoadDiagramOnly)
             return await LoadDiagramAsync(options, savedJson, saved.RootElement, cancellationToken);
         var rows = InputCombineService.ParseCombineJson(saved.RootElement);
@@ -176,6 +178,9 @@ internal static class HeadlessCalculation
             RunOptions.LoadDiagramSection => PrintOption.LoadDiagram,
             RunOptions.SectionDiagramSection => PrintOption.SectionDiagram,
             RunOptions.PickupSectionDiagramSection => PrintOption.PickupSectionDiagram,
+            RunOptions.BridgeDefinitionsSection => PrintOption.BridgeDefinitions,
+            RunOptions.BridgeLoadsSection => PrintOption.BridgeLoads,
+            RunOptions.BridgeAuditSection => PrintOption.BridgeAudit,
             _ => throw new RunnerException("INVALID_ARGUMENT", "Unsupported PDF section."),
         }).ToArray(),
             // RunOptions rejects different load and section diagram layouts in one request.
@@ -190,12 +195,31 @@ internal static class HeadlessCalculation
             DiagramComponents: options.SectionDiagramComponents,
             LoadDiagramComponents: options.LoadDiagramAxis ? ["axis", "load"] : ["load"],
             LoadDiagramSingleCaseIds: options.LoadDiagramSingleCases);
-        var printSnapshot = new PrintSnapshot(selection, savedJson, 0, 0, presentation, derived, []);
+        // The presentation was calculated from this very input, so it is current (revision 0 of 0).
+        var printSnapshot = new PrintSnapshot(selection, savedJson, 0, 0, presentation, derived, [],
+            presentation is null ? null : 0);
         byte[] pdf = await Task.Run(() => DirectPdfGenerator.Generate(
             PrintProjection.Build(printSnapshot), cancellationToken), cancellationToken).WaitAsync(cancellationToken);
         if (pdf.Length < 8 || !pdf.AsSpan(0, 5).SequenceEqual("%PDF-"u8))
             throw new RunnerException("INVALID_PDF", "PDF generation returned an invalid document.", "output");
         return pdf;
+    }
+
+    /// <summary>
+    /// Bridge-load tables print what the desktop prints; checked here so a request that cannot
+    /// print fails before the calculation, with its own code.
+    /// </summary>
+    private static void ValidateBridgeSections(RunOptions options, int dimension, string savedJson)
+    {
+        if (dimension != 3)
+            throw new RunnerException("BRIDGE_LOADS_REQUIRE_3D", "Bridge-load sections are printed for a 3D model only.");
+        var saved = System.Text.Json.Nodes.JsonNode.Parse(savedJson) as System.Text.Json.Nodes.JsonObject;
+        bool needsCases = options.PdfSections.Contains(RunOptions.BridgeLoadsSection) ||
+            options.PdfSections.Contains(RunOptions.BridgeAuditSection);
+        if (needsCases ? !BridgePrintProjection.HasLoads(saved) : !BridgePrintProjection.HasDefinitions(saved))
+            throw new RunnerException("BRIDGE_LOADS_REQUIRED", needsCases
+                ? "Bridge-load and audit sections require a load case with bridge loads."
+                : "The bridge definitions section requires a bridge panel or path.");
     }
 
     internal static string ReadInput(string path)

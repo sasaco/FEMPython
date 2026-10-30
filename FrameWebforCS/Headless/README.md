@@ -42,7 +42,8 @@ output. `--generate-pdf` and `--generate-pik` default to `true`; section selecti
 all five names shown above. Optional `--generate-pickup-displacement-csv` and
 `--generate-pickup-reaction-csv` default to `false`. Flags accept exactly `true` or `false`; repeated and
 unknown options/sections fail. PDF sections may be any nonempty distinct subset
-of those five names, `load_diagram`, `section_diagram` and `pickup_section_diagram`. Sections are rendered in the existing PDF composer's order.
+of those five names, `load_diagram`, `section_diagram`, `pickup_section_diagram`, `bridge_definitions`,
+`bridge_loads` and `bridge_audit`. Sections are rendered in the existing PDF composer's order.
 `--pdf-paper` (`A4` or `A3`, default `A4`) and `--pdf-orientation` (`vertical` or
 `horizontal`, default `vertical`) apply to the whole PDF and require PDF output.
 
@@ -86,6 +87,24 @@ with `PICKUP_REQUIRED`.
   --input 'C:\jobs\input.json' --output-dir 'C:\jobs\output' `
   --generate-pik true --pdf-sections section_diagram --pdf-paper A4 --pdf-orientation vertical `
   --section-diagram-layout split_horizontal --section-diagram-components mz,fy,fx,disg
+```
+
+The bridge-load sections print the desktop's bridge-load tables for a 3D document with
+`bridge_loads`: `bridge_definitions` the panels and paths (load transfer only, no stiffness),
+`bridge_loads` the entered intensities and directions of every case with bridge loads, and
+`bridge_audit` the solver's load transfer audit of each such case (applied and nodal resultants
+and moments, conservation errors, integrated length or area per load, and the equivalent nodal
+loads). They calculate like the other result sections; a 3D request needs `--generate-pik false`.
+A 2D document fails with `BRIDGE_LOADS_REQUIRE_3D`; `bridge_loads` or `bridge_audit` without a
+case that has bridge loads, and `bridge_definitions` without a panel or path, fail with
+`BRIDGE_LOADS_REQUIRED`. The bridge-load diagram is not offered: the desktop captures it from
+the 3D view, which the runner does not have. The audit prints its units as unspecified
+(単位未指定) when the result set carries none, as it does for a saved document without units.
+
+```powershell
+& FrameWebforCS/Headless/bin/Release/net10.0-windows/FrameWebforCS.Headless.exe run `
+  --input 'C:\jobs\input.json' --output-dir 'C:\jobs\output' `
+  --generate-pik false --pdf-sections input,bridge_definitions,bridge_loads,bridge_audit
 ```
 
 To request only the calculation result and both node PICKUP CSVs (2D or 3D):

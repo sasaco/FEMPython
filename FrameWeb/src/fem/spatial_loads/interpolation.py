@@ -11,17 +11,20 @@ from .geometry import (
 )
 
 
-def natural_coordinates(vertices, point, eps, label='Q4'):
+def natural_coordinates(vertices, point, eps, label='Q4', *, validated=False):
     """Invert a convex Q4, checking residual and containment without clamping.
 
     Newton equations use translated, scaled coordinates. Backtracking retains
     descent for strongly distorted convex cells; failure is explicit.
+    ``validated`` skips the strict convexity check for a cell that already
+    passed it (a prepared panel cell or strip); containment is still checked.
     """
     p = points_array(vertices, label=label)
     point = np.asarray(point, dtype=float)
     if len(p) != 4 or point.shape != (2,) or not np.all(np.isfinite(point)):
         raise ValueError(f'{label}: expected four vertices and a finite point')
-    validate_polygon(p, eps, label, strict=True)
+    if not validated:
+        validate_polygon(p, eps, label, strict=True)
     if not contains_point(p, point, eps):
         raise ValueError(f'{label}: point outside cell; extrapolation is forbidden')
     scale = np.linalg.norm(np.ptp(p, axis=0))
@@ -57,16 +60,17 @@ def natural_coordinates(vertices, point, eps, label='Q4'):
     raise ValueError(f'{label}: inverse mapping did not converge')
 
 
-def shape_values(vertices, point, eps, label='cell'):
+def shape_values(vertices, point, eps, label='cell', *, validated=False):
     p = points_array(vertices, label=label)
     point = np.asarray(point, dtype=float)
     if point.shape != (2,) or not np.all(np.isfinite(point)):
         raise ValueError(f'{label}: expected a finite point')
     if len(p) == 4:
-        return q4_shape(natural_coordinates(p, point, eps, label))
+        return q4_shape(natural_coordinates(p, point, eps, label, validated=validated))
     if len(p) != 3:
         raise ValueError(f'{label}: only T3 and Q4 cells are supported')
-    validate_polygon(p, eps, label, strict=True)
+    if not validated:
+        validate_polygon(p, eps, label, strict=True)
     if not contains_point(p, point, eps):
         raise ValueError(f'{label}: point outside cell; extrapolation is forbidden')
     scale = np.linalg.norm(np.ptp(p, axis=0))
@@ -121,8 +125,8 @@ class StripCell:
     s1: float
     intensities: tuple
 
-    def intensity(self, point, eps, label='strip'):
-        r, v = natural_coordinates(self.points, point, eps, label)
+    def intensity(self, point, eps, label='strip', *, validated=False):
+        r, v = natural_coordinates(self.points, point, eps, label, validated=validated)
         s = self.s0 + (r + 1) * .5 * (self.s1 - self.s0)
         t = (v + 1) * .5
         (p11, p12), (p21, p22) = self.intensities
