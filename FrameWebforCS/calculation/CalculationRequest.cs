@@ -32,6 +32,10 @@ internal static class CalculationRequestBuilder
 
         int dimension = (int?)saved["dimension"] ?? 3;
         if (dimension is not (2 or 3)) throw new CalculationRequestException("dimension must be 2 or 3.");
+        bool nonlinear = saved["nonlinear"] is JsonValue flag && flag.TryGetValue(out bool declared) && declared ||
+            saved.ContainsKey("nonlinear_combine");
+        if (nonlinear && dimension != 2)
+            throw new CalculationRequestException("非線形解析は2Dのモデルだけで行えます。");
         IReadOnlyDictionary<string, JsonObject> bridgeCases;
         try
         {
@@ -125,11 +129,16 @@ internal static class CalculationRequestBuilder
             foreach (var (_, value) in sheet)
                 if (value is JsonObject element)
                 {
+                    // The nonlinear bar is a Timoshenko beam whose shear stiffness is G·A, so a
+                    // nonlinear model keeps G as entered; without one the engine derives it from E and nu.
+                    bool keepShearModulus = nonlinear;
+                    if (keepShearModulus && Number(element["G"]) == null) element.Remove("G");
                     foreach (string key in new[] { "E", "G", "Xp", "A", "J", "Iy", "Iz" })
-                        DefaultNumber(element, key);
+                        if (key != "G" || !keepShearModulus) DefaultNumber(element, key);
                     element["n"] = String(element["n"]);
                     if (dimension == 2)
-                        foreach (string key in new[] { "G", "J", "Iy" }) element[key] = 1;
+                        foreach (string key in new[] { "G", "J", "Iy" })
+                            if (key != "G" || !keepShearModulus) element[key] = 1;
                 }
         }
 
@@ -137,6 +146,13 @@ internal static class CalculationRequestBuilder
             result["fix_node"] as JsonObject, result["fix_member"] as JsonObject, dimension, out var shearCompanions);
         var loads = Object(result, "load");
         if (loads.Count == 0) throw new CalculationRequestException("At least one load case is required.");
+        if (nonlinear)
+        {
+            if (shearCompanions.Count > 0)
+                throw new CalculationRequestException("非線形解析では M/S の荷重は使えません。");
+            result["nonlinear"] = true;
+            result["nonlinear_combine"] = NonlinearCombinations(saved["nonlinear_combine"], loads);
+        }
         if (dimension == 2) Complete2D(result);
         result["dimension"] = dimension;
         return new CalculationRequest(result.ToJsonString(), shearCompanions);
@@ -164,6 +180,9 @@ internal static class CalculationRequestBuilder
                 selector["symbol"] = String(source["symbol"]);
                 selector["LL_pitch"] = Number(source["LL_pitch"]) ?? 0.1;
             }
+            // GLOSSARY: 固定荷重・増分荷重・限定増分荷重. Only nonlinear models carry kinds.
+            foreach (string key in new[] { "kind", "limit" })
+                if (source[key] != null) selector[key] = source[key]!.DeepClone();
             var nodeRows = new JsonArray();
             if (source["load_node"] is JsonArray rawNodeRows)
                 foreach (var rowValue in rawNodeRows)
@@ -367,6 +386,12 @@ internal static class CalculationRequestBuilder
             var row = (JsonObject)value.DeepClone();
             // This transient marker is derived below, never trusted from saved input.
             row.Remove("_relativeZeroLength");
+            // Engine-format files (the P7 model, MCP inputs) load one member per row as "m".
+            if (row["m"] != null && row["m1"] == null && row["m2"] == null)
+            {
+                row["m1"] = row["m"]!.DeepClone();
+                row.Remove("m");
+            }
             int rowNumber = (int?)row["row"] ?? 0;
             double? markValue = Number(row["mark"]);
             if (markValue != 0 && markValue != 1 && markValue != 2 && markValue != 9 && markValue != 11)
@@ -568,6 +593,50 @@ internal static class CalculationRequestBuilder
                         if (value is JsonObject row) { row["tz"] = 0; row["tr"] = 0; }
     }
 
+    // GLOSSARY: 非線形解析の組合せ. Checked here so the user gets a Japanese message before the
+    // engine runs; the engine repeats the structural rules (same sheets, settings) itself.
+    private static JsonObject NonlinearCombinations(JsonNode? source, JsonObject loads)
+    {
+        if (source is not JsonObject rows || rows.Count == 0)
+            throw new CalculationRequestException("非線形解析の組合せがありません。組合せを1行以上入力してください。");
+        foreach (var (rowId, value) in rows)
+        {
+            if (value is not JsonObject row)
+                throw new CalculationRequestException($"非線形解析の組合せ {rowId} が不正です。");
+            var cases = row.Where(item => item.Key.StartsWith('C') && (Number(item.Value) ?? 0) != 0)
+                .Select(item => item.Key[1..]).ToArray();
+            if (cases.Length == 0)
+                throw new CalculationRequestException($"非線形解析の組合せ {rowId}: 係数の入った基本ケースがありません。");
+            foreach (string caseId in cases)
+            {
+                if (loads[caseId] is not JsonObject load)
+                    throw new CalculationRequestException(
+                        $"非線形解析の組合せ {rowId}: 基本ケース {caseId} に荷重がありません。");
+                if (String(load["symbol"]) == "LL")
+                    throw new CalculationRequestException(
+                        $"非線形解析の組合せ {rowId}: 移動荷重の基本ケース {caseId} は使えません。");
+                if (String(load["kind"]) == "limited" && Number(load["limit"]) is not > 0)
+                    throw new CalculationRequestException(
+                        $"基本ケース {caseId}: 限定増分荷重には限定倍率（0 より大きい値）が要ります。");
+            }
+            var first = (JsonObject)loads[cases[0]]!;
+            foreach (string caseId in cases.Skip(1))
+                foreach (string sheet in new[] { "element", "fix_node", "fix_member", "joint" })
+                    if (Id(loads[caseId]![sheet]) != Id(first[sheet]))
+                        throw new CalculationRequestException(
+                            $"非線形解析の組合せ {rowId}: 基本ケース {cases[0]} と {caseId} の {SheetName(sheet)}の番号が違います。");
+        }
+        return (JsonObject)rows.DeepClone();
+    }
+
+    private static string SheetName(string sheet) => sheet switch
+    {
+        "element" => "材料",
+        "fix_node" => "支点",
+        "fix_member" => "バネ",
+        _ => "結合",
+    };
+
     private static void NormalizeConstraintRows(JsonObject result, string section, string idKey,
         string[] components)
     {
@@ -580,11 +649,14 @@ internal static class CalculationRequestBuilder
             foreach (var value in source)
             {
                 if (value is not JsonObject row) continue;
-                if (Number(row[idKey]) == null || !components.Any(key => (Number(row[key]) ?? 0) != 0))
+                if (Number(row[idKey]) == null ||
+                    !components.Any(key => row[key] is JsonObject || (Number(row[key]) ?? 0) != 0))
                     continue;
                 var projected = new JsonObject { ["row"] = (int?)row["row"] ?? 0,
                     [idKey] = String(row[idKey]) };
-                foreach (string key in components) projected[key] = Number(row[key]) ?? 0;
+                // A nonlinear support spring object replaces the component's number.
+                foreach (string key in components)
+                    projected[key] = row[key] is JsonObject spring ? spring.DeepClone() : Number(row[key]) ?? 0;
                 rows.Add(projected);
             }
             if (rows.Count == 0) groups.Remove(groupId);

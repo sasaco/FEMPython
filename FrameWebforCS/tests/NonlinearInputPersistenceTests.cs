@@ -37,6 +37,14 @@ public sealed class NonlinearInputPersistenceTests
             Assert.Equal(sourceCase!["kind"]!.GetValue<string>(), saved["load"]![id]!["kind"]!.GetValue<string>());
             Assert.True(JsonNode.DeepEquals(sourceCase["limit"], saved["load"]![id]!["limit"]));
         }
+        // Engine-format member loads ("m") open as the desktop's member range (m1) and are saved so.
+        foreach (var (id, sourceCase) in source["load"]!.AsObject())
+            Assert.Equal(
+                (sourceCase!["load_member"] as JsonArray ?? new JsonArray()).OfType<JsonObject>()
+                    // Load values pass through the desktop's float storage (existing behavior).
+                    .Select(row => (row["m"]!.ToString(), row["direction"]!.ToString(), (float)row["P1"]!.GetValue<double>())),
+                (saved["load"]![id]!["load_member"] as JsonArray ?? new JsonArray()).OfType<JsonObject>()
+                    .Select(row => (row["m1"]?.ToString(), row["direction"]!.ToString(), row["P1"]!.GetValue<float>())));
         Assert.False(saved.ContainsKey("combine"));
         Assert.False(saved.ContainsKey("define"));
         Assert.False(saved.ContainsKey("pickup"));

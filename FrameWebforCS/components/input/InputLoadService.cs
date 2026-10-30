@@ -240,24 +240,36 @@ namespace FrameWebforCS.components.input
         }
 
         // Parse before mutating live rows so InputDataService can stage the whole file.
-        // Engine-format files (the P7 model, MCP inputs) carry no grid row numbers. Rows that lack
-        // one are numbered in order within their array, as the intensity sheet shows them.
-        private static JsonObject? NumberEngineFormatRows(JsonElement loadJson)
+        // Engine-format files (the P7 model, MCP inputs) carry no grid row numbers and load one
+        // member per row as "m". Rows without a number are numbered in order within their array,
+        // as the intensity sheet shows them, and "m" becomes the desktop's member range start (m1).
+        private static JsonObject? ReadEngineFormatRows(JsonElement loadJson)
         {
-            bool missing = loadJson.EnumerateObject().Any(caseJson =>
+            static bool EngineFormat(JsonElement row) => row.ValueKind == JsonValueKind.Object &&
+                (!row.TryGetProperty("row", out _) ||
+                 row.TryGetProperty("m", out _) && !row.TryGetProperty("m1", out _) && !row.TryGetProperty("m2", out _));
+            bool engineFormat = loadJson.EnumerateObject().Any(caseJson =>
                 caseJson.Value.ValueKind == JsonValueKind.Object &&
                 new[] { "load_node", "load_member" }.Any(rowName =>
                     caseJson.Value.TryGetProperty(rowName, out var rows) && rows.ValueKind == JsonValueKind.Array &&
-                    rows.EnumerateArray().Any(row => row.ValueKind == JsonValueKind.Object && !row.TryGetProperty("row", out _))));
-            if (!missing) return null;
-            var numbered = JsonNode.Parse(loadJson.GetRawText())!.AsObject();
-            foreach (var (_, caseNode) in numbered)
+                    rows.EnumerateArray().Any(EngineFormat)));
+            if (!engineFormat) return null;
+            var converted = JsonNode.Parse(loadJson.GetRawText())!.AsObject();
+            foreach (var (_, caseNode) in converted)
                 foreach (string rowName in new[] { "load_node", "load_member" })
                     if (caseNode is JsonObject item && item[rowName] is JsonArray rows)
                         for (int index = 0; index < rows.Count; index++)
-                            if (rows[index] is JsonObject row && !row.ContainsKey("row"))
-                                row["row"] = index + 1;
-            return numbered;
+                        {
+                            if (rows[index] is not JsonObject row) continue;
+                            if (!row.ContainsKey("row")) row["row"] = index + 1;
+                            if (rowName == "load_member" && row["m"] is { } member &&
+                                !row.ContainsKey("m1") && !row.ContainsKey("m2"))
+                            {
+                                row["m1"] = member.ToString();
+                                row.Remove("m");
+                            }
+                        }
+            return converted;
         }
 
         internal static Dictionary<string, clsLoad> ParseLoadJson(JsonElement jsonData)
@@ -270,9 +282,9 @@ namespace FrameWebforCS.components.input
                 return new Dictionary<string, clsLoad>();
             if (loadJson.ValueKind != JsonValueKind.Object)
                 throw new JsonException("load must be an object.");
-            if (NumberEngineFormatRows(loadJson) is { } numbered)
+            if (ReadEngineFormatRows(loadJson) is { } converted)
             {
-                using var document = JsonDocument.Parse(new JsonObject { ["load"] = numbered }.ToJsonString());
+                using var document = JsonDocument.Parse(new JsonObject { ["load"] = converted }.ToJsonString());
                 return ParseLoadJson(document.RootElement);
             }
             var caseIds = new HashSet<string>();
