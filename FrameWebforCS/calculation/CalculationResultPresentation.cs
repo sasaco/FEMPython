@@ -8,10 +8,40 @@ internal sealed record CalculationResultPage(
     AnalysisResult Result,
     IReadOnlyList<StaticAnalysisResult> MovingChildren);
 
+/// <summary>The control node and dof of a nonlinear combination row (its displacement_control).</summary>
+internal sealed record NonlinearControl(string NodeId, string Dof)
+{
+    /// <summary>Rows of the saved input's nonlinear_combine that control a displacement, by row ID
+    /// (the result's case ID).</summary>
+    internal static IReadOnlyDictionary<string, NonlinearControl> FromSavedJson(string savedJson)
+    {
+        var controls = new Dictionary<string, NonlinearControl>(StringComparer.Ordinal);
+        if (System.Text.Json.Nodes.JsonNode.Parse(savedJson)?["nonlinear_combine"]
+            is not System.Text.Json.Nodes.JsonObject rows) return controls;
+        foreach (var (rowId, row) in rows)
+            if (row?["displacement_control"] is System.Text.Json.Nodes.JsonObject control &&
+                control["node"] is { } node && control["dof"] is { } dof)
+                controls[rowId] = new(node.ToString(), dof.ToString());
+        return controls;
+    }
+}
+
+/// <summary>GLOSSARY: 段階. One row of a nonlinear combination's step table.</summary>
+internal sealed record CalculationResultStep(int PageIndex, int StepIndex, double LoadFactor, double? ControlDisplacement);
+
+/// <summary>A sheet tab of the result screens: one page, or every step of one nonlinear combination.</summary>
+internal sealed record CalculationResultTab(string Label, IReadOnlyList<int> PageIndices,
+    IReadOnlyList<CalculationResultStep> Steps)
+{
+    /// <summary>The page shown first: the final step of a combination.</summary>
+    internal int DefaultPageIndex => PageIndices[^1];
+}
+
 internal sealed class CalculationResultPresentation
 {
     internal CalculationResultPresentation(AnalysisResultSet resultSet,
-        CalculationDerivedPresentation? derived = null, int dimension = 3)
+        CalculationDerivedPresentation? derived = null, int dimension = 3,
+        IReadOnlyDictionary<string, NonlinearControl>? controls = null)
     {
         ArgumentNullException.ThrowIfNull(resultSet);
         if (dimension is not (2 or 3)) throw new ArgumentOutOfRangeException(nameof(dimension));
@@ -52,6 +82,46 @@ internal sealed class CalculationResultPresentation
             pages.Add(new(key, label, resultCase, result, movingChildren));
         }
         Pages = pages.AsReadOnly();
+        Tabs = BuildTabs(pages, controls).AsReadOnly();
+    }
+
+    private static List<CalculationResultTab> BuildTabs(List<CalculationResultPage> pages,
+        IReadOnlyDictionary<string, NonlinearControl>? controls)
+    {
+        var tabs = new List<CalculationResultTab>();
+        var stepTabs = new Dictionary<string, (List<int> Pages, List<CalculationResultStep> Steps)>(StringComparer.Ordinal);
+        for (int index = 0; index < pages.Count; index++)
+        {
+            CalculationResultPage page = pages[index];
+            if (page.Result is not LoadStepAnalysisResult step)
+            {
+                tabs.Add(new(page.Label, [index], []));
+                continue;
+            }
+            if (!stepTabs.TryGetValue(page.Case.CaseId, out var group))
+            {
+                group = ([], []);
+                stepTabs.Add(page.Case.CaseId, group);
+                tabs.Add(new(page.Case.Name.Length == 0 ? page.Case.CaseId : page.Case.Name, group.Pages, group.Steps));
+            }
+            group.Pages.Add(index);
+            group.Steps.Add(new(index, step.State.StepIndex, step.State.LoadFactor,
+                controls?.TryGetValue(page.Case.CaseId, out NonlinearControl? control) == true
+                    ? ControlDisplacement(step, control) : null));
+        }
+        return tabs;
+    }
+
+    private static double? ControlDisplacement(ForceAnalysisResult result, NonlinearControl control)
+    {
+        DisplacementComponents? value = result.NodeDisplacements
+            .FirstOrDefault(node => node.NodeId == control.NodeId)?.Components;
+        return value is null ? null : control.Dof switch
+        {
+            "dx" => value.Dx, "dy" => value.Dy, "dz" => value.Dz,
+            "rx" => value.Rx, "ry" => value.Ry, "rz" => value.Rz,
+            _ => null,
+        };
     }
 
     internal AnalysisResultSet ResultSet { get; }
@@ -59,6 +129,7 @@ internal sealed class CalculationResultPresentation
     internal int Dimension { get; }
     internal void UpdateDerived(CalculationDerivedPresentation? derived) => Derived = derived;
     internal IReadOnlyList<CalculationResultPage> Pages { get; }
+    internal IReadOnlyList<CalculationResultTab> Tabs { get; }
     internal string LengthUnit => UnitLabel(ResultSet.Units.Length);
     internal string ForceUnit => UnitLabel(ResultSet.Units.Force);
     internal string MomentUnit => ResultSet.Units.Length is "m" or "mm" &&

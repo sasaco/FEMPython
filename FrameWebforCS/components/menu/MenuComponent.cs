@@ -255,7 +255,8 @@ namespace FrameWebforCS
                     AnalysisResultSet resultSet = AnalysisResultSetJson.Deserialize(json);
                     CalculationDerivedPresentation derived = CalculationDerivedPresenter.Build(
                         resultSet, dimension, derivedInput);
-                    return new CalculationResultPresentation(resultSet, derived, dimension);
+                    return new CalculationResultPresentation(resultSet, derived, dimension,
+                        NonlinearControl.FromSavedJson(snapshotJson));
                 }, cancellation);
                 cancellation.ThrowIfCancellationRequested();
                 if (_closing || IsDisposed || _input.CalculationInputRevision != revision)
