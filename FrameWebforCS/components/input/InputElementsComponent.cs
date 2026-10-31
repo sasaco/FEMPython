@@ -183,6 +183,40 @@ namespace FrameWebforCS.components.input
                 column[3].Width = 80;
                 column[4].Width = 150;
 
+                if (_input.IsNonlinear) AddSkeletonColumns(fpSpread1_Sheet1, 5);
+            }
+        }
+
+        // GLOSSARY: 骨格曲線 (2D非線形モード only): 種別, then M_k with φ_k (M-φ) or θ_k (M-θ).
+        private static void AddSkeletonColumns(FarPoint.Win.Spread.SheetView sheet, int first)
+        {
+            var header = sheet.ColumnHeader;
+            var column = sheet.Columns;
+            sheet.ColumnCount = first + 9;
+            header.Cells[0, first].Text = "種別";
+            header.Cells[1, first].Text = " ";
+            column[first].DataField = nameof(clsElement.Skeleton);
+            column[first].CellType = new ComboBoxCellType
+            {
+                Items = [clsElement.LinearSkeleton, clsElement.CurvatureSkeleton, clsElement.RotationSkeleton],
+                Editable = false
+            };
+            column[first].Width = 70;
+            string[] moments = [nameof(clsElement.M1), nameof(clsElement.M2), nameof(clsElement.M3), nameof(clsElement.M4)];
+            string[] deformations = [nameof(clsElement.D1), nameof(clsElement.D2), nameof(clsElement.D3), nameof(clsElement.D4)];
+            for (int k = 0; k < 4; k++)
+            {
+                int m = first + 1 + 2*k;
+                header.Cells[0, m].Text = "M" + (k + 1);
+                header.Cells[1, m].Text = "(kN・m)";
+                column[m].DataField = moments[k];
+                column[m].CellType = new GeneralCellType { FormatString = "F1" };
+                column[m].Width = 80;
+                header.Cells[0, m + 1].Text = $"φ{k + 1}・θ{k + 1}";
+                header.Cells[1, m + 1].Text = "(1/m)・(rad)";
+                column[m + 1].DataField = deformations[k];
+                column[m + 1].CellType = new GeneralCellType { FormatString = "E3" };
+                column[m + 1].Width = 80;
             }
         }
 

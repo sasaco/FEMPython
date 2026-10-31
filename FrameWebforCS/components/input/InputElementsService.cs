@@ -35,6 +35,91 @@ namespace FrameWebforCS.components.input
         public string? Name { get => n; set { n = value; Changed(nameof(Name)); } }
         public JsonObject? Nonlinear { get => nonlinear; set { nonlinear = value; Changed(nameof(Nonlinear)); } }
 
+        // GLOSSARY: 骨格曲線. The sheet's view of nonlinear: the kind and four points, M_k = P_k with
+        // φ_k = delta_k (M-φ) or θ_k = theta_k (M-θ). Edits rewrite only those keys, so beta and
+        // other fields are kept; a material the sheet cannot show (laws, asymmetric) is 個別指定
+        // and kept as written. (Internal constants: ClassToDictionary saves public fields.)
+        internal const string LinearSkeleton = "線形";
+        internal const string CurvatureSkeleton = "M-φ";
+        internal const string RotationSkeleton = "M-θ";
+        internal const string IndividualSkeleton = "個別指定";
+
+        public string Skeleton
+        {
+            get => nonlinear == null ? LinearSkeleton
+                : !IsEditable(nonlinear) ? IndividualSkeleton
+                : IsRotation ? RotationSkeleton : CurvatureSkeleton;
+            set
+            {
+                if (value == Skeleton || value is not (LinearSkeleton or CurvatureSkeleton or RotationSkeleton))
+                {
+                    Changed(nameof(Skeleton));
+                    return;
+                }
+                if (value == LinearSkeleton) nonlinear = null;
+                else
+                {
+                    // Switching between M-φ and M-θ keeps the moments; the deformations differ in kind.
+                    JsonObject next = nonlinear != null && IsEditable(nonlinear)
+                        ? nonlinear.DeepClone().AsObject()
+                        : new JsonObject
+                        {
+                            ["type"] = "jr_stiffness_reduction",
+                            ["symmetric"] = true,
+                            ["hysteresis_dofs"] = new JsonArray("moment_z"),
+                        };
+                    next.Remove("skeleton");
+                    for (int k = 1; k <= 4; k++)
+                    {
+                        next.Remove($"delta_{k}");
+                        next.Remove($"theta_{k}");
+                    }
+                    if (value == RotationSkeleton) next["skeleton"] = "m_theta";
+                    nonlinear = next;
+                }
+                Changed(nameof(Skeleton));
+            }
+        }
+
+        public double? M1 { get => Point("P_1"); set => SetPoint("P_1", value, nameof(M1)); }
+        public double? M2 { get => Point("P_2"); set => SetPoint("P_2", value, nameof(M2)); }
+        public double? M3 { get => Point("P_3"); set => SetPoint("P_3", value, nameof(M3)); }
+        public double? M4 { get => Point("P_4"); set => SetPoint("P_4", value, nameof(M4)); }
+        // φ_k for M-φ, θ_k for M-θ.
+        public double? D1 { get => Point(Deformation(1)); set => SetPoint(Deformation(1), value, nameof(D1)); }
+        public double? D2 { get => Point(Deformation(2)); set => SetPoint(Deformation(2), value, nameof(D2)); }
+        public double? D3 { get => Point(Deformation(3)); set => SetPoint(Deformation(3), value, nameof(D3)); }
+        public double? D4 { get => Point(Deformation(4)); set => SetPoint(Deformation(4), value, nameof(D4)); }
+
+        private bool IsRotation => nonlinear?["skeleton"]?.GetValueKind() == JsonValueKind.String &&
+            nonlinear["skeleton"]!.GetValue<string>() == "m_theta";
+
+        private string Deformation(int k) => (IsRotation ? "theta_" : "delta_") + k.ToString(CultureInfo.InvariantCulture);
+
+        private static bool IsEditable(JsonObject material) =>
+            !material.ContainsKey("laws") &&
+            (material["type"] is null || material["type"]!.ToJsonString() == "\"jr_stiffness_reduction\"") &&
+            (material["symmetric"] is null || material["symmetric"]!.GetValueKind() == JsonValueKind.True);
+
+        private double? Point(string key) =>
+            nonlinear != null && IsEditable(nonlinear) && nonlinear[key] is JsonValue value &&
+            value.GetValueKind() == JsonValueKind.Number &&
+            double.TryParse(value.ToJsonString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double number)
+                ? number : null;
+
+        private void SetPoint(string key, double? value, string property)
+        {
+            // A refused entry (linear or 個別指定 row, non-finite value) restores the bound cell.
+            if (nonlinear == null || !IsEditable(nonlinear) || value is double number && !double.IsFinite(number))
+            {
+                Changed(property);
+                return;
+            }
+            if (value == null) nonlinear.Remove(key);
+            else nonlinear[key] = value.Value;
+            Changed(property);
+        }
+
         public bool IsEmpty => E == null && G == null && Xp == null && A == null && J == null &&
             Iy == null && Iz == null && string.IsNullOrWhiteSpace(n) && nonlinear == null;
 
