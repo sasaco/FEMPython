@@ -123,12 +123,13 @@ internal static class CalculationRequestBuilder
             foreach (string axis in new[] { "x", "y", "z" }) DefaultNumber(node, axis);
         }
         NormalizeMemberSpringRows(result, members, nodes);
-        foreach (var (_, sheetValue) in elements)
+        foreach (var (sheetId, sheetValue) in elements)
         {
             if (sheetValue is not JsonObject sheet) throw new CalculationRequestException("element sheet must be an object.");
-            foreach (var (_, value) in sheet)
+            foreach (var (elementId, value) in sheet)
                 if (value is JsonObject element)
                 {
+                    if (nonlinear) CheckSkeletonPoints($"材料シート {sheetId} の材料 {elementId}", element["nonlinear"]);
                     // The nonlinear bar is a Timoshenko beam whose shear stiffness is G·A, so a
                     // nonlinear model keeps G as entered; without one the engine derives it from E and nu.
                     bool keepShearModulus = nonlinear;
@@ -152,6 +153,7 @@ internal static class CalculationRequestBuilder
                 throw new CalculationRequestException("非線形解析では M/S の荷重は使えません。");
             result["nonlinear"] = true;
             result["nonlinear_combine"] = NonlinearCombinations(saved["nonlinear_combine"], loads);
+            CheckSupportSprings(result["fix_node"] as JsonObject);
         }
         if (dimension == 2) Complete2D(result);
         result["dimension"] = dimension;
@@ -593,6 +595,43 @@ internal static class CalculationRequestBuilder
                         if (value is JsonObject row) { row["tz"] = 0; row["tr"] = 0; }
     }
 
+    // GLOSSARY: 骨格曲線. The engine fills a missing point of a JR skeleton with a default value, so
+    // points 1-3 are required here and the 4th point is a pair. Component laws are left to the engine.
+    private static void CheckSkeletonPoints(string label, JsonNode? source)
+    {
+        if (source is not JsonObject skeleton || skeleton.ContainsKey("laws") ||
+            String(skeleton["type"]) is not (null or "" or "jr_stiffness_reduction")) return;
+        bool rotation = String(skeleton["skeleton"]) == "m_theta";
+        string deformation = rotation ? "theta_" : "delta_";
+        string symbol = rotation ? "θ" : "φ";
+        if (new[] { 1, 2, 3 }.Any(k => skeleton[$"P_{k}"] == null || skeleton[$"{deformation}{k}"] == null))
+            throw new CalculationRequestException($"{label}: 骨格曲線の M1〜M3 と {symbol}1〜{symbol}3 を入れてください。");
+        if ((skeleton["P_4"] == null) != (skeleton[$"{deformation}4"] == null))
+            throw new CalculationRequestException($"{label}: 骨格曲線の M4 と {symbol}4 は両方入れるか、両方空けてください。");
+    }
+
+    // 非線形ばね in the support sheet's JRSNAP order. Only the keys the sheet fills are checked here;
+    // the engine checks the values themselves and the springs the sheet cannot show.
+    private static void CheckSupportSprings(JsonObject? supports)
+    {
+        foreach (var (sheetId, rows) in supports ?? [])
+            foreach (var row in rows as JsonArray ?? [])
+                foreach (var (component, label) in new[] { ("tx", "X方向"), ("ty", "Y方向"), ("rz", "回転") })
+                {
+                    if (row?[component] is not JsonObject spring) continue;
+                    string[] required = String(spring["type"]) switch
+                    {
+                        "jrsnap_bilinear" => ["K1", "F1_pos", "F1_neg"],
+                        "jrsnap_trilinear" => ["K1_pos", "F1_pos", "F1_neg", "K2_pos", "F2_pos", "F2_neg", "K3_pos"],
+                        _ => []
+                    };
+                    if (required.Any(key => spring[key] == null))
+                        throw new CalculationRequestException(
+                            $"支点シート {sheetId} の節点 {Id(row["n"])} の{label}のばね: " +
+                            (required.Length == 3 ? "K1・+F1・−F1" : "K1・+F1・−F1・K2・+F2・−F2・K3") + " を入れてください。");
+                }
+    }
+
     // GLOSSARY: 非線形解析の組合せ. Checked here so the user gets a Japanese message before the
     // engine runs; the engine repeats the structural rules (same sheets, settings) itself.
     private static JsonObject NonlinearCombinations(JsonNode? source, JsonObject loads)
@@ -607,6 +646,18 @@ internal static class CalculationRequestBuilder
                 .Select(item => item.Key[1..]).ToArray();
             if (cases.Length == 0)
                 throw new CalculationRequestException($"非線形解析の組合せ {rowId}: 係数の入った基本ケースがありません。");
+            // The sheet keeps an incomplete row unsaved, so only complete settings reach here.
+            if (row["displacement_control"] is JsonObject control)
+            {
+                if (control["node"] == null)
+                    throw new CalculationRequestException($"非線形解析の組合せ {rowId}: 変位増分には制御節点が要ります。");
+                if (control["targets"] == null)
+                    throw new CalculationRequestException(
+                        $"非線形解析の組合せ {rowId}: 変位増分には目標変位と分割数が要ります。");
+            }
+            else if (row["load_factors"] == null && row["n_load_steps"] == null)
+                throw new CalculationRequestException($"非線形解析の組合せ {rowId}: 載荷の方法が決まっていません。" +
+                    "変位増分なら制御節点・目標変位・分割数を、荷重増分なら分割数を入れてください。");
             foreach (string caseId in cases)
             {
                 if (loads[caseId] is not JsonObject load)

@@ -82,11 +82,37 @@ public sealed class NonlinearCalculationRequestTests
     [InlineData("missing", "基本ケース 99 に荷重がありません")]
     [InlineData("sheet", "支点の番号が違います")]
     [InlineData("3d", "2Dのモデルだけ")]
+    // The sheet keeps an incomplete row unsaved, so the saved row lacks its control or list.
+    [InlineData("method", "非線形解析の組合せ 1: 載荷の方法が決まっていません")]
+    [InlineData("node", "非線形解析の組合せ 1: 変位増分には制御節点が要ります")]
+    [InlineData("targets", "非線形解析の組合せ 1: 変位増分には目標変位と分割数が要ります")]
+    // The engine would otherwise fill a missing skeleton point with its default.
+    [InlineData("skeleton", "材料シート 1 の材料 2: 骨格曲線の M1〜M3 と φ1〜φ3 を入れてください")]
+    [InlineData("rotation", "材料シート 1 の材料 2: 骨格曲線の M1〜M3 と θ1〜θ3 を入れてください")]
+    [InlineData("fourth", "材料シート 1 の材料 2: 骨格曲線の M4 と φ4 は両方入れるか、両方空けてください")]
+    // A component chosen on the support sheet with no values saves a bare bilinear spring.
+    [InlineData("spring", "支点シート 1 の節点 9 の回転のばね: K1・+F1・−F1 を入れてください")]
+    [InlineData("trilinear", "支点シート 1 の節点 9 の回転のばね: K1・+F1・−F1・K2・+F2・−F2・K3 を入れてください")]
     public void InvalidNonlinearModelsAreRejectedBeforeTheEngine(string defect, string message)
     {
         JsonObject saved = P7();
+        JsonObject row = saved["nonlinear_combine"]!["1"]!.AsObject();
+        JsonObject skeleton = saved["element"]!["1"]!["2"]!["nonlinear"]!.AsObject();
+        JsonObject support = saved["fix_node"]!["1"]![0]!.AsObject();
         switch (defect)
         {
+            case "spring": support["rz"] = new JsonObject { ["type"] = "jrsnap_bilinear" }; break;
+            case "trilinear": support["rz"]!.AsObject().Remove("K3_pos"); break;
+            case "skeleton": skeleton.Remove("P_3"); break;
+            case "rotation":
+                skeleton["skeleton"] = "m_theta";
+                foreach (int k in new[] { 1, 2, 4 }) skeleton[$"theta_{k}"] = skeleton[$"delta_{k}"]!.DeepClone();
+                foreach (int k in new[] { 1, 2, 3, 4 }) skeleton.Remove($"delta_{k}");
+                break;
+            case "fourth": skeleton.Remove("delta_4"); break;
+            case "method": row.Remove("displacement_control"); break;
+            case "node": row["displacement_control"]!.AsObject().Remove("node"); break;
+            case "targets": row["displacement_control"]!.AsObject().Remove("targets"); break;
             case "rows": saved["nonlinear_combine"] = new JsonObject(); break;
             case "limit": saved["load"]!["6"]!.AsObject().Remove("limit"); break;
             case "missing": saved["nonlinear_combine"]!["1"]!["C99"] = 1; break;
