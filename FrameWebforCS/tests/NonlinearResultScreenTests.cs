@@ -1,5 +1,6 @@
 using FarPoint.Win.Spread;
 using FrameWebforCS.calculation;
+using FrameWebforCS.components.menu;
 using FrameWebforCS.components.result;
 using FrameWebforCS.providers;
 using System.Globalization;
@@ -91,6 +92,50 @@ public sealed class NonlinearResultScreenTests
                 Assert.Equal(0, steps.Sheet.RowCount);
             }
         }));
+    }
+
+    // The COMBINE/PICKUP result screens belong to linear models only.
+    [Fact]
+    public void TheLinearCombinationResultsLeaveTheSidebarInTheNonlinearMode()
+    {
+        string[] linearOnly = ["combdisg", "pickdisg", "combreac", "pickreac", "combfsec", "pickfsec"];
+        RunSta(() =>
+        {
+            try
+            {
+                Open("""{"dimension":2}""");
+                using var sidebar = new SidebarComponent();
+                TreeView tree = Assert.Single(sidebar.Controls.OfType<TreeView>());
+                string[] before = Keys(tree);
+
+                InputDataService.Instance.SetAnalysisMode(2, true);
+                Assert.Equal(before.Except(linearOnly), Keys(tree));
+
+                InputDataService.Instance.SetAnalysisMode(2, false);
+                Assert.Equal(before, Keys(tree));
+
+                Open("""{"dimension":2,"nonlinear":true}""");
+                Assert.Equal(before.Except(linearOnly), Keys(tree));
+            }
+            finally { Open("{}"); }
+        });
+
+        static string[] Keys(TreeView tree)
+        {
+            var keys = new List<string>();
+            void Walk(TreeNodeCollection nodes)
+            {
+                foreach (TreeNode node in nodes) { keys.Add(node.Name); Walk(node.Nodes); }
+            }
+            Walk(tree.Nodes);
+            return [.. keys];
+        }
+    }
+
+    private static void Open(string json)
+    {
+        using JsonDocument document = JsonDocument.Parse(json);
+        InputDataService.Instance.JsonDataOpen(document.RootElement);
     }
 
     private static string Fixture(string name) =>

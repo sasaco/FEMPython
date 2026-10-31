@@ -26,6 +26,8 @@ namespace FrameWebforCS.components.menu
         private readonly TreeNode _solidNode;
         private readonly TreeNode _bridgeNode;
         private readonly TreeNode _inputNode;
+        // COMBINE/PICKUP results: linear models only, hidden in the 2D非線形 mode.
+        private readonly (TreeNode Node, TreeNode Parent, int Index)[] _linearResultNodes;
 
         internal class targetComponent
         {
@@ -196,13 +198,18 @@ namespace FrameWebforCS.components.menu
             _solidNode = treeView1.Nodes.Find("solid", true).Single();
             _bridgeNode = treeView1.Nodes.Find("bridge_load", true).Single();
             _inputNode = treeView1.Nodes.Find("input", true).Single();
+            _linearResultNodes = new[] { "combdisg", "pickdisg", "combreac", "pickreac", "combfsec", "pickfsec" }
+                .Select(key => treeView1.Nodes.Find(key, true).Single())
+                .Select(node => (node, node.Parent, node.Index)).ToArray();
             treeView1.ExpandAll();
             _input.DimensionChanged += OnDimensionChanged;
             _input.FileReplaced += OnFileReplaced;
+            _input.NonlinearModeChanged += OnNonlinearModeChanged;
             Disposed += (_, _) =>
             {
                 _input.DimensionChanged -= OnDimensionChanged;
                 _input.FileReplaced -= OnFileReplaced;
+                _input.NonlinearModeChanged -= OnNonlinearModeChanged;
             };
             RefreshDimensionEntries();
         }
@@ -210,6 +217,8 @@ namespace FrameWebforCS.components.menu
         private void OnDimensionChanged(int _) => RefreshDimensionEntries();
 
         private void OnFileReplaced(long _) => RefreshDimensionEntries();
+
+        private void OnNonlinearModeChanged(bool _) => RefreshDimensionEntries();
 
         private void RefreshDimensionEntries()
         {
@@ -228,6 +237,11 @@ namespace FrameWebforCS.components.menu
                 if (_panelNode.Parent != null) _panelNode.Remove();
                 if (_solidNode.Parent != null) _solidNode.Remove();
                 if (_bridgeNode.Parent != null) _bridgeNode.Remove();
+            }
+            foreach (var (node, parent, index) in _linearResultNodes)
+            {
+                if (_input.IsNonlinear) { if (node.Parent != null) node.Remove(); }
+                else if (node.Parent == null) parent.Nodes.Insert(Math.Min(index, parent.Nodes.Count), node);
             }
         }
 
