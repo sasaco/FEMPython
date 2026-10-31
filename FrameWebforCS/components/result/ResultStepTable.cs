@@ -32,12 +32,15 @@ internal sealed class ResultStepTable : UserControl
         header.RowCount = 2;
         string[] titles = ["段階", "荷重の倍率", "制御節点"];
         string[] units = ["No", "λ", "変位(mm)"];
-        int[] widths = [50, 80, 90];
+        int[] widths = [50, 80, 120];
         for (int column = 0; column < titles.Length; column++)
         {
             header.Cells[0, column].Text = titles[column];
             header.Cells[1, column].Text = units[column];
             Sheet.Columns[column].Width = widths[column];
+            // Text as formatted, like the other result tables.
+            Sheet.Columns[column].CellType = new FarPoint.Win.Spread.CellType.TextCellType();
+            Sheet.Columns[column].HorizontalAlignment = CellHorizontalAlignment.Right;
         }
         Width = widths.Sum() + 30;
         Controls.Add(_spread);
@@ -105,6 +108,7 @@ internal sealed class ResultStepTable : UserControl
         Sheet.SetActiveCell(row, 0);
         Sheet.ClearSelection();
         Sheet.AddSelection(row, 0, 1, Sheet.ColumnCount);
+        _spread.ShowActiveCell(VerticalPosition.Center, HorizontalPosition.Left);
     }
 
     private void Pick(int row)
