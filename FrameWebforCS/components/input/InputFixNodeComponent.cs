@@ -1,4 +1,5 @@
 ﻿using FarPoint.Win.Spread;
+using FarPoint.Win.Spread.CellType;
 using FrameWebforCS.providers;
 using System;
 using System.Collections.Generic;
@@ -154,7 +155,41 @@ namespace FrameWebforCS.components.input
                 {
                     column[i].Width = 80;
                 }
+
+                if (_input.IsNonlinear) AddSpringColumns(fpSpread1_Sheet1, 4);
             }
+        }
+
+        // 2D非線形モード only: the support's 非線形ばね in JRSNAP order on one component.
+        private static void AddSpringColumns(SheetView sheet, int first)
+        {
+            var header = sheet.ColumnHeader;
+            var column = sheet.Columns;
+            string[] labels = ["成分", "K1", "+F1", "−F1", "K2", "+F2", "−F2", "K3", "K1−", "K2−", "K3−"];
+            string[] fields =
+            [
+                nameof(clsFixNode.SpringComponent), nameof(clsFixNode.SpringK1), nameof(clsFixNode.SpringF1Pos),
+                nameof(clsFixNode.SpringF1Neg), nameof(clsFixNode.SpringK2), nameof(clsFixNode.SpringF2Pos),
+                nameof(clsFixNode.SpringF2Neg), nameof(clsFixNode.SpringK3), nameof(clsFixNode.SpringK1Neg),
+                nameof(clsFixNode.SpringK2Neg), nameof(clsFixNode.SpringK3Neg)
+            ];
+            sheet.ColumnCount = first + labels.Length;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                header.Cells[0, first + i].Text = i == 0 ? "非線形ばね" : "";
+                header.Cells[1, first + i].Text = labels[i];
+                column[first + i].DataField = fields[i];
+                column[first + i].CellType = new GeneralCellType();
+                column[first + i].Width = 80;
+            }
+            header.Cells[0, first].ColumnSpan = labels.Length;
+            column[first].CellType = new ComboBoxCellType
+            {
+                Items = ["X方向", "Y方向", "回転"],
+                ItemData = ["tx", "ty", "rz"],
+                EditorValue = EditorValue.ItemData,
+                Editable = false
+            };
         }
 
         internal void RefreshDimension()

@@ -31,6 +31,94 @@ namespace FrameWebforCS.components.input
         public float? Rx { get => rx; set { rx = value; Changed(nameof(Rx)); } }
         public float? Ry { get => ry; set { ry = value; Changed(nameof(Ry)); } }
         public float? Rz { get => rz; set { rz = value; Changed(nameof(Rz)); } }
+        // The sheet's 非線形ばね: one JRSNAP spring on one component, entered in JRSNAP order
+        // (K1, +F1, −F1, K2, +F2, −F2, K3, K1−, K2−, K3−). Only K1, +F1 and −F1 make a
+        // jrsnap_bilinear spring; any other value makes it jrsnap_trilinear. Other springs (slip,
+        // more than one per row) are 個別指定 and kept as written. (Internal constants:
+        // ClassToDictionary saves public fields.)
+        internal const string IndividualSpring = "個別指定";
+        internal const string BilinearSpring = "jrsnap_bilinear";
+        internal const string TrilinearSpring = "jrsnap_trilinear";
+        private static readonly string[] SpringComponents = { "tx", "ty", "tz", "rx", "ry", "rz" };
+        private static readonly string[] TrilinearKeys =
+            { "K1_pos", "F1_pos", "F1_neg", "K2_pos", "F2_pos", "F2_neg", "K3_pos", "K1_neg", "K2_neg", "K3_neg" };
+        private static readonly string[] BilinearKeys = { "K1", "F1_pos", "F1_neg" };
+
+        private (string Component, JsonObject Spring)? EditableSpring =>
+            springs is { Count: 1 } && springs.Single() is var (component, spring) &&
+            spring["type"]?.GetValueKind() == JsonValueKind.String &&
+            spring["type"]!.GetValue<string>() is BilinearSpring or TrilinearSpring &&
+            spring.All(item => item.Key == "type" ||
+                (spring["type"]!.GetValue<string>() == BilinearSpring ? BilinearKeys : TrilinearKeys).Contains(item.Key))
+                ? (component, spring) : null;
+
+        public string? SpringComponent
+        {
+            get => springs is not { Count: > 0 } ? null : EditableSpring?.Component ?? IndividualSpring;
+            set
+            {
+                bool editable = springs is not { Count: > 0 } || EditableSpring != null;
+                if (!editable || value != null && !SpringComponents.Contains(value) || value == SpringComponent)
+                {
+                    Changed(nameof(SpringComponent));
+                    return;
+                }
+                JsonObject spring = EditableSpring?.Spring ?? new JsonObject { ["type"] = BilinearSpring };
+                springs = value == null ? null : new Dictionary<string, JsonObject> { [value] = spring };
+                // The spring takes the place of the component's number when saved.
+                switch (value)
+                {
+                    case "tx": tx = null; Changed(nameof(Tx)); break;
+                    case "ty": ty = null; Changed(nameof(Ty)); break;
+                    case "tz": tz = null; Changed(nameof(Tz)); break;
+                    case "rx": rx = null; Changed(nameof(Rx)); break;
+                    case "ry": ry = null; Changed(nameof(Ry)); break;
+                    case "rz": rz = null; Changed(nameof(Rz)); break;
+                }
+                Changed(nameof(SpringComponent));
+            }
+        }
+
+        public double? SpringK1 { get => SpringValue(0); set => SetSpringValue(0, value, nameof(SpringK1)); }
+        public double? SpringF1Pos { get => SpringValue(1); set => SetSpringValue(1, value, nameof(SpringF1Pos)); }
+        public double? SpringF1Neg { get => SpringValue(2); set => SetSpringValue(2, value, nameof(SpringF1Neg)); }
+        public double? SpringK2 { get => SpringValue(3); set => SetSpringValue(3, value, nameof(SpringK2)); }
+        public double? SpringF2Pos { get => SpringValue(4); set => SetSpringValue(4, value, nameof(SpringF2Pos)); }
+        public double? SpringF2Neg { get => SpringValue(5); set => SetSpringValue(5, value, nameof(SpringF2Neg)); }
+        public double? SpringK3 { get => SpringValue(6); set => SetSpringValue(6, value, nameof(SpringK3)); }
+        public double? SpringK1Neg { get => SpringValue(7); set => SetSpringValue(7, value, nameof(SpringK1Neg)); }
+        public double? SpringK2Neg { get => SpringValue(8); set => SetSpringValue(8, value, nameof(SpringK2Neg)); }
+        public double? SpringK3Neg { get => SpringValue(9); set => SetSpringValue(9, value, nameof(SpringK3Neg)); }
+
+        private double? SpringValue(int index)
+        {
+            if (EditableSpring is not var (_, spring)) return null;
+            string[] keys = spring["type"]!.GetValue<string>() == BilinearSpring ? BilinearKeys : TrilinearKeys;
+            return index < keys.Length && spring[keys[index]] is JsonValue value &&
+                value.GetValueKind() == JsonValueKind.Number &&
+                double.TryParse(value.ToJsonString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double number)
+                    ? number : null;
+        }
+
+        private void SetSpringValue(int index, double? value, string property)
+        {
+            // A refused entry (no spring component, 個別指定, non-finite value) restores the bound cell.
+            if (EditableSpring is not var (component, _) || value is double number && !double.IsFinite(number))
+            {
+                Changed(property);
+                return;
+            }
+            double?[] values = Enumerable.Range(0, TrilinearKeys.Length).Select(SpringValue).ToArray();
+            values[index] = value;
+            bool bilinear = values.Skip(BilinearKeys.Length).All(item => item == null);
+            string[] keys = bilinear ? BilinearKeys : TrilinearKeys;
+            var spring = new JsonObject { ["type"] = bilinear ? BilinearSpring : TrilinearSpring };
+            for (int k = 0; k < keys.Length; k++)
+                if (values[k] is double filled) spring[keys[k]] = filled;
+            springs = new Dictionary<string, JsonObject> { [component] = spring };
+            Changed(property);
+        }
+
         public bool IsEmpty => string.IsNullOrWhiteSpace(n) && tx == null && ty == null && tz == null && rx == null && ry == null && rz == null &&
             (springs == null || springs.Count == 0);
         private void Changed(string name) => DocumentReplacementNotifications.Publish(PropertyChanged, this, new PropertyChangedEventArgs(name));
