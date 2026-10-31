@@ -148,6 +148,8 @@ namespace FrameWebforCS.providers
             SetDimension(dimension);
             if (nonlinear == IsNonlinear) return;
 
+            // Set first: the screens refreshed by the removals below show the new mode's sheets.
+            IsNonlinear = nonlinear;
             if (nonlinear)
                 InputCombineService.Instance.RemoveLinearCombinations();
             else
@@ -157,7 +159,6 @@ namespace FrameWebforCS.providers
                 InputElementsService.Instance.RemoveNonlinear();
                 InputFixNodeService.Instance.RemoveSprings();
             }
-            IsNonlinear = nonlinear;
             CalculationInputRevision++;
             NonlinearModeChanged?.Invoke(nonlinear);
         }

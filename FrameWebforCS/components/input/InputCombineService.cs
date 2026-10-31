@@ -28,8 +28,159 @@ namespace FrameWebforCS.components.input
         public string? symbol;
         public JsonObject Analysis { get; } = new();
 
-        public override bool IsEmpty => base.IsEmpty && string.IsNullOrWhiteSpace(symbol) && Analysis.Count == 0;
+        public override bool IsEmpty => base.IsEmpty && string.IsNullOrWhiteSpace(symbol) && Analysis.Count == 0 &&
+            _pendingMethod == null && _pendingAmount == null && _pendingDivisions == null;
+
+        // The sheet's view of the analysis settings. A list that is not uniform (step × k) shows
+        // as 個別指定 and is kept as written until the row's target, factor or divisions change.
+        // A target or factor entered without divisions (or the reverse) is held here, unsaved,
+        // until the list can be written.
+        private NonlinearMethod? _pendingMethod;
+        private double? _pendingAmount;
+        private int? _pendingDivisions;
+
+        private JsonObject? Control => Analysis["displacement_control"] as JsonObject;
+
+        private JsonNode? List => Control != null ? Control["targets"] : Analysis["load_factors"];
+
+        public NonlinearMethod? Method =>
+            Control != null ? NonlinearMethod.Displacement
+            : Analysis.ContainsKey("load_factors") || Analysis.ContainsKey("n_load_steps") ? NonlinearMethod.Load
+            : _pendingMethod;
+
+        public int? ControlNode => Integer(Control?["node"]);
+
+        private double? Amount => List is JsonArray ? UniformLast(List) : _pendingAmount;
+
+        public double? Target => Method == NonlinearMethod.Displacement ? Amount : null;
+
+        public double? MaxFactor => Method == NonlinearMethod.Load ? Amount : null;
+
+        public int? Divisions =>
+            List is JsonArray list ? list.Count : Integer(Analysis["n_load_steps"]) ?? _pendingDivisions;
+
+        public bool IsIndividual => List is JsonArray && UniformLast(List) == null;
+
+        public int? MaxIterations => Integer(Analysis["max_iterations"]);
+
+        public double? Tolerance => Number(Analysis["tolerance"]);
+
+        internal void SetMethod(NonlinearMethod? method)
+        {
+            if (method == Method) return;
+            int? divisions = Divisions;
+            Analysis.Remove("displacement_control");
+            Analysis.Remove("load_factors");
+            Analysis.Remove("n_load_steps");
+            _pendingMethod = method;
+            if (method == NonlinearMethod.Displacement)
+                Analysis["displacement_control"] = new JsonObject { ["dof"] = "dx" };
+            WriteList(null, method == null ? null : divisions);
+        }
+
+        internal void SetControlNode(int? node)
+        {
+            if (Control is not JsonObject control)
+                throw new ArgumentException("制御節点は、方式が変位増分の行に入れてください。");
+            if (node is <= 0)
+                throw new ArgumentException("制御節点は節点番号（1 以上の整数）で入れてください。");
+            if (node == null) control.Remove("node");
+            else control["node"] = node.Value;
+        }
+
+        // The target (変位増分) or the max factor JALF (荷重増分).
+        internal void SetAmount(NonlinearMethod method, double? amount)
+        {
+            if (Method != method)
+                throw new ArgumentException(method == NonlinearMethod.Displacement
+                    ? "目標変位は、方式が変位増分の行に入れてください。"
+                    : "最大倍率は、方式が荷重増分の行に入れてください。");
+            if (amount is double value && (!double.IsFinite(value) || value == 0 ||
+                    method == NonlinearMethod.Load && value < 0))
+                throw new ArgumentException(method == NonlinearMethod.Displacement
+                    ? "目標変位は 0 以外の数で入れてください（向きは符号で表します）。"
+                    : "最大倍率は 0 より大きい数で入れてください。");
+            WriteList(amount, Divisions);
+        }
+
+        internal void SetDivisions(int? divisions)
+        {
+            if (Method == null)
+                throw new ArgumentException("分割数は、方式を選んでから入れてください。");
+            if (divisions is <= 0)
+                throw new ArgumentException("分割数は 1 以上の整数で入れてください。");
+            // Re-dividing a 個別指定 list keeps its final value.
+            double? amount = Amount ?? (List is JsonArray list ? Number(list[^1]) : null);
+            WriteList(amount, divisions);
+        }
+
+        internal void SetMaxIterations(int? iterations)
+        {
+            if (iterations is <= 0)
+                throw new ArgumentException("最大反復回数は 1 以上の整数で入れてください（空欄は 50）。");
+            if (iterations == null) Analysis.Remove("max_iterations");
+            else Analysis["max_iterations"] = iterations.Value;
+        }
+
+        internal void SetTolerance(double? tolerance)
+        {
+            if (tolerance is double value && (!double.IsFinite(value) || value <= 0))
+                throw new ArgumentException("許容誤差は 0 より大きい数で入れてください（空欄は 1e-6）。");
+            if (tolerance == null) Analysis.Remove("tolerance");
+            else Analysis["tolerance"] = tolerance.Value;
+        }
+
+        // Writes step × k for k = 1..divisions with step = amount / divisions, as the JRSNAP
+        // comparison models do. Load control without a max factor goes up to λ = 1 (n_load_steps).
+        private void WriteList(double? amount, int? divisions)
+        {
+            NonlinearMethod? method = Method;
+            _pendingMethod = method;
+            _pendingAmount = null;
+            _pendingDivisions = null;
+            Control?.Remove("targets");
+            Analysis.Remove("load_factors");
+            Analysis.Remove("n_load_steps");
+            if (amount is double total && divisions is int count)
+            {
+                double step = total/count;
+                var list = new JsonArray(Enumerable.Range(1, count).Select(k => (JsonNode)(step*k)).ToArray());
+                if (Control is JsonObject control) control["targets"] = list;
+                else Analysis["load_factors"] = list;
+            }
+            else if (method == NonlinearMethod.Load && amount == null && divisions is int steps)
+                Analysis["n_load_steps"] = steps;
+            else
+            {
+                _pendingAmount = amount;
+                _pendingDivisions = divisions;
+            }
+        }
+
+        private static double? UniformLast(JsonNode? node)
+        {
+            if (node is not JsonArray list || list.Count == 0) return null;
+            double[] values = list.Select(Number).OfType<double>().ToArray();
+            if (values.Length != list.Count) return null;
+            double step = values[0];
+            double scale = Math.Abs(values[^1]);
+            for (int k = 0; k < values.Length; k++)
+                if (Math.Abs(values[k] - step*(k + 1)) > 1e-12*scale) return null;
+            return values[^1];
+        }
+
+        // Values written here (int or double) and values read from a file are both numbers.
+        private static double? Number(JsonNode? node) =>
+            node is JsonValue value && value.GetValueKind() == JsonValueKind.Number &&
+            double.TryParse(value.ToJsonString(), NumberStyles.Float, CultureInfo.InvariantCulture, out double number)
+                ? number : null;
+
+        private static int? Integer(JsonNode? node) =>
+            Number(node) is double number && number == Math.Truncate(number) && Math.Abs(number) <= int.MaxValue
+                ? (int)number : null;
     }
+
+    internal enum NonlinearMethod { Displacement, Load }
 
 
     internal class InputCombineService
@@ -260,15 +411,72 @@ namespace FrameWebforCS.components.input
                 DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
+        public void SetNonlinearName(int row, string? name)
+        {
+            if (SetName<double, clsNonlinearCombine>(_nonlinear, row, name))
+                DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
+        }
+
+        public void SetNonlinearCoefficient(int row, int column, double? value)
+        {
+            if (value.HasValue && !double.IsFinite(value.Value))
+                throw new ArgumentOutOfRangeException(nameof(value));
+            if (SetCoefficient<double, clsNonlinearCombine>(_nonlinear, row, column, value))
+                DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
+        }
+
+        // The analysis settings of a 非線形解析の組合せ row. Invalid entries throw ArgumentException
+        // with a message for the user, and leave the row unchanged.
+        public void SetNonlinearMethod(int row, NonlinearMethod? method) =>
+            EditNonlinear(row, item => item.SetMethod(method));
+
+        public void SetNonlinearControlNode(int row, int? node) =>
+            EditNonlinear(row, item => item.SetControlNode(node));
+
+        public void SetNonlinearTarget(int row, double? target) =>
+            EditNonlinear(row, item => item.SetAmount(NonlinearMethod.Displacement, target));
+
+        public void SetNonlinearMaxFactor(int row, double? factor) =>
+            EditNonlinear(row, item => item.SetAmount(NonlinearMethod.Load, factor));
+
+        public void SetNonlinearDivisions(int row, int? divisions) =>
+            EditNonlinear(row, item => item.SetDivisions(divisions));
+
+        public void SetNonlinearMaxIterations(int row, int? iterations) =>
+            EditNonlinear(row, item => item.SetMaxIterations(iterations));
+
+        public void SetNonlinearTolerance(int row, double? tolerance) =>
+            EditNonlinear(row, item => item.SetTolerance(tolerance));
+
+        private void EditNonlinear(int row, Action<clsNonlinearCombine> edit)
+        {
+            if (row < 1 || row > MaxRows)
+                throw new ArgumentOutOfRangeException(nameof(row));
+            bool added = !_nonlinear.TryGetValue(row, out clsNonlinearCombine? item);
+            item ??= AddRow<double, clsNonlinearCombine>(_nonlinear, row);
+            try { edit(item); }
+            catch
+            {
+                if (added) _nonlinear.Remove(row);
+                throw;
+            }
+            if (item.IsEmpty) _nonlinear.Remove(row);
+            DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
+        }
+
         private static bool SetCoefficient<T>(Dictionary<int, clsCombine<T>> rows,
-            int row, int column, T? value) where T : struct
+            int row, int column, T? value) where T : struct =>
+            SetCoefficient<T, clsCombine<T>>(rows, row, column, value);
+
+        private static bool SetCoefficient<T, TRow>(Dictionary<int, TRow> rows,
+            int row, int column, T? value) where T : struct where TRow : clsCombine<T>, new()
         {
             if (row < 1 || row > MaxRows || column < 1)
                 throw new ArgumentOutOfRangeException(nameof(row));
-            if (!rows.TryGetValue(row, out clsCombine<T>? item))
+            if (!rows.TryGetValue(row, out TRow? item))
             {
                 if (!value.HasValue) return false;
-                item = AddRow(rows, row);
+                item = AddRow<T, TRow>(rows, row);
             }
             if (value.HasValue)
             {
@@ -286,15 +494,19 @@ namespace FrameWebforCS.components.input
         }
 
         private static bool SetName<T>(Dictionary<int, clsCombine<T>> rows,
-            int row, string? name) where T : struct
+            int row, string? name) where T : struct =>
+            SetName<T, clsCombine<T>>(rows, row, name);
+
+        private static bool SetName<T, TRow>(Dictionary<int, TRow> rows,
+            int row, string? name) where T : struct where TRow : clsCombine<T>, new()
         {
             if (row < 1 || row > MaxRows)
                 throw new ArgumentOutOfRangeException(nameof(row));
             string? normalizedName = string.IsNullOrWhiteSpace(name) ? null : name;
-            if (!rows.TryGetValue(row, out clsCombine<T>? item))
+            if (!rows.TryGetValue(row, out TRow? item))
             {
                 if (normalizedName == null) return false;
-                item = AddRow(rows, row);
+                item = AddRow<T, TRow>(rows, row);
             }
             if (item.name == normalizedName) return false;
             item.name = normalizedName;
@@ -302,12 +514,12 @@ namespace FrameWebforCS.components.input
             return true;
         }
 
-        private static clsCombine<T> AddRow<T>(Dictionary<int, clsCombine<T>> rows,
-            int row) where T : struct
+        private static TRow AddRow<T, TRow>(Dictionary<int, TRow> rows,
+            int row) where T : struct where TRow : clsCombine<T>, new()
         {
             string id = row.ToString(CultureInfo.InvariantCulture);
             while (rows.Values.Any(item => item.Id == id)) id = "row_" + id;
-            var item = new clsCombine<T> { row = row, Id = id };
+            var item = new TRow { row = row, Id = id };
             rows.Add(row, item);
             return item;
         }

@@ -1,5 +1,6 @@
 ﻿using FarPoint.Win.Spread;
 using FarPoint.Win.Spread.CellType;
+using FrameWebforCS.providers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,12 +18,22 @@ namespace FrameWebforCS.components.input
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet1;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet2;
         private FarPoint.Win.Spread.SheetView fpSpread1_Sheet3;
+        private FarPoint.Win.Spread.SheetView fpSpread1_Sheet4;
         private readonly HashSet<int> _shownDefineRows = new();
         private readonly HashSet<int> _shownCombineRows = new();
         private readonly HashSet<int> _shownPickupRows = new();
+        private readonly HashSet<int> _shownNonlinearRows = new();
         private bool _refreshing;
         private int _combineCoefficientCount = -1;
         private char _combinePrefix;
+        private int _nonlinearCoefficientCount = -1;
+
+        // GLOSSARY: 非線形解析の組合せ. Columns: 名称, C1..Cn, then these settings.
+        private static readonly string[] NonlinearSettings =
+            { "方式", "制御節点", "目標変位", "分割数", "最大倍率", "最大反復回数", "許容誤差" };
+        private const string DisplacementMethod = "変位増分";
+        private const string LoadMethod = "荷重増分";
+        private const string IndividualList = "個別指定";
 
         public InputCombineComponent()
         {
@@ -42,6 +53,11 @@ namespace FrameWebforCS.components.input
 
             fpSpread1_Sheet3 = fpSpread1.AddNewSheetView();
             SetSheet3();
+
+            fpSpread1_Sheet4 = fpSpread1.AddNewSheetView();
+            fpSpread1_Sheet4.SheetName = "非線形解析の組合せ";
+            ConfigureRows(fpSpread1_Sheet4);
+            RefreshNonlinearColumns();
 
             fpSpread1.Change += OnChange;
             _service.RowsReplaced += OnRowsReplaced;
@@ -116,6 +132,62 @@ namespace FrameWebforCS.components.input
             return true;
         }
 
+        private bool RefreshNonlinearColumns()
+        {
+            int count = Math.Min(50, Math.Max(5, _load.MaximumEffectiveCaseId));
+            if (_nonlinearCoefficientCount == count) return false;
+
+            bool wasRefreshing = _refreshing;
+            _refreshing = true;
+            try
+            {
+                var sheet = fpSpread1_Sheet4;
+                var header = sheet.ColumnHeader;
+                sheet.ColumnCount = 1 + count + NonlinearSettings.Length;
+                header.Cells[0, 0].Text = "名称";
+                sheet.Columns[0].Width = 200;
+                sheet.Columns[0].CellType = new GeneralCellType();
+                for (int column = 1; column <= count; column++)
+                {
+                    header.Cells[0, column].Text = "C" + column.ToString(CultureInfo.InvariantCulture);
+                    sheet.Columns[column].Width = 50;
+                    sheet.Columns[column].CellType = new GeneralCellType { FormatString = "F3" };
+                }
+                for (int index = 0; index < NonlinearSettings.Length; index++)
+                {
+                    int column = 1 + count + index;
+                    header.Cells[0, column].Text = NonlinearSettings[index];
+                    header.Cells[0, column].Note = null;
+                    sheet.Columns[column].Width = 80;
+                    sheet.Columns[column].CellType = new GeneralCellType();
+                }
+                sheet.Columns[1 + count].CellType = new ComboBoxCellType
+                {
+                    Items = [DisplacementMethod, LoadMethod],
+                    Editable = false
+                };
+                header.Cells[0, 1 + count + 2].Note = "制御節点の x 方向の変位。向きは符号で表します。";
+                header.Cells[0, 1 + count + 4].Note = "荷重の倍率 λ の最大値（JRSNAP の JALF）";
+                header.Cells[0, 1 + count + 5].Note = "空欄は 50";
+                header.Cells[0, 1 + count + 6].Note = "空欄は 1e-6";
+                _nonlinearCoefficientCount = count;
+            }
+            finally { _refreshing = wasRefreshing; }
+            return true;
+        }
+
+        // GLOSSARY: 2D非線形モード. Only the 非線形解析の組合せ sheet is shown there.
+        private void RefreshModeSheets()
+        {
+            bool nonlinear = InputDataService.Instance.IsNonlinear;
+            fpSpread1_Sheet1.Visible = !nonlinear;
+            fpSpread1_Sheet2.Visible = !nonlinear;
+            fpSpread1_Sheet3.Visible = !nonlinear;
+            fpSpread1_Sheet4.Visible = nonlinear;
+            if (!fpSpread1.ActiveSheet.Visible)
+                fpSpread1.ActiveSheet = nonlinear ? fpSpread1_Sheet4 : fpSpread1_Sheet2;
+        }
+
         private void SetSheet3()
         {
             fpSpread1_Sheet3.SheetName = "PICKUP";
@@ -156,9 +228,14 @@ namespace FrameWebforCS.components.input
         {
             RunOnUiThread(() =>
             {
-                if (!RefreshCombineColumns()) return;
                 _refreshing = true;
-                try { RefreshSheet(fpSpread1_Sheet2, _service.CombineRows, _shownCombineRows, true); }
+                try
+                {
+                    if (RefreshCombineColumns())
+                        RefreshSheet(fpSpread1_Sheet2, _service.CombineRows, _shownCombineRows, true);
+                    if (RefreshNonlinearColumns())
+                        RefreshNonlinearSheet();
+                }
                 finally { _refreshing = false; }
             });
         }
@@ -183,8 +260,91 @@ namespace FrameWebforCS.components.input
                 RefreshSheet(fpSpread1_Sheet1, _service.DefineRows, _shownDefineRows, false);
                 RefreshSheet(fpSpread1_Sheet2, _service.CombineRows, _shownCombineRows, true);
                 RefreshSheet(fpSpread1_Sheet3, _service.PickupRows, _shownPickupRows, true);
+                RefreshNonlinearColumns();
+                RefreshNonlinearSheet();
+                RefreshModeSheets();
             }
             finally { _refreshing = false; }
+        }
+
+        private void RefreshNonlinearSheet()
+        {
+            foreach (int row in _shownNonlinearRows)
+                RenderNonlinearRow(row - 1, null);
+            _shownNonlinearRows.Clear();
+            foreach (var (row, item) in _service.NonlinearRows)
+            {
+                RenderNonlinearRow(row - 1, item);
+                _shownNonlinearRows.Add(row);
+            }
+        }
+
+        private void RenderNonlinearRow(int row, clsNonlinearCombine? item)
+        {
+            var sheet = fpSpread1_Sheet4;
+            for (int column = 0; column < sheet.ColumnCount; column++)
+                sheet.Cells[row, column].Value = null;
+            if (item == null) return;
+
+            int count = _nonlinearCoefficientCount;
+            sheet.Cells[row, 0].Value = item.name;
+            foreach (var (index, value) in item.Coefficients)
+                if (index <= count)
+                    sheet.Cells[row, index].Value = value;
+            int settings = 1 + count;
+            sheet.Cells[row, settings].Value = item.Method switch
+            {
+                NonlinearMethod.Displacement => DisplacementMethod,
+                NonlinearMethod.Load => LoadMethod,
+                _ => null
+            };
+            sheet.Cells[row, settings + 1].Value = item.ControlNode;
+            sheet.Cells[row, settings + 2].Value = item.Method == NonlinearMethod.Displacement && item.IsIndividual
+                ? IndividualList : item.Target;
+            sheet.Cells[row, settings + 3].Value = item.Divisions;
+            sheet.Cells[row, settings + 4].Value = item.Method == NonlinearMethod.Load && item.IsIndividual
+                ? IndividualList : item.MaxFactor;
+            sheet.Cells[row, settings + 5].Value = item.MaxIterations;
+            sheet.Cells[row, settings + 6].Value = item.Tolerance;
+        }
+
+        private void EditNonlinearCell(int row, int column, object? value)
+        {
+            int count = _nonlinearCoefficientCount;
+            if (column == 0)
+            {
+                _service.SetNonlinearName(row, value?.ToString());
+                return;
+            }
+            if (column <= count)
+            {
+                if (!TryReadDouble(value, out double? coefficient))
+                    throw new ArgumentException("係数には有効な数値を入力してください。");
+                _service.SetNonlinearCoefficient(row, column, coefficient);
+                return;
+            }
+            switch (column - count - 1)
+            {
+                case 0:
+                    _service.SetNonlinearMethod(row, value?.ToString() switch
+                    {
+                        DisplacementMethod => NonlinearMethod.Displacement,
+                        LoadMethod => NonlinearMethod.Load,
+                        _ => null
+                    });
+                    break;
+                case 1: _service.SetNonlinearControlNode(row, ReadInt(value)); break;
+                case 2: _service.SetNonlinearTarget(row, ReadDouble(value)); break;
+                case 3: _service.SetNonlinearDivisions(row, ReadInt(value)); break;
+                case 4: _service.SetNonlinearMaxFactor(row, ReadDouble(value)); break;
+                case 5: _service.SetNonlinearMaxIterations(row, ReadInt(value)); break;
+                case 6: _service.SetNonlinearTolerance(row, ReadDouble(value)); break;
+            }
+
+            static int? ReadInt(object? value) => TryReadInt(value, out int? number)
+                ? number : throw new ArgumentException("整数を入力してください。");
+            static double? ReadDouble(object? value) => TryReadDouble(value, out double? number)
+                ? number : throw new ArgumentException("数値を入力してください。");
         }
 
         private static void RefreshSheet<T>(SheetView sheet,
@@ -255,6 +415,22 @@ namespace FrameWebforCS.components.input
                     _service.SetPickupCoefficient(row, e.Column + 1, number);
                 }
                 _shownPickupRows.Add(row);
+            }
+            else if (sheet == fpSpread1_Sheet4)
+            {
+                string? refused = null;
+                try { EditNonlinearCell(row, e.Column, value); }
+                catch (ArgumentException error) { refused = error.Message; }
+                // A setting can change the row's other cells (method, lists), so redraw it.
+                _refreshing = true;
+                try
+                {
+                    RenderNonlinearRow(e.Row, _service.NonlinearRows.GetValueOrDefault(row));
+                    _shownNonlinearRows.Add(row);
+                }
+                finally { _refreshing = false; }
+                if (refused != null)
+                    MessageBox.Show(this, refused, "入力エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             else return;
 
