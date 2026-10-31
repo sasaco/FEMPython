@@ -919,6 +919,16 @@ namespace FrameWebforCS.components.input
 
         internal bool HasKinds => _load.Values.Any(item => item.kind != null || item.limit != null);
 
+        // Leaving 2D非線形モード: clears the kinds through the case rows, as an edit would.
+        internal void RemoveKinds()
+        {
+            foreach (clsLoadNameRow row in LoadNames.Where(row => row.kind != null || row.limit != null).ToList())
+            {
+                row.kind = null;
+                row.limit = null;
+            }
+        }
+
         internal static bool HasKindRows(PreparedLoadData prepared) =>
             prepared.Loads.Values.Any(item => item.kind != null || item.limit != null);
 

@@ -75,6 +75,7 @@ namespace FrameWebforCS.providers
         internal bool IsNonlinear { get; private set; }
 
         internal event Action<int>? DimensionChanged;
+        internal event Action<bool>? NonlinearModeChanged;
         internal int? ResultDimension { get; private set; }
         private bool _publishingDocumentReplacement;
 
@@ -115,6 +116,50 @@ namespace FrameWebforCS.providers
             }
             CalculationInputRevision++;
             DimensionChanged?.Invoke(value);
+        }
+
+        // The data that switching to the given mode removes, as the confirmation dialog lists it.
+        internal IReadOnlyList<string> DataRemovedBySwitching(bool nonlinear)
+        {
+            var removed = new List<string>();
+            if (nonlinear == IsNonlinear) return removed;
+            var combine = InputCombineService.Instance;
+            if (nonlinear)
+            {
+                if (combine.DefineRows.Count != 0) removed.Add("DEFINE");
+                if (combine.CombineRows.Count != 0) removed.Add("COMBINE");
+                if (combine.PickupRows.Count != 0) removed.Add("PICKUP");
+            }
+            else
+            {
+                if (InputLoadService.Instance.HasKinds) removed.Add("荷重の種類・限定倍率");
+                if (combine.NonlinearRows.Count != 0) removed.Add("非線形解析の組合せ");
+                if (InputElementsService.Instance.HasNonlinear) removed.Add("材料の骨格曲線");
+                if (InputFixNodeService.Instance.HasSprings) removed.Add("支点の非線形ばね");
+            }
+            return removed;
+        }
+
+        // GLOSSARY: 2D非線形モード. Removes the data listed by DataRemovedBySwitching.
+        internal void SetAnalysisMode(int dimension, bool nonlinear)
+        {
+            if (nonlinear && dimension != 2)
+                throw new ArgumentOutOfRangeException(nameof(dimension), "A nonlinear model must be two-dimensional.");
+            SetDimension(dimension);
+            if (nonlinear == IsNonlinear) return;
+
+            if (nonlinear)
+                InputCombineService.Instance.RemoveLinearCombinations();
+            else
+            {
+                InputLoadService.Instance.RemoveKinds();
+                InputCombineService.Instance.RemoveNonlinearCombinations();
+                InputElementsService.Instance.RemoveNonlinear();
+                InputFixNodeService.Instance.RemoveSprings();
+            }
+            IsNonlinear = nonlinear;
+            CalculationInputRevision++;
+            NonlinearModeChanged?.Invoke(nonlinear);
         }
 
         private SceneService? _sceneService;

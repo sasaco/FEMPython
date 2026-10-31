@@ -129,6 +129,17 @@ namespace FrameWebforCS.components.input
 
         internal bool HasSprings => HasSpringRows(_fix_node);
 
+        // Leaving 2D非線形モード: a component that held a spring becomes free.
+        internal void RemoveSprings()
+        {
+            foreach (var (sheet, active) in _fix_node.ToList())
+                foreach (clsFixNode value in active.Where(value => value.springs?.Count > 0).ToList())
+                {
+                    value.springs = null;
+                    _sheets[sheet].ResetItem(value.row - 1);
+                }
+        }
+
         private static Dictionary<string, JsonObject>? CloneSprings(Dictionary<string, JsonObject>? springs) =>
             springs?.ToDictionary(item => item.Key, item => item.Value.DeepClone().AsObject());
 

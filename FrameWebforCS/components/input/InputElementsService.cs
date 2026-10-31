@@ -141,6 +141,14 @@ namespace FrameWebforCS.components.input
 
         internal bool HasNonlinear => _element.Values.Any(sheet => sheet.Values.Any(row => row.nonlinear != null));
 
+        // Leaving 2D非線形モード: clears the skeletons through the bound rows, as an edit would.
+        internal void RemoveNonlinear()
+        {
+            foreach (clsElement row in _element.Values.SelectMany(sheet => sheet.Values)
+                         .Where(row => row.nonlinear != null).ToList())
+                row.Nonlinear = null;
+        }
+
         internal static bool HasNonlinearRows(Dictionary<string, Dictionary<string, clsElement>>? parsed) =>
             parsed?.Values.Any(sheet => sheet.Values.Any(row => row.nonlinear != null)) == true;
 

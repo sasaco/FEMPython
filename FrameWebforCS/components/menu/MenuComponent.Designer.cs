@@ -40,6 +40,7 @@
             toolStripMenuItem1 = new ToolStripMenuItem();
             dToolStripMenuItem2 = new ToolStripMenuItem();
             dToolStripMenuItem3 = new ToolStripMenuItem();
+            nonlinearToolStripMenuItem = new ToolStripMenuItem();
             button1 = new Button();
             openFileDialog1 = new OpenFileDialog();
             saveFileDialog1 = new SaveFileDialog();
@@ -122,7 +123,7 @@
             // 
             // toolStripMenuItem1
             // 
-            toolStripMenuItem1.DropDownItems.AddRange(new ToolStripItem[] { dToolStripMenuItem2, dToolStripMenuItem3 });
+            toolStripMenuItem1.DropDownItems.AddRange(new ToolStripItem[] { dToolStripMenuItem2, dToolStripMenuItem3, nonlinearToolStripMenuItem });
             toolStripMenuItem1.Name = "toolStripMenuItem1";
             toolStripMenuItem1.Size = new Size(33, 20);
             toolStripMenuItem1.Text = "3D";
@@ -140,7 +141,14 @@
             dToolStripMenuItem3.Size = new Size(88, 22);
             dToolStripMenuItem3.Text = "3D";
             dToolStripMenuItem3.Click += Dimension3DToolStripMenuItem_Click;
-            // 
+            //
+            // nonlinearToolStripMenuItem
+            //
+            nonlinearToolStripMenuItem.Name = "nonlinearToolStripMenuItem";
+            nonlinearToolStripMenuItem.Size = new Size(88, 22);
+            nonlinearToolStripMenuItem.Text = "2D非線形";
+            nonlinearToolStripMenuItem.Click += NonlinearToolStripMenuItem_Click;
+            //
             // button1
             // 
             button1.Dock = DockStyle.Fill;
@@ -186,6 +194,7 @@
         private ToolStripMenuItem toolStripMenuItem1;
         private ToolStripMenuItem dToolStripMenuItem2;
         private ToolStripMenuItem dToolStripMenuItem3;
+        private ToolStripMenuItem nonlinearToolStripMenuItem;
         private ToolStripMenuItem 計算ToolStripMenuItem;
         private OpenFileDialog openFileDialog1;
         private SaveFileDialog saveFileDialog1;

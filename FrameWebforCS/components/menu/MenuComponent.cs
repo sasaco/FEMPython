@@ -53,13 +53,25 @@ namespace FrameWebforCS
             SyncDimensionMenu();
         }
 
-        private void Dimension2DToolStripMenuItem_Click(object sender, EventArgs e) => SelectDimension(2);
+        private void Dimension2DToolStripMenuItem_Click(object sender, EventArgs e) => SelectMode(2, false);
 
-        private void Dimension3DToolStripMenuItem_Click(object sender, EventArgs e) => SelectDimension(3);
+        private void Dimension3DToolStripMenuItem_Click(object sender, EventArgs e) => SelectMode(3, false);
 
-        private void SelectDimension(int dimension)
+        private void NonlinearToolStripMenuItem_Click(object sender, EventArgs e) => SelectMode(2, true);
+
+        private void SelectMode(int dimension, bool nonlinear)
         {
-            if (_input.dimension == dimension)
+            if (_input.dimension == dimension && _input.IsNonlinear == nonlinear)
+            {
+                SyncDimensionMenu();
+                return;
+            }
+
+            IReadOnlyList<string> removed = _input.DataRemovedBySwitching(nonlinear);
+            if (removed.Count != 0 && MessageBox.Show(this,
+                    "切り替えると、次のデータを削除します。\n\n・" + string.Join("\n・", removed) +
+                    "\n\n切り替えますか？",
+                    "解析モードの切替え", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
             {
                 SyncDimensionMenu();
                 return;
@@ -68,14 +80,14 @@ namespace FrameWebforCS
             try
             {
                 AppRoutingModule.Instance.PrepareDimensionChange();
-                _input.SetDimension(dimension);
+                _input.SetAnalysisMode(dimension, nonlinear);
             }
             catch (Exception ex)
             {
-                SyncDimensionMenu();
                 MessageBox.Show(this, "解析次元を変更できませんでした。\n" + ex.Message,
                     "解析次元の変更エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            SyncDimensionMenu();
         }
 
         private void OnDimensionChanged(int _) => SyncDimensionMenu();
@@ -278,9 +290,11 @@ namespace FrameWebforCS
         private void SyncDimensionMenu()
         {
             bool is3D = _input.dimension == 3;
-            toolStripMenuItem1.Text = is3D ? "3D" : "2D";
-            dToolStripMenuItem2.Checked = !is3D;
+            bool nonlinear = _input.IsNonlinear;
+            toolStripMenuItem1.Text = nonlinear ? "2D非線形" : is3D ? "3D" : "2D";
+            dToolStripMenuItem2.Checked = !is3D && !nonlinear;
             dToolStripMenuItem3.Checked = is3D;
+            nonlinearToolStripMenuItem.Checked = nonlinear;
         }
 
         private void SaveToolStripMenuItem_Click(object sender, EventArgs e)

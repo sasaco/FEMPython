@@ -109,6 +109,11 @@ namespace FrameWebforCS.components.input
             DocumentReplacementNotifications.Publish(RowsChanged, this, EventArgs.Empty);
         }
 
+        // GLOSSARY: 2D非線形モード. Each mode keeps only its own combination sheets.
+        internal void RemoveLinearCombinations() => ApplyCombine(new(), new(), new(), _nonlinear);
+
+        internal void RemoveNonlinearCombinations() => ApplyCombine(_combine, _define, _pickup, new());
+
         private static bool ReadNonlinearSetting(clsNonlinearCombine item, JsonProperty property)
         {
             if (property.Name == "symbol")
