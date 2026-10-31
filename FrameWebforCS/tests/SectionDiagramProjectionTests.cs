@@ -115,10 +115,9 @@ public sealed class SectionDiagramProjectionTests
         JsonObject root = Project(presentation, saved, new([PrintOption.SectionDiagram]));
         JsonNode details = root["PrintDiagram"]!["diagramResult"]!;
         Assert.NotNull(details["caseLabels"]);
-        Assert.Equal(new[] { "train/A/LoadStep/0", "train/A/LoadStep/1" },
+        // A nonlinear combination prints its final step only.
+        Assert.Equal(new[] { "train/A/LoadStep/1" },
             details["caseLabels"]!.AsObject().Select(pair => pair.Key));
-        Assert.Equal("Case train/A Train A (Step 0, 0.5)",
-            details["caseLabels"]!["train/A/LoadStep/0"]!.GetValue<string>());
         Assert.Equal("Case train/A Train A (Step 1, 1)",
             details["caseLabels"]!["train/A/LoadStep/1"]!.GetValue<string>());
         Assert.Equal(0.002, root["PrintDiagram"]!["disg"]!["train/A/LoadStep/1"]![1]!["dx"]!.GetValue<double>());

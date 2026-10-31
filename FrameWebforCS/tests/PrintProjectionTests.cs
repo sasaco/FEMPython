@@ -82,7 +82,8 @@ public sealed class PrintProjectionTests
         PrintSnapshot snapshot = Snapshot(new PrintSelection([PrintOption.Displacement]), presentation);
         JsonObject root = JsonNode.Parse(PrintProjection.Build(snapshot))!.AsObject();
         JsonObject rows = root["disg"]!.AsObject();
-        Assert.Equal(presentation.Pages.Count, rows.Count);
+        // A nonlinear combination prints its final step only.
+        Assert.Equal(presentation.PrintPages.Select(page => page.Key), rows.Select(row => row.Key));
         Assert.Equal(rows.Count, root["disgName"]!.AsArray().Count);
         Assert.All(rows, entry => Assert.NotEmpty(entry.Value!.AsArray()));
         Assert.Null(root["result"]);

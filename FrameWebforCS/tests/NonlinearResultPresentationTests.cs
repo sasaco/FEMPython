@@ -1,4 +1,5 @@
 using FrameWebforCS.calculation;
+using FrameWebforCS.providers.printing;
 using System.Text.Json.Nodes;
 using Xunit;
 
@@ -53,6 +54,26 @@ public sealed class NonlinearResultPresentationTests
 
         Assert.Equal(2, presentation.Tabs.Count);
         Assert.All(presentation.Tabs.SelectMany(tab => tab.Steps), step => Assert.Null(step.ControlDisplacement));
+    }
+
+    // Printing carries the final step of a combination only.
+    [Fact]
+    public void PrintingCarriesOnlyTheFinalStepOfACombination()
+    {
+        var presentation = new CalculationResultPresentation(
+            AnalysisResultSetJson.Deserialize(Fixture("nonlinear-states")), dimension: 2);
+        string final = presentation.Pages.Single(page => page.Result.State is LoadStepResultState { IsFinal: true }).Key;
+        const string input = """
+            {"dimension":2,"node":{},"member":{},"element":{},"rigid":[],"joint":{},"fix_node":{},
+             "fix_member":{},"notice_points":[],"load":{},"define":{},"combine":{},"pickup":{}}
+            """;
+        var selection = new PrintSelection([PrintOption.Displacement, PrintOption.Reaction, PrintOption.SectionForce]);
+
+        JsonObject root = JsonNode.Parse(PrintProjection.Build(
+            new PrintSnapshot(selection, input, 2, 3, presentation, null, [])))!.AsObject();
+
+        foreach (string family in new[] { "disg", "reac", "fsec" })
+            Assert.Equal([final], root[family]!.AsObject().Select(item => item.Key));
     }
 
     [Fact]

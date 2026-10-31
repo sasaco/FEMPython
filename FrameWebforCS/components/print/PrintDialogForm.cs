@@ -288,7 +288,7 @@ internal sealed class PrintDialogForm : Form
         _bridgeViews.Items.Add(new ChoiceItem<string>("iso", "鳥瞰図"));
         if (presentation is not null)
         {
-            foreach (var page in presentation.Pages)
+            foreach (var page in presentation.PrintPages)
                 _cases.Items.Add(new ChoiceItem<string>(page.Key, page.Label));
             if (presentation.Derived is { } derived)
                 foreach (var item in derived.Combines.Concat(derived.Pickups)

@@ -345,7 +345,7 @@ internal static class PrintProjection
         var caseIds = snapshot.Selection.CaseIds;
         if (caseIds is not null && caseIds.Any(id => !result.Pages.Any(page => page.Key == id || page.Case.CaseId == id)))
             throw new PrintProjectionException("A selected calculation case is unavailable.");
-        var pages = result.Pages.Where(page => caseIds is null || caseIds.Contains(page.Key) ||
+        var pages = result.PrintPages.Where(page => caseIds is null || caseIds.Contains(page.Key) ||
             caseIds.Contains(page.Case.CaseId)).ToArray();
         if (pages.Length == 0) throw new PrintProjectionException("No selected result case is available.");
         if (snapshot.Selection.NodeIds is { } nodeIds && nodeIds.Any(id =>
@@ -802,7 +802,7 @@ internal static class PrintProjection
                 PrintOption.LoadDiagram => (saved["load"] as JsonObject)?.Select(item => item.Key).ToArray() ?? [],
                 PrintOption.CombinedSectionDiagram => result?.Derived?.Combines.Select(item => item.Id).ToArray() ?? [],
                 PrintOption.PickupSectionDiagram => result?.Derived?.Pickups.Select(item => item.Id).ToArray() ?? [],
-                _ => result?.Pages.Where(page => HasPrintableRows(page,
+                _ => result?.PrintPages.Where(page => HasPrintableRows(page,
                     option == PrintOption.DisplacementDiagram ? "disg" : "fsec", selection))
                     .Select(item => item.Key).ToArray() ?? [],
             };

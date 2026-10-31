@@ -130,6 +130,9 @@ internal sealed class CalculationResultPresentation
     internal void UpdateDerived(CalculationDerivedPresentation? derived) => Derived = derived;
     internal IReadOnlyList<CalculationResultPage> Pages { get; }
     internal IReadOnlyList<CalculationResultTab> Tabs { get; }
+    /// <summary>The pages a report prints: a nonlinear combination's final step only.</summary>
+    internal IEnumerable<CalculationResultPage> PrintPages =>
+        Pages.Where(page => page.Result.State is not LoadStepResultState { IsFinal: false });
     internal string LengthUnit => UnitLabel(ResultSet.Units.Length);
     internal string ForceUnit => UnitLabel(ResultSet.Units.Force);
     internal string MomentUnit => ResultSet.Units.Length is "m" or "mm" &&
