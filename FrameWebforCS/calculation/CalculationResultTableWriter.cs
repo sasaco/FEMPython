@@ -6,8 +6,10 @@ namespace FrameWebforCS.calculation;
 
 internal static class CalculationResultTableWriter
 {
-    internal static string SheetName(CalculationResultPage page, int ordinal) =>
-        $"{ordinal + 1} {page.Label}"[..Math.Min(31, $"{ordinal + 1} {page.Label}".Length)];
+    internal static string SheetName(CalculationResultPage page, int ordinal) => SheetName(page.Label, ordinal);
+
+    internal static string SheetName(string label, int ordinal) =>
+        $"{ordinal + 1} {label}"[..Math.Min(31, $"{ordinal + 1} {label}".Length)];
 
     internal static void FillDisplacements(SheetView sheet, CalculationResultPresentation presentation,
         CalculationResultPage page, int dimension)

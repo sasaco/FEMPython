@@ -18,11 +18,15 @@ namespace FrameWebforCS.components.result
         private readonly ResultFsecService _input = ResultFsecService.Instance;
         private bool _rebuilding;
         private int _materializedSheet = -1;
+        private int _materializedPage = -1;
+        private readonly ResultStepTable _steps;
 
         public ResultFsecComponent()
         {
             InitializeComponent();
             ResultDimensionNotice.Attach(this);
+            _steps = ResultStepTable.Attach(this);
+            _steps.PageSelected += () => { MaterializeSelectedSheet(); PublishCurrentPage(); };
             fpSpread1.EditModeOn += fpSpread1.faSpread_EditModeOn;
 
             fpSpread1.ActiveSheetChanged += (_, _) => { MaterializeSelectedSheet(); PublishCurrentPage(); };
@@ -53,8 +57,9 @@ namespace FrameWebforCS.components.result
             var canonical = CalculationResultStore.Instance.Current;
             if (canonical is not null)
             {
-                if (Visible && index >= 0 && index < canonical.Pages.Count)
-                    FrameWebforCS.three.ThreeResultsService.PublishPage("fsec", canonical.Pages[index].Key,
+                int page = _steps.Page(index);
+                if (Visible && page >= 0 && page < canonical.Pages.Count)
+                    FrameWebforCS.three.ThreeResultsService.PublishPage("fsec", canonical.Pages[page].Key,
                         FrameWebforCS.three.ThreeResultsService.DefaultSectionForceComponent(
                             InputDataService.Instance.dimension));
                 return;
@@ -85,12 +90,13 @@ namespace FrameWebforCS.components.result
                 fpSpread1.Sheets.Clear();
                 _materializedSheet = -1;
                 var canonical = CalculationResultStore.Instance.Current;
+                _steps.Reset(canonical);
                 if (canonical is not null)
                 {
-                    for (int index = 0; index < canonical.Pages.Count; index++)
+                    for (int index = 0; index < canonical.Tabs.Count; index++)
                     {
                         SheetView sheet = fpSpread1.AddNewSheetView();
-                        sheet.SheetName = CalculationResultTableWriter.SheetName(canonical.Pages[index], index);
+                        sheet.SheetName = CalculationResultTableWriter.SheetName(canonical.Tabs[index].Label, index);
                         SetSheet1(sheet);
                         sheet.RowCount = 0;
                     }
@@ -128,13 +134,16 @@ namespace FrameWebforCS.components.result
             if (CalculationResultStore.Instance.Current is { } canonical)
             {
                 int selectedCanonical = fpSpread1.ActiveSheetIndex;
-                if (selectedCanonical < 0 || selectedCanonical >= canonical.Pages.Count ||
-                    selectedCanonical >= fpSpread1.Sheets.Count || selectedCanonical == _materializedSheet) return;
+                int page = _steps.Page(selectedCanonical);
+                if (page < 0 || selectedCanonical >= fpSpread1.Sheets.Count ||
+                    selectedCanonical == _materializedSheet && page == _materializedPage) return;
+                if (selectedCanonical != _materializedSheet) _steps.ShowTab(selectedCanonical);
                 if (_materializedSheet >= 0 && _materializedSheet < fpSpread1.Sheets.Count)
                     fpSpread1.Sheets[_materializedSheet].RowCount = 0;
                 CalculationResultTableWriter.FillSectionForces(fpSpread1.Sheets[selectedCanonical],
-                    canonical, canonical.Pages[selectedCanonical], canonical.Dimension);
+                    canonical, canonical.Pages[page], canonical.Dimension);
                 _materializedSheet = selectedCanonical;
+                _materializedPage = page;
                 return;
             }
             int selected = fpSpread1.ActiveSheetIndex;
