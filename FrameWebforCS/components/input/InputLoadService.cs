@@ -87,8 +87,32 @@ namespace FrameWebforCS.components.input
         public string? symbol { get => Value.symbol; set { Value.symbol = value; Changed(nameof(symbol)); } }
         public float? LL_pitch { get => Value.LL_pitch; set { Value.LL_pitch = value; Changed(nameof(LL_pitch)); } }
         public string? name { get => Value.name; set { Value.name = value; Changed(nameof(name)); } }
-        public string? kind { get => Value.kind; set { Value.kind = value; Changed(nameof(kind)); } }
-        public double? limit { get => Value.limit; set { Value.limit = value; Changed(nameof(limit)); } }
+        // Only a limited load has a limit, and it must be positive (as the engine requires): leaving
+        // the limited kind clears it, and a refused entry restores the bound cell.
+        public string? kind
+        {
+            get => Value.kind;
+            set
+            {
+                Value.kind = value;
+                if (value != "limited") Value.limit = null;
+                Changed(nameof(kind));
+            }
+        }
+        public double? limit
+        {
+            get => Value.limit;
+            set
+            {
+                if (value is double number && (Value.kind != "limited" || !double.IsFinite(number) || number <= 0))
+                {
+                    Changed(nameof(limit));
+                    return;
+                }
+                Value.limit = value;
+                Changed(nameof(limit));
+            }
+        }
     }
 
     internal sealed class clsLoadIntensityRow : INotifyPropertyChanged

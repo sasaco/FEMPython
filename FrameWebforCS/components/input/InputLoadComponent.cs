@@ -244,8 +244,9 @@ namespace FrameWebforCS.components.input
 
             var header = fpSpread1_Sheet1.ColumnHeader;
 
-            fpSpread1_Sheet1.ColumnCount = 7;
-            string[] fields = { "LL_pitch", "symbol", "name", "fix_node", "fix_member", "element", "joint" };
+            fpSpread1_Sheet1.ColumnCount = 9;
+            string[] fields = { "LL_pitch", "symbol", "name", "fix_node", "fix_member", "element", "joint",
+                "kind", "limit" };
             for (int i = 0; i < fields.Length; i++)
                 column[i].DataField = fields[i];
 
@@ -256,13 +257,37 @@ namespace FrameWebforCS.components.input
             header.Cells[0, 4].Text = "断面";
             header.Cells[0, 5].Text = "バネ";
             header.Cells[0, 6].Text = "結合";
+            // GLOSSARY: 固定荷重・増分荷重・限定増分荷重. Blank is the engine default, incremental.
+            header.Cells[0, KindColumn].Text = "種類";
+            column[KindColumn].CellType = new ComboBoxCellType
+            {
+                Items = ["固定", "増分", "限定増分"],
+                ItemData = InputLoadService.LoadKinds,
+                EditorValue = EditorValue.ItemData,
+                Editable = false
+            };
+            header.Cells[0, LimitColumn].Text = "限定倍率 λ";
+            header.Cells[0, LimitColumn].Note = "JRSNAP の LiMiT3/MDV×JALF";
 
             column[2].Width = 400;
             column[3].Width = 50;
             column[4].Width = 50;
             column[5].Width = 50;
             column[6].Width = 50;
+            column[KindColumn].Width = 80;
+            column[LimitColumn].Width = 80;
+            RefreshModeColumns();
             fpSpread1_Sheet1.DataSource = _service.LoadNames;
+        }
+
+        private const int KindColumn = 7;
+        private const int LimitColumn = 8;
+
+        // GLOSSARY: 2D非線形モード. Kinds and limits are entered only there.
+        private void RefreshModeColumns()
+        {
+            fpSpread1_Sheet1.Columns[KindColumn].Visible = _input.IsNonlinear;
+            fpSpread1_Sheet1.Columns[LimitColumn].Visible = _input.IsNonlinear;
         }
 
         private void SetSheet2()
@@ -370,6 +395,7 @@ namespace FrameWebforCS.components.input
         internal void RefreshDimension()
         {
             if (fpSpread1.EditMode) fpSpread1.StopCellEditing();
+            RefreshModeColumns();
             SetSheet2();
             float width = 100;
             foreach (Column column in fpSpread1_Sheet2.Columns) width += column.Width;

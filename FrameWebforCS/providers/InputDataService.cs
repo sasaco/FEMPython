@@ -367,6 +367,7 @@ namespace FrameWebforCS.providers
             }
             _cameraPosition = loadedCameraPosition;
             ResultDimension = loadedResultDimension;
+            bool previousNonlinear = IsNonlinear;
             IsNonlinear = loadedNonlinear;
 
             var combineCoordinator = ResultCombineDisgCoordinator.Instance;
@@ -414,6 +415,8 @@ namespace FrameWebforCS.providers
             CalculationInputRevision++;
             if (previousDimension != loadedDimension)
                 notifications.PublishFirst(DimensionChanged, loadedDimension);
+            if (previousNonlinear != loadedNonlinear)
+                notifications.PublishFirst(NonlinearModeChanged, loadedNonlinear);
             notifications.PublishFirst(FileReplaced, DocumentRevision);
             _publishingDocumentReplacement = true;
             try { notifications.Complete(); }

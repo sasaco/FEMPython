@@ -35,6 +35,8 @@ namespace FrameWebforCS
         private AppRoutingModule()
         {
             _input.DimensionChanged += OnDimensionChanged;
+            // The 2D非線形 columns are refreshed with the dimension-dependent ones.
+            _input.NonlinearModeChanged += _ => OnDimensionChanged(_input.dimension);
         }
 
         internal void PrepareDimensionChange()
